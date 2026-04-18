@@ -63,6 +63,16 @@ const GAMES = [
     stars: '⭐⭐⭐⭐⭐',
     isNew: false,
   },
+  {
+    id: 'g7',
+    route: '/jewelry-shop',
+    icon: '💎',
+    num: 7,
+    name: 'ほうせきやさん',
+    desc: 'やってきた どうぶつさんに\nアクセサリをわたそう！',
+    stars: '⭐⭐⭐⭐',
+    isNew: true,
+  },
 ];
 
 function GameCard({ game, onClick }) {

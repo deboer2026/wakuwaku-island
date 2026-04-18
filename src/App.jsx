@@ -6,6 +6,7 @@ import Meiro from './games/Meiro'
 import DoubutsuPuzzle from './games/DoubutsuPuzzle'
 import KazuAsobi from './games/KazuAsobi'
 import AnimalSoccer from './games/AnimalSoccer'
+import JewelryShop from './games/JewelryShop'
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
       <Route path="/doubutsu-puzzle" element={<DoubutsuPuzzle />} />
       <Route path="/kazu-asobi" element={<KazuAsobi />} />
       <Route path="/animal-soccer" element={<AnimalSoccer />} />
+      <Route path="/jewelry-shop" element={<JewelryShop />} />
     </Routes>
   )
 }
