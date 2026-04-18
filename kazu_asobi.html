@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>かずあそび</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Hiragino Maru Gothic Pro', 'Rounded Mplus 1c', sans-serif; overflow: hidden; background: #f3e5f5; }
+#game-wrap { width: 100vw; height: 100vh; max-width: 480px; margin: 0 auto; position: relative; overflow: hidden; }
+canvas#bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+/* HUD */
+#hud { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px 8px; z-index: 10; background: rgba(156,39,176,0.75); }
+.hud-box { background: rgba(255,255,255,0.95); border-radius: 12px; padding: 4px 12px; text-align: center; min-width: 68px; }
+.hud-label { font-size: 10px; color: #6a1b9a; font-weight: 700; }
+.hud-val   { font-size: 20px; font-weight: 900; color: #4a148c; }
+#hud-title { font-size: 16px; font-weight: 900; color: #fff; text-shadow: 1px 2px 0 #4a148c; }
+
+/* SCREENS */
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 0 20px; }
+
+/* タイトル */
+#title-screen { background: linear-gradient(160deg,#ce93d8,#f3e5f5); }
+#title-screen h1 { font-size: 32px; font-weight: 900; color: #6a1b9a; text-shadow: 2px 2px 0 #fff; margin-bottom: 6px; }
+
+/* ルール説明カード */
+.rule-card { background: #fff; border-radius: 20px; padding: 18px 20px; width: 100%; max-width: 320px; margin-bottom: 18px; box-shadow: 0 6px 0 #ce93d8; }
+.rule-card h2 { font-size: 15px; font-weight: 900; color: #6a1b9a; margin-bottom: 12px; text-align: center; }
+.rule-step { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.rule-num  { background: #ce93d8; color: #fff; font-size: 13px; font-weight: 900; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rule-text { font-size: 13px; color: #444; line-height: 1.5; }
+.rule-ex   { background: #f3e5f5; border-radius: 12px; padding: 10px 14px; text-align: center; margin-top: 10px; font-size: 13px; color: #6a1b9a; line-height: 1.7; }
+
+.hi-badge { background: rgba(106,27,154,0.15); color: #6a1b9a; font-size: 13px; font-weight: 700; padding: 4px 16px; border-radius: 20px; margin-bottom: 14px; }
+.big-btn { background: #9c27b0; color: #fff; border: none; border-radius: 50px; padding: 14px 44px; font-size: 20px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 0 #6a1b9a; touch-action: manipulation; }
+.big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #6a1b9a; }
+.big-btn.orange { background: #FF6B35; box-shadow: 0 6px 0 #c94d1e; }
+.big-btn.blue   { background: #4DB8FF; box-shadow: 0 6px 0 #2a9ad4; }
+.big-btn.orange:active { box-shadow: 0 2px 0 #c94d1e; }
+.big-btn.blue:active   { box-shadow: 0 2px 0 #2a9ad4; }
+
+/* GAME AREA */
+#game-area { position: absolute; inset: 0; z-index: 5; display: none; flex-direction: column; align-items: center; padding-top: 64px; }
+
+/* 数字表示 */
+#number-area { display: flex; flex-direction: column; align-items: center; margin-bottom: 8px; }
+#question-label { font-size: 13px; font-weight: 700; color: #7b1fa2; margin-bottom: 2px; }
+#big-number { font-size: 88px; font-weight: 900; color: #6a1b9a; text-shadow: 3px 4px 0 #ce93d8; line-height: 1; }
+#tap-hint { font-size: 13px; color: #ab47bc; margin-top: 2px; }
+
+/* カウンター */
+#tap-counter { font-size: 20px; font-weight: 900; color: #9c27b0; margin-bottom: 6px; min-height: 28px; }
+
+/* 動物グリッド */
+#animal-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 0 12px; width: 100%; max-width: 380px; margin-bottom: 10px; }
+.animal-btn {
+  background: #fff; border: 3px solid #ce93d8; border-radius: 16px;
+  cursor: pointer; transition: transform 0.08s;
+  display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation; position: relative; overflow: hidden;
+}
+.animal-btn:active { transform: scale(0.92); }
+.animal-btn.tapped { background: #f3e5f5; border-color: #9c27b0; transform: scale(0.95); }
+.animal-btn.tapped::after { content: '✓'; position: absolute; top: 2px; right: 4px; font-size: 12px; color: #9c27b0; font-weight: 900; }
+.animal-btn.wrong-tap { animation: wShake 0.35s; border-color: #f44336; background: #ffebee; }
+@keyframes wShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
+/* 決定ボタン */
+#submit-btn { background: #9c27b0; color: #fff; border: none; border-radius: 50px; padding: 12px 44px; font-size: 18px; font-weight: 700; cursor: pointer; box-shadow: 0 5px 0 #6a1b9a; touch-action: manipulation; opacity: 0.45; pointer-events: none; transition: opacity 0.2s; }
+#submit-btn.active { opacity: 1; pointer-events: auto; }
+#submit-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #6a1b9a; }
+
+/* フィードバック */
+#feedback { position: absolute; top: 38%; left: 50%; transform: translate(-50%,-50%); z-index: 15; font-size: 52px; font-weight: 900; pointer-events: none; opacity: 0; transition: opacity 0.2s; text-align: center; white-space: nowrap; }
+
+/* RESULT */
+#result-overlay { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(106,27,154,0.88); }
+#result-overlay h2 { font-size: 44px; font-weight: 900; color: #FFD700; text-shadow: 3px 3px 0 #4a148c; margin-bottom: 8px; }
+#result-overlay p  { font-size: 16px; color: #fff; text-align: center; line-height: 1.8; margin-bottom: 6px; }
+.new-hi-txt { font-size: 18px; font-weight: 900; color: #FFD700; margin-bottom: 16px; }
+
+.pop-label { position: absolute; font-weight: 900; pointer-events: none; animation: popUp 0.7s forwards; z-index: 25; }
+@keyframes popUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-60px) scale(1.5)} }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+  <canvas id="bg"></canvas>
+
+  <!-- タイトル -->
+  <div id="title-screen" class="screen">
+    <div style="font-size:56px;margin-bottom:6px;">🔢</div>
+    <h1>かずあそび！</h1>
+
+    <div class="rule-card">
+      <h2>📖 あそびかた</h2>
+      <div class="rule-step">
+        <div class="rule-num">1</div>
+        <div class="rule-text">おおきな <b>かず</b> がでてくるよ</div>
+      </div>
+      <div class="rule-step">
+        <div class="rule-num">2</div>
+        <div class="rule-text">そのかずと <b>おなじだけ</b><br>どうぶつをタップしよう！</div>
+      </div>
+      <div class="rule-step">
+        <div class="rule-num">3</div>
+        <div class="rule-text">タップしたら <b>「きめる！」</b><br>ボタンをおしてね</div>
+      </div>
+      <div class="rule-ex">
+        れい：かずが <b style="font-size:18px;color:#9c27b0;">3</b> なら<br>
+        どうぶつを <b style="color:#9c27b0;">3つ</b> タップ → 「きめる！」<br>
+        <span style="font-size:18px;">🐱 🐰 🐸</span> ← 3つ！
+      </div>
+    </div>
+
+    <div id="hi-title" class="hi-badge">🏆 ハイスコア: 0もん</div>
+    <button class="big-btn" onclick="startGame()">▶ スタート！</button>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud" style="display:none;">
+    <div class="hud-box"><div class="hud-label">もんだい</div><div class="hud-val" id="q-disp">0</div></div>
+    <div id="hud-title">🔢 かずあそび</div>
+    <div class="hud-box"><div class="hud-label">のこり</div><div class="hud-val" id="time-disp">30</div></div>
+  </div>
+
+  <!-- ゲームエリア -->
+  <div id="game-area">
+    <div id="number-area">
+      <div id="question-label">このかずだけ タップしよう！</div>
+      <div id="big-number">3</div>
+      <div id="tap-hint"></div>
+    </div>
+    <div id="tap-counter"></div>
+    <div id="animal-grid"></div>
+    <button id="submit-btn" onclick="onSubmit()">きめる！</button>
+  </div>
+
+  <!-- フィードバック -->
+  <div id="feedback"></div>
+
+  <!-- 結果 -->
+  <div id="result-overlay" style="display:none;">
+    <h2 id="r-title">🎉</h2>
+    <p id="r-msg"></p>
+    <div id="r-hi" class="new-hi-txt"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="big-btn orange" onclick="startGame()">もういちど</button>
+      <button class="big-btn blue" onclick="goTitle()">タイトルへ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const wrap = document.getElementById('game-wrap');
+const bgcv = document.getElementById('bg');
+const bgctx = bgcv.getContext('2d');
+let W, H;
+
+const ANIMALS = ['🐱','🐶','🐸','🐼','🦊','🐰','🐧','🐻','🐮','🐷','🦁','🐨','🦝','🦄','🐯','🐺'];
+const GALLERY = ['👸','🤴','👑','🦋','🌸','⭐','🎉','🌈','🎀','🐝'];
+let gallery = [];
+let bgAnimId;
+
+// ゲーム状態
+let targetNum = 0, tappedCount = 0, correctCount = 0;
+let timeLeft = 30, timerInt, running = false;
+let tappedSet = new Set();
+let currentAnimal = '';
+let questionCount = 0;
+let locked = false;
+
+function getHi() { return parseInt(localStorage.getItem('kazu_hi')||'0'); }
+function saveHi(v) { localStorage.setItem('kazu_hi',v); }
+function updateHiBadge() { document.getElementById('hi-title').textContent='🏆 ハイスコア: '+getHi()+'もん'; }
+
+function resize() {
+  W = wrap.clientWidth; H = wrap.clientHeight;
+  bgcv.width = W; bgcv.height = H;
+  buildGallery();
+}
+
+function buildGallery() {
+  gallery = [];
+  for(let i=0;i<5;i++){
+    gallery.push({emoji:GALLERY[i%GALLERY.length],   x:W*0.04+(i%2)*W*0.07, y:H*0.12+i*H*0.12, size:W*0.065, phase:i*1.1, speed:1.4+i*0.2});
+    gallery.push({emoji:GALLERY[(i+4)%GALLERY.length], x:W*0.96-(i%2)*W*0.07, y:H*0.12+i*H*0.12, size:W*0.065, phase:i*1.3, speed:1.6+i*0.2});
+  }
+  ['👸','🤴','👑','🎀','🌈'].forEach((e,i)=> gallery.push({emoji:e,x:W*(0.1+i*0.2),y:H*0.055,size:W*0.07,phase:i*0.8,speed:2}));
+  ['🦁','🐘','🦊','🐸','🐧','🐨'].forEach((e,i)=> gallery.push({emoji:e,x:W*(0.08+i*0.17),y:H*0.95,size:W*0.065,phase:i*0.6,speed:1.7}));
+}
+
+function bgLoop() {
+  bgctx.clearRect(0,0,W,H);
+  bgctx.fillStyle='#f3e5f5'; bgctx.fillRect(0,0,W,H);
+  // デコ丸
+  for(let i=0;i<8;i++){
+    bgctx.fillStyle=`hsla(${280+i*15},60%,80%,0.18)`;
+    bgctx.beginPath(); bgctx.arc(W*(0.1+i*0.12),H*0.5+Math.sin(i*1.3)*H*0.25,W*0.055,0,Math.PI*2); bgctx.fill();
+  }
+  const t=performance.now()/1000;
+  gallery.forEach(g=>{
+    const bob=Math.sin(t*g.speed+g.phase)*5;
+    bgctx.font=`${Math.round(g.size)}px serif`;
+    bgctx.textAlign='center'; bgctx.textBaseline='middle';
+    bgctx.fillText(g.emoji,g.x,g.y+bob);
+  });
+  bgAnimId=requestAnimationFrame(bgLoop);
+}
+
+// ===== ゲーム開始 =====
+function startGame() {
+  correctCount=0; timeLeft=30; running=true; questionCount=0; locked=false;
+  document.getElementById('title-screen').style.display='none';
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('game-area').style.display='flex';
+  document.getElementById('q-disp').textContent='0';
+  document.getElementById('time-disp').textContent='30';
+  clearInterval(timerInt);
+  timerInt=setInterval(()=>{ timeLeft--; document.getElementById('time-disp').textContent=timeLeft; if(timeLeft<=0) endGame(); },1000);
+  nextQuestion();
+}
+
+function goTitle() {
+  running=false; clearInterval(timerInt);
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='none';
+  document.getElementById('game-area').style.display='none';
+  document.getElementById('title-screen').style.display='flex';
+  updateHiBadge();
+}
+
+// ===== 問題生成 =====
+function nextQuestion() {
+  locked=false; tappedSet.clear(); tappedCount=0;
+  targetNum = 1 + Math.floor(Math.random()*8); // 1〜8
+  currentAnimal = ANIMALS[Math.floor(Math.random()*ANIMALS.length)];
+  // 動物の数：targetNum + 追加2〜4匹（ダミー）
+  const total = Math.min(targetNum + 2 + Math.floor(Math.random()*4), 12);
+
+  document.getElementById('big-number').textContent = targetNum;
+  document.getElementById('tap-hint').textContent = `← この かずだけ タップ！`;
+  updateCounter();
+  renderAnimalGrid(total);
+  updateSubmitBtn();
+}
+
+function renderAnimalGrid(total) {
+  const ag = document.getElementById('animal-grid');
+  ag.innerHTML='';
+  // ボタンサイズ計算
+  const cols = total <= 6 ? 3 : 4;
+  const btnW = Math.floor((Math.min(W,380) - 24 - (cols-1)*8) / cols);
+  const btnH = Math.floor(btnW * 0.95);
+  const emojiSize = Math.round(btnW * 0.52);
+  for(let i=0;i<total;i++){
+    const btn=document.createElement('button');
+    btn.className='animal-btn';
+    btn.style.width=btnW+'px'; btn.style.height=btnH+'px';
+    btn.innerHTML=`<span style="font-size:${emojiSize}px;line-height:1;">${currentAnimal}</span>`;
+    btn.dataset.idx=i;
+    btn.addEventListener('click',()=>onAnimalTap(btn,i));
+    btn.addEventListener('touchend',e=>{e.preventDefault();onAnimalTap(btn,i);},{passive:false});
+    ag.appendChild(btn);
+  }
+}
+
+function onAnimalTap(btn, idx) {
+  if(locked) return;
+  if(tappedSet.has(idx)) {
+    // タップ解除
+    tappedSet.delete(idx);
+    btn.classList.remove('tapped');
+  } else {
+    if(tappedSet.size >= targetNum) {
+      // 多くタップしようとしたら警告
+      btn.classList.add('wrong-tap');
+      setTimeout(()=>btn.classList.remove('wrong-tap'),350);
+      showPop(W/2, H*0.5, `${targetNum}つだよ！`, '#9c27b0', 20);
+      return;
+    }
+    tappedSet.add(idx);
+    btn.classList.add('tapped');
+  }
+  tappedCount = tappedSet.size;
+  updateCounter();
+  updateSubmitBtn();
+}
+
+function updateCounter() {
+  const el=document.getElementById('tap-counter');
+  let s='';
+  for(let i=0;i<targetNum;i++) s+= i<tappedCount ? '🟣' : '⚪';
+  el.textContent=s;
+}
+
+function updateSubmitBtn() {
+  const btn=document.getElementById('submit-btn');
+  if(tappedCount===targetNum){ btn.classList.add('active'); }
+  else { btn.classList.remove('active'); }
+}
+
+function onSubmit() {
+  if(locked||tappedCount!==targetNum) return;
+  locked=true;
+  // 正解！（タップ数がtargetNumと一致していれば正解）
+  correctCount++;
+  questionCount++;
+  document.getElementById('q-disp').textContent=correctCount;
+  showFeedback('⭕', '#9c27b0');
+  showPop(W/2, H*0.45, '✨ せいかい！', '#FFD700', 26);
+  setTimeout(()=>{ hideFeedback(); nextQuestion(); }, 900);
+}
+
+function showFeedback(text, color) {
+  const el=document.getElementById('feedback');
+  el.textContent=text; el.style.color=color; el.style.opacity='1';
+}
+function hideFeedback() { document.getElementById('feedback').style.opacity='0'; }
+
+function showPop(x,y,text,color,size){
+  const el=document.createElement('div');
+  el.className='pop-label'; el.textContent=text;
+  el.style.color=color; el.style.fontSize=size+'px';
+  el.style.left=(x-70)+'px'; el.style.top=(y-30)+'px';
+  wrap.appendChild(el);
+  setTimeout(()=>el.remove(),800);
+}
+
+function endGame() {
+  running=false; clearInterval(timerInt);
+  document.getElementById('hud').style.display='none';
+  document.getElementById('game-area').style.display='none';
+  document.getElementById('result-overlay').style.display='flex';
+  const hi=getHi(); const isNew=correctCount>hi;
+  if(isNew) saveHi(correctCount);
+  updateHiBadge();
+  const hiEl=document.getElementById('r-hi');
+  hiEl.textContent=isNew?'🏆 ニューレコード！':'ハイスコア: '+hi+'もん';
+  hiEl.style.color=isNew?'#FFD700':'rgba(255,255,255,0.6)';
+  const t=document.getElementById('r-title'), m=document.getElementById('r-msg');
+  if(correctCount>=12)     {t.textContent='🏆 すごい！';  m.innerHTML=`<b style="font-size:28px;color:#FFD700">${correctCount}</b> もん せいかい！<br>かずの天才だ！`;}
+  else if(correctCount>=6) {t.textContent='⭐ ナイス！';  m.innerHTML=`<b style="font-size:28px;color:#FFD700">${correctCount}</b> もん せいかい！<br>よくできました！`;}
+  else                     {t.textContent='🔢 もういちど';m.innerHTML=`<b style="font-size:28px;color:#FFD700">${correctCount}</b> もん せいかい<br>またちょうせん！`;}
+}
+
+resize();
+updateHiBadge();
+window.addEventListener('resize',()=>resize());
+bgLoop();
+</script>
+</body>
+</html>

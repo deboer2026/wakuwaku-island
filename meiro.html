@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>めいろあそび</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Hiragino Maru Gothic Pro', 'Rounded Mplus 1c', sans-serif; overflow: hidden; background: #e8eaf6; }
+#game-wrap { width: 100vw; height: 100vh; max-width: 480px; margin: 0 auto; position: relative; overflow: hidden; }
+canvas#bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+canvas#maze-cv { position: absolute; z-index: 2; }
+
+/* HUD */
+#hud { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px 8px; z-index: 10; background: rgba(63,81,181,0.8); }
+.hud-box { background: rgba(255,255,255,0.95); border-radius: 12px; padding: 4px 12px; text-align: center; min-width: 68px; }
+.hud-label { font-size: 10px; color: #283593; font-weight: 700; }
+.hud-val   { font-size: 20px; font-weight: 900; color: #1a237e; }
+#hud-title { font-size: 15px; font-weight: 900; color: #fff; text-shadow: 1px 2px 0 #1a237e; }
+
+/* SCREENS */
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 0 16px; }
+#title-screen { background: linear-gradient(160deg,#7986cb,#e8eaf6); }
+#title-screen h1 { font-size: 30px; font-weight: 900; color: #fff; text-shadow: 2px 2px 0 #283593; margin-bottom: 6px; }
+#title-screen p  { font-size: 13px; color: #e8eaf6; margin-bottom: 14px; text-align: center; line-height: 1.7; }
+.chara-select { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; width: 300px; }
+.chara-btn { background: #fff; border: 4px solid transparent; border-radius: 18px; padding: 12px 8px 8px; cursor: pointer; transition: transform 0.1s; text-align: center; font-size: 11px; font-weight: 700; color: #555; touch-action: manipulation; }
+.chara-btn .ci { font-size: 38px; display: block; margin-bottom: 4px; line-height: 1; }
+.chara-btn:hover { transform: scale(1.07); }
+.chara-btn.selected { border-color: #7986cb; background: #e8eaf6; transform: scale(1.1); box-shadow: 0 0 0 3px #3f51b5; }
+.hi-badge { background: rgba(255,255,255,0.25); color: #fff; font-size: 13px; font-weight: 700; padding: 4px 16px; border-radius: 20px; margin-bottom: 14px; }
+.big-btn { background: #3f51b5; color: #fff; border: none; border-radius: 50px; padding: 13px 40px; font-size: 19px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 0 #1a237e; touch-action: manipulation; }
+.big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #1a237e; }
+.big-btn.orange { background: #FF6B35; box-shadow: 0 6px 0 #c94d1e; }
+.big-btn.blue   { background: #4DB8FF; box-shadow: 0 6px 0 #2a9ad4; }
+
+/* DPAD */
+#dpad { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 10; user-select: none; }
+.dpad-wrap { display: grid; grid-template-columns: repeat(3,58px); grid-template-rows: repeat(3,58px); gap: 4px; }
+.dpad-btn { background: rgba(255,255,255,0.9); border: none; border-radius: 14px; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 0 rgba(0,0,0,0.2); transition: transform 0.08s, box-shadow 0.08s; touch-action: manipulation; }
+.dpad-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,0.15); }
+.dpad-center { background: rgba(255,255,255,0.3); border-radius: 50%; }
+.dpad-empty  { background: transparent; box-shadow: none; }
+
+/* RESULT */
+#result-overlay { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(40,53,147,0.9); }
+#result-overlay h2 { font-size: 44px; font-weight: 900; color: #FFD700; text-shadow: 3px 3px 0 #1a237e; margin-bottom: 8px; }
+#result-overlay p  { font-size: 16px; color: #fff; text-align: center; line-height: 1.8; margin-bottom: 8px; }
+.new-hi-txt { font-size: 18px; font-weight: 900; color: #FFD700; margin-bottom: 16px; }
+
+.pop-label { position: absolute; font-weight: 900; pointer-events: none; animation: popUp 0.7s forwards; z-index: 25; }
+@keyframes popUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-60px) scale(1.5)} }
+@keyframes blink  { 0%,100%{opacity:1} 50%{opacity:0.2} }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+  <canvas id="bg"></canvas>
+  <canvas id="maze-cv"></canvas>
+
+  <!-- タイトル -->
+  <div id="title-screen" class="screen">
+    <div style="font-size:56px;margin-bottom:6px;">🌀</div>
+    <h1>めいろあそび！</h1>
+    <p>ゴール🏁まで すすもう！<br>👾 てきに ぶつかると ❤️ がへるよ！<br>👆 いきたい ほうこうを タップ！</p>
+    <p style="color:#c5cae9;font-size:12px;margin-bottom:10px;">キャラをえらんでね</p>
+    <div class="chara-select">
+      <button class="chara-btn" data-e="🐱" onclick="selChara(this)"><span class="ci">🐱</span>ねこ</button>
+      <button class="chara-btn" data-e="🐰" onclick="selChara(this)"><span class="ci">🐰</span>うさぎ</button>
+      <button class="chara-btn" data-e="🐸" onclick="selChara(this)"><span class="ci">🐸</span>かえる</button>
+      <button class="chara-btn" data-e="🐼" onclick="selChara(this)"><span class="ci">🐼</span>パンダ</button>
+      <button class="chara-btn" data-e="🦊" onclick="selChara(this)"><span class="ci">🦊</span>きつね</button>
+      <button class="chara-btn" data-e="🐧" onclick="selChara(this)"><span class="ci">🐧</span>ペンギン</button>
+    </div>
+    <div id="hi-title" class="hi-badge">🏆 ベストタイム: --</div>
+    <button class="big-btn" id="start-btn" style="opacity:0.4;pointer-events:none;" onclick="startGame()">▶ スタート！</button>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud" style="display:none;">
+    <div class="hud-box"><div class="hud-label">じかん</div><div class="hud-val" id="time-disp">0:00</div></div>
+    <div id="hud-title">🌀 めいろあそび</div>
+    <div class="hud-box"><div class="hud-label">ライフ</div><div class="hud-val" id="hp-disp">❤️❤️❤️</div></div>
+  </div>
+
+  <!-- タップ操作ヒント -->
+  <div id="tap-hint-area" style="display:none; position:absolute; bottom:24px; left:0; right:0; text-align:center; z-index:10; pointer-events:none;">
+    <div style="display:inline-block; background:rgba(255,255,255,0.92); border-radius:20px; padding:10px 22px; font-size:14px; font-weight:700; color:#3f51b5; box-shadow:0 4px 0 rgba(0,0,0,0.15);">
+      👆 いきたい ほうこうを タップ！
+    </div>
+  </div>
+
+  <!-- 結果 -->
+  <div id="result-overlay" style="display:none;">
+    <h2 id="r-title">🎉</h2>
+    <p id="r-msg"></p>
+    <div id="r-hi" class="new-hi-txt"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="big-btn orange" onclick="startGame()">もういちど</button>
+      <button class="big-btn blue"   onclick="goTitle()">タイトルへ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const wrap   = document.getElementById('game-wrap');
+const bgcv   = document.getElementById('bg');
+const bgctx  = bgcv.getContext('2d');
+const cv     = document.getElementById('maze-cv');
+const ctx    = cv.getContext('2d');
+let W, H;
+
+// キャラ
+let charaEmoji = null;
+
+// 迷路パラメータ
+const COLS = 11, ROWS = 11; // 奇数のみ
+let CELL, MAZE_W, MAZE_H, OX, OY; // セルサイズ・オフセット
+
+// 迷路データ
+let maze = []; // 0=通路 1=壁
+let player = {x:0, y:0, px:0, py:0, blinkT:0, invincible:false, invT:0};
+let goalCell = {x:0, y:0};
+let enemies = [];
+let hp = 3, elapsed = 0, timerInt, animId, running = false;
+
+// 移動
+let moveDir = {dx:0, dy:0};
+let moveInterval = null;
+const MOVE_DELAY = 160; // ms per step
+
+// ギャラリー
+let gallery = [];
+const GALLERY = ['👸','🤴','👑','🦋','🌸','⭐','🎉','🌈','🐝','🦁'];
+
+function getBest(){ return localStorage.getItem('maze_best')||null; }
+function saveBest(v){ localStorage.setItem('maze_best',v); }
+function fmtTime(s){ return Math.floor(s/60)+':'+(s%60<10?'0':'')+s%60; }
+function updateHiBadge(){ const b=getBest(); document.getElementById('hi-title').textContent=b?'🏆 ベストタイム: '+fmtTime(parseInt(b)):'🏆 ベストタイム: --'; }
+
+function resize(){
+  W=wrap.clientWidth; H=wrap.clientHeight;
+  bgcv.width=W; bgcv.height=H;
+  // 迷路キャンバスは上部HUD(52px)・下部Dpad(220px)を除いた中央
+  const dpadH = 220;
+  const hudH  = 56;
+  const availH = H - hudH - dpadH - 16;
+  const availW = W - 32;
+  CELL = Math.floor(Math.min(availW/COLS, availH/ROWS));
+  MAZE_W = CELL*COLS; MAZE_H = CELL*ROWS;
+  OX = Math.floor((W-MAZE_W)/2);
+  OY = hudH + Math.floor((availH-MAZE_H)/2) + 8;
+  cv.width=W; cv.height=H;
+  cv.style.left='0'; cv.style.top='0';
+  buildGallery();
+}
+
+function buildGallery(){
+  gallery=[];
+  GALLERY.forEach((e,i)=>{
+    gallery.push({emoji:e, x:W*(0.04+(i%2)*0.06), y:H*(0.12+Math.floor(i/2)*0.16), size:W*0.06, phase:i*1.2, speed:1.5+i*0.2});
+    gallery.push({emoji:GALLERY[(i+3)%GALLERY.length], x:W*(0.96-(i%2)*0.06), y:H*(0.12+Math.floor(i/2)*0.16), size:W*0.06, phase:i*1.4, speed:1.7+i*0.2});
+  });
+}
+
+// ===== 迷路生成（再帰バックトラッキング）=====
+function genMaze(){
+  // 全て壁で初期化
+  maze=[];
+  for(let r=0;r<ROWS;r++){ maze.push([]); for(let c=0;c<COLS;c++) maze[r].push(1); }
+  // スタートは(1,1)
+  function carve(r,c){
+    maze[r][c]=0;
+    const dirs=[[0,2],[0,-2],[2,0],[-2,0]].sort(()=>Math.random()-0.5);
+    for(const [dr,dc] of dirs){
+      const nr=r+dr, nc=c+dc;
+      if(nr>0&&nr<ROWS-1&&nc>0&&nc<COLS-1&&maze[nr][nc]===1){
+        maze[r+dr/2][c+dc/2]=0;
+        carve(nr,nc);
+      }
+    }
+  }
+  carve(1,1);
+  // スタート・ゴール確保
+  maze[1][1]=0;
+  maze[ROWS-2][COLS-2]=0;
+}
+
+// ===== 敵生成 =====
+function genEnemies(){
+  enemies=[];
+  const count=3+Math.floor(Math.random()*2); // 3〜4体
+  let placed=0, tries=0;
+  while(placed<count&&tries<200){
+    tries++;
+    const r=1+Math.floor(Math.random()*(ROWS-2));
+    const c=1+Math.floor(Math.random()*(COLS-2));
+    if(maze[r][c]!==0) continue;
+    if(Math.abs(r-1)<=2&&Math.abs(c-1)<=2) continue; // スタートから離す
+    if(Math.abs(r-(ROWS-2))<=1&&Math.abs(c-(COLS-2))<=1) continue; // ゴールから離す
+    const horiz=Math.random()<0.5;
+    const range=2+Math.floor(Math.random()*3);
+    enemies.push({
+      r, c, baseR:r, baseC:c,
+      horiz, range,
+      t:0, speed:0.004+Math.random()*0.003,
+    });
+    placed++;
+  }
+}
+
+function selChara(btn){
+  document.querySelectorAll('.chara-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  charaEmoji=btn.dataset.e;
+  const sb=document.getElementById('start-btn');
+  sb.style.opacity='1'; sb.style.pointerEvents='auto';
+}
+
+function startGame(){
+  if(!charaEmoji) return;
+  hp=3; elapsed=0; running=true;
+  player={r:1,c:1,blinkT:0,invincible:false,invT:0};
+  goalCell={r:ROWS-2,c:COLS-2};
+  moveDir={dx:0,dy:0};
+  clearInterval(timerInt); clearInterval(moveInterval); cancelAnimationFrame(animId);
+  genMaze(); genEnemies();
+  document.getElementById('title-screen').style.display='none';
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('tap-hint-area').style.display='block';
+  updateHUD();
+  timerInt=setInterval(()=>{ elapsed++; document.getElementById('time-disp').textContent=fmtTime(elapsed); },1000);
+  loop();
+}
+
+function goTitle(){
+  running=false; clearInterval(timerInt); clearInterval(moveInterval); cancelAnimationFrame(animId);
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='none';
+  document.getElementById('tap-hint-area').style.display='none';
+  document.getElementById('title-screen').style.display='flex';
+  updateHiBadge();
+}
+
+function updateHUD(){
+  document.getElementById('hp-disp').textContent='❤️'.repeat(hp)+'🖤'.repeat(3-hp);
+}
+
+// ===== 移動制御 =====
+function startMove(dx,dy){
+  stopMove();
+  tryMove(dx,dy);
+  moveInterval=setInterval(()=>tryMove(dx,dy), MOVE_DELAY);
+}
+function stopMove(){ clearInterval(moveInterval); moveInterval=null; }
+
+function tryMove(dx,dy){
+  if(!running) return;
+  const nr=player.r+dy, nc=player.c+dx;
+  if(nr<0||nr>=ROWS||nc<0||nc>=COLS) return;
+  if(maze[nr][nc]===1) return;
+  player.r=nr; player.c=nc;
+  checkGoal(); checkEnemy();
+}
+
+// ===== 判定 =====
+function checkGoal(){
+  if(player.r===goalCell.r&&player.c===goalCell.c) clearStage();
+}
+
+function checkEnemy(){
+  if(player.invincible) return;
+  for(const e of enemies){
+    const er=Math.round(e.baseR+(e.horiz?0:Math.sin(e.t*Math.PI*2)*e.range));
+    const ec=Math.round(e.baseC+(e.horiz?Math.sin(e.t*Math.PI*2)*e.range:0));
+    if(Math.abs(player.r-er)<=0&&Math.abs(player.c-ec)<=0){
+      hitEnemy(); return;
+    }
+  }
+}
+
+function hitEnemy(){
+  if(player.invincible) return;
+  hp=Math.max(0,hp-1);
+  updateHUD();
+  showPop(W/2,H/2,'💥 いたい！','#f44336',26);
+  player.invincible=true; player.invT=0;
+  if(hp<=0){ setTimeout(gameOver,600); }
+}
+
+function clearStage(){
+  running=false; clearInterval(timerInt); clearInterval(moveInterval); cancelAnimationFrame(animId);
+  const best=getBest(); const isNew=!best||elapsed<parseInt(best);
+  if(isNew) saveBest(elapsed);
+  updateHiBadge();
+  document.getElementById('hud').style.display='none';
+  document.getElementById('tap-hint-area').style.display='none';
+  document.getElementById('result-overlay').style.display='flex';
+  document.getElementById('r-title').textContent='🎉 クリア！';
+  document.getElementById('r-msg').innerHTML=`タイム: <b style="font-size:24px;color:#FFD700">${fmtTime(elapsed)}</b><br>のこりライフ: ${'❤️'.repeat(hp)}`;
+  const hiEl=document.getElementById('r-hi');
+  hiEl.textContent=isNew?'🏆 ベストタイム こうしん！':'ベスト: '+fmtTime(parseInt(best));
+  hiEl.style.color=isNew?'#FFD700':'rgba(255,255,255,0.6)';
+  // お祝い
+  for(let i=0;i<16;i++) setTimeout(()=>spawnConfetti(),i*80);
+}
+
+function gameOver(){
+  running=false; clearInterval(timerInt); clearInterval(moveInterval); cancelAnimationFrame(animId);
+  document.getElementById('hud').style.display='none';
+  document.getElementById('tap-hint-area').style.display='none';
+  document.getElementById('result-overlay').style.display='flex';
+  document.getElementById('r-title').textContent='💀 ゲームオーバー';
+  document.getElementById('r-msg').innerHTML='てきに やられてしまった…<br>もういちど ちょうせんしよう！';
+  document.getElementById('r-hi').textContent='';
+}
+
+function spawnConfetti(){
+  const el=document.createElement('div');
+  el.className='pop-label';
+  el.textContent=['🎉','⭐','✨','🌟','🌀'][Math.floor(Math.random()*5)];
+  el.style.fontSize='22px'; el.style.color='#FFD700';
+  el.style.left=Math.random()*W+'px'; el.style.top='60px';
+  wrap.appendChild(el); setTimeout(()=>el.remove(),800);
+}
+
+// ===== ループ =====
+function loop(){
+  if(!running) return;
+  update(); draw();
+  animId=requestAnimationFrame(loop);
+}
+
+function update(){
+  // 無敵時間
+  if(player.invincible){
+    player.invT+=0.04;
+    if(player.invT>1) player.invincible=false;
+  }
+  // 敵移動
+  for(const e of enemies) e.t+=e.speed;
+  // 敵との継続当たり判定
+  if(!player.invincible){
+    for(const e of enemies){
+      const er=Math.round(e.baseR+(e.horiz?0:Math.sin(e.t*Math.PI*2)*e.range));
+      const ec=Math.round(e.baseC+(e.horiz?Math.sin(e.t*Math.PI*2)*e.range:0));
+      if(player.r===er&&player.c===ec){ hitEnemy(); break; }
+    }
+  }
+}
+
+function draw(){
+  // 背景
+  bgctx.fillStyle='#e8eaf6'; bgctx.fillRect(0,0,W,H);
+  const t=performance.now()/1000;
+  gallery.forEach(g=>{
+    const bob=Math.sin(t*g.speed+g.phase)*5;
+    bgctx.font=`${Math.round(g.size)}px serif`;
+    bgctx.textAlign='center'; bgctx.textBaseline='middle';
+    bgctx.fillText(g.emoji,g.x,g.y+bob);
+  });
+
+  ctx.clearRect(0,0,W,H);
+
+  // 迷路パネル背景
+  ctx.fillStyle='rgba(255,255,255,0.85)';
+  ctx.beginPath();
+  ctx.roundRect(OX-6,OY-6,MAZE_W+12,MAZE_H+12,14);
+  ctx.fill();
+  ctx.strokeStyle='#9fa8da'; ctx.lineWidth=2;
+  ctx.stroke();
+
+  // セル描画
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const x=OX+c*CELL, y=OY+r*CELL;
+      if(maze[r][c]===1){
+        ctx.fillStyle='#3f51b5';
+        ctx.beginPath(); ctx.roundRect(x+1,y+1,CELL-2,CELL-2,3); ctx.fill();
+      } else {
+        ctx.fillStyle='#f5f5ff';
+        ctx.fillRect(x,y,CELL,CELL);
+      }
+    }
+  }
+
+  // ゴール
+  const gx=OX+goalCell.c*CELL, gy=OY+goalCell.r*CELL;
+  ctx.fillStyle='#fffde7';
+  ctx.fillRect(gx,gy,CELL,CELL);
+  ctx.font=`${Math.round(CELL*0.75)}px serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('🏁',gx+CELL/2,gy+CELL/2);
+
+  // スタートマーク
+  ctx.fillStyle='rgba(200,230,255,0.5)';
+  ctx.fillRect(OX+CELL,OY+CELL,CELL,CELL);
+
+  // 敵
+  const now=performance.now()/1000;
+  for(const e of enemies){
+    const er=e.baseR+(e.horiz?0:Math.sin(e.t*Math.PI*2)*e.range);
+    const ec=e.baseC+(e.horiz?Math.sin(e.t*Math.PI*2)*e.range:0);
+    const ex=OX+ec*CELL+CELL/2, ey=OY+er*CELL+CELL/2;
+    ctx.font=`${Math.round(CELL*0.72)}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('👾',ex,ey);
+  }
+
+  // プレイヤー
+  if(!player.invincible||Math.floor(performance.now()/100)%2===0){
+    const px=OX+player.c*CELL+CELL/2, py=OY+player.r*CELL+CELL/2;
+    ctx.font=`${Math.round(CELL*0.76)}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(charaEmoji,px,py);
+  }
+}
+
+function showPop(x,y,text,color,size){
+  const el=document.createElement('div');
+  el.className='pop-label'; el.textContent=text;
+  el.style.color=color; el.style.fontSize=size+'px';
+  el.style.left=(x-60)+'px'; el.style.top=(y-30)+'px';
+  wrap.appendChild(el); setTimeout(()=>el.remove(),800);
+}
+
+
+// タップ操作：キャラから見たタップ位置の方向に移動
+function onMazeTap(cx, cy) {
+  if (!running) return;
+  // プレイヤーの画面上の中心
+  const px = OX + player.c * CELL + CELL/2;
+  const py = OY + player.r * CELL + CELL/2;
+  const dx = cx - px;
+  const dy = cy - py;
+  if (Math.abs(dx) < CELL*0.3 && Math.abs(dy) < CELL*0.3) return; // 自分付近は無視
+  // 水平・垂直の大きい方を優先
+  if (Math.abs(dx) > Math.abs(dy)) {
+    tryMove(dx > 0 ? 1 : -1, 0);
+  } else {
+    tryMove(0, dy > 0 ? 1 : -1);
+  }
+}
+
+cv.addEventListener('click', e => {
+  const r = cv.getBoundingClientRect();
+  onMazeTap(
+    (e.clientX - r.left) * (cv.width / r.width),
+    (e.clientY - r.top)  * (cv.height / r.height)
+  );
+});
+cv.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const r = cv.getBoundingClientRect();
+  const t = e.changedTouches[0];
+  onMazeTap(
+    (t.clientX - r.left) * (cv.width / r.width),
+    (t.clientY - r.top)  * (cv.height / r.height)
+  );
+}, { passive: false });
+
+// キーボード対応（任意）
+window.addEventListener('keydown',e=>{
+  if(e.key==='ArrowUp')    startMove(0,-1);
+  if(e.key==='ArrowDown')  startMove(0,1);
+  if(e.key==='ArrowLeft')  startMove(-1,0);
+  if(e.key==='ArrowRight') startMove(1,0);
+});
+window.addEventListener('keyup',()=>stopMove());
+
+resize();
+updateHiBadge();
+window.addEventListener('resize',()=>resize());
+
+// タイトル時もギャラリーアニメ
+function titleLoop(){
+  bgctx.fillStyle='#e8eaf6'; bgctx.fillRect(0,0,W,H);
+  const t=performance.now()/1000;
+  gallery.forEach(g=>{
+    const bob=Math.sin(t*g.speed+g.phase)*5;
+    bgctx.font=`${Math.round(g.size)}px serif`;
+    bgctx.textAlign='center'; bgctx.textBaseline='middle';
+    bgctx.fillText(g.emoji,g.x,g.y+bob);
+  });
+  if(!running) requestAnimationFrame(titleLoop);
+}
+titleLoop();
+</script>
+</body>
+</html>

@@ -1,0 +1,362 @@
+/* ============================
+   Animal Soccer
+   ============================ */
+
+.soccer-wrap {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  background: #1b5e20;
+  font-family: 'Rounded Mplus 1c', 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
+}
+
+/* ---- HUD ---- */
+.soccer-hud {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 6px 10px;
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+  font-size: clamp(13px, 3.5vw, 18px);
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.soccer-hud-back {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: clamp(12px, 3vw, 15px);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.soccer-hud-info {
+  display: flex;
+  gap: 16px;
+}
+
+/* ---- Canvas ---- */
+.soccer-canvas {
+  flex: 1;
+  width: 100%;
+  display: block;
+  min-height: 0;
+}
+
+/* ---- Speech bubble ---- */
+.soccer-speech {
+  position: absolute;
+  top: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.92);
+  color: #333;
+  font-size: clamp(15px, 4vw, 22px);
+  font-weight: bold;
+  padding: 8px 20px;
+  border-radius: 24px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  pointer-events: none;
+  z-index: 20;
+  white-space: nowrap;
+  animation: soccerSpeechPop 0.2s ease;
+}
+
+@keyframes soccerSpeechPop {
+  from { transform: translateX(-50%) scale(0.7); opacity: 0; }
+  to   { transform: translateX(-50%) scale(1);   opacity: 1; }
+}
+
+/* ---- D-Pad ---- */
+.soccer-dpad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 0 14px;
+  background: rgba(0,0,0,0.35);
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.soccer-dpad-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.soccer-dpad-empty {
+  width: clamp(64px, 18vw, 80px);
+  height: clamp(64px, 18vw, 80px);
+}
+
+.soccer-dpad-btn {
+  width: clamp(64px, 18vw, 80px);
+  height: clamp(64px, 18vw, 80px);
+  background: rgba(255,255,255,0.18);
+  border: 2px solid rgba(255,255,255,0.4);
+  border-radius: 16px;
+  color: #fff;
+  font-size: clamp(20px, 5.5vw, 28px);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  transition: background 0.1s, transform 0.08s;
+  font-family: inherit;
+  line-height: 1.1;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.soccer-dpad-btn:active {
+  background: rgba(255,255,255,0.38);
+  transform: scale(0.92);
+}
+
+.soccer-dpad-label {
+  font-size: clamp(9px, 2.5vw, 12px);
+  opacity: 0.85;
+}
+
+.soccer-dpad-center {
+  width: clamp(64px, 18vw, 80px);
+  height: clamp(64px, 18vw, 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(26px, 7vw, 36px);
+}
+
+/* ---- Pop label ---- */
+.soccer-pop {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: clamp(18px, 5vw, 26px);
+  font-weight: bold;
+  color: #fff200;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  pointer-events: none;
+  z-index: 30;
+  animation: soccerPopUp 1.2s ease forwards;
+}
+
+@keyframes soccerPopUp {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  80%  { opacity: 1; transform: translateX(-50%) translateY(-48px) scale(1.2); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-64px) scale(0.9); }
+}
+
+/* ============================
+   Title Screen
+   ============================ */
+
+.soccer-title {
+  justify-content: center;
+  background: linear-gradient(160deg, #1b5e20 0%, #388e3c 50%, #2e7d32 100%);
+}
+
+.soccer-back-btn {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.4);
+  color: #fff;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: clamp(12px, 3vw, 15px);
+  cursor: pointer;
+  font-family: inherit;
+  z-index: 5;
+}
+
+.soccer-title-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  text-align: center;
+}
+
+.soccer-title-emoji {
+  font-size: clamp(52px, 14vw, 80px);
+  animation: soccerBounce 1.2s ease-in-out infinite;
+}
+
+@keyframes soccerBounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-12px); }
+}
+
+.soccer-title-text {
+  font-size: clamp(24px, 6.5vw, 38px);
+  color: #fff;
+  margin: 0;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.soccer-subtitle {
+  font-size: clamp(13px, 3.5vw, 18px);
+  color: rgba(255,255,255,0.8);
+  margin: 0;
+}
+
+.soccer-char-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.soccer-char-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  background: rgba(255,255,255,0.12);
+  border: 2px solid rgba(255,255,255,0.25);
+  border-radius: 14px;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.soccer-char-btn:active {
+  transform: scale(0.93);
+}
+
+.soccer-char-btn.selected {
+  background: rgba(255,255,255,0.28);
+  border-color: #fff200;
+  box-shadow: 0 0 10px rgba(255,242,0,0.4);
+}
+
+.soccer-char-emoji {
+  font-size: clamp(28px, 8vw, 40px);
+}
+
+.soccer-char-name {
+  font-size: clamp(10px, 2.8vw, 14px);
+  font-weight: bold;
+}
+
+.soccer-start-btn {
+  background: linear-gradient(135deg, #ffd600, #ff6f00);
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  padding: 12px 32px;
+  font-size: clamp(16px, 4.5vw, 22px);
+  font-weight: bold;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  transition: transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.soccer-start-btn:active {
+  transform: scale(0.94);
+}
+
+.soccer-hi {
+  color: rgba(255,255,255,0.7);
+  font-size: clamp(12px, 3vw, 16px);
+}
+
+/* ============================
+   Result Screen
+   ============================ */
+
+.soccer-result {
+  justify-content: center;
+  background: linear-gradient(160deg, #1b5e20, #388e3c);
+}
+
+.soccer-result-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 20px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 24px;
+  border: 2px solid rgba(255,255,255,0.25);
+  text-align: center;
+  color: #fff;
+  max-width: 320px;
+  width: 90%;
+}
+
+.soccer-result-title {
+  font-size: clamp(26px, 7vw, 36px);
+  font-weight: bold;
+}
+
+.soccer-result-score {
+  font-size: clamp(20px, 5.5vw, 28px);
+  font-weight: bold;
+  color: #fff200;
+}
+
+.soccer-result-msg {
+  font-size: clamp(14px, 4vw, 18px);
+}
+
+.soccer-result-new {
+  font-size: clamp(16px, 4.5vw, 20px);
+  font-weight: bold;
+  color: #ffd600;
+  animation: soccerBounce 0.8s ease-in-out infinite;
+}
+
+.soccer-result-hi {
+  font-size: clamp(13px, 3.5vw, 16px);
+  color: rgba(255,255,255,0.75);
+}
+
+.soccer-result-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.soccer-back-btn2 {
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.4);
+  color: #fff;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-size: clamp(13px, 3.5vw, 16px);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.soccer-back-btn2:active {
+  background: rgba(255,255,255,0.3);
+}

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>どうぶつパズル</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Hiragino Maru Gothic Pro', 'Rounded Mplus 1c', sans-serif; overflow: hidden; background: #fff9e6; }
+#game-wrap { width: 100vw; height: 100vh; max-width: 480px; margin: 0 auto; position: relative; overflow: hidden; }
+
+/* HUD */
+#hud { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px 8px; z-index: 10; background: rgba(255,180,50,0.85); }
+.hud-box { background: rgba(255,255,255,0.95); border-radius: 12px; padding: 4px 12px; text-align: center; min-width: 68px; }
+.hud-label { font-size: 10px; color: #e65100; font-weight: 700; }
+.hud-val   { font-size: 20px; font-weight: 900; color: #bf360c; }
+#hud-title { font-size: 16px; font-weight: 900; color: #fff; text-shadow: 1px 2px 0 #e65100; }
+
+/* SCREENS */
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; }
+#title-screen { background: linear-gradient(180deg,#ffb300,#ffe082); }
+#title-screen h1 { font-size: 28px; font-weight: 900; color: #fff; text-shadow: 2px 2px 0 #e65100; margin-bottom: 8px; }
+#title-screen p  { font-size: 13px; color: #fff8e1; margin-bottom: 20px; text-align: center; line-height: 1.8; }
+.hi-badge { background: rgba(255,255,255,0.25); color: #fff; font-size: 13px; font-weight: 700; padding: 4px 16px; border-radius: 20px; margin-bottom: 16px; }
+.big-btn { background: #FF6B35; color: #fff; border: none; border-radius: 50px; padding: 14px 44px; font-size: 20px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 0 #c94d1e; touch-action: manipulation; }
+.big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #c94d1e; }
+.big-btn.blue { background: #4DB8FF; box-shadow: 0 6px 0 #2a9ad4; }
+.big-btn.blue:active { box-shadow: 0 2px 0 #2a9ad4; }
+
+/* RESULT */
+#result-overlay { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,160,0,0.9); }
+#result-overlay h2 { font-size: 44px; font-weight: 900; color: #fff; text-shadow: 3px 3px 0 #e65100; margin-bottom: 8px; }
+#result-overlay p  { font-size: 16px; color: #fff; text-align: center; line-height: 1.8; margin-bottom: 6px; }
+.stars-disp { font-size: 44px; margin-bottom: 8px; }
+.new-hi-txt { font-size: 18px; font-weight: 900; color: #FFD700; text-shadow: 1px 1px 0 #000; margin-bottom: 14px; }
+
+/* FIELD */
+#field { position: absolute; inset: 0; overflow: hidden; }
+#gallery-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+/* CARD GRID */
+#card-grid { position: absolute; left: 50%; transform: translateX(-50%); display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; z-index: 5; }
+
+/* CARD */
+.card { cursor: pointer; perspective: 600px; touch-action: manipulation; }
+.card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.4s; border-radius: 14px; }
+.card.flipped .card-inner   { transform: rotateY(180deg); }
+.card.matched .card-inner   { transform: rotateY(180deg); }
+.card-front, .card-back { position: absolute; inset: 0; border-radius: 14px; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; }
+.card-back {
+  background: linear-gradient(135deg,#ffb300,#ff6f00);
+  border: 3px solid #fff;
+  box-shadow: 0 4px 0 #e65100;
+  font-size: 24px;
+}
+.card-back::after { content:'🌟'; font-size: inherit; }
+.card-front {
+  background: #fff8e1;
+  border: 3px solid #ffcc02;
+  box-shadow: 0 4px 0 #e6a800;
+  transform: rotateY(180deg);
+  flex-direction: column;
+  gap: 2px;
+}
+.card-front .animal { line-height: 1; }
+.card-front .aname  { font-size: 10px; font-weight: 700; color: #bf360c; }
+
+.card.matched .card-front { background: #fffde7; border-color: #66bb6a; box-shadow: 0 4px 0 #388e3c; }
+.card.wrong .card-inner { animation: shake 0.4s; }
+@keyframes shake { 0%,100%{transform:rotateY(180deg)} 25%{transform:rotateY(180deg) translateX(-5px)} 75%{transform:rotateY(180deg) translateX(5px)} }
+
+/* CELEBRATE */
+.confetti { position: absolute; pointer-events: none; z-index: 25; font-size: 20px; animation: fallDown 1.5s forwards; }
+@keyframes fallDown { 0%{opacity:1;transform:translateY(0) rotate(0)} 100%{opacity:0;transform:translateY(120px) rotate(360deg)} }
+
+.pop-label { position: absolute; font-weight: 900; pointer-events: none; animation: popUp 0.7s forwards; z-index: 25; }
+@keyframes popUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-60px) scale(1.5)} }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+
+  <!-- タイトル -->
+  <div id="title-screen" class="screen">
+    <div style="font-size:60px;margin-bottom:6px;">🐾</div>
+    <h1>どうぶつパズル！</h1>
+    <p>おなじどうぶつを<br>みつけてペアにしよう！<br>16まいのカードに<br>チャレンジ！</p>
+    <div id="hi-title" class="hi-badge">🏆 ベストタイム: --</div>
+    <button class="big-btn" onclick="startGame()">▶ スタート！</button>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud" style="display:none;">
+    <div class="hud-box"><div class="hud-label">ミス</div><div class="hud-val" id="miss-disp">0</div></div>
+    <div id="hud-title">🐾 どうぶつパズル</div>
+    <div class="hud-box"><div class="hud-label">じかん</div><div class="hud-val" id="time-disp">0</div></div>
+  </div>
+
+  <!-- フィールド（ギャラリーcanvas） -->
+  <div id="field">
+    <canvas id="gallery-canvas"></canvas>
+  </div>
+
+  <!-- カードグリッド -->
+  <div id="card-grid"></div>
+
+  <!-- 結果 -->
+  <div id="result-overlay" style="display:none;">
+    <h2 id="r-title">🎉 クリア！</h2>
+    <div class="stars-disp" id="r-stars">⭐⭐⭐</div>
+    <p id="r-msg"></p>
+    <div id="r-hi" class="new-hi-txt"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="big-btn" onclick="startGame()">もういちど</button>
+      <button class="big-btn blue" onclick="goTitle()">タイトルへ</button>
+    </div>
+  </div>
+
+</div>
+<script>
+const wrap = document.getElementById('game-wrap');
+const gcv  = document.getElementById('gallery-canvas');
+const gctx = gcv.getContext('2d');
+const grid = document.getElementById('card-grid');
+let W, H;
+
+const ANIMALS = [
+  {e:'🐱',n:'ねこ'},{e:'🐶',n:'いぬ'},{e:'🐸',n:'かえる'},{e:'🐼',n:'パンダ'},
+  {e:'🦊',n:'きつね'},{e:'🐧',n:'ペンギン'},{e:'🐰',n:'うさぎ'},{e:'🐻',n:'くま'},
+];
+const GALLERY_CHARS = ['👸','🤴','👑','🦁','🐨','🦝','🐮','🦋','🌸','⭐','🎉','🌈'];
+let gallery = [];
+
+// ゲーム状態
+let cards = [], flipped = [], matched = 0, misses = 0;
+let elapsed = 0, timerInt, animId;
+let waiting = false;
+
+function getBest() { return localStorage.getItem('puzzle_best')||null; }
+function saveBest(v) { localStorage.setItem('puzzle_best', v); }
+function fmtTime(s) { return Math.floor(s/60)+':'+(s%60<10?'0':'')+s%60; }
+function updateHiBadge() {
+  const b = getBest();
+  document.getElementById('hi-title').textContent = b ? '🏆 ベストタイム: '+fmtTime(parseInt(b)) : '🏆 ベストタイム: --';
+}
+
+function resize() {
+  W = wrap.clientWidth; H = wrap.clientHeight;
+  gcv.width = W; gcv.height = H;
+  buildGallery();
+  layoutGrid();
+}
+
+function buildGallery() {
+  gallery = [];
+  for(let i=0;i<6;i++){
+    gallery.push({emoji:GALLERY_CHARS[i%GALLERY_CHARS.length], x:W*0.03+(i%2)*W*0.07, y:H*0.12+i*H*0.11, size:W*0.068, phase:i*1.1, speed:1.4+i*0.2});
+    gallery.push({emoji:GALLERY_CHARS[(i+5)%GALLERY_CHARS.length], x:W*0.97-(i%2)*W*0.07, y:H*0.12+i*H*0.11, size:W*0.068, phase:i*1.3, speed:1.6+i*0.2});
+  }
+  ['👸','🤴','👑','🎀','🌈'].forEach((e,i)=>
+    gallery.push({emoji:e, x:W*(0.12+i*0.19), y:H*0.055, size:W*0.07, phase:i*0.8, speed:2})
+  );
+  ['🦁','🐘','🦊','🐸','🐧','🐨'].forEach((e,i)=>
+    gallery.push({emoji:e, x:W*(0.08+i*0.17), y:H*0.95, size:W*0.065, phase:i*0.6, speed:1.7})
+  );
+}
+
+function layoutGrid() {
+  const pad   = W * 0.14;
+  const gapPx = 8;
+  const cols  = 4;
+  const cardW = Math.floor((W - pad*2 - gapPx*3) / cols);
+  const cardH = Math.floor(cardW * 1.15);
+  const rows  = 4;
+  const totalH = cardH*rows + gapPx*(rows-1);
+  const topY  = (H - totalH) / 2 + 28;
+
+  grid.style.width  = (cardW*cols + gapPx*(cols-1)) + 'px';
+  grid.style.top    = topY + 'px';
+  grid.style.gap    = gapPx + 'px';
+
+  document.querySelectorAll('.card').forEach(c => {
+    c.style.width  = cardW + 'px';
+    c.style.height = cardH + 'px';
+    const front = c.querySelector('.animal');
+    if (front) front.style.fontSize = Math.round(cardW * 0.48) + 'px';
+  });
+}
+
+// ===== ギャラリーアニメ =====
+function galLoop() {
+  gctx.clearRect(0,0,W,H);
+  // 背景
+  gctx.fillStyle='#fff9e6'; gctx.fillRect(0,0,W,H);
+  // 装飾ドット
+  for(let i=0;i<12;i++){
+    gctx.fillStyle=`hsla(${i*30},70%,75%,0.25)`;
+    gctx.beginPath(); gctx.arc(W*(0.05+i*0.08),H*0.5+(Math.sin(i)*H*0.3),W*0.04,0,Math.PI*2); gctx.fill();
+  }
+  const t=performance.now()/1000;
+  gallery.forEach(g=>{
+    const bob=Math.sin(t*g.speed+g.phase)*5;
+    gctx.font=`${Math.round(g.size)}px serif`;
+    gctx.textAlign='center'; gctx.textBaseline='middle';
+    gctx.fillText(g.emoji,g.x,g.y+bob);
+  });
+  animId=requestAnimationFrame(galLoop);
+}
+
+// ===== ゲーム =====
+function startGame() {
+  matched=0; misses=0; elapsed=0; flipped=[]; waiting=false;
+  clearInterval(timerInt);
+  document.getElementById('title-screen').style.display='none';
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('miss-disp').textContent='0';
+  document.getElementById('time-disp').textContent='0';
+
+  // カード生成（8ペア=16枚シャッフル）
+  const deck = [...ANIMALS, ...ANIMALS].sort(()=>Math.random()-0.5);
+  grid.innerHTML='';
+  cards=[];
+  deck.forEach((a,i)=>{
+    const el=document.createElement('div');
+    el.className='card';
+    el.dataset.idx=i;
+    el.innerHTML=`
+      <div class="card-inner">
+        <div class="card-back"></div>
+        <div class="card-front">
+          <span class="animal">${a.e}</span>
+          <span class="aname">${a.n}</span>
+        </div>
+      </div>`;
+    el.addEventListener('click',()=>onCardClick(i));
+    el.addEventListener('touchend',e=>{e.preventDefault();onCardClick(i);},{passive:false});
+    grid.appendChild(el);
+    cards.push({el, animal:a, flipped:false, matched:false});
+  });
+  layoutGrid();
+  timerInt=setInterval(()=>{ elapsed++; document.getElementById('time-disp').textContent=fmtTime(elapsed); },1000);
+}
+
+function goTitle(){
+  clearInterval(timerInt); cancelAnimationFrame(animId);
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='none';
+  document.getElementById('title-screen').style.display='flex';
+  updateHiBadge();
+  animId=requestAnimationFrame(galLoop);
+}
+
+function onCardClick(idx) {
+  if(waiting) return;
+  const card=cards[idx];
+  if(card.flipped||card.matched) return;
+  if(flipped.length>=2) return;
+
+  // めくる
+  card.flipped=true;
+  card.el.classList.add('flipped');
+  flipped.push(idx);
+
+  if(flipped.length===2) {
+    waiting=true;
+    const [a,b]=flipped;
+    if(cards[a].animal.e===cards[b].animal.e) {
+      // ペア成立！
+      setTimeout(()=>{
+        cards[a].el.classList.add('matched');
+        cards[b].el.classList.add('matched');
+        cards[a].matched=true; cards[b].matched=true;
+        matched++;
+        showPop(W/2, H/2, '✨ ペア！', '#FFD700', 26);
+        celebrate(cards[a].el);
+        flipped=[]; waiting=false;
+        if(matched===8) setTimeout(endGame,600);
+      },400);
+    } else {
+      // ミス
+      misses++;
+      document.getElementById('miss-disp').textContent=misses;
+      cards[a].el.querySelector('.card-inner').style.animation='none';
+      cards[b].el.querySelector('.card-inner').style.animation='none';
+      void cards[a].el.offsetWidth;
+      cards[a].el.classList.add('wrong');
+      cards[b].el.classList.add('wrong');
+      setTimeout(()=>{
+        cards[a].el.classList.remove('flipped','wrong');
+        cards[b].el.classList.remove('flipped','wrong');
+        cards[a].flipped=false; cards[b].flipped=false;
+        flipped=[]; waiting=false;
+      },900);
+    }
+  }
+}
+
+function celebrate(el) {
+  const rect=el.getBoundingClientRect();
+  const wRect=wrap.getBoundingClientRect();
+  const cx=rect.left-wRect.left+rect.width/2;
+  const cy=rect.top-wRect.top;
+  ['🎉','⭐','✨','🌟'].forEach((e,i)=>{
+    const d=document.createElement('div');
+    d.className='confetti'; d.textContent=e;
+    d.style.left=(cx-20+Math.random()*40)+'px';
+    d.style.top=cy+'px';
+    d.style.animationDelay=(i*0.1)+'s';
+    wrap.appendChild(d);
+    setTimeout(()=>d.remove(),1800);
+  });
+}
+
+function showPop(x,y,text,color,size){
+  const el=document.createElement('div');
+  el.className='pop-label'; el.textContent=text;
+  el.style.color=color; el.style.fontSize=size+'px';
+  el.style.left=(x-60)+'px'; el.style.top=(y-40)+'px';
+  wrap.appendChild(el);
+  setTimeout(()=>el.remove(),800);
+}
+
+function endGame(){
+  clearInterval(timerInt);
+  const best=getBest();
+  const isNew=!best||elapsed<parseInt(best);
+  if(isNew) saveBest(elapsed);
+  updateHiBadge();
+  document.getElementById('hud').style.display='none';
+  document.getElementById('result-overlay').style.display='flex';
+  // 星評価（ミス数）
+  const stars = misses<=3?'⭐⭐⭐':misses<=7?'⭐⭐':'⭐';
+  document.getElementById('r-stars').textContent=stars;
+  document.getElementById('r-title').textContent='🎉 クリア！';
+  document.getElementById('r-msg').innerHTML=
+    `じかん: <b style="font-size:22px;color:#FFD700">${fmtTime(elapsed)}</b><br>ミス: <b style="color:#FF6B35">${misses}かい</b>`;
+  const hiEl=document.getElementById('r-hi');
+  hiEl.textContent=isNew?'🏆 ベストタイム こうしん！':'ベスト: '+fmtTime(parseInt(best));
+  hiEl.style.color=isNew?'#FFD700':'rgba(255,255,255,0.7)';
+  // お祝い紙吹雪
+  for(let i=0;i<20;i++){
+    setTimeout(()=>{
+      const d=document.createElement('div');
+      d.className='confetti';
+      d.textContent=['🎉','⭐','✨','🌟','🐾'][Math.floor(Math.random()*5)];
+      d.style.left=Math.random()*W+'px';
+      d.style.top='10px';
+      d.style.animationDuration=(1+Math.random())+'s';
+      wrap.appendChild(d);
+      setTimeout(()=>d.remove(),2000);
+    },i*80);
+  }
+}
+
+resize();
+updateHiBadge();
+window.addEventListener('resize',()=>resize());
+galLoop();
+</script>
+</body>
+</html>

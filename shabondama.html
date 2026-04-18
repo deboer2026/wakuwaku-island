@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>シャボンだまポン</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Hiragino Maru Gothic Pro', 'Rounded Mplus 1c', sans-serif; overflow: hidden; background: #87CEEB; }
+#game-wrap { width: 100vw; height: 100vh; max-width: 480px; margin: 0 auto; position: relative; overflow: hidden; }
+canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+#hud { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 16px 8px; z-index: 10; background: rgba(135,206,235,0.7); }
+.hud-box { background: rgba(255,255,255,0.92); border-radius: 12px; padding: 4px 14px; text-align: center; min-width: 72px; }
+.hud-label { font-size: 10px; color: #5a90c0; font-weight: 700; }
+.hud-val { font-size: 22px; font-weight: 900; color: #1a6090; }
+#hud-title { font-size: 17px; font-weight: 900; color: #fff; text-shadow: 1px 2px 0 #3a7fb5; }
+
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; }
+#title-screen { background: linear-gradient(180deg,#5ba3d9,#87CEEB); }
+#title-screen h1 { font-size: 30px; font-weight: 900; color: #fff; text-shadow: 2px 2px 0 #3a7fb5; margin-bottom: 6px; }
+#title-screen p { font-size: 13px; color: #e0f0ff; margin-bottom: 6px; text-align: center; line-height: 1.7; }
+.warn-box { background: rgba(255,80,80,0.85); color: #fff; font-size: 13px; font-weight: 700; padding: 8px 18px; border-radius: 14px; margin-bottom: 20px; text-align: center; line-height: 1.6; }
+
+.big-btn { background: #FF6B35; color: #fff; border: none; border-radius: 50px; padding: 14px 44px; font-size: 20px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 0 #c94d1e; touch-action: manipulation; }
+.big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #c94d1e; }
+.big-btn.blue { background: #4DB8FF; box-shadow: 0 6px 0 #2a9ad4; }
+.big-btn.blue:active { box-shadow: 0 2px 0 #2a9ad4; }
+
+#result-overlay { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(100,170,220,0.88); }
+#result-overlay h2 { font-size: 46px; font-weight: 900; color: #fff; text-shadow: 3px 3px 0 #3a7fb5; margin-bottom: 8px; }
+#result-overlay p { font-size: 16px; color: #fff; margin-bottom: 20px; text-align: center; line-height: 1.8; }
+.hi-badge { background: rgba(255,255,255,0.2); color: #FFD700; font-size: 13px; font-weight: 700; padding: 4px 16px; border-radius: 20px; margin-bottom: 16px; }
+
+.pop-label { position: absolute; font-weight: 900; pointer-events: none; animation: popUp 0.7s forwards; z-index: 25; }
+@keyframes popUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-60px) scale(1.5)} }
+@keyframes shake { 0%,100%{transform:rotate(0)} 20%,60%{transform:rotate(-10deg)} 40%,80%{transform:rotate(10deg)} }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+
+  <!-- タイトル -->
+  <div id="title-screen" class="screen">
+    <div style="font-size:64px;margin-bottom:8px;">🫧</div>
+    <h1>シャボンだまポン！</h1>
+    <p>とんでくる シャボンだまを<br>どんどんタップしよう！</p>
+    <div class="warn-box">⚠️ どうぶつがまじってるよ！<br>どうぶつは おしちゃダメ！</div>
+    <div id="hi-badge-title" class="hi-badge">🏆 ハイスコア: 0てん</div>
+    <button class="big-btn" onclick="startGame()">▶ スタート！</button>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud" style="display:none;">
+    <div class="hud-box"><div class="hud-label">スコア</div><div class="hud-val" id="score-disp">0</div></div>
+    <div id="hud-title">🫧 シャボンだまポン</div>
+    <div class="hud-box"><div class="hud-label">のこり</div><div class="hud-val" id="time-disp">30</div></div>
+  </div>
+
+  <canvas id="c"></canvas>
+
+  <!-- 結果 -->
+  <div id="result-overlay" style="display:none;">
+    <h2 id="result-title">🎉</h2>
+    <p id="result-msg"></p>
+    <div id="result-hi" class="hi-badge"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="big-btn" onclick="startGame()">もういちど</button>
+      <button class="big-btn blue" onclick="goTitle()">タイトルへ</button>
+    </div>
+  </div>
+
+</div>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const wrap = document.getElementById('game-wrap');
+let W, H;
+
+// ゲーム状態
+let bubbles = [], score = 0, timeLeft = 30, running = false;
+let animId, timerInt, spawnTimeout;
+let penalty = 0; // ペナルティ累計
+
+// ギャラリー
+let gallery = [];
+const GALLERY_CHARS = ['👸','🤴','👑','🦁','🐨','🦝','🐮','🐷','🐔','🐦','🦄','🐯','🐺','🦋','🐝','🦀','🐙','🐭','🐹'];
+
+// 動物（ニセシャボン玉）
+const TRAP_ANIMALS = ['🐱','🐶','🐸','🐼','🦊','🐰','🐧','🐻'];
+
+// シャボン玉カラー
+const BUBBLE_COLS = [
+  ['rgba(180,220,255,0.45)','#74b9ff'],
+  ['rgba(255,200,230,0.45)','#fd79a8'],
+  ['rgba(200,255,220,0.45)','#55efc4'],
+  ['rgba(255,230,180,0.45)','#fdcb6e'],
+  ['rgba(220,200,255,0.45)','#a29bfe'],
+  ['rgba(255,210,210,0.45)','#ff7675'],
+];
+
+function getHi() { return parseInt(localStorage.getItem('shabondama_hi')||'0'); }
+function saveHi(v) { localStorage.setItem('shabondama_hi', v); }
+function updateHiBadge() {
+  document.getElementById('hi-badge-title').textContent = '🏆 ハイスコア: ' + getHi() + 'てん';
+}
+
+function resize() {
+  W = wrap.clientWidth; H = wrap.clientHeight;
+  canvas.width = W; canvas.height = H;
+  buildGallery();
+}
+
+function buildGallery() {
+  gallery = [];
+  // 左側
+  for (let i=0;i<5;i++) gallery.push({emoji:GALLERY_CHARS[i%GALLERY_CHARS.length], x:W*0.03+(i%2)*W*0.06, y:H*0.12+i*H*0.1, size:W*0.07, phase:i*1.1, speed:1.5+i*0.3});
+  // 右側
+  for (let i=0;i<5;i++) gallery.push({emoji:GALLERY_CHARS[(i+6)%GALLERY_CHARS.length], x:W*0.97-(i%2)*W*0.06, y:H*0.12+i*H*0.1, size:W*0.07, phase:i*1.4, speed:1.8+i*0.2});
+  // 上部
+  const topChars = ['👸','🤴','👑','🎉','⭐'];
+  topChars.forEach((e,i) => gallery.push({emoji:e, x:W*(0.15+i*0.18), y:H*0.06, size:W*0.065, phase:i*0.8, speed:2}));
+  // 下部（フッター）
+  const botChars = ['🦁','🐘','🦊','🐧','🐸','🐨'];
+  botChars.forEach((e,i) => gallery.push({emoji:e, x:W*(0.1+i*0.16), y:H*0.94, size:W*0.065, phase:i*0.6, speed:1.6}));
+}
+
+function mkBubble() {
+  const isTrap = Math.random() < 0.18; // 18%で動物
+  const r = isTrap ? 28+Math.random()*18 : 20+Math.random()*32;
+  const col = BUBBLE_COLS[Math.floor(Math.random()*BUBBLE_COLS.length)];
+  return {
+    x: r + Math.random()*(W-r*2),
+    y: H + r,
+    r,
+    vx: (Math.random()-0.5)*0.8,
+    vy: -(0.8+Math.random()*1.4),
+    wobble: Math.random()*Math.PI*2,
+    col,
+    isTrap,
+    animal: isTrap ? TRAP_ANIMALS[Math.floor(Math.random()*TRAP_ANIMALS.length)] : null,
+    alive: true,
+    popping: false,
+    popAlpha: 1,
+    popScale: 1,
+    shaking: false,
+    shakeT: 0,
+  };
+}
+
+function spawnLoop() {
+  if (!running) return;
+  const count = bubbles.filter(b=>b.alive&&!b.popping).length;
+  if (count < 14) bubbles.push(mkBubble());
+  spawnTimeout = setTimeout(spawnLoop, 400+Math.random()*700);
+}
+
+function startGame() {
+  score=0; timeLeft=30; running=true; penalty=0;
+  bubbles=[];
+  document.getElementById('title-screen').style.display='none';
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('score-disp').textContent='0';
+  document.getElementById('time-disp').textContent='30';
+  clearInterval(timerInt);
+  clearTimeout(spawnTimeout);
+  cancelAnimationFrame(animId);
+  // 最初にバラまく
+  for(let i=0;i<6;i++) { const b=mkBubble(); b.y=H*0.3+Math.random()*H*0.5; bubbles.push(b); }
+  loop();
+  spawnLoop();
+  timerInt = setInterval(()=>{
+    timeLeft--;
+    document.getElementById('time-disp').textContent=timeLeft;
+    if(timeLeft<=0) endGame();
+  },1000);
+}
+
+function goTitle() {
+  running=false; cancelAnimationFrame(animId); clearInterval(timerInt); clearTimeout(spawnTimeout);
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='none';
+  document.getElementById('title-screen').style.display='flex';
+  updateHiBadge();
+}
+
+// タッチ/クリック
+function handleTap(cx,cy) {
+  if(!running) return;
+  // 上から順に（大きいもの優先ではなく最前面）
+  for(let i=bubbles.length-1;i>=0;i--) {
+    const b=bubbles[i];
+    if(!b.alive||b.popping||b.shaking) continue;
+    const dx=b.x-cx, dy=b.y-cy;
+    if(Math.sqrt(dx*dx+dy*dy)<b.r*1.1) {
+      if(b.isTrap) {
+        // ペナルティ
+        penalty++;
+        b.shaking=true; b.shakeT=0;
+        const pts = -2;
+        score = Math.max(0, score+pts);
+        document.getElementById('score-disp').textContent=score;
+        showPop(b.x, b.y, '🚫 -2', '#ff4444', 20);
+      } else {
+        b.popping=true;
+        const pts = b.r > 40 ? 1 : b.r > 28 ? 2 : 3;
+        score+=pts;
+        document.getElementById('score-disp').textContent=score;
+        showPop(b.x, b.y, pts===1?'+1':pts===2?'+2 ✨':'+3 🌟', pts===1?'#74b9ff':pts===2?'#a29bfe':'#FFD700', pts===1?16:pts===2?20:24);
+      }
+      break;
+    }
+  }
+}
+
+canvas.addEventListener('click', e=>{
+  const r=canvas.getBoundingClientRect();
+  handleTap((e.clientX-r.left)*(W/r.width),(e.clientY-r.top)*(H/r.height));
+});
+canvas.addEventListener('touchstart', e=>{
+  e.preventDefault();
+  const r=canvas.getBoundingClientRect();
+  Array.from(e.changedTouches).forEach(t=>handleTap((t.clientX-r.left)*(W/r.width),(t.clientY-r.top)*(H/r.height)));
+},{passive:false});
+
+function loop() {
+  if(!running) return;
+  update();
+  draw();
+  animId=requestAnimationFrame(loop);
+}
+
+function update() {
+  bubbles.forEach(b=>{
+    if(!b.alive) return;
+    if(b.popping) {
+      b.popAlpha-=0.08; b.popScale+=0.08;
+      if(b.popAlpha<=0) b.alive=false;
+      return;
+    }
+    if(b.shaking) {
+      b.shakeT+=0.25;
+      if(b.shakeT>Math.PI*3) { b.shaking=false; b.shakeT=0; }
+      return;
+    }
+    b.wobble+=0.03;
+    b.x+=b.vx+Math.sin(b.wobble)*0.4;
+    b.y+=b.vy;
+    if(b.y+b.r<0) b.alive=false;
+    if(b.x<b.r) { b.x=b.r; b.vx=Math.abs(b.vx); }
+    if(b.x>W-b.r) { b.x=W-b.r; b.vx=-Math.abs(b.vx); }
+  });
+  bubbles=bubbles.filter(b=>b.alive||b.popping);
+}
+
+function draw() {
+  // 背景
+  ctx.fillStyle='#87CEEB'; ctx.fillRect(0,0,W,H);
+  // 雲デコ
+  drawClouds();
+  // ギャラリー
+  drawGallery();
+  // バブル
+  bubbles.forEach(drawBubble);
+}
+
+function drawClouds() {
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  [[W*0.1,H*0.15,60],[W*0.75,H*0.1,48],[W*0.45,H*0.08,40]].forEach(([cx,cy,r])=>{
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+r*0.6,cy+4,r*0.7,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx-r*0.6,cy+6,r*0.6,0,Math.PI*2); ctx.fill();
+  });
+}
+
+function drawGallery() {
+  const t=performance.now()/1000;
+  gallery.forEach(g=>{
+    const bob=Math.sin(t*g.speed+g.phase)*5;
+    ctx.font=`${Math.round(g.size)}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(g.emoji,g.x,g.y+bob);
+  });
+}
+
+function drawBubble(b) {
+  if(!b.alive) return;
+  ctx.save();
+  let ox=0;
+  if(b.shaking) ox=Math.sin(b.shakeT*6)*8;
+
+  if(b.popping) {
+    ctx.globalAlpha=b.popAlpha;
+    ctx.translate(b.x+ox,b.y);
+    ctx.scale(b.popScale,b.popScale);
+    // 破裂リング
+    ctx.beginPath(); ctx.arc(0,0,b.r,0,Math.PI*2);
+    ctx.strokeStyle=b.col[1]; ctx.lineWidth=3; ctx.stroke();
+    ctx.restore();
+    return;
+  }
+
+  ctx.translate(b.x+ox,b.y);
+
+  if(b.isTrap) {
+    // 動物：白丸 + 絵文字
+    ctx.beginPath(); ctx.arc(0,0,b.r,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,240,200,0.85)'; ctx.fill();
+    ctx.strokeStyle='#ff9966'; ctx.lineWidth=2.5; ctx.stroke();
+    // バツ印
+    ctx.strokeStyle='rgba(255,80,80,0.5)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(-b.r*0.5,-b.r*0.5); ctx.lineTo(b.r*0.5,b.r*0.5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(b.r*0.5,-b.r*0.5); ctx.lineTo(-b.r*0.5,b.r*0.5); ctx.stroke();
+    ctx.font=`${Math.round(b.r*1.2)}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(b.animal,0,0);
+  } else {
+    // シャボン玉
+    ctx.beginPath(); ctx.arc(0,0,b.r,0,Math.PI*2);
+    ctx.fillStyle=b.col[0]; ctx.fill();
+    ctx.beginPath(); ctx.arc(0,0,b.r,0,Math.PI*2);
+    ctx.strokeStyle=b.col[1]; ctx.lineWidth=2; ctx.stroke();
+    // ハイライト
+    ctx.beginPath(); ctx.ellipse(-b.r*0.3,-b.r*0.32,b.r*0.22,b.r*0.13,-0.4,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.65)'; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(b.r*0.18,b.r*0.2,b.r*0.09,b.r*0.06,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.35)'; ctx.fill();
+    // サイズ別ポイント表示
+    const pts = b.r>40?1:b.r>28?2:3;
+    ctx.font=`bold ${Math.round(b.r*0.5)}px sans-serif`;
+    ctx.fillStyle=pts===3?'#a29bfe':pts===2?'#74b9ff':'rgba(255,255,255,0.7)';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('+'+pts,0,b.r*0.15);
+  }
+  ctx.restore();
+}
+
+function showPop(x,y,text,color,size) {
+  const el=document.createElement('div');
+  el.className='pop-label';
+  el.textContent=text;
+  el.style.color=color;
+  el.style.fontSize=size+'px';
+  el.style.left=(x-50)+'px';
+  el.style.top=(y-30)+'px';
+  wrap.appendChild(el);
+  setTimeout(()=>el.remove(),750);
+}
+
+function endGame() {
+  running=false; clearInterval(timerInt); clearTimeout(spawnTimeout); cancelAnimationFrame(animId);
+  const hi=getHi(); const isNew=score>hi;
+  if(isNew) saveHi(score);
+  updateHiBadge();
+  document.getElementById('hud').style.display='none';
+  document.getElementById('result-overlay').style.display='flex';
+  const title=document.getElementById('result-title');
+  const msg=document.getElementById('result-msg');
+  const hiEl=document.getElementById('result-hi');
+  hiEl.textContent = isNew ? '🏆 ニューレコード！' : `ハイスコア: ${hi}てん`;
+  hiEl.style.color = isNew ? '#FFD700' : '#ccc';
+  if(score>=40)      {title.textContent='🏆 すごい！';  msg.innerHTML=`スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！<br>シャボンだまの<br>チャンピオン！`;}
+  else if(score>=20) {title.textContent='⭐ ナイス！';  msg.innerHTML=`スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！<br>よくできました！`;}
+  else               {title.textContent='🫧 もういちど';msg.innerHTML=`スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん<br>またちょうせん！`;}
+}
+
+// ===== タイトル画面バブルアニメ =====
+let titleBubbles = [];
+let titleAnimId;
+
+function mkTitleBubble() {
+  const r = 14 + Math.random() * 38;
+  const col = BUBBLE_COLS[Math.floor(Math.random() * BUBBLE_COLS.length)];
+  return { x: r+Math.random()*(W-r*2), y: H+r, r, vx:(Math.random()-0.5)*0.7, vy:-(0.5+Math.random()*1.2), wobble:Math.random()*Math.PI*2, col, alpha:0.7+Math.random()*0.25 };
+}
+
+function titleLoop() {
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#87CEEB'; ctx.fillRect(0,0,W,H);
+  drawClouds(); drawGallery();
+  if(titleBubbles.length<30) titleBubbles.push(mkTitleBubble());
+  titleBubbles.forEach(b=>{
+    b.wobble+=0.025; b.x+=b.vx+Math.sin(b.wobble)*0.35; b.y+=b.vy;
+    if(b.x<b.r){b.x=b.r;b.vx=Math.abs(b.vx);}
+    if(b.x>W-b.r){b.x=W-b.r;b.vx=-Math.abs(b.vx);}
+    ctx.save(); ctx.globalAlpha=b.alpha; ctx.translate(b.x,b.y);
+    ctx.beginPath(); ctx.arc(0,0,b.r,0,Math.PI*2); ctx.fillStyle=b.col[0]; ctx.fill();
+    ctx.strokeStyle=b.col[1]; ctx.lineWidth=2; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(-b.r*0.3,-b.r*0.32,b.r*0.22,b.r*0.13,-0.4,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.65)'; ctx.fill();
+    ctx.restore();
+  });
+  titleBubbles=titleBubbles.filter(b=>b.y+b.r>0);
+  titleAnimId=requestAnimationFrame(titleLoop);
+}
+
+function stopTitleAnim(){cancelAnimationFrame(titleAnimId); titleBubbles=[];}
+const _origStart=startGame;
+startGame=function(){stopTitleAnim();_origStart();};
+
+resize();
+updateHiBadge();
+window.addEventListener('resize',()=>{resize();});
+titleLoop();
+</script>
+</body>
+</html>

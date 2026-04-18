@@ -1,0 +1,379 @@
+/* ============================
+   Kazu Asobi (Number Game)
+   ============================ */
+
+.kazu-wrap {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  background: #f3e5f5;
+  font-family: 'Rounded Mplus 1c', 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
+}
+
+/* ---- Canvas (background) ---- */
+.kazu-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* ---- Overlay (all UI on top of canvas) ---- */
+.kazu-overlay {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0 0 12px;
+  gap: 6px;
+}
+
+/* ---- HUD ---- */
+.kazu-hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 6px 10px;
+  background: rgba(156,39,176,0.75);
+  color: #fff;
+  font-size: clamp(13px, 3.5vw, 18px);
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.kazu-hud-back {
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.4);
+  color: #fff;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: clamp(12px, 3vw, 15px);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.kazu-hud-info {
+  display: flex;
+  gap: 16px;
+}
+
+/* ---- Number area ---- */
+.kazu-number-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.kazu-number {
+  font-size: clamp(72px, 20vw, 96px);
+  font-weight: bold;
+  color: #6a1b9a;
+  line-height: 1;
+  text-shadow: 2px 2px 0 #ce93d8, 4px 4px 8px rgba(106,27,154,0.2);
+}
+
+.kazu-number-label {
+  font-size: clamp(13px, 3.5vw, 17px);
+  color: #7b1fa2;
+  font-weight: bold;
+}
+
+.kazu-animal-label {
+  font-size: clamp(28px, 8vw, 40px);
+  margin-top: 2px;
+}
+
+/* ---- Counter dots ---- */
+.kazu-counter {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 4px 8px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.kazu-dot {
+  font-size: clamp(14px, 4vw, 20px);
+}
+
+/* ---- Warning ---- */
+.kazu-warning {
+  color: #c62828;
+  font-size: clamp(12px, 3.2vw, 15px);
+  font-weight: bold;
+  background: rgba(255,235,238,0.9);
+  padding: 4px 12px;
+  border-radius: 12px;
+  animation: kazuShake 0.3s ease;
+  flex-shrink: 0;
+}
+
+@keyframes kazuShake {
+  0%,100% { transform: translateX(0); }
+  25%      { transform: translateX(-6px); }
+  75%      { transform: translateX(6px); }
+}
+
+/* ---- Animal grid ---- */
+.kazu-animal-grid {
+  display: grid;
+  gap: 8px;
+  padding: 0 12px;
+  width: 100%;
+  max-width: 360px;
+  flex: 1;
+  align-content: start;
+}
+
+.kazu-animal-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 2.5px solid #ce93d8;
+  border-radius: 14px;
+  aspect-ratio: 1;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s, border-color 0.12s, transform 0.08s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  min-height: 48px;
+}
+
+.kazu-animal-btn:active {
+  transform: scale(0.9);
+}
+
+.kazu-animal-btn.tapped {
+  background: #f3e5f5;
+  border-color: #9c27b0;
+  box-shadow: 0 0 8px rgba(156,39,176,0.3);
+}
+
+.kazu-btn-emoji {
+  font-size: clamp(20px, 6vw, 32px);
+}
+
+.kazu-check {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: clamp(11px, 3vw, 14px);
+  color: #9c27b0;
+  font-weight: bold;
+}
+
+/* ---- Submit button ---- */
+.kazu-submit-btn {
+  background: #bdbdbd;
+  color: #fff;
+  border: none;
+  border-radius: 28px;
+  padding: 12px 0;
+  width: 80%;
+  max-width: 280px;
+  font-size: clamp(17px, 4.5vw, 22px);
+  font-weight: bold;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.kazu-submit-btn.active {
+  background: #9c27b0;
+  box-shadow: 0 4px 16px rgba(156,39,176,0.4);
+}
+
+.kazu-submit-btn.active:active {
+  transform: scale(0.94);
+}
+
+/* ============================
+   Title Screen
+   ============================ */
+
+.kazu-title {
+  justify-content: center;
+  background: linear-gradient(160deg, #f3e5f5, #e1bee7, #ce93d8 200%);
+}
+
+.kazu-back-btn {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: rgba(156,39,176,0.15);
+  border: 1px solid rgba(156,39,176,0.4);
+  color: #6a1b9a;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: clamp(12px, 3vw, 15px);
+  cursor: pointer;
+  font-family: inherit;
+  z-index: 5;
+}
+
+.kazu-title-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  text-align: center;
+}
+
+.kazu-title-emoji {
+  font-size: clamp(52px, 14vw, 80px);
+  animation: kazuBounce 1.2s ease-in-out infinite;
+}
+
+@keyframes kazuBounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-12px); }
+}
+
+.kazu-title-text {
+  font-size: clamp(24px, 6.5vw, 38px);
+  color: #6a1b9a;
+  margin: 0;
+  text-shadow: 1px 1px 0 #ce93d8;
+}
+
+.kazu-subtitle {
+  font-size: clamp(13px, 3.5vw, 18px);
+  color: #7b1fa2;
+  margin: 0;
+}
+
+.kazu-title-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #6a1b9a;
+  font-size: clamp(12px, 3vw, 15px);
+  background: rgba(255,255,255,0.5);
+  padding: 10px 20px;
+  border-radius: 14px;
+}
+
+.kazu-start-btn {
+  background: linear-gradient(135deg, #ab47bc, #6a1b9a);
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  padding: 12px 36px;
+  font-size: clamp(16px, 4.5vw, 22px);
+  font-weight: bold;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 16px rgba(106,27,154,0.35);
+  transition: transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.kazu-start-btn:active {
+  transform: scale(0.94);
+}
+
+.kazu-hi {
+  color: #7b1fa2;
+  font-size: clamp(12px, 3vw, 16px);
+}
+
+/* ============================
+   Result Screen
+   ============================ */
+
+.kazu-result {
+  justify-content: center;
+  background: linear-gradient(160deg, #f3e5f5, #e1bee7);
+}
+
+.kazu-result-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 20px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 24px;
+  border: 2px solid #ce93d8;
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(156,39,176,0.15);
+}
+
+.kazu-result-title {
+  font-size: clamp(26px, 7vw, 36px);
+  font-weight: bold;
+  color: #6a1b9a;
+}
+
+.kazu-result-score {
+  font-size: clamp(20px, 5.5vw, 28px);
+  font-weight: bold;
+  color: #9c27b0;
+}
+
+.kazu-result-msg {
+  font-size: clamp(14px, 4vw, 18px);
+  color: #5c007a;
+}
+
+.kazu-result-new {
+  font-size: clamp(16px, 4.5vw, 20px);
+  font-weight: bold;
+  color: #ff6f00;
+  animation: kazuBounce 0.8s ease-in-out infinite;
+}
+
+.kazu-result-hi {
+  font-size: clamp(13px, 3.5vw, 16px);
+  color: #7b1fa2;
+}
+
+.kazu-result-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.kazu-back-btn2 {
+  background: rgba(156,39,176,0.12);
+  border: 1px solid #ce93d8;
+  color: #6a1b9a;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-size: clamp(13px, 3.5vw, 16px);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.kazu-back-btn2:active {
+  background: rgba(156,39,176,0.22);
+}

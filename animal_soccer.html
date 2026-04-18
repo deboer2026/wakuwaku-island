@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>どうぶつサッカー</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Hiragino Maru Gothic Pro', 'Rounded Mplus 1c', sans-serif; background: #2e7d32; overflow: hidden; }
+#game-wrap { width: 100vw; height: 100vh; max-width: 480px; margin: 0 auto; position: relative; overflow: hidden; }
+canvas#field { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* ===== SELECT ===== */
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; }
+#select-screen { background: linear-gradient(180deg,#1b5e20,#2e7d32); }
+#select-screen h2 { font-size: 28px; font-weight: 900; color: #fff; text-shadow: 2px 2px 0 #0a3d0a; margin-bottom: 4px; }
+#select-screen p  { font-size: 13px; color: #c8f0c8; margin-bottom: 18px; }
+.kicker-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 20px; width: 300px; }
+.kicker-btn { background: #fff; border: 4px solid transparent; border-radius: 18px; padding: 12px 8px 8px; cursor: pointer; transition: transform 0.1s; text-align: center; font-size: 11px; font-weight: 700; color: #555; }
+.kicker-btn .k-icon { font-size: 40px; display: block; margin-bottom: 4px; line-height: 1; }
+.kicker-btn:hover { transform: scale(1.07); }
+.kicker-btn.selected { border-color: #FFD700; background: #fffde7; transform: scale(1.1); box-shadow: 0 0 0 3px #FFA000; }
+.hi-badge { background: rgba(255,255,255,0.15); color: #FFD700; font-size: 13px; font-weight: 700; padding: 4px 16px; border-radius: 20px; margin-bottom: 14px; }
+
+/* ===== HUD ===== */
+#hud { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 8px 12px 6px; z-index: 10; background: rgba(0,0,0,0.3); }
+.hud-box { background: rgba(255,255,255,0.92); border-radius: 10px; padding: 3px 12px; text-align: center; min-width: 64px; }
+.hud-label { font-size: 9px; color: #666; font-weight: 700; }
+.hud-val   { font-size: 20px; font-weight: 900; color: #1b5e20; }
+#hud-title { font-size: 16px; font-weight: 900; color: #fff; text-shadow: 1px 1px 0 #000; }
+
+/* ===== DPAD ===== */
+#dpad { position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 10; user-select: none; }
+.dpad-wrap { display: grid; grid-template-columns: repeat(3,60px); grid-template-rows: repeat(3,60px); gap: 5px; }
+.dpad-btn { background: rgba(255,255,255,0.88); border: none; border-radius: 14px; font-size: 22px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 5px 0 rgba(0,0,0,0.25); transition: transform 0.08s, box-shadow 0.08s; touch-action: manipulation; gap: 1px; }
+.dpad-btn .sub { font-size: 9px; font-weight: 700; color: #666; }
+.dpad-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,0.2); }
+.dpad-center { background: rgba(255,255,255,0.35); cursor: default; border-radius: 50%; }
+.dpad-empty  { background: transparent; box-shadow: none; }
+
+/* ===== RESULT ===== */
+#result-overlay { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); }
+#result-overlay h2 { font-size: 48px; font-weight: 900; color: #FFD700; text-shadow: 3px 3px 0 #000; margin-bottom: 6px; }
+#result-overlay p  { font-size: 16px; color: #fff; margin-bottom: 6px; text-align: center; line-height: 1.7; }
+.new-hi { font-size: 20px; color: #FFD700; font-weight: 900; animation: pop 0.5s ease; }
+.result-btn { background: #FF6B35; color: #fff; border: none; border-radius: 50px; padding: 13px 32px; font-size: 17px; font-weight: 700; cursor: pointer; box-shadow: 0 5px 0 #c94d1e; margin: 5px; }
+.result-btn.sec { background: #4DB8FF; box-shadow: 0 5px 0 #2a9ad4; }
+.result-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+
+/* ===== SPEECH ===== */
+#speech { position: absolute; z-index: 15; pointer-events: none; background: #fff; border-radius: 16px; padding: 7px 16px; font-size: 18px; font-weight: 700; color: #333; box-shadow: 0 3px 0 #ccc; transition: opacity 0.4s; white-space: nowrap; }
+#speech::after { content:''; position: absolute; bottom:-10px; left:50%; transform:translateX(-50%); border:10px solid transparent; border-top-color:#fff; border-bottom:none; }
+
+/* ===== BONUS POP ===== */
+.bonus-pop { position: absolute; z-index: 20; font-size: 22px; font-weight: 900; color: #FFD700; text-shadow: 2px 2px 0 #000; pointer-events: none; animation: floatUp 1.2s forwards; }
+@keyframes floatUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-80px) scale(1.4)} }
+@keyframes pop { 0%{transform:scale(0.5)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+
+  <!-- キャラ選択 -->
+  <div id="select-screen" class="screen">
+    <h2>⚽ どうぶつサッカー</h2>
+    <p>けるどうぶつをえらんでね！</p>
+    <div id="hi-score-badge" class="hi-badge">🏆 ハイスコア: 0てん</div>
+    <div class="kicker-grid">
+      <button class="kicker-btn" data-animal="🐱" data-name="ねこ" onclick="selectKicker(this)"><span class="k-icon">🐱</span>ねこ</button>
+      <button class="kicker-btn" data-animal="🐰" data-name="うさぎ" onclick="selectKicker(this)"><span class="k-icon">🐰</span>うさぎ</button>
+      <button class="kicker-btn" data-animal="🐸" data-name="かえる" onclick="selectKicker(this)"><span class="k-icon">🐸</span>かえる</button>
+      <button class="kicker-btn" data-animal="🐼" data-name="パンダ" onclick="selectKicker(this)"><span class="k-icon">🐼</span>パンダ</button>
+      <button class="kicker-btn" data-animal="🦊" data-name="きつね" onclick="selectKicker(this)"><span class="k-icon">🦊</span>きつね</button>
+      <button class="kicker-btn" data-animal="🐧" data-name="ペンギン" onclick="selectKicker(this)"><span class="k-icon">🐧</span>ペンギン</button>
+    </div>
+    <button class="result-btn" id="start-btn" onclick="startGame()" style="opacity:0.4;pointer-events:none;">▶ スタート！</button>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud" style="display:none;">
+    <div class="hud-box"><div class="hud-label">スコア</div><div class="hud-val" id="score-disp">0</div></div>
+    <div id="hud-title">⚽ サッカー</div>
+    <div class="hud-box"><div class="hud-label">のこり</div><div class="hud-val" id="shots-disp">5</div></div>
+  </div>
+
+  <canvas id="field"></canvas>
+
+  <!-- 方向パッド -->
+  <div id="dpad" style="display:none;">
+    <div class="dpad-wrap">
+      <div class="dpad-empty"></div>
+      <button class="dpad-btn" onclick="shoot('top')">⬆️<span class="sub">たかい</span></button>
+      <div class="dpad-empty"></div>
+      <button class="dpad-btn" onclick="shoot('left')">⬅️<span class="sub">ひだり</span></button>
+      <div class="dpad-btn dpad-center">⚽</div>
+      <button class="dpad-btn" onclick="shoot('right')">➡️<span class="sub">みぎ</span></button>
+      <div class="dpad-empty"></div>
+      <button class="dpad-btn" onclick="shoot('bottom')">⬇️<span class="sub">ひくい</span></button>
+      <div class="dpad-empty"></div>
+    </div>
+  </div>
+
+  <!-- 吹き出し -->
+  <div id="speech" style="display:none;"></div>
+
+  <!-- 結果 -->
+  <div id="result-overlay" style="display:none;">
+    <h2 id="result-title">🎉</h2>
+    <p id="result-msg"></p>
+    <div id="new-hi-msg"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="result-btn" onclick="retryGame()">もういちど</button>
+      <button class="result-btn sec" onclick="backToSelect()">キャラかえる</button>
+    </div>
+  </div>
+
+</div>
+<script>
+const canvas = document.getElementById('field');
+const ctx = canvas.getContext('2d');
+const wrap = document.getElementById('game-wrap');
+
+let W, H;
+let kicker = { emoji:'🐱', name:'ねこ' };
+let score = 0, shotsLeft = 5, shooting = false;
+let animId;
+
+// キーパー
+let kpX = 0.5, kpDir = 1, kpSpeed = 0;
+
+// くだもの (2個、左右移動)
+const FRUITS = ['🍎','🍊','🍋','🍇','🍓','🍑','🍒','🍌'];
+let fruits = [];
+
+// ボールアニメ
+let ball = null; // {sx,sy,tx,ty,t,dur,pts,isGoal,isFruit}
+
+// ギャラリーキャラ (固定配置、初期化時に生成)
+let gallery = [];
+
+// ===== STORAGE =====
+function getHi() { return parseInt(localStorage.getItem('soccer_hi')||'0'); }
+function saveHi(v) { localStorage.setItem('soccer_hi', v); }
+
+function updateHiBadge() {
+  document.getElementById('hi-score-badge').textContent = '🏆 ハイスコア: ' + getHi() + 'てん';
+}
+
+// ===== リサイズ =====
+function resize() {
+  W = wrap.clientWidth;
+  H = wrap.clientHeight;
+  canvas.width = W;
+  canvas.height = H;
+  buildGallery();
+}
+
+// ===== ギャラリー生成 =====
+function buildGallery() {
+  gallery = [];
+  const chars = ['🦁','🐨','🦝','🐮','🐷','🐔','🐦','🦄','🐯','🦊','🐺','🦋','🐝','🦀','🐙'];
+  // ギャラリーエリア: ゴール上部左右 + 上部横並び
+  // 左側縦列
+  for (let i = 0; i < 4; i++) {
+    gallery.push({ emoji: chars[(i*3)%chars.length], x: W*0.02 + (i%2)*W*0.07, y: H*0.04 + i*H*0.05, size: W*0.07 + Math.random()*W*0.02, phase: Math.random()*Math.PI*2, speed: 1.5+Math.random() });
+  }
+  // 右側縦列
+  for (let i = 0; i < 4; i++) {
+    gallery.push({ emoji: chars[(i*3+5)%chars.length], x: W*0.91 - (i%2)*W*0.07, y: H*0.04 + i*H*0.05, size: W*0.07 + Math.random()*W*0.02, phase: Math.random()*Math.PI*2, speed: 1.5+Math.random() });
+  }
+  // 上部 プリンセス・プリンス・王様
+  gallery.push({ emoji:'👑', x: W*0.5,  y: H*0.01, size: W*0.06, phase:0, speed:2, label:true });
+  // プリンセス（SVGは複雑なので絵文字で代替+装飾）
+  gallery.push({ emoji:'👸', x: W*0.3,  y: H*0.015, size: W*0.08, phase:1, speed:1.8 });
+  gallery.push({ emoji:'🤴', x: W*0.7,  y: H*0.015, size: W*0.08, phase:2, speed:2.2 });
+  // 上部横列 動物たち
+  const topRow = ['🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐸'];
+  const count = Math.floor(W / 36);
+  for (let i = 0; i < Math.min(count, topRow.length); i++) {
+    gallery.push({ emoji: topRow[i], x: W*(0.05 + i*0.9/Math.min(count,topRow.length-1)), y: H*0.035, size: W*0.055, phase: i*0.7, speed: 2+Math.random() });
+  }
+}
+
+// ===== くだもの初期化 =====
+function initFruits() {
+  fruits = [
+    { emoji: FRUITS[Math.floor(Math.random()*FRUITS.length)], x: 0.3, dir: 1,  speed: 0.003, pts: 3 },
+    { emoji: FRUITS[Math.floor(Math.random()*FRUITS.length)], x: 0.7, dir: -1, speed: 0.004, pts: 5 },
+  ];
+}
+
+// ===== キャラ選択 =====
+function selectKicker(btn) {
+  document.querySelectorAll('.kicker-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  kicker = { emoji: btn.dataset.animal, name: btn.dataset.name };
+  const sb = document.getElementById('start-btn');
+  sb.style.opacity='1'; sb.style.pointerEvents='auto';
+}
+
+// ===== ゲーム開始 =====
+function startGame() {
+  score=0; shotsLeft=5; shooting=false; ball=null;
+  kpX=0.5+(Math.random()-0.5)*0.3;
+  kpSpeed=0.0025+Math.random()*0.002;
+  kpDir=Math.random()<0.5?1:-1;
+  initFruits();
+  document.getElementById('select-screen').style.display='none';
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('dpad').style.display='block';
+  updateHUD();
+  cancelAnimationFrame(animId);
+  loop();
+  showSpeech('⚽ しゅーとしよう！', W/2, H*0.75, 1800);
+}
+
+function updateHUD() {
+  document.getElementById('score-disp').textContent = score;
+  document.getElementById('shots-disp').textContent = shotsLeft;
+}
+
+// ===== シュート =====
+// dir: 'top'|'bottom'|'left'|'right'
+function shoot(dir) {
+  if (shooting || shotsLeft<=0) return;
+  shooting = true;
+
+  const kx = W*0.5, ky = H*0.74;
+  const goalL = W*0.2, goalR = W*0.8;
+  const goalTop = H*0.1, goalBot = H*0.26;
+
+  // X位置
+  let tx, ty;
+  const cx = (goalL+goalR)/2;
+  if (dir==='left')   tx = goalL + (goalR-goalL)*0.18;
+  else if (dir==='right') tx = goalL + (goalR-goalL)*0.82;
+  else                tx = cx + (Math.random()-0.5)*(goalR-goalL)*0.3;
+
+  // Y位置（上・下）
+  if (dir==='top')    ty = goalTop + (goalBot-goalTop)*0.2;
+  else if (dir==='bottom') ty = goalTop + (goalBot-goalTop)*0.78;
+  else                ty = goalTop + (goalBot-goalTop)*0.5;
+
+  // くだもの判定（シュート時点のくだもの位置）
+  let fruitHit = null;
+  for (const f of fruits) {
+    const fx = W*f.x;
+    const fy = goalTop + (goalBot-goalTop)*0.5;
+    if (Math.abs(fx-tx)<W*0.07 && Math.abs(fy-ty)<H*0.1) {
+      fruitHit = f;
+      break;
+    }
+  }
+
+  // キーパー判定
+  const kpx = W*kpX;
+  const keeperW = W*0.12;
+  // キーパーが上段守るか下段守るか（ランダム）
+  const kpCoversTop = Math.random()<0.5;
+  const dirTop = (dir==='top');
+  const saved = Math.abs(kpx-tx)<keeperW && (kpCoversTop===dirTop);
+
+  const pts = fruitHit ? fruitHit.pts : 1;
+  const isGoal = !saved;
+
+  ball = { sx:kx, sy:ky-W*0.1, tx, ty, t:0, dur:120, pts, isGoal, fruitEmoji: fruitHit?fruitHit.emoji:null };
+}
+
+// ===== ループ =====
+function loop() {
+  update();
+  draw();
+  animId = requestAnimationFrame(loop);
+}
+
+function update() {
+  const now = performance.now()/1000;
+
+  // キーパー移動
+  kpX += kpDir*kpSpeed;
+  if (kpX>0.82){kpX=0.82;kpDir=-1;}
+  if (kpX<0.18){kpX=0.18;kpDir=1;}
+
+  // くだもの移動
+  for (const f of fruits) {
+    f.x += f.dir*f.speed;
+    if (f.x>0.82){f.x=0.82;f.dir=-1;}
+    if (f.x<0.18){f.x=0.18;f.dir=1;}
+  }
+
+  // ボール
+  if (ball) {
+    ball.t++;
+    if (ball.t >= ball.dur) {
+      const {isGoal, pts, fruitEmoji} = ball;
+      ball = null;
+      shooting = false;
+      shotsLeft--;
+      if (isGoal) {
+        score += pts;
+        const msg = fruitEmoji ? `${fruitEmoji} ボーナス +${pts}！` : `ゴール！⚽ +${pts}`;
+        showSpeech(msg, W/2, H*0.45, 1400);
+        showBonusPop(W/2, H*0.38, fruitEmoji ? `${fruitEmoji}+${pts}` : '⚽ GOAL!');
+        // キーパー吹き飛び
+        kpX = kpX < 0.5 ? 0.85 : 0.15;
+      } else {
+        showSpeech('🐻 セーブ！', W/2, H*0.45, 1400);
+      }
+      updateHUD();
+      if (shotsLeft<=0) setTimeout(endGame, 1500);
+    }
+  }
+}
+
+// ===== 描画 =====
+function draw() {
+  ctx.clearRect(0,0,W,H);
+  drawField();
+  drawGallery();
+  drawGoal();
+  drawFruits();
+  drawKeeper();
+  drawKicker();
+  drawBall();
+  drawReaction();
+}
+
+function drawField() {
+  ctx.fillStyle='#388e3c'; ctx.fillRect(0,0,W,H);
+  for (let i=0;i<10;i++) {
+    ctx.fillStyle = i%2===0 ? 'rgba(0,0,0,0.05)':'rgba(255,255,255,0.03)';
+    ctx.fillRect(0,H*i/10,W,H/10);
+  }
+  ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(0,H*0.63); ctx.lineTo(W,H*0.63); ctx.stroke();
+  ctx.beginPath(); ctx.arc(W/2,H*0.63,W*0.13,0,Math.PI*2); ctx.stroke();
+  // ペナルティエリア
+  ctx.strokeRect(W*0.18,H*0.26,W*0.64,H*0.18);
+}
+
+function drawGallery() {
+  const t = performance.now()/1000;
+  for (const g of gallery) {
+    const bob = Math.sin(t*g.speed+g.phase)*4;
+    ctx.font = `${Math.round(g.size)}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(g.emoji, g.x, g.y+bob);
+  }
+}
+
+function drawGoal() {
+  const gl=W*0.2, gr=W*0.8, gt=H*0.1, gb=H*0.26;
+  // ネット
+  ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=1;
+  for(let x=gl;x<=gr;x+=(gr-gl)/10){ctx.beginPath();ctx.moveTo(x,gt);ctx.lineTo(x,gb);ctx.stroke();}
+  for(let y=gt;y<=gb;y+=(gb-gt)/6){ctx.beginPath();ctx.moveTo(gl,y);ctx.lineTo(gr,y);ctx.stroke();}
+  // ポスト
+  ctx.strokeStyle='#fff'; ctx.lineWidth=5; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(gl,gb); ctx.lineTo(gl,gt); ctx.lineTo(gr,gt); ctx.lineTo(gr,gb); ctx.stroke();
+}
+
+function drawFruits() {
+  const goalTop=H*0.1, goalBot=H*0.26;
+  const fy = goalTop+(goalBot-goalTop)*0.5;
+  for (const f of fruits) {
+    const fx = W*f.x;
+    ctx.font=`${Math.round(W*0.07)}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(f.emoji, fx, fy);
+    // ボーナス表示
+    ctx.font=`bold ${Math.round(W*0.03)}px sans-serif`;
+    ctx.fillStyle='#FFD700';
+    ctx.textBaseline='bottom';
+    ctx.fillText(`+${f.pts}`, fx, fy-W*0.04);
+    ctx.fillStyle='#000';
+  }
+}
+
+function drawKeeper() {
+  const kpx=W*kpX, kpy=H*0.195;
+  ctx.font=`${Math.round(W*0.14)}px serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('🐻', kpx, kpy);
+  ctx.fillStyle='rgba(0,0,0,0.15)';
+  ctx.beginPath(); ctx.ellipse(kpx,kpy+W*0.078,W*0.065,W*0.022,0,0,Math.PI*2); ctx.fill();
+}
+
+function drawKicker() {
+  if (ball) return;
+  const kx=W*0.5, ky=H*0.74;
+  ctx.font=`${Math.round(W*0.14)}px serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(kicker.emoji, kx, ky);
+  ctx.fillStyle='rgba(0,0,0,0.15)';
+  ctx.beginPath(); ctx.ellipse(kx,ky+W*0.078,W*0.065,W*0.022,0,0,Math.PI*2); ctx.fill();
+  // 静止ボール
+  ctx.font=`${Math.round(W*0.07)}px serif`;
+  ctx.fillText('⚽', kx, ky-W*0.1);
+}
+
+function drawBall() {
+  if (!ball) return;
+  const {sx,sy,tx,ty,t,dur} = ball;
+  const p = t/dur;
+  const ease = p<0.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2;
+  const bx = sx+(tx-sx)*ease;
+  const by = sy+(ty-sy)*ease;
+  const sc = 1 - p*0.25;
+  ctx.save();
+  ctx.translate(bx,by);
+  ctx.rotate(p*Math.PI*8);
+  ctx.font=`${Math.round(W*0.075*sc)}px serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('⚽',0,0);
+  ctx.restore();
+}
+
+function drawReaction() {
+  if (!ball) return;
+  const p = ball.t / ball.dur;
+  if (p < 0.85) return;
+  if (ball.isGoal) {
+    const kx=W*0.5, ky=H*0.74;
+    ctx.save();
+    ctx.translate(kx, ky - Math.sin((p-0.85)*Math.PI*6)*H*0.04);
+    ctx.rotate(Math.sin((p-0.85)*20)*0.25);
+    ctx.font=`${Math.round(W*0.14)}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(kicker.emoji,0,0);
+    ctx.restore();
+    ctx.font=`${Math.round(W*0.065)}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🎉', kx+W*0.12, ky-H*0.07);
+    const kpx=W*kpX, kpy=H*0.195;
+    ctx.save();
+    ctx.translate(kpx,kpy); ctx.rotate(0.35);
+    ctx.font=`${Math.round(W*0.14)}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🐻',0,0);
+    ctx.restore();
+    ctx.font=`${Math.round(W*0.055)}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('😭', kpx+W*0.1, kpy-H*0.045);
+  }
+}
+
+// ===== UI =====
+let speechTimer;
+function showSpeech(text,x,y,dur) {
+  const el=document.getElementById('speech');
+  el.textContent=text;
+  el.style.display='block'; el.style.opacity='1';
+  el.style.left=(x-90)+'px'; el.style.top=(y-46)+'px';
+  clearTimeout(speechTimer);
+  speechTimer=setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.style.display='none',400);},dur);
+}
+
+function showBonusPop(x,y,text) {
+  const el=document.createElement('div');
+  el.className='bonus-pop'; el.textContent=text;
+  el.style.left=(x-50)+'px'; el.style.top=(y)+'px';
+  wrap.appendChild(el);
+  setTimeout(()=>el.remove(),1300);
+}
+
+// ===== 終了 =====
+function endGame() {
+  cancelAnimationFrame(animId);
+  document.getElementById('dpad').style.display='none';
+  const hi = getHi();
+  const isNew = score > hi;
+  if (isNew) saveHi(score);
+  updateHiBadge();
+  document.getElementById('result-overlay').style.display='flex';
+  const title=document.getElementById('result-title');
+  const msg=document.getElementById('result-msg');
+  const newHiEl=document.getElementById('new-hi-msg');
+  newHiEl.innerHTML = isNew ? `<div class="new-hi">🏆 ニューレコード！</div>` : `<p style="color:#aaa;font-size:13px;">ハイスコア: ${hi}てん</p>`;
+  if (score>=12)     {title.textContent='🏆 チャンピオン！'; msg.innerHTML=`スコア <b style="color:#FFD700;font-size:22px;">${score}</b> てん！<br>かんぺき！さいこう！`;}
+  else if (score>=6) {title.textContent='⭐ ナイス！';      msg.innerHTML=`スコア <b style="color:#FFD700;font-size:22px;">${score}</b> てん！<br>よくできました！`;}
+  else               {title.textContent='😢 ざんねん…';     msg.innerHTML=`スコア <b style="color:#FFD700;font-size:22px;">${score}</b> てん<br>またちょうせん！`;}
+}
+
+function retryGame() { document.getElementById('result-overlay').style.display='none'; startGame(); }
+function backToSelect() {
+  cancelAnimationFrame(animId);
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='none';
+  document.getElementById('dpad').style.display='none';
+  document.getElementById('select-screen').style.display='flex';
+  updateHiBadge();
+}
+
+// ===== INIT =====
+resize();
+updateHiBadge();
+window.addEventListener('resize',()=>{resize();});
+ctx.fillStyle='#2e7d32'; ctx.fillRect(0,0,canvas.width,canvas.height);
+</script>
+</body>
+</html>
