@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { playShabondamaBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted } from '../utils/audio';
 import './Shabondama.css';
 
 const GALLERY_CHARS = ['👸','🤴','👑','🦁','🐨','🦝','🐮','🐷','🐔','🐦','🦄','🐯','🐺','🦋','🐝','🦀','🐙','🐭','🐹'];
@@ -240,6 +241,7 @@ export default function Shabondama() {
           setScoreDisplay(scoreRef.current);
           showPop(b.x, b.y, '🚫 -2', '#ff4444', 20);
         } else {
+          playSoundCorrect();
           b.popping = true;
           const pts = b.r > 40 ? 1 : b.r > 28 ? 2 : 3;
           scoreRef.current += pts;
@@ -257,6 +259,8 @@ export default function Shabondama() {
     clearInterval(timerIntRef.current);
     clearTimeout(spawnTimeoutRef.current);
     cancelAnimationFrame(animIdRef.current);
+    stopBgm();
+    playSoundClear();
 
     const score = scoreRef.current;
     const hi = getHi();
@@ -283,6 +287,9 @@ export default function Shabondama() {
 
   // ---------- startGame ----------
   const startGame = useCallback(() => {
+    ensureAudioStarted();
+    playShabondamaBgm();
+
     scoreRef.current = 0;
     timeLeftRef.current = 30;
     runningRef.current = true;
@@ -392,6 +399,7 @@ export default function Shabondama() {
       cancelAnimationFrame(animIdRef.current);
       clearInterval(timerIntRef.current);
       clearTimeout(spawnTimeoutRef.current);
+      stopBgm();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

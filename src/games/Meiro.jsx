@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { playMeiroBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted } from '../utils/audio';
 import './Meiro.css';
 
 const COLS = 11, ROWS = 11;
@@ -283,6 +284,8 @@ export default function Meiro() {
     runningRef.current = false;
     if (timerIntRef.current) { clearInterval(timerIntRef.current); timerIntRef.current = null; }
     if (mazeAnimRef.current) { cancelAnimationFrame(mazeAnimRef.current); mazeAnimRef.current = null; }
+    stopBgm();
+    playSoundCorrect();
     const t = timeRef.current;
     const hi = getHi();
     const isNew = hi === 0 || t < hi;
@@ -298,6 +301,7 @@ export default function Meiro() {
     runningRef.current = false;
     if (timerIntRef.current) { clearInterval(timerIntRef.current); timerIntRef.current = null; }
     if (mazeAnimRef.current) { cancelAnimationFrame(mazeAnimRef.current); mazeAnimRef.current = null; }
+    stopBgm();
     const hi = getHi();
     setResultData({ title: 'ゲームオーバー 😢', msg: 'もういちどチャレンジ！', hiText: hi > 0 ? `ベスト: ${fmtTime(hi)}` : '', isNew: false });
     setScreen('result');
@@ -389,6 +393,9 @@ export default function Meiro() {
 
   // ---- Start game ----
   const startGame = useCallback((char) => {
+    ensureAudioStarted();
+    playMeiroBgm();
+
     charRef.current = char;
     hpRef.current = MAX_HP;
     invincibleRef.current = false;

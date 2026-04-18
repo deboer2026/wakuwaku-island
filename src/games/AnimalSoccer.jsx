@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { playAnimalSoccerBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted } from '../utils/audio';
 import './AnimalSoccer.css';
 
 const FRUITS = ['🍎','🍊','🍋','🍇','🍓','🍑','🍒','🍌'];
@@ -94,6 +95,8 @@ export default function AnimalSoccer() {
   const endGame = useCallback(() => {
     if (animIdRef.current) cancelAnimationFrame(animIdRef.current);
     animIdRef.current = null;
+    stopBgm();
+    playSoundClear();
     const s = scoreRef.current;
     const hi = getHi();
     const isNew = s > hi;
@@ -307,6 +310,9 @@ export default function AnimalSoccer() {
   }, [update, draw]);
 
   const startGame = useCallback((char) => {
+    ensureAudioStarted();
+    playAnimalSoccerBgm();
+
     kickerRef.current = char;
     scoreRef.current = 0;
     shotsLeftRef.current = 5;

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { playJewelryShopBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
 import './JewelryShop.css';
 
 const ACCESSORIES = [
@@ -184,6 +185,9 @@ export default function JewelryShop() {
   }
 
   function startGame() {
+    ensureAudioStarted();
+    playJewelryShopBgm();
+
     scoreRef.current = 0;
     stageRef.current = 1;
     hpRef.current = 3;
@@ -203,6 +207,9 @@ export default function JewelryShop() {
   }
 
   function doGameOver() {
+    stopBgm();
+    playSoundClear();
+
     const hi = getHi();
     const isNew = scoreRef.current > hi;
     if (isNew) saveHi(scoreRef.current);
@@ -216,6 +223,7 @@ export default function JewelryShop() {
     if (!servingRef.current) return;
     const answer = currentAnswerRef.current;
     if (acc.e === answer.e) {
+      playSoundCorrect();
       servingRef.current = false;
       setCorrectItem(acc.e);
       setCustomerAnim('happy');
@@ -227,6 +235,7 @@ export default function JewelryShop() {
         advanceCustomer(queueRef.current, stageRef.current);
       }, 900);
     } else {
+      playSoundWrong();
       setWrongItem(acc.e);
       setCustomerAnim('angry');
       hpRef.current = Math.max(0, hpRef.current - 1);

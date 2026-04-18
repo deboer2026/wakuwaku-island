@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { playTopPageBgm, stopBgm, toggleMute, getMuteState, ensureAudioStarted } from '../utils/audio';
 import './TopPage.css';
 
 const GAMES = [
@@ -101,9 +102,29 @@ function GameCard({ game, onClick }) {
 
 export default function TopPage() {
   const navigate = useNavigate();
+  const [isMuted, setIsMuted] = useState(getMuteState());
+
+  useEffect(() => {
+    // Initialize audio on first user interaction
+    ensureAudioStarted();
+    playTopPageBgm();
+    return () => {
+      stopBgm();
+    };
+  }, []);
+
+  const handleMuteToggle = () => {
+    toggleMute();
+    setIsMuted(getMuteState());
+  };
 
   return (
     <div className="wi-wrap">
+      {/* Mute Button */}
+      <button className="mute-btn" onClick={handleMuteToggle} title={isMuted ? 'Unmute' : 'Mute'}>
+        {isMuted ? '🔇' : '🔊'}
+      </button>
+
       {/* ── Sky ── */}
       <div className="wi-sky">
         {/* Clouds */}

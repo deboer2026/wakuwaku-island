@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ほうせきやさん</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Hiragino Maru Gothic Pro', 'Rounded Mplus 1c', sans-serif; overflow: hidden; background: #fce4ec; }
+#game-wrap { width: 100vw; height: 100vh; max-width: 480px; margin: 0 auto; position: relative; overflow: hidden; }
+canvas#bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+
+/* HUD */
+#hud { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px 8px; z-index: 10; background: rgba(233,30,99,0.75); }
+.hud-box { background: rgba(255,255,255,0.95); border-radius: 12px; padding: 4px 12px; text-align: center; min-width: 68px; }
+.hud-label { font-size: 10px; color: #880e4f; font-weight: 700; }
+.hud-val   { font-size: 20px; font-weight: 900; color: #560027; }
+#hud-title { font-size: 15px; font-weight: 900; color: #fff; text-shadow: 1px 2px 0 #880e4f; }
+
+/* SCREENS */
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 0 20px; }
+#title-screen { background: linear-gradient(160deg,#f48fb1,#fce4ec); }
+#title-screen h1 { font-size: 30px; font-weight: 900; color: #880e4f; text-shadow: 2px 2px 0 #fff; margin-bottom: 6px; }
+#title-screen p  { font-size: 13px; color: #ad1457; margin-bottom: 20px; text-align: center; line-height: 1.8; }
+.hi-badge { background: rgba(136,14,79,0.12); color: #880e4f; font-size: 13px; font-weight: 700; padding: 4px 16px; border-radius: 20px; margin-bottom: 14px; }
+.big-btn { background: #e91e63; color: #fff; border: none; border-radius: 50px; padding: 14px 44px; font-size: 20px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 0 #880e4f; touch-action: manipulation; }
+.big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #880e4f; }
+.big-btn.blue { background: #4DB8FF; box-shadow: 0 6px 0 #2a9ad4; }
+.big-btn.blue:active { box-shadow: 0 2px 0 #2a9ad4; }
+
+/* GAME AREA */
+#game-area { position: absolute; inset: 0; z-index: 5; display: none; flex-direction: column; align-items: center; padding-top: 58px; }
+
+/* お店カウンター */
+#shop-counter {
+  width: 92%; max-width: 400px;
+  background: linear-gradient(180deg,#fff9c4,#fff176);
+  border-radius: 20px;
+  padding: 14px 14px 10px;
+  box-shadow: 0 6px 0 #f9a825;
+  margin-bottom: 10px;
+  position: relative;
+}
+#counter-label { font-size: 11px; font-weight: 700; color: #f57f17; text-align: center; margin-bottom: 8px; letter-spacing: 0.05em; }
+
+/* 棚アイテムグリッド */
+#shelf-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.shelf-item {
+  background: #fff; border: 3px solid #f9a825;
+  border-radius: 16px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; transition: transform 0.1s;
+  touch-action: manipulation; position: relative;
+}
+.shelf-item:active { transform: scale(0.9); }
+.shelf-item.correct { border-color: #66bb6a; background: #f1f8e9; animation: correctPop 0.4s; }
+.shelf-item.wrong   { border-color: #f44336; background: #ffebee; animation: wrongShake 0.35s; }
+.shelf-item .s-emoji { line-height: 1; }
+.shelf-item .s-name  { font-size: 9px; font-weight: 700; color: #555; }
+@keyframes correctPop  { 0%{transform:scale(1)} 50%{transform:scale(1.2)} 100%{transform:scale(1)} }
+@keyframes wrongShake  { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+/* お客さんエリア */
+#customer-area {
+  width: 92%; max-width: 400px;
+  display: flex; align-items: flex-end; justify-content: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  position: relative;
+  min-height: 120px;
+}
+
+/* お客さんキャラ */
+#customer-char {
+  font-size: 72px; line-height: 1;
+  transition: transform 0.3s;
+  filter: drop-shadow(2px 4px 0 rgba(0,0,0,0.15));
+}
+#customer-char.happy  { animation: happyBounce 0.5s; }
+#customer-char.angry  { animation: angryShake 0.4s; }
+@keyframes happyBounce { 0%,100%{transform:translateY(0)} 30%{transform:translateY(-20px)} 60%{transform:translateY(-10px)} }
+@keyframes angryShake  { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-8deg)} 75%{transform:rotate(8deg)} }
+
+/* 吹き出し */
+#speech-bubble {
+  background: #fff; border-radius: 18px; padding: 10px 14px;
+  box-shadow: 0 3px 0 #e0e0e0; max-width: 180px;
+  position: relative; text-align: center;
+  margin-bottom: 12px;
+}
+#speech-bubble::after {
+  content:''; position: absolute; bottom: -10px; left: 30px;
+  border: 10px solid transparent; border-top-color: #fff; border-bottom: none;
+}
+#speech-emoji { font-size: 32px; display: block; margin-bottom: 2px; line-height: 1; }
+#speech-text  { font-size: 13px; font-weight: 700; color: #333; }
+
+/* 待ち列 */
+#queue-area { display: flex; gap: 6px; justify-content: center; margin-bottom: 6px; }
+.queue-dot { font-size: 20px; line-height: 1; transition: opacity 0.3s; }
+.queue-dot.done { opacity: 0.3; }
+
+/* ライフ */
+#life-area { font-size: 13px; font-weight: 700; color: #e91e63; }
+
+/* RESULT */
+#result-overlay { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(233,30,99,0.88); }
+#result-overlay h2 { font-size: 44px; font-weight: 900; color: #FFD700; text-shadow: 3px 3px 0 #880e4f; margin-bottom: 8px; }
+#result-overlay p  { font-size: 16px; color: #fff; text-align: center; line-height: 1.8; margin-bottom: 8px; }
+.new-hi-txt { font-size: 18px; font-weight: 900; color: #FFD700; margin-bottom: 16px; }
+
+/* ステージクリア */
+#stage-clear { position: absolute; inset: 0; z-index: 28; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,200,50,0.92); }
+#stage-clear h2 { font-size: 40px; font-weight: 900; color: #fff; text-shadow: 2px 2px 0 #f57f17; margin-bottom: 8px; }
+#stage-clear p  { font-size: 16px; color: #fff; margin-bottom: 20px; }
+
+.pop-label { position: absolute; font-weight: 900; pointer-events: none; animation: popUp 0.7s forwards; z-index: 25; }
+@keyframes popUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-70px) scale(1.5)} }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+  <canvas id="bg"></canvas>
+
+  <!-- タイトル -->
+  <div id="title-screen" class="screen">
+    <div style="font-size:60px;margin-bottom:6px;">💎</div>
+    <h1>ほうせきやさん</h1>
+    <p>やってきた どうぶつさんに<br>ほしい アクセサリを<br>わたしてあげよう！<br>たなから えらんで タップ！</p>
+    <div id="hi-title" class="hi-badge">🏆 ハイスコア: 0てん</div>
+    <button class="big-btn" onclick="startGame()">▶ スタート！</button>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud" style="display:none;">
+    <div class="hud-box"><div class="hud-label">スコア</div><div class="hud-val" id="score-disp">0</div></div>
+    <div id="hud-title">💎 ほうせきやさん</div>
+    <div class="hud-box"><div class="hud-label">ステージ</div><div class="hud-val" id="stage-disp">1</div></div>
+  </div>
+
+  <!-- ゲームエリア -->
+  <div id="game-area">
+    <!-- 待ち列 -->
+    <div id="queue-area"></div>
+
+    <!-- お客さんエリア -->
+    <div id="customer-area">
+      <div id="speech-bubble">
+        <span id="speech-emoji">💍</span>
+        <div id="speech-text">これがほしいな</div>
+      </div>
+      <div id="customer-char">🐱</div>
+    </div>
+
+    <!-- ライフ -->
+    <div id="life-area">❤️❤️❤️</div>
+
+    <!-- お店カウンター（棚） -->
+    <div id="shop-counter">
+      <div id="counter-label">💎 たなからえらんでね 💎</div>
+      <div id="shelf-grid"></div>
+    </div>
+  </div>
+
+  <!-- ステージクリア -->
+  <div id="stage-clear" style="display:none;">
+    <h2 id="sc-title">🌟 ステージクリア！</h2>
+    <p id="sc-msg">みんなにわたせたよ！</p>
+    <button class="big-btn" onclick="nextStage()">つぎへ ▶</button>
+  </div>
+
+  <!-- 結果 -->
+  <div id="result-overlay" style="display:none;">
+    <h2 id="r-title">🎉</h2>
+    <p id="r-msg"></p>
+    <div id="r-hi" class="new-hi-txt"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="big-btn" onclick="startGame()">もういちど</button>
+      <button class="big-btn blue" onclick="goTitle()">タイトルへ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const wrap = document.getElementById('game-wrap');
+const bgcv = document.getElementById('bg');
+const bgctx = bgcv.getContext('2d');
+let W, H;
+
+// アクセサリマスターデータ
+const ACCESSORIES = [
+  {e:'💍',n:'ゆびわ'},{e:'📿',n:'ネックレス'},{e:'👑',n:'おうかん'},
+  {e:'💎',n:'ダイヤ'},{e:'⭐',n:'スター'},{e:'🌙',n:'つき'},
+  {e:'🌸',n:'はな'},{e:'🦋',n:'ちょうちょ'},{e:'❤️',n:'ハート'},
+  {e:'🎀',n:'リボン'},{e:'🌈',n:'にじ'},{e:'✨',n:'キラキラ'},
+];
+
+// お客さんの動物
+const CUSTOMERS = [
+  {e:'🐱',n:'ねこ'},{e:'🐶',n:'いぬ'},{e:'🐰',n:'うさぎ'},
+  {e:'🐸',n:'かえる'},{e:'🐼',n:'パンダ'},{e:'🦊',n:'きつね'},
+  {e:'🐧',n:'ペンギン'},{e:'🐻',n:'くま'},{e:'🐮',n:'うし'},
+  {e:'🐷',n:'ぶた'},{e:'🦁',n:'らいおん'},{e:'🐨',n:'こあら'},
+];
+
+// ギャラリー
+const GALLERY = ['👸','🤴','🌟','🎉','🌈','🎀','🦋','🌸'];
+let gallery = [];
+
+// ステージ設定：ステージ数に応じた棚アイテム数
+function shelfCount(stage) { return Math.min(4 + stage, ACCESSORIES.length); }
+function customersPerStage(stage) { return 4 + stage; }
+
+// ゲーム状態
+let score = 0, stage = 1, hp = 3;
+let customerQueue = [], currentCustomer = null, currentAnswer = null;
+let serving = false;
+let bgAnimId;
+
+function getHi() { return parseInt(localStorage.getItem('jewelry_hi')||'0'); }
+function saveHi(v) { localStorage.setItem('jewelry_hi', v); }
+function updateHiBadge() { document.getElementById('hi-title').textContent = '🏆 ハイスコア: '+getHi()+'てん'; }
+
+function resize() {
+  W = wrap.clientWidth; H = wrap.clientHeight;
+  bgcv.width = W; bgcv.height = H;
+  buildGallery();
+}
+
+function buildGallery() {
+  gallery = [];
+  GALLERY.forEach((e,i) => {
+    gallery.push({emoji:e, x:W*(0.04+(i%2)*0.07), y:H*(0.1+Math.floor(i/2)*0.16), size:W*0.065, phase:i*1.1, speed:1.4+i*0.2});
+    gallery.push({emoji:GALLERY[(i+3)%GALLERY.length], x:W*(0.96-(i%2)*0.07), y:H*(0.1+Math.floor(i/2)*0.16), size:W*0.065, phase:i*1.3, speed:1.6+i*0.2});
+  });
+}
+
+function bgLoop() {
+  bgctx.clearRect(0,0,W,H);
+  bgctx.fillStyle='#fce4ec'; bgctx.fillRect(0,0,W,H);
+  // キラキラ装飾
+  const t = performance.now()/1000;
+  for(let i=0;i<10;i++){
+    const x=W*(0.05+i*0.1), y=H*(0.1+Math.sin(t*0.7+i)*0.08);
+    bgctx.font=`${Math.round(W*0.03+Math.sin(t+i)*3)}px serif`;
+    bgctx.textAlign='center'; bgctx.textBaseline='middle';
+    bgctx.globalAlpha=0.3+Math.sin(t*1.5+i)*0.15;
+    bgctx.fillText(['💎','✨','⭐','🌸'][i%4],x,y);
+  }
+  bgctx.globalAlpha=1;
+  gallery.forEach(g=>{
+    const bob=Math.sin(t*g.speed+g.phase)*5;
+    bgctx.font=`${Math.round(g.size)}px serif`;
+    bgctx.textAlign='center'; bgctx.textBaseline='middle';
+    bgctx.fillText(g.emoji,g.x,g.y+bob);
+  });
+  bgAnimId=requestAnimationFrame(bgLoop);
+}
+
+// ===== ゲーム開始 =====
+function startGame() {
+  score=0; stage=1; hp=3;
+  document.getElementById('title-screen').style.display='none';
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('stage-clear').style.display='none';
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('game-area').style.display='flex';
+  updateHUD();
+  setupStage();
+}
+
+function goTitle() {
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('stage-clear').style.display='none';
+  document.getElementById('hud').style.display='none';
+  document.getElementById('game-area').style.display='none';
+  document.getElementById('title-screen').style.display='flex';
+  updateHiBadge();
+}
+
+function updateHUD() {
+  document.getElementById('score-disp').textContent=score;
+  document.getElementById('stage-disp').textContent=stage;
+  document.getElementById('life-area').textContent='❤️'.repeat(hp)+'🖤'.repeat(3-hp);
+}
+
+// ===== ステージセットアップ =====
+function setupStage() {
+  serving=false;
+  const total = customersPerStage(stage);
+  // お客さんキューを作成（ランダム）
+  customerQueue=[];
+  for(let i=0;i<total;i++){
+    const cust=CUSTOMERS[Math.floor(Math.random()*CUSTOMERS.length)];
+    const want=ACCESSORIES[Math.floor(Math.random()*ACCESSORIES.length)];
+    customerQueue.push({customer:cust, want});
+  }
+  // 棚アイテムを設定（正解を含むランダムセット）
+  buildShelf();
+  renderQueue();
+  nextCustomer();
+}
+
+function buildShelf() {
+  const count=shelfCount(stage);
+  // 現在のお客さんの正解を必ず含む
+  const wantIdx = currentAnswer ? ACCESSORIES.findIndex(a=>a.e===currentAnswer.e) : -1;
+  let pool=[...ACCESSORIES];
+  // シャッフル
+  pool.sort(()=>Math.random()-0.5);
+  // 正解を含む先頭count個
+  if(wantIdx>=0 && !pool.slice(0,count).find(a=>a.e===currentAnswer.e)){
+    pool.unshift(ACCESSORIES[wantIdx]);
+  }
+  const shelf=pool.slice(0,count);
+  shelf.sort(()=>Math.random()-0.5);
+
+  const grid=document.getElementById('shelf-grid');
+  grid.innerHTML='';
+  const btnSize=Math.min(Math.floor((Math.min(W,400)-28-(count<=4?3:Math.ceil(count/2)-1)*8)/Math.min(count,Math.ceil(count/2)+1)),80);
+  const emojiSize=Math.round(btnSize*0.55);
+
+  shelf.forEach(acc=>{
+    const btn=document.createElement('button');
+    btn.className='shelf-item';
+    btn.style.width=btnSize+'px'; btn.style.height=btnSize+'px';
+    btn.innerHTML=`<span class="s-emoji" style="font-size:${emojiSize}px">${acc.e}</span><span class="s-name">${acc.n}</span>`;
+    btn.addEventListener('click',()=>onSelectItem(acc, btn));
+    btn.addEventListener('touchend',e=>{e.preventDefault();onSelectItem(acc, btn);},{passive:false});
+    grid.appendChild(btn);
+  });
+}
+
+function renderQueue() {
+  const qa=document.getElementById('queue-area');
+  qa.innerHTML='';
+  const total=customerQueue.length + (currentCustomer?1:0);
+  const done=total-(customerQueue.length+(currentCustomer?1:0));
+  customerQueue.forEach((c,i)=>{
+    const d=document.createElement('div');
+    d.className='queue-dot';
+    d.textContent=c.customer.e;
+    qa.appendChild(d);
+  });
+}
+
+function nextCustomer() {
+  if(customerQueue.length===0){ stageClear(); return; }
+  const next=customerQueue.shift();
+  currentCustomer=next.customer;
+  currentAnswer=next.want;
+  serving=true;
+
+  document.getElementById('customer-char').textContent=currentCustomer.e;
+  document.getElementById('customer-char').className='';
+  document.getElementById('speech-emoji').textContent=currentAnswer.e;
+  document.getElementById('speech-text').textContent=currentAnswer.n+'がほしいな';
+  renderQueue();
+  // 棚を正解含めて再構築
+  buildShelf();
+}
+
+function onSelectItem(acc, btn) {
+  if(!serving) return;
+  if(acc.e===currentAnswer.e){
+    // 正解！
+    serving=false;
+    btn.classList.add('correct');
+    document.getElementById('customer-char').classList.add('happy');
+    score+=10+(stage-1)*5;
+    updateHUD();
+    showPop(W/2,H*0.45,'✨ せいかい！+'+( 10+(stage-1)*5),'#FFD700',24);
+    setTimeout(()=>{ btn.classList.remove('correct'); nextCustomer(); },900);
+  } else {
+    // 不正解
+    btn.classList.add('wrong');
+    document.getElementById('customer-char').classList.add('angry');
+    hp=Math.max(0,hp-1);
+    updateHUD();
+    showPop(W/2,H*0.45,'💦 ちがうよ…','#f44336',22);
+    setTimeout(()=>{ btn.classList.remove('wrong'); document.getElementById('customer-char').className=''; if(hp<=0) gameOver(); },500);
+  }
+}
+
+function stageClear() {
+  document.getElementById('stage-clear').style.display='flex';
+  document.getElementById('sc-title').textContent='🌟 ステージ'+stage+' クリア！';
+  document.getElementById('sc-msg').innerHTML=`ぜんいんに わたせたよ！<br>スコア: <b style="color:#FFD700;font-size:20px">${score}</b>てん`;
+  // 紙吹雪
+  for(let i=0;i<16;i++) setTimeout(()=>spawnConfetti(),i*80);
+}
+
+function nextStage() {
+  stage++;
+  document.getElementById('stage-clear').style.display='none';
+  setupStage();
+}
+
+function gameOver() {
+  document.getElementById('hud').style.display='none';
+  document.getElementById('game-area').style.display='none';
+  document.getElementById('result-overlay').style.display='flex';
+  const hi=getHi(); const isNew=score>hi;
+  if(isNew) saveHi(score);
+  updateHiBadge();
+  document.getElementById('r-title').textContent='💔 ざんねん…';
+  document.getElementById('r-msg').innerHTML=`スコア <b style="font-size:26px;color:#FFD700">${score}</b> てん<br>ステージ ${stage} まで すすんだよ！`;
+  const hiEl=document.getElementById('r-hi');
+  hiEl.textContent=isNew?'🏆 ニューレコード！':'ハイスコア: '+hi+'てん';
+  hiEl.style.color=isNew?'#FFD700':'rgba(255,255,255,0.6)';
+}
+
+function showPop(x,y,text,color,size){
+  const el=document.createElement('div');
+  el.className='pop-label'; el.textContent=text;
+  el.style.color=color; el.style.fontSize=size+'px';
+  el.style.left=(x-80)+'px'; el.style.top=(y-30)+'px';
+  wrap.appendChild(el); setTimeout(()=>el.remove(),800);
+}
+
+function spawnConfetti(){
+  const el=document.createElement('div');
+  el.className='pop-label';
+  el.textContent=['🎉','⭐','✨','💎','🌟'][Math.floor(Math.random()*5)];
+  el.style.fontSize='22px'; el.style.color='#FFD700';
+  el.style.left=Math.random()*W+'px'; el.style.top='60px';
+  wrap.appendChild(el); setTimeout(()=>el.remove(),800);
+}
+
+resize();
+updateHiBadge();
+window.addEventListener('resize',()=>resize());
+bgLoop();
+</script>
+</body>
+</html>

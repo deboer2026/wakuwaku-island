@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { playDoubutsuPuzzleBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
 import './DoubutsuPuzzle.css';
 
 // ─── constants ────────────────────────────────────────────────────────────────
@@ -191,6 +192,8 @@ export default function DoubutsuPuzzle() {
   // ─── endGame ───────────────────────────────────────────────────────────────
   const endGame = useCallback((elapsed, misses) => {
     clearInterval(timerIntRef.current);
+    stopBgm();
+    playSoundClear();
 
     const stars = misses <= 3 ? '⭐⭐⭐' : misses <= 7 ? '⭐⭐' : '⭐';
     const prevBest = getBestTime();
@@ -281,6 +284,9 @@ export default function DoubutsuPuzzle() {
 
   // ─── startGame ─────────────────────────────────────────────────────────────
   const startGame = useCallback(() => {
+    ensureAudioStarted();
+    playDoubutsuPuzzleBgm();
+
     matchedRef.current  = 0;
     missRef.current     = 0;
     timeRef.current     = 0;

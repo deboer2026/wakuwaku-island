@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { playKazuAsobiBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
 import './KazuAsobi.css';
 
 const ANIMALS = ['🐱','🐶','🐸','🐼','🦊','🐰','🐧','🐻','🐮','🐷','🦁','🐨','🦝','🦄','🐯','🐺'];
@@ -111,6 +112,8 @@ export default function KazuAsobi() {
   const endGame = useCallback(() => {
     runningRef.current = false;
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    stopBgm();
+    playSoundClear();
     const c = correctCountRef.current;
     const hi = getHi();
     const isNew = c > hi;
@@ -125,6 +128,9 @@ export default function KazuAsobi() {
   }, []);
 
   const startGame = useCallback(() => {
+    ensureAudioStarted();
+    playKazuAsobiBgm();
+
     correctCountRef.current = 0;
     timeLeftRef.current = GAME_DURATION;
     runningRef.current = true;

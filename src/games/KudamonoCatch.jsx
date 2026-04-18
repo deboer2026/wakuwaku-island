@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { playKudamonoCatchBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
 import './KudamonoCatch.css';
 
 // ─── constants ───────────────────────────────────────────────────────────────
@@ -292,12 +293,14 @@ export default function KudamonoCatch() {
       ) {
         item.caught = true;
         if (item.isTrap) {
+          playSoundWrong();
           hpRef.current = Math.max(0, hpRef.current - 1);
           showPop(item.x, cy, '💥 -HP', '#ff4444', 22);
           if (hpRef.current <= 0) {
             setTimeout(endGame, 600);
           }
         } else {
+          playSoundCorrect();
           const pts = FRUIT_PTS[item.emoji] || 1;
           scoreRef.current += pts;
           setScoreDisplay(scoreRef.current);
@@ -347,6 +350,8 @@ export default function KudamonoCatch() {
     clearInterval(timerIntRef.current);
     clearTimeout(spawnTimeoutRef.current);
     cancelAnimationFrame(animIdRef.current);
+    stopBgm();
+    playSoundClear();
 
     const score = scoreRef.current;
     const hi    = getHi();
@@ -381,6 +386,9 @@ export default function KudamonoCatch() {
 
   // ─── startGame ─────────────────────────────────────────────────────────────
   const startGame = useCallback(() => {
+    ensureAudioStarted();
+    playKudamonoCatchBgm();
+
     catcherEmoji.current = CHARACTERS[selectedChara].emoji;
 
     scoreRef.current    = 0;
@@ -494,6 +502,7 @@ export default function KudamonoCatch() {
       cancelAnimationFrame(animIdRef.current);
       clearInterval(timerIntRef.current);
       clearTimeout(spawnTimeoutRef.current);
+      stopBgm();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
