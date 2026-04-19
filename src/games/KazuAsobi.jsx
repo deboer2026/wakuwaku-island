@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playKazuAsobiBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
+import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import './KazuAsobi.css';
 
 const ANIMALS = ['🐱','🐶','🐸','🐼','🦊','🐰','🐧','🐻','🐮','🐷','🦁','🐨','🦝','🦄','🐯','🐺'];
@@ -117,7 +118,11 @@ export default function KazuAsobi() {
     const c = correctCountRef.current;
     const hi = getHi();
     const isNew = c > hi;
-    if (isNew) saveHi(c);
+    if (isNew) {
+      saveHi(c);
+      trackNewHighScore('KazuAsobi', c);
+    }
+    trackGameClear('KazuAsobi', c, 1);
     setHiScore(isNew ? c : hi);
     let title, msg;
     if (c >= 12)     { title = '🏆 すごい！'; msg = 'てんさいキッズ！'; }
@@ -130,6 +135,7 @@ export default function KazuAsobi() {
   const startGame = useCallback(() => {
     ensureAudioStarted();
     playKazuAsobiBgm();
+    trackGameStart('KazuAsobi');
 
     correctCountRef.current = 0;
     timeLeftRef.current = GAME_DURATION;

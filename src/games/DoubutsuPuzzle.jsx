@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playDoubutsuPuzzleBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
+import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import './DoubutsuPuzzle.css';
 
 // ─── constants ────────────────────────────────────────────────────────────────
@@ -198,7 +199,11 @@ export default function DoubutsuPuzzle() {
     const stars = misses <= 3 ? '⭐⭐⭐' : misses <= 7 ? '⭐⭐' : '⭐';
     const prevBest = getBestTime();
     const isNewBest = prevBest === 0 || elapsed < prevBest;
-    if (isNewBest) saveBestTime(elapsed);
+    if (isNewBest) {
+      saveBestTime(elapsed);
+      trackNewHighScore('DoubutsuPuzzle', elapsed);
+    }
+    trackGameClear('DoubutsuPuzzle', elapsed, 1);
     setBestTimeDisplay(isNewBest ? elapsed : prevBest);
 
     setResultData({
@@ -284,6 +289,7 @@ export default function DoubutsuPuzzle() {
 
   // ─── startGame ─────────────────────────────────────────────────────────────
   const startGame = useCallback(() => {
+    trackGameStart('DoubutsuPuzzle');
     ensureAudioStarted();
     playDoubutsuPuzzleBgm();
 

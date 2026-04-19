@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playJewelryShopBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
+import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import './JewelryShop.css';
 
 const ACCESSORIES = [
@@ -187,6 +188,7 @@ export default function JewelryShop() {
   function startGame() {
     ensureAudioStarted();
     playJewelryShopBgm();
+    trackGameStart('JewelryShop');
 
     scoreRef.current = 0;
     stageRef.current = 1;
@@ -212,7 +214,11 @@ export default function JewelryShop() {
 
     const hi = getHi();
     const isNew = scoreRef.current > hi;
-    if (isNew) saveHi(scoreRef.current);
+    if (isNew) {
+      saveHi(scoreRef.current);
+      trackNewHighScore('JewelryShop', scoreRef.current);
+    }
+    trackGameClear('JewelryShop', scoreRef.current, stageRef.current);
     setHiScore(isNew ? scoreRef.current : hi);
     setIsNewHi(isNew);
     setResultData({ score: scoreRef.current, stage: stageRef.current });

@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playAnimalSoccerBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted } from '../utils/audio';
+import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import './AnimalSoccer.css';
 
 const FRUITS = ['🍎','🍊','🍋','🍇','🍓','🍑','🍒','🍌'];
@@ -100,7 +101,11 @@ export default function AnimalSoccer() {
     const s = scoreRef.current;
     const hi = getHi();
     const isNew = s > hi;
-    if (isNew) saveHi(s);
+    if (isNew) {
+      saveHi(s);
+      trackNewHighScore('AnimalSoccer', s);
+    }
+    trackGameClear('AnimalSoccer', s, 1);
     setHiScore(isNew ? s : hi);
     let title, msg;
     if (s >= 12) { title = '🏆 チャンピオン！'; msg = 'かんぺきなシュート！'; }
@@ -310,6 +315,7 @@ export default function AnimalSoccer() {
   }, [update, draw]);
 
   const startGame = useCallback((char) => {
+    trackGameStart('AnimalSoccer');
     ensureAudioStarted();
     playAnimalSoccerBgm();
 

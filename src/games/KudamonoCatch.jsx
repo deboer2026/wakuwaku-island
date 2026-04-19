@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playKudamonoCatchBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
+import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import './KudamonoCatch.css';
 
 // ─── constants ───────────────────────────────────────────────────────────────
@@ -356,7 +357,11 @@ export default function KudamonoCatch() {
     const score = scoreRef.current;
     const hi    = getHi();
     const isNew = score > hi;
-    if (isNew) saveHi(score);
+    if (isNew) {
+      saveHi(score);
+      trackNewHighScore('KudamonoCatch', score);
+    }
+    trackGameClear('KudamonoCatch', score, 1);
     setHiScore(isNew ? score : hi);
 
     let title, msg;
@@ -386,6 +391,7 @@ export default function KudamonoCatch() {
 
   // ─── startGame ─────────────────────────────────────────────────────────────
   const startGame = useCallback(() => {
+    trackGameStart('KudamonoCatch');
     ensureAudioStarted();
     playKudamonoCatchBgm();
 

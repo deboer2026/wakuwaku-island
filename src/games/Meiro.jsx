@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playMeiroBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted } from '../utils/audio';
+import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import './Meiro.css';
 
 const COLS = 11, ROWS = 11;
@@ -289,7 +290,11 @@ export default function Meiro() {
     const t = timeRef.current;
     const hi = getHi();
     const isNew = hi === 0 || t < hi;
-    if (isNew) saveHi(t);
+    if (isNew) {
+      saveHi(t);
+      trackNewHighScore('Meiro', t);
+    }
+    trackGameClear('Meiro', t, 1);
     setHiScore(isNew ? t : hi);
     const title = isNew ? '🏆 ベストタイム こうしん！' : 'クリア！🏁';
     const hiText = `ベスト: ${fmtTime(isNew ? t : hi)}`;
@@ -302,6 +307,7 @@ export default function Meiro() {
     if (timerIntRef.current) { clearInterval(timerIntRef.current); timerIntRef.current = null; }
     if (mazeAnimRef.current) { cancelAnimationFrame(mazeAnimRef.current); mazeAnimRef.current = null; }
     stopBgm();
+    trackGameOver('Meiro', timeRef.current);
     const hi = getHi();
     setResultData({ title: 'ゲームオーバー 😢', msg: 'もういちどチャレンジ！', hiText: hi > 0 ? `ベスト: ${fmtTime(hi)}` : '', isNew: false });
     setScreen('result');
@@ -393,6 +399,7 @@ export default function Meiro() {
 
   // ---- Start game ----
   const startGame = useCallback((char) => {
+    trackGameStart('Meiro');
     ensureAudioStarted();
     playMeiroBgm();
 
