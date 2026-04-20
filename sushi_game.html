@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>さーもんをとろう！</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Hiragino Maru Gothic Pro', 'Rounded Mplus 1c', sans-serif; overflow: hidden; background: #fff8f0; }
+#game-wrap { width: 100vw; height: 100vh; max-width: 480px; margin: 0 auto; position: relative; overflow: hidden; }
+canvas#bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+canvas#cv { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; }
+
+#hud { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px 8px; z-index: 10; background: rgba(220,60,60,0.82); }
+.hud-box { background: rgba(255,255,255,0.95); border-radius: 12px; padding: 4px 12px; text-align: center; min-width: 68px; }
+.hud-label { font-size: 10px; color: #c0392b; font-weight: 700; }
+.hud-val   { font-size: 20px; font-weight: 900; color: #922b21; }
+#hud-title { font-size: 14px; font-weight: 900; color: #fff; text-shadow: 1px 2px 0 #922b21; }
+
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 0 20px; }
+#title-screen { background: linear-gradient(160deg,#ffcdd2,#fff8f0); }
+#title-screen h1 { font-size: 28px; font-weight: 900; color: #c0392b; text-shadow: 2px 2px 0 #fff; margin-bottom: 6px; }
+
+.rule-card { background: #fff; border-radius: 20px; padding: 16px 18px; width: 100%; max-width: 320px; margin-bottom: 14px; box-shadow: 0 6px 0 #ffcdd2; }
+.rule-card h2 { font-size: 14px; font-weight: 900; color: #c0392b; margin-bottom: 10px; text-align: center; }
+.rule-step { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.rule-num  { background: #e74c3c; color: #fff; font-size: 12px; font-weight: 900; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rule-text { font-size: 12px; color: #444; line-height: 1.5; }
+.hi-badge { background: rgba(192,57,43,0.1); color: #c0392b; font-size: 13px; font-weight: 700; padding: 4px 16px; border-radius: 20px; margin-bottom: 14px; }
+.big-btn { background: #e74c3c; color: #fff; border: none; border-radius: 50px; padding: 13px 40px; font-size: 19px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 0 #922b21; touch-action: manipulation; }
+.big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #922b21; }
+.big-btn.blue { background: #4DB8FF; box-shadow: 0 6px 0 #2a9ad4; }
+
+/* ステージクリア */
+#stage-clear { position: absolute; inset: 0; z-index: 28; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,160,0,0.92); }
+#stage-clear h2 { font-size: 36px; font-weight: 900; color: #fff; text-shadow: 2px 2px 0 #e65100; margin-bottom: 8px; }
+#stage-clear p  { font-size: 16px; color: #fff; margin-bottom: 20px; text-align: center; line-height: 1.7; }
+
+#result-overlay { position: absolute; inset: 0; z-index: 30; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(192,57,43,0.9); }
+#result-overlay h2 { font-size: 44px; font-weight: 900; color: #FFD700; text-shadow: 3px 3px 0 #922b21; margin-bottom: 8px; }
+#result-overlay p  { font-size: 16px; color: #fff; text-align: center; line-height: 1.8; margin-bottom: 8px; }
+.new-hi-txt { font-size: 18px; font-weight: 900; color: #FFD700; margin-bottom: 16px; }
+
+.pop-label { position: absolute; font-weight: 900; pointer-events: none; animation: popUp 0.7s forwards; z-index: 25; white-space: nowrap; }
+@keyframes popUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-60px) scale(1.5)} }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+  <canvas id="bg"></canvas>
+  <canvas id="cv"></canvas>
+
+  <!-- タイトル -->
+  <div id="title-screen" class="screen">
+    <div style="font-size:60px;margin-bottom:6px;">🍣</div>
+    <h1>さーもんをとろう！</h1>
+    <div class="rule-card">
+      <h2>📖 あそびかた</h2>
+      <div class="rule-step"><div class="rule-num">1</div><div class="rule-text">かいてんずしの レーンを みてね！</div></div>
+      <div class="rule-step"><div class="rule-num">2</div><div class="rule-text"><b>さーもん🍣</b> がながれてきたら タップ！</div></div>
+      <div class="rule-step"><div class="rule-num">3</div><div class="rule-text"><b>どうぶつ</b> や <b>ほかのもの</b> は タップしちゃダメ！</div></div>
+      <div class="rule-step"><div class="rule-num">4</div><div class="rule-text">ステージ3まで クリアしよう！ スピードがあがるよ！</div></div>
+    </div>
+    <div id="hi-title" class="hi-badge">🏆 ハイスコア: 0てん</div>
+    <button class="big-btn" onclick="startGame()">▶ スタート！</button>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud" style="display:none;">
+    <div class="hud-box"><div class="hud-label">スコア</div><div class="hud-val" id="score-disp">0</div></div>
+    <div id="hud-title">🍣 ステージ <span id="stage-disp">1</span></div>
+    <div class="hud-box"><div class="hud-label">ライフ</div><div class="hud-val" id="hp-disp">❤️❤️❤️</div></div>
+  </div>
+
+  <!-- ステージクリア -->
+  <div id="stage-clear">
+    <div style="font-size:64px;margin-bottom:8px;">🎉</div>
+    <h2 id="sc-title">ステージ1 クリア！</h2>
+    <p id="sc-msg"></p>
+    <button class="big-btn" onclick="nextStage()">つぎへ ▶</button>
+  </div>
+
+  <!-- 結果 -->
+  <div id="result-overlay">
+    <h2 id="r-title">🎉</h2>
+    <p id="r-msg"></p>
+    <div id="r-hi" class="new-hi-txt"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="big-btn" onclick="startGame()">もういちど</button>
+      <button class="big-btn blue" onclick="goTitle()">タイトルへ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const wrap  = document.getElementById('game-wrap');
+const bgcv  = document.getElementById('bg');
+const bgctx = bgcv.getContext('2d');
+const cv    = document.getElementById('cv');
+const ctx   = cv.getContext('2d');
+let W, H;
+
+// レーン設定
+const LANE_COUNT = 3;
+let LANE_H, LANE_Y = []; // レーンのY座標
+let ITEM_SIZE;
+
+// アイテム
+const SALMON = {e:'🍣', salmon:true};
+const OTHERS = [
+  {e:'🐱'},{e:'🐶'},{e:'🐸'},{e:'🐼'},{e:'🦊'},{e:'🐰'},
+  {e:'🐧'},{e:'🐻'},{e:'🍊'},{e:'🍎'},{e:'🎀'},{e:'⭐'},
+  {e:'🐙'},{e:'🦐'},{e:'🥚'},{e:'🐟'},{e:'🦑'},{e:'🍙'},
+];
+
+const GALLERY = ['👸','🤴','👑','🌸','✨','🎉','🌈','🎀'];
+let gallery = [];
+
+// ゲーム状態
+let lanes = [[], [], []]; // 各レーンのアイテム
+let score = 0, hp = 3, stage = 1, running = false;
+let stageGoal = 8; // 1ステージで取るべきサーモン数
+let salmonCaught = 0;
+let speed = 2; // px/frame
+let animId, spawnTimeout;
+let missedSalmon = 0; // 取り逃がしたサーモン（ペナルティ）
+
+function getHi(){ return parseInt(localStorage.getItem('sushi3_hi')||'0'); }
+function saveHi(v){ localStorage.setItem('sushi3_hi',v); }
+function updateHiBadge(){ document.getElementById('hi-title').textContent='🏆 ハイスコア: '+getHi()+'てん'; }
+
+function resize(){
+  W = wrap.clientWidth; H = wrap.clientHeight;
+  bgcv.width = W; bgcv.height = H;
+  cv.width = W; cv.height = H;
+  LANE_H = Math.floor((H * 0.7) / LANE_COUNT);
+  ITEM_SIZE = Math.floor(LANE_H * 0.62);
+  for(let i=0;i<LANE_COUNT;i++){
+    LANE_Y[i] = Math.floor(H * 0.14) + i * LANE_H + LANE_H/2;
+  }
+  buildGallery();
+}
+
+function buildGallery(){
+  gallery = [];
+  GALLERY.forEach((e,i)=>{
+    gallery.push({emoji:e, x:W*(0.03+(i%2)*0.06), y:H*(0.88+Math.floor(i/4)*0.07), size:W*0.06, phase:i*1.1, speed:1.5+i*0.2});
+    gallery.push({emoji:GALLERY[(i+3)%GALLERY.length], x:W*(0.97-(i%2)*0.06), y:H*(0.88+Math.floor(i/4)*0.07), size:W*0.06, phase:i*1.3, speed:1.7+i*0.2});
+  });
+}
+
+function stageSpeed(s){ return 2 + s * 1.2; }
+function stageGoalCount(s){ return s===1?8:s===2?12:16; }
+function stageInterval(s){ return s===1?1800:s===2?1300:950; }
+
+function mkItem(laneIdx){
+  const isSalmon = Math.random() < 0.38;
+  const data = isSalmon ? SALMON : OTHERS[Math.floor(Math.random()*OTHERS.length)];
+  return {
+    ...data,
+    lane: laneIdx,
+    x: W + ITEM_SIZE,
+    popping: false, popAlpha: 1, popScale: 1,
+    shaking: false, shakeT: 0,
+    alive: true,
+  };
+}
+
+function spawnLoop(){
+  if(!running) return;
+  // ランダムなレーンに出現
+  const lane = Math.floor(Math.random() * LANE_COUNT);
+  // そのレーンの最後のアイテムが十分離れていれば追加
+  const last = lanes[lane][lanes[lane].length-1];
+  if(!last || last.x < W - ITEM_SIZE * 2.5){
+    lanes[lane].push(mkItem(lane));
+  }
+  spawnTimeout = setTimeout(spawnLoop, stageInterval(stage) + Math.random()*400);
+}
+
+function startGame(){
+  score=0; hp=3; stage=1; running=true; salmonCaught=0; missedSalmon=0;
+  stageGoal=stageGoalCount(1);
+  speed=stageSpeed(1);
+  lanes=[[],[],[]];
+  document.getElementById('title-screen').style.display='none';
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('stage-clear').style.display='none';
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('score-disp').textContent='0';
+  document.getElementById('stage-disp').textContent='1';
+  updateHp();
+  clearTimeout(spawnTimeout); cancelAnimationFrame(animId);
+  loop(); spawnLoop();
+}
+
+function goTitle(){
+  running=false; cancelAnimationFrame(animId); clearTimeout(spawnTimeout);
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('stage-clear').style.display='none';
+  document.getElementById('hud').style.display='none';
+  document.getElementById('title-screen').style.display='flex';
+  updateHiBadge();
+}
+
+function updateHp(){ document.getElementById('hp-disp').textContent='❤️'.repeat(hp)+'🖤'.repeat(3-hp); }
+
+// タップ判定
+function onTap(cx, cy){
+  if(!running) return;
+  // どのレーンか
+  for(let l=0;l<LANE_COUNT;l++){
+    if(Math.abs(cy - LANE_Y[l]) > LANE_H*0.55) continue;
+    // そのレーンのアイテムを右から順にチェック
+    for(let i=lanes[l].length-1;i>=0;i--){
+      const item=lanes[l][i];
+      if(!item.alive||item.popping||item.shaking) continue;
+      if(Math.abs(item.x - cx) < ITEM_SIZE*0.8){
+        if(item.salmon){
+          // 正解！
+          item.popping=true;
+          salmonCaught++;
+          score+=10;
+          document.getElementById('score-disp').textContent=score;
+          showPop(item.x, LANE_Y[l], '🍣 +10', '#FFD700', 24);
+          // ステージクリア判定
+          if(salmonCaught>=stageGoal){
+            setTimeout(()=>{ running ? checkStage() : null; }, 600);
+          }
+        } else {
+          // ミス！
+          item.shaking=true; item.shakeT=0;
+          hp=Math.max(0,hp-1); updateHp();
+          showPop(item.x, LANE_Y[l], '🚫 ダメ！', '#f44336', 22);
+          if(hp<=0){ setTimeout(endGame,600); }
+        }
+        break;
+      }
+    }
+  }
+}
+
+cv.addEventListener('click',e=>{
+  const r=cv.getBoundingClientRect();
+  onTap((e.clientX-r.left)*(W/r.width),(e.clientY-r.top)*(H/r.height));
+});
+cv.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  const r=cv.getBoundingClientRect();
+  Array.from(e.changedTouches).forEach(t=>onTap((t.clientX-r.left)*(W/r.width),(t.clientY-r.top)*(H/r.height)));
+},{passive:false});
+
+function loop(){
+  if(!running) return;
+  update(); draw();
+  animId=requestAnimationFrame(loop);
+}
+
+function update(){
+  for(let l=0;l<LANE_COUNT;l++){
+    lanes[l].forEach(item=>{
+      if(!item.alive) return;
+      if(item.popping){ item.popAlpha-=0.09; item.popScale+=0.07; if(item.popAlpha<=0) item.alive=false; return; }
+      if(item.shaking){ item.shakeT+=0.28; if(item.shakeT>Math.PI*3){item.shaking=false;item.shakeT=0;} return; }
+      item.x -= speed;
+      // 画面外に出たら消える（サーモン取り逃がしはペナルティなし・シンプルに）
+      if(item.x < -ITEM_SIZE) item.alive=false;
+    });
+    lanes[l]=lanes[l].filter(i=>i.alive||i.popping||i.shaking);
+  }
+}
+
+function draw(){
+  // 背景
+  bgctx.fillStyle='#fff8f0'; bgctx.fillRect(0,0,W,H);
+  // ギャラリー（下部）
+  const t=performance.now()/1000;
+  gallery.forEach(g=>{
+    const bob=Math.sin(t*g.speed+g.phase)*4;
+    bgctx.font=`${Math.round(g.size)}px serif`;
+    bgctx.textAlign='center'; bgctx.textBaseline='middle';
+    bgctx.fillText(g.emoji,g.x,g.y+bob);
+  });
+
+  ctx.clearRect(0,0,W,H);
+
+  // レーン描画
+  for(let l=0;l<LANE_COUNT;l++){
+    const y=LANE_Y[l];
+    const laneColors=['rgba(255,220,220,0.5)','rgba(255,240,200,0.5)','rgba(220,240,255,0.5)'];
+    // レーン背景
+    ctx.fillStyle=laneColors[l];
+    ctx.fillRect(0, y-LANE_H/2, W, LANE_H);
+    // レーンベルト（コンベア）
+    ctx.fillStyle='rgba(180,160,140,0.3)';
+    ctx.fillRect(0, y+LANE_H*0.3, W, LANE_H*0.1);
+    // 矢印（流れる方向）
+    ctx.fillStyle='rgba(150,100,80,0.2)';
+    ctx.font=`${Math.round(LANE_H*0.18)}px serif`;
+    ctx.textBaseline='middle';
+    for(let x=20;x<W;x+=80){
+      ctx.fillText('→',x,y+LANE_H*0.35);
+    }
+    // レーン境界線
+    ctx.strokeStyle='rgba(200,150,120,0.4)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(0,y+LANE_H/2); ctx.lineTo(W,y+LANE_H/2); ctx.stroke();
+
+    // アイテム描画
+    lanes[l].forEach(item=>{
+      if(!item.alive) return;
+      ctx.save();
+      let ox=0;
+      if(item.shaking) ox=Math.sin(item.shakeT*6)*8;
+      if(item.popping){
+        ctx.globalAlpha=item.popAlpha;
+        ctx.translate(item.x+ox, y);
+        ctx.scale(item.popScale, item.popScale);
+      } else {
+        ctx.translate(item.x+ox, y);
+      }
+
+      // お皿（白い円）
+      ctx.beginPath(); ctx.arc(0,0,ITEM_SIZE*0.52,0,Math.PI*2);
+      ctx.fillStyle=item.salmon?'rgba(255,240,240,0.95)':'rgba(255,255,255,0.88)';
+      ctx.fill();
+      ctx.strokeStyle=item.salmon?'#e74c3c':'#ddd'; ctx.lineWidth=2.5; ctx.stroke();
+
+      // 絵文字
+      ctx.font=`${Math.round(ITEM_SIZE*0.75)}px serif`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(item.e, 0, 0);
+
+      // トラップ✕
+      if(!item.salmon && !item.popping){
+        ctx.strokeStyle='rgba(255,50,50,0.45)'; ctx.lineWidth=2;
+        const s=ITEM_SIZE*0.35;
+        ctx.beginPath(); ctx.moveTo(-s,-s); ctx.lineTo(s,s); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(s,-s); ctx.lineTo(-s,s); ctx.stroke();
+      }
+      ctx.restore();
+    });
+  }
+
+  // ステージ進捗バー
+  const prog=Math.min(salmonCaught/stageGoal,1);
+  ctx.fillStyle='rgba(255,200,200,0.5)';
+  ctx.fillRect(0, H*0.92, W, H*0.05);
+  ctx.fillStyle='#e74c3c';
+  ctx.fillRect(0, H*0.92, W*prog, H*0.05);
+  ctx.fillStyle='#fff';
+  ctx.font=`bold ${Math.round(H*0.025)}px sans-serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(`🍣 ${salmonCaught} / ${stageGoal}`, W/2, H*0.945);
+}
+
+function checkStage(){
+  if(!running) return;
+  running=false; clearTimeout(spawnTimeout); cancelAnimationFrame(animId);
+  if(stage>=3){ endGame(); return; }
+  const sc=document.getElementById('stage-clear');
+  sc.style.display='flex';
+  document.getElementById('sc-title').textContent=`ステージ${stage} クリア！`;
+  document.getElementById('sc-msg').innerHTML=`🍣×${salmonCaught} とれたよ！<br>つぎは もっとはやいよ！`;
+  for(let i=0;i<16;i++) setTimeout(()=>spawnConfetti(),i*80);
+}
+
+function nextStage(){
+  stage++;
+  stageGoal=stageGoalCount(stage);
+  speed=stageSpeed(stage);
+  salmonCaught=0; lanes=[[],[],[]];
+  document.getElementById('stage-clear').style.display='none';
+  document.getElementById('stage-disp').textContent=stage;
+  running=true;
+  loop(); spawnLoop();
+}
+
+function endGame(){
+  running=false; clearTimeout(spawnTimeout); cancelAnimationFrame(animId);
+  document.getElementById('hud').style.display='none';
+  document.getElementById('result-overlay').style.display='flex';
+  const hi=getHi(); const isNew=score>hi;
+  if(isNew) saveHi(score);
+  updateHiBadge();
+  const hiEl=document.getElementById('r-hi');
+  hiEl.textContent=isNew?'🏆 ニューレコード！':'ハイスコア: '+hi+'てん';
+  hiEl.style.color=isNew?'#FFD700':'rgba(255,255,255,0.6)';
+  const t=document.getElementById('r-title'), m=document.getElementById('r-msg');
+  const reason=hp<=0?'<br><span style="font-size:13px;color:#ffcccc;">まちがえすぎちゃった…</span>':'';
+  if(stage>=3&&salmonCaught>=stageGoal){t.textContent='🏆 チャンピオン！'; m.innerHTML=`スコア <b style="font-size:26px;color:#FFD700">${score}</b> てん！<br>ぜんぶ クリアしたよ！${reason}`;}
+  else if(score>=80){t.textContent='🍣 ナイス！'; m.innerHTML=`スコア <b style="font-size:26px;color:#FFD700">${score}</b> てん！<br>ステージ${stage}まで クリア！${reason}`;}
+  else              {t.textContent='😅 もういちど'; m.innerHTML=`スコア <b style="font-size:26px;color:#FFD700">${score}</b> てん<br>またちょうせん！${reason}`;}
+}
+
+function showPop(x,y,text,color,size){
+  const el=document.createElement('div');
+  el.className='pop-label'; el.textContent=text;
+  el.style.color=color; el.style.fontSize=size+'px';
+  el.style.left=(x-50)+'px'; el.style.top=(y-40)+'px';
+  wrap.appendChild(el); setTimeout(()=>el.remove(),800);
+}
+
+function spawnConfetti(){
+  const el=document.createElement('div');
+  el.className='pop-label';
+  el.textContent=['🎉','⭐','✨','🍣','🌟'][Math.floor(Math.random()*5)];
+  el.style.fontSize='22px'; el.style.color='#FFD700';
+  el.style.left=Math.random()*W+'px'; el.style.top='60px';
+  wrap.appendChild(el); setTimeout(()=>el.remove(),800);
+}
+
+resize();
+updateHiBadge();
+window.addEventListener('resize',()=>resize());
+
+function titleBgLoop(){
+  bgctx.fillStyle='#fff8f0'; bgctx.fillRect(0,0,W,H);
+  const t=performance.now()/1000;
+  gallery.forEach(g=>{
+    const bob=Math.sin(t*g.speed+g.phase)*4;
+    bgctx.font=`${Math.round(g.size)}px serif`;
+    bgctx.textAlign='center'; bgctx.textBaseline='middle';
+    bgctx.fillText(g.emoji,g.x,g.y+bob);
+  });
+  if(!running) requestAnimationFrame(titleBgLoop);
+}
+titleBgLoop();
+</script>
+</body>
+</html>

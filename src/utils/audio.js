@@ -339,3 +339,55 @@ export function playSoundPop() {
   synth.triggerAttackRelease('A4', '16n');
   setTimeout(() => synth.dispose(), 200);
 }
+
+// Sushi Game BGM
+export function playSushiBgm() {
+  if (isMuted || !audioInitialized) return;
+  stopAllBgm();
+
+  const synth = new window.Tone.PolySynth(window.Tone.Synth, {
+    oscillator: { type: 'sine' },
+    envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.5 },
+  }).toDestination();
+  synth.volume.value = VOLUME;
+
+  const now = window.Tone.now();
+  const melody = [
+    ['C4', '8n'], ['E4', '8n'], ['G4', '8n'], ['C5', '8n'],
+    ['G4', '8n'], ['E4', '8n'], ['C4', '8n'], ['E4', '8n'],
+  ];
+
+  currentBgm = new window.Tone.Loop((time) => {
+    melody.forEach((m, i) => {
+      synth.triggerAttackRelease(m[0], m[1], time + i * 0.25);
+    });
+  }, '2n');
+
+  currentBgm.start(0);
+}
+
+// Ichigo Game BGM
+export function playIchigoBgm() {
+  if (isMuted || !audioInitialized) return;
+  stopAllBgm();
+
+  const synth = new window.Tone.PolySynth(window.Tone.Synth, {
+    oscillator: { type: 'triangle' },
+    envelope: { attack: 0.005, decay: 0.15, sustain: 0.2, release: 0.6 },
+  }).toDestination();
+  synth.volume.value = VOLUME;
+
+  const now = window.Tone.now();
+  const melody = [
+    ['D4', '8n'], ['F4', '8n'], ['A4', '8n'], ['D5', '8n'],
+    ['A4', '8n'], ['F4', '8n'], ['D4', '8n'], ['F4', '8n'],
+  ];
+
+  currentBgm = new window.Tone.Loop((time) => {
+    melody.forEach((m, i) => {
+      synth.triggerAttackRelease(m[0], m[1], time + i * 0.25);
+    });
+  }, '2n');
+
+  currentBgm.start(0);
+}

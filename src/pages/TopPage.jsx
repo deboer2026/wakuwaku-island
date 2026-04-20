@@ -74,6 +74,26 @@ const GAMES = [
     stars: '⭐⭐⭐⭐',
     isNew: true,
   },
+  {
+    id: 'g8',
+    route: '/sushi',
+    icon: '🍣',
+    num: 8,
+    name: 'さーもん',
+    desc: 'かいてんずし！\nサーモンだけ\nタップしよう！',
+    stars: '⭐⭐⭐⭐⭐',
+    isNew: true,
+  },
+  {
+    id: 'g9',
+    route: '/ichigo',
+    icon: '🍓',
+    num: 9,
+    name: 'いちご',
+    desc: '30びょうで\nいちごを\nあつめよう！',
+    stars: '⭐⭐⭐⭐⭐',
+    isNew: true,
+  },
 ];
 
 function GameCard({ game, onClick }) {

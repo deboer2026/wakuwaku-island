@@ -568,6 +568,13 @@ export default function KudamonoCatch() {
       {/* ── HUD ── */}
       {screen === 'game' && (
         <div id="kdc-hud">
+          <button className="game-back-btn" onClick={() => {
+            runningRef.current = false;
+            if(timerIntRef.current) clearInterval(timerIntRef.current);
+            if(animIdRef.current) cancelAnimationFrame(animIdRef.current);
+            if(spawnTimeoutRef.current) clearTimeout(spawnTimeoutRef.current);
+            setScreen('title');
+          }}>← もどる</button>
           <div className="kdc-hud-box">
             <div className="kdc-hud-label">スコア</div>
             <div className="kdc-hud-val">{scoreDisplay}</div>

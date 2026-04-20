@@ -374,6 +374,12 @@ export default function DoubutsuPuzzle() {
         <>
           {/* HUD */}
           <div id="dbp-hud">
+            <button className="game-back-btn" onClick={() => {
+              clearInterval(timerIntRef.current);
+              flippedRef.current = [];
+              lockRef.current = false;
+              setScreen('title');
+            }}>← もどる</button>
             <div className="dbp-hud-box">
               <div className="dbp-hud-label">じかん</div>
               <div className="dbp-hud-val">{timeDisplay}</div>

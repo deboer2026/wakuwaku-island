@@ -7,6 +7,8 @@ import DoubutsuPuzzle from './games/DoubutsuPuzzle'
 import KazuAsobi from './games/KazuAsobi'
 import AnimalSoccer from './games/AnimalSoccer'
 import JewelryShop from './games/JewelryShop'
+import SushiGame from './games/SushiGame'
+import IchigoGame from './games/IchigoGame'
 
 export default function App() {
   return (
@@ -19,6 +21,8 @@ export default function App() {
       <Route path="/kazu-asobi" element={<KazuAsobi />} />
       <Route path="/animal-soccer" element={<AnimalSoccer />} />
       <Route path="/jewelry-shop" element={<JewelryShop />} />
+      <Route path="/sushi" element={<SushiGame />} />
+      <Route path="/ichigo" element={<IchigoGame />} />
     </Routes>
   )
 }
