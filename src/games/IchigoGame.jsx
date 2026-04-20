@@ -122,8 +122,10 @@ export default function IchigoGame() {
     if (!runningRef.current) return;
     const active = itemsRef.current.filter(i => i.alive && !i.popping).length;
     if (active < 16) itemsRef.current.push(mkItem());
-    // Continue spawning with delay
-    setTimeout(spawnLoop, 350 + Math.random() * 500);
+    // Recursive setTimeout with timeout stored in ref
+    setTimeout(() => {
+      spawnLoop();
+    }, 350 + Math.random() * 500);
   }, [mkItem]);
 
   const resetCombo = useCallback(() => {
@@ -378,6 +380,12 @@ export default function IchigoGame() {
     playIchigoBgm();
     trackGameStart('IchigoGame');
 
+    // CRITICAL: Clear any existing timers/animations FIRST
+    if (timerIdRef.current) clearInterval(timerIdRef.current);
+    if (animIdRef.current) cancelAnimationFrame(animIdRef.current);
+    if (bgAnimIdRef.current) cancelAnimationFrame(bgAnimIdRef.current);
+    if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
+
     scoreRef.current = 0;
     timeLeftRef.current = 30;
     hpRef.current = 3;
@@ -413,6 +421,7 @@ export default function IchigoGame() {
       itemsRef.current.push(b);
     }
 
+    // Start loops AFTER setting runningRef.current = true
     animIdRef.current = requestAnimationFrame(gameLoop);
     spawnLoop();
 
@@ -572,7 +581,7 @@ export default function IchigoGame() {
         <span className="ichigo-basket-count">{collected}こ</span>
         <span className="ichigo-life-area">{'❤️'.repeat(hp)}{'🖤'.repeat(3 - hp)}</span>
       </div>
-      <button className="ichigo-hud-back" onClick={() => { runningRef.current = false; if (timerIdRef.current) clearInterval(timerIdRef.current); if (animIdRef.current) cancelAnimationFrame(animIdRef.current); setScreen('title'); }}>← もどる</button>
+      <button className="ichigo-hud-back" onClick={() => { runningRef.current = false; if (timerIdRef.current) clearInterval(timerIdRef.current); if (animIdRef.current) cancelAnimationFrame(animIdRef.current); navigate('/'); }}>🏠</button>
     </div>
   );
 }

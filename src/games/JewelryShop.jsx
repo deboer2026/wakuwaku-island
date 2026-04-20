@@ -281,6 +281,7 @@ export default function JewelryShop() {
       {/* ── HUD ── */}
       {(screen === 'game' || screen === 'stageClear') && (
         <div className="js-hud">
+          <button className="js-hud-back" onClick={() => { servingRef.current = false; if (rafRef.current) cancelAnimationFrame(rafRef.current); navigate('/'); }}>🏠</button>
           <div className="js-hud-box">
             <div className="js-hud-label">スコア</div>
             <div className="js-hud-val">{score}</div>

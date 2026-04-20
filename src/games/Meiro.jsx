@@ -553,8 +553,8 @@ export default function Meiro() {
           if (timerIntRef.current) clearInterval(timerIntRef.current);
           if (mazeAnimRef.current) cancelAnimationFrame(mazeAnimRef.current);
           if (bgAnimRef.current) cancelAnimationFrame(bgAnimRef.current);
-          setScreen('title');
-        }}>← もどる</button>
+          navigate('/');
+        }}>🏠</button>
         <div className="meiro-hud-info">
           <span>じかん: <b>{fmtTime(timeDisplay)}</b></span>
           <span>ライフ: {hpHearts.join('')}</span>

@@ -289,7 +289,7 @@ export default function KazuAsobi() {
       <div className="kazu-overlay">
         {/* HUD */}
         <div className="kazu-hud">
-          <button className="kazu-hud-back" onClick={() => { runningRef.current=false; if(timerRef.current) clearInterval(timerRef.current); if(animIdRef.current) cancelAnimationFrame(animIdRef.current); setScreen('title'); }}>← もどる</button>
+          <button className="kazu-hud-back" onClick={() => { runningRef.current=false; if(timerRef.current) clearInterval(timerRef.current); if(animIdRef.current) cancelAnimationFrame(animIdRef.current); navigate('/'); }}>🏠</button>
           <div className="kazu-hud-info">
             <span>⏱ <b>{timeDisplay}</b></span>
             <span>⭕ <b>{correctDisplay}</b></span>

@@ -483,8 +483,8 @@ export default function Shabondama() {
             if(timerIntRef.current) clearInterval(timerIntRef.current);
             if(animIdRef.current) cancelAnimationFrame(animIdRef.current);
             if(spawnTimeoutRef.current) clearTimeout(spawnTimeoutRef.current);
-            setScreen('title');
-          }}>← もどる</button>
+            navigate('/');
+          }}>🏠</button>
           <div className="sdm-hud-box">
             <div className="sdm-hud-label">スコア</div>
             <div className="sdm-hud-val">{scoreDisplay}</div>

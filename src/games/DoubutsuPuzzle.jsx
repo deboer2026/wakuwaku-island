@@ -378,8 +378,8 @@ export default function DoubutsuPuzzle() {
               clearInterval(timerIntRef.current);
               flippedRef.current = [];
               lockRef.current = false;
-              setScreen('title');
-            }}>← もどる</button>
+              navigate('/');
+            }}>🏠</button>
             <div className="dbp-hud-box">
               <div className="dbp-hud-label">じかん</div>
               <div className="dbp-hud-val">{timeDisplay}</div>

@@ -441,7 +441,7 @@ export default function AnimalSoccer() {
   return (
     <div className="soccer-wrap" ref={wrapRef}>
       <div className="soccer-hud">
-        <button className="soccer-hud-back" onClick={() => { if(animIdRef.current) cancelAnimationFrame(animIdRef.current); setScreen('title'); }}>← もどる</button>
+        <button className="soccer-hud-back" onClick={() => { if(animIdRef.current) cancelAnimationFrame(animIdRef.current); navigate('/'); }}>🏠</button>
         <div className="soccer-hud-info">
           <span>スコア: <b>{scoreDisplay}</b></span>
           <span>のこり: {'⚽'.repeat(shotsDisplay)}</span>

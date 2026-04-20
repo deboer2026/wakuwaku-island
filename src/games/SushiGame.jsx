@@ -88,7 +88,10 @@ export default function SushiGame() {
     if (!last || last.x < W.current - (W.current * 0.12) * 2.5) {
       lanesRef.current[lane].push(mkItem(lane));
     }
-    spawnTimeoutRef.current = setTimeout(spawnLoop, stageInterval(stageRef.current) + Math.random() * 400);
+    // Recursive setTimeout - key to continuous spawning
+    spawnTimeoutRef.current = setTimeout(() => {
+      spawnLoop();
+    }, stageInterval(stageRef.current) + Math.random() * 400);
   }, [mkItem]);
 
   const drawBg = useCallback(() => {
@@ -334,6 +337,10 @@ export default function SushiGame() {
   }, [endGame]);
 
   const nextStage = useCallback(() => {
+    // Clear existing loops
+    if (spawnTimeoutRef.current) clearTimeout(spawnTimeoutRef.current);
+    if (animIdRef.current) cancelAnimationFrame(animIdRef.current);
+
     stageRef.current++;
     stageGoalRef.current = stageGoalCount(stageRef.current);
     speedRef.current = stageSpeed(stageRef.current);
@@ -343,13 +350,20 @@ export default function SushiGame() {
     setScreen('game');
     runningRef.current = true;
     animIdRef.current = requestAnimationFrame(gameLoop);
-    spawnTimeoutRef.current = setTimeout(spawnLoop, stageInterval(stageRef.current));
+    spawnTimeoutRef.current = setTimeout(() => {
+      spawnLoop();
+    }, stageInterval(stageRef.current));
   }, [gameLoop, spawnLoop]);
 
   const startGame = useCallback(() => {
     ensureAudioStarted();
     playSushiBgm();
     trackGameStart('SushiGame');
+
+    // CRITICAL: Clear any existing timeouts/animations FIRST
+    if (spawnTimeoutRef.current) clearTimeout(spawnTimeoutRef.current);
+    if (animIdRef.current) cancelAnimationFrame(animIdRef.current);
+    if (bgAnimIdRef.current) cancelAnimationFrame(bgAnimIdRef.current);
 
     scoreRef.current = 0;
     hpRef.current = 3;
@@ -377,8 +391,11 @@ export default function SushiGame() {
     bgCanvasRef.current.height = H.current;
     buildGallery();
 
+    // Start loops AFTER setting runningRef.current = true
     animIdRef.current = requestAnimationFrame(gameLoop);
-    spawnTimeoutRef.current = setTimeout(spawnLoop, stageInterval(1));
+    spawnTimeoutRef.current = setTimeout(() => {
+      spawnLoop();
+    }, stageInterval(1));
   }, [gameLoop, spawnLoop, buildGallery]);
 
   const spawnConfetti = () => {
@@ -522,7 +539,7 @@ export default function SushiGame() {
       <canvas ref={bgCanvasRef} className="sushi-canvas-bg" />
       <canvas ref={canvasRef} className="sushi-canvas" />
       <div className="sushi-hud">
-        <button className="sushi-hud-back" onClick={() => { runningRef.current = false; if (spawnTimeoutRef.current) clearTimeout(spawnTimeoutRef.current); if (animIdRef.current) cancelAnimationFrame(animIdRef.current); setScreen('title'); }}>← もどる</button>
+        <button className="sushi-hud-back" onClick={() => { runningRef.current = false; if (spawnTimeoutRef.current) clearTimeout(spawnTimeoutRef.current); if (animIdRef.current) cancelAnimationFrame(animIdRef.current); navigate('/'); }}>🏠</button>
         <div className="sushi-hud-box"><div className="sushi-hud-label">スコア</div><div className="sushi-hud-val">{score}</div></div>
         <div className="sushi-hud-title">🍣 ステージ {stage}</div>
         <div className="sushi-hud-box"><div className="sushi-hud-label">ライフ</div><div className="sushi-hud-val">{'❤️'.repeat(hp)}{'🖤'.repeat(3 - hp)}</div></div>
