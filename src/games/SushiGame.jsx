@@ -1,377 +1,365 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playSushiBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import './SushiGame.css';
 
-const LANE_COUNT = 3;
 const SALMON = '🍣';
-const TRAP_EMOJI = ['🐱','🐶','🐸','🐼','🦊','🐰','🐧','🐻','🍊','🍎','🎀','⭐'];
-const GALLERY_CHARS = ['👸','🤴','👑','🌸','✨','🎉','🌈','🎀'];
+const TRAPS = ['🐱','🐶','🐸','🐼','🦊','🐰','🐧','🐻','🍊','🍎','🎀','⭐','🐙','🦐','🥚','🐟'];
+const LANE_COLORS = ['#ffe8e8','#fff8e0','#e8f0ff'];
+const ITEM_PX = 56; // アイテムの直径(px)
 
 function getHi() { return parseInt(localStorage.getItem('sushi_hi') || '0'); }
 function saveHi(v) { localStorage.setItem('sushi_hi', String(v)); }
 
+let _uid = 0;
+
+function stageSpeed(s)  { return s === 1 ? 2.5 : s === 2 ? 4.0 : 5.5; }
+function stageGoal(s)   { return s === 1 ? 8   : s === 2 ? 12  : 16;  }
+function stageIntvl(s)  { return s === 1 ? 1800 : s === 2 ? 1300 : 950; }
+
 export default function SushiGame() {
   const navigate = useNavigate();
 
-  // UI State
-  const [screen, setScreen] = useState('title');
-  const [score, setScore] = useState(0);
-  const [hp, setHp] = useState(3);
-  const [stage, setStage] = useState(1);
-  const [hiScore, setHiScore] = useState(getHi());
-  const [resultData, setResultData] = useState({ title: '', msg: '', hiText: '', isNew: false });
+  /* ─── UI State ─── */
+  const [screen, setScreen]     = useState('title');
+  const [items,  setItems]      = useState([]);
+  const [score,  setScore]      = useState(0);
+  const [hp,     setHp]         = useState(3);
+  const [stage,  setStage]      = useState(1);
+  const [caught, setCaught]     = useState(0);
+  const [hiScore,setHiScore]    = useState(getHi());
+  const [resultData,setResult]  = useState(null);
 
-  // Game items state - for DOM rendering
-  const [items, setItems] = useState([]);
+  /* ─── Mutable Refs ─── */
+  const scoreR   = useRef(0);
+  const hpR      = useRef(3);
+  const stageR   = useRef(1);
+  const speedR   = useRef(stageSpeed(1));
+  const goalR    = useRef(stageGoal(1));
+  const caughtR  = useRef(0);
+  const runR     = useRef(false);
+  const moveIntR = useRef(null);
+  const spawnTmR = useRef(null);
+  const wrapR    = useRef(null);
 
-  // Mutable game state refs
-  const scoreRef = useRef(0);
-  const hpRef = useRef(3);
-  const stageRef = useRef(1);
-  const runningRef = useRef(false);
-  const salmonCaughtRef = useRef(0);
-  const stageGoalRef = useRef(8);
-  const speedRef = useRef(2);
-  const spawnTimeoutRef = useRef(null);
-  const updateIntervalRef = useRef(null);
-  const itemCounterRef = useRef(0);
-
-  const stageSpeed = (s) => 2 + s * 1.2;
-  const stageGoalCount = (s) => s === 1 ? 8 : s === 2 ? 12 : 16;
-  const stageInterval = (s) => s === 1 ? 1800 : s === 2 ? 1300 : 950;
-
-  // Create new item
-  const mkItem = useCallback(() => {
-    const lane = Math.floor(Math.random() * LANE_COUNT);
+  /* ─── アイテム生成 ─── */
+  function mkItem() {
+    const W    = wrapR.current ? wrapR.current.offsetWidth : window.innerWidth;
+    const lane = Math.floor(Math.random() * 3);
     const isSalmon = Math.random() < 0.38;
-    const emoji = isSalmon ? SALMON : TRAP_EMOJI[Math.floor(Math.random() * TRAP_EMOJI.length)];
     return {
-      id: itemCounterRef.current++,
-      emoji,
+      id:       _uid++,
+      emoji:    isSalmon ? SALMON : TRAPS[Math.floor(Math.random() * TRAPS.length)],
       isSalmon,
       lane,
-      x: 100, // starts at right edge (100%)
-      alive: true,
+      x:        W + ITEM_PX,   // 画面右端の外側からスタート
     };
-  }, []);
+  }
 
-  // Spawn loop - add items periodically
-  const spawnLoop = useCallback(() => {
-    if (!runningRef.current) {
-      console.log('[SushiGame] spawnLoop: runningRef is false, stopping spawn');
-      return;
-    }
-    console.log('[SushiGame] spawnLoop: adding new item');
-    const newItem = mkItem();
-    setItems(prev => [...prev, newItem]);
+  /* ─── 全停止 ─── */
+  function stopAll() {
+    runR.current = false;
+    if (moveIntR.current) { clearInterval(moveIntR.current); moveIntR.current = null; }
+    if (spawnTmR.current) { clearTimeout(spawnTmR.current);  spawnTmR.current  = null; }
+    stopBgm();
+  }
 
-    // Schedule next spawn
-    const interval = stageInterval(stageRef.current) + Math.random() * 400;
-    spawnTimeoutRef.current = setTimeout(() => {
-      spawnLoop();
-    }, interval);
-  }, [mkItem]);
+  /* ─── スポーンループ（setTimeout再帰） ─── */
+  function spawnOnce() {
+    if (!runR.current) return;
+    setItems(prev => [...prev, mkItem()]);
+    spawnTmR.current = setTimeout(spawnOnce, stageIntvl(stageR.current) + Math.random() * 400);
+  }
 
-  // Update loop - move items and remove off-screen ones
-  const updateItems = useCallback(() => {
-    setItems(prev => {
-      const speed = speedRef.current;
-      const updated = prev
-        .map(item => ({
-          ...item,
-          x: item.x - speed, // move left
-        }))
-        .filter(item => item.x > -10); // remove off-screen
+  /* ─── 移動ループ（setInterval 16ms ≈ 60fps） ─── */
+  function startMoveInterval() {
+    if (moveIntR.current) clearInterval(moveIntR.current);
+    moveIntR.current = setInterval(() => {
+      if (!runR.current) return;
+      setItems(prev =>
+        prev
+          .map(item => ({ ...item, x: item.x - speedR.current }))
+          .filter(item => item.x > -(ITEM_PX + 10))
+      );
+    }, 16);
+  }
 
-      return updated;
-    });
-  }, []);
+  /* ─── スタート ─── */
+  function startGame() {
+    stopAll();
+    _uid = 0;
+    scoreR.current  = 0;
+    hpR.current     = 3;
+    stageR.current  = 1;
+    speedR.current  = stageSpeed(1);
+    goalR.current   = stageGoal(1);
+    caughtR.current = 0;
+    runR.current    = true;
 
-  // Start game
-  const startGame = useCallback(() => {
-    console.log('[SushiGame] startGame called');
+    setScore(0); setHp(3); setStage(1); setCaught(0);
+    setItems([]); setResult(null);
+    setScreen('game');
+
     ensureAudioStarted();
     playSushiBgm();
     trackGameStart('SushiGame');
 
-    // Clear previous state
-    if (spawnTimeoutRef.current) clearTimeout(spawnTimeoutRef.current);
-    if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
+    // setScreen が適用された後に開始する
+    setTimeout(() => {
+      startMoveInterval();
+      spawnOnce();
+    }, 80);
+  }
 
-    // Reset game state
-    scoreRef.current = 0;
-    hpRef.current = 3;
-    stageRef.current = 1;
-    runningRef.current = true;
-    salmonCaughtRef.current = 0;
-    stageGoalRef.current = stageGoalCount(1);
-    speedRef.current = stageSpeed(1);
-    itemCounterRef.current = 0;
-
-    setScore(0);
-    setHp(3);
-    setStage(1);
-    setItems([]);
-    setScreen('game');
-
-    // Start spawn loop
-    console.log('[SushiGame] starting spawn loop');
-    spawnTimeoutRef.current = setTimeout(() => {
-      spawnLoop();
-    }, stageInterval(1));
-
-    // Start update loop (item movement)
-    console.log('[SushiGame] starting update loop');
-    updateIntervalRef.current = setInterval(() => {
-      updateItems();
-    }, 50); // Update 20 times per second
-  }, [spawnLoop, updateItems]);
-
-  // Handle item tap
-  const handleItemTap = useCallback((itemId, isSalmon) => {
-    if (!runningRef.current) return;
-
-    setItems(prev => prev.filter(item => item.id !== itemId));
+  /* ─── タップ判定 ─── */
+  function tapItem(id, isSalmon) {
+    if (!runR.current) return;
+    setItems(prev => prev.filter(i => i.id !== id));
 
     if (isSalmon) {
-      console.log('[SushiGame] Salmon caught!');
       playSoundCorrect();
-      scoreRef.current += 10;
-      salmonCaughtRef.current++;
-      setScore(scoreRef.current);
-
-      // Check if stage goal reached
-      if (salmonCaughtRef.current >= stageGoalRef.current) {
-        nextStage();
-      }
+      scoreR.current  += 10;
+      caughtR.current += 1;
+      setScore(scoreR.current);
+      setCaught(caughtR.current);
+      if (caughtR.current >= goalR.current) stageDone();
     } else {
-      console.log('[SushiGame] Trap hit!');
       playSoundWrong();
-      hpRef.current--;
-      setHp(hpRef.current);
-      if (hpRef.current <= 0) {
-        endGame();
-      }
+      hpR.current -= 1;
+      setHp(hpR.current);
+      if (hpR.current <= 0) gameOver();
     }
-  }, []);
+  }
 
-  // End game
-  const endGame = useCallback(() => {
-    console.log('[SushiGame] Game Over');
-    runningRef.current = false;
-    if (spawnTimeoutRef.current) clearTimeout(spawnTimeoutRef.current);
-    if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
-    stopBgm();
-    playSoundClear();
+  /* ─── ステージクリア ─── */
+  function stageDone() {
+    stopAll();
+    if (stageR.current >= 3) { gameOver(true); return; }
+    setScreen('stageClear');
+  }
 
-    const finalScore = scoreRef.current;
-    const hi = getHi();
-    const isNew = finalScore > hi;
-    if (isNew) {
-      saveHi(finalScore);
-      trackNewHighScore('SushiGame', finalScore);
-    }
-    trackGameClear('SushiGame', finalScore, stageRef.current);
-    setHiScore(isNew ? finalScore : hi);
+  function goNextStage() {
+    stageR.current  += 1;
+    speedR.current   = stageSpeed(stageR.current);
+    goalR.current    = stageGoal(stageR.current);
+    caughtR.current  = 0;
+    runR.current     = true;
 
-    let title, msg;
-    if (finalScore >= 200) {
-      title = '🏆 チャンピオン！';
-      msg = `スコア <b style="font-size:28px;color:#FFD700">${finalScore}</b> てん！`;
-    } else if (finalScore >= 100) {
-      title = '⭐ すごい！';
-      msg = `スコア <b style="font-size:28px;color:#FFD700">${finalScore}</b> てん！`;
-    } else {
-      title = '🍣 もういちど';
-      msg = `スコア <b style="font-size:28px;color:#FFD700">${finalScore}</b> てん<br>またちょうせん！`;
-    }
-
-    const hiText = isNew ? '🏆 ニューレコード！' : `ハイスコア: ${hi}てん`;
-    setResultData({ title, msg, hiText, isNew });
-    setScreen('result');
-  }, []);
-
-  // Next stage
-  const nextStage = useCallback(() => {
-    console.log(`[SushiGame] Stage ${stageRef.current} clear!`);
-    runningRef.current = false;
-    if (spawnTimeoutRef.current) clearTimeout(spawnTimeoutRef.current);
-    if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
-
-    const nextStageNum = stageRef.current + 1;
-    if (nextStageNum > 3) {
-      endGame();
-    } else {
-      setStage(nextStageNum);
-      setScreen('stageClear');
-    }
-  }, [endGame]);
-
-  // Continue to next stage
-  const continueToNextStage = useCallback(() => {
-    console.log(`[SushiGame] Continuing to stage ${stageRef.current + 1}`);
-    const nextStageNum = stageRef.current + 1;
-    stageRef.current = nextStageNum;
-    runningRef.current = true;
-    salmonCaughtRef.current = 0;
-    stageGoalRef.current = stageGoalCount(nextStageNum);
-    speedRef.current = stageSpeed(nextStageNum);
-
-    setScore(scoreRef.current);
-    setHp(hpRef.current);
-    setStage(nextStageNum);
+    setStage(stageR.current);
+    setCaught(0);
     setItems([]);
     setScreen('game');
 
-    // Restart loops
-    if (spawnTimeoutRef.current) clearTimeout(spawnTimeoutRef.current);
-    if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
+    ensureAudioStarted();
+    playSushiBgm();
 
-    spawnTimeoutRef.current = setTimeout(() => {
-      spawnLoop();
-    }, stageInterval(nextStageNum));
-
-    updateIntervalRef.current = setInterval(() => {
-      updateItems();
-    }, 50);
-  }, [spawnLoop, updateItems]);
-
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      if (spawnTimeoutRef.current) clearTimeout(spawnTimeoutRef.current);
-      if (updateIntervalRef.current) clearInterval(updateIntervalRef.current);
-      stopBgm();
-    };
-  }, []);
-
-  // Title Screen
-  if (screen === 'title') {
-    return (
-      <div className="sushi-wrap sushi-title">
-        <button className="sushi-back-btn" onClick={() => navigate('/')}>← もどる</button>
-        <div className="sushi-title-box">
-          <div className="sushi-title-emoji">🍣</div>
-          <h1 className="sushi-title-text">さーもんをとろう！</h1>
-          <div className="sushi-rule-card">
-            <h2>📖 あそびかた</h2>
-            <div className="sushi-rule-step"><div className="sushi-rule-num">1</div><div className="sushi-rule-text">かいてんずしの レーンを みてね！</div></div>
-            <div className="sushi-rule-step"><div className="sushi-rule-num">2</div><div className="sushi-rule-text"><b>さーもん🍣</b> がながれてきたら タップ！</div></div>
-            <div className="sushi-rule-step"><div className="sushi-rule-num">3</div><div className="sushi-rule-text"><b>どうぶつ</b> や <b>ほかのもの</b> は タップしちゃダメ！</div></div>
-            <div className="sushi-rule-step"><div className="sushi-rule-num">4</div><div className="sushi-rule-text">ステージ3まで クリアしよう！ スピードがあがるよ！</div></div>
-          </div>
-          {hiScore > 0 && <div className="sushi-hi-badge">🏆 ハイスコア: {hiScore}てん</div>}
-          <button className="sushi-start-btn" onClick={startGame}>▶ スタート！</button>
-        </div>
-      </div>
-    );
+    setTimeout(() => {
+      startMoveInterval();
+      spawnOnce();
+    }, 80);
   }
 
-  // Stage Clear Screen
-  if (screen === 'stageClear') {
-    return (
-      <div className="sushi-wrap sushi-stageclear">
-        <div className="sushi-stageclear-box">
-          <div style={{ fontSize: '64px', marginBottom: '8px' }}>🎉</div>
-          <h2 className="sushi-stageclear-title">ステージ{stage} クリア！</h2>
-          <p className="sushi-stageclear-msg">🍣×{salmonCaughtRef.current} とれたよ！つぎは もっとはやいよ！</p>
-          <button className="sushi-start-btn" onClick={continueToNextStage}>つぎへ ▶</button>
-        </div>
-      </div>
-    );
+  /* ─── ゲームオーバー ─── */
+  function gameOver(allClear = false) {
+    stopAll();
+    playSoundClear();
+    const s   = scoreR.current;
+    const hi  = getHi();
+    const isNew = s > hi;
+    if (isNew) { saveHi(s); trackNewHighScore('SushiGame', s); }
+    trackGameClear('SushiGame', s, stageR.current);
+    setHiScore(isNew ? s : hi);
+
+    let title, msg;
+    if (allClear)    { title = '🏆 チャンピオン！'; msg = `スコア ${s} てん！<br>ぜんぶクリアしたよ！`; }
+    else if (s >= 80){ title = '🍣 ナイス！';       msg = `スコア ${s} てん！<br>ステージ${stageR.current}まで！`; }
+    else             { title = '😅 もういちど';      msg = `スコア ${s} てん<br>またちょうせん！`; }
+
+    setResult({ title, msg, score: s, isNew, hi: isNew ? s : hi });
+    setScreen('result');
   }
 
-  // Result Screen
-  if (screen === 'result') {
-    return (
-      <div className="sushi-wrap sushi-result">
-        <div className="sushi-result-box">
-          <h2 className="sushi-result-title">{resultData.title}</h2>
-          <p className="sushi-result-msg" dangerouslySetInnerHTML={{ __html: resultData.msg }} />
-          {resultData.isNew && <div className="sushi-result-new">🏆 ニューレコード！</div>}
-          <div className="sushi-result-hi">{resultData.hiText}</div>
-          <div className="sushi-result-btns">
-            <button className="sushi-start-btn" onClick={startGame}>もういちど</button>
-            <button className="sushi-back-btn" onClick={() => navigate('/')}>タイトルへ</button>
-          </div>
+  /* ─── アンマウント時クリーンアップ ─── */
+  useEffect(() => () => stopAll(), []); // eslint-disable-line
+
+  /* ═══════════════════════════════════════════════════════════
+     タイトル画面
+  ═══════════════════════════════════════════════════════════ */
+  if (screen === 'title') return (
+    <div className="sushi-wrap sushi-title">
+      <button className="sushi-back-btn" onClick={() => navigate('/')}>← もどる</button>
+      <div className="sushi-title-box">
+        <div style={{ fontSize: 60, marginBottom: 6 }}>🍣</div>
+        <h1 className="sushi-title-text">さーもんをとろう！</h1>
+        <div className="sushi-rule-card">
+          <h2>📖 あそびかた</h2>
+          <div className="sushi-rule-step"><div className="sushi-rule-num">1</div><div className="sushi-rule-text">かいてんずしの レーンを みてね！</div></div>
+          <div className="sushi-rule-step"><div className="sushi-rule-num">2</div><div className="sushi-rule-text"><b>さーもん🍣</b> がながれてきたら タップ！</div></div>
+          <div className="sushi-rule-step"><div className="sushi-rule-num">3</div><div className="sushi-rule-text"><b>どうぶつ・ほかのもの</b>はタップしちゃダメ！</div></div>
+          <div className="sushi-rule-step"><div className="sushi-rule-num">4</div><div className="sushi-rule-text">ステージ3まで クリアしよう！スピードがあがるよ！</div></div>
+        </div>
+        {hiScore > 0 && <div className="sushi-hi-badge">🏆 ハイスコア: {hiScore}てん</div>}
+        <button className="sushi-start-btn" onClick={startGame}>▶ スタート！</button>
+      </div>
+    </div>
+  );
+
+  /* ═══════════════════════════════════════════════════════════
+     ステージクリア画面
+  ═══════════════════════════════════════════════════════════ */
+  if (screen === 'stageClear') return (
+    <div className="sushi-wrap sushi-stageclear">
+      <div className="sushi-stageclear-box">
+        <div style={{ fontSize: 64, marginBottom: 8 }}>🎉</div>
+        <h2 className="sushi-stageclear-title">ステージ{stage} クリア！</h2>
+        <p className="sushi-stageclear-msg">🍣×{caught} とれたよ！つぎは もっとはやいよ！</p>
+        <button className="sushi-start-btn" onClick={goNextStage}>つぎへ ▶</button>
+      </div>
+    </div>
+  );
+
+  /* ═══════════════════════════════════════════════════════════
+     リザルト画面
+  ═══════════════════════════════════════════════════════════ */
+  if (screen === 'result') return (
+    <div className="sushi-wrap sushi-result">
+      <div className="sushi-result-box">
+        <h2 className="sushi-result-title">{resultData?.title}</h2>
+        <p className="sushi-result-msg" dangerouslySetInnerHTML={{ __html: resultData?.msg ?? '' }} />
+        {resultData?.isNew && <div className="sushi-result-new">🏆 ニューレコード！</div>}
+        <div className="sushi-result-hi">ハイスコア: {resultData?.hi ?? hiScore}てん</div>
+        <div className="sushi-result-btns">
+          <button className="sushi-start-btn" onClick={startGame}>もういちど</button>
+          <button className="sushi-back-btn"  onClick={() => navigate('/')}>タイトルへ</button>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
-  // Game Screen - DOM based lanes with items
+  /* ═══════════════════════════════════════════════════════════
+     ゲーム画面 ── DOM ベース
+     ゲームラッパーを画面全体に固定し、
+     3つのレーン div を並べてアイテムを position:absolute で表示
+  ═══════════════════════════════════════════════════════════ */
+  const HUD_H   = 60;  // HUD の高さ(px)
+  const PROG_H  = 24;  // 進捗バーの高さ(px)
+  const areaH   = `calc(100vh - ${HUD_H + PROG_H}px)`; // レーン全体の高さ
+
   return (
-    <div className="sushi-wrap" style={{ overflow: 'hidden', backgroundColor: '#fff8f0' }}>
-      {/* HUD */}
-      <div className="sushi-hud">
-        <button className="sushi-hud-back" onClick={() => { runningRef.current = false; if (spawnTimeoutRef.current) clearTimeout(spawnTimeoutRef.current); if (updateIntervalRef.current) clearInterval(updateIntervalRef.current); navigate('/'); }}>🏠</button>
-        <div className="sushi-hud-box"><div className="sushi-hud-label">スコア</div><div className="sushi-hud-val">{score}</div></div>
-        <div className="sushi-hud-title">🍣 ステージ {stage}</div>
-        <div className="sushi-hud-box"><div className="sushi-hud-label">ライフ</div><div className="sushi-hud-val">{'❤️'.repeat(hp)}{'🖤'.repeat(3 - hp)}</div></div>
+    <div
+      ref={wrapR}
+      style={{
+        position: 'fixed', inset: 0,
+        background: '#fff8f0',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* ── HUD ── */}
+      <div style={{
+        flexShrink: 0,
+        height: HUD_H,
+        background: 'rgba(220,60,60,0.85)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 14px',
+        zIndex: 10,
+      }}>
+        <button
+          onClick={() => { stopAll(); navigate('/'); }}
+          style={{ fontSize: 22, background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: 10, padding: '4px 8px', cursor: 'pointer' }}
+        >🏠</button>
+        <div style={{ background: 'rgba(255,255,255,0.95)', borderRadius: 12, padding: '4px 12px', textAlign: 'center' }}>
+          <div style={{ fontSize: 10, color: '#c0392b', fontWeight: 700 }}>スコア</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: '#922b21' }}>{score}</div>
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', textShadow: '1px 2px 0 #922b21' }}>
+          🍣 ステージ {stage}
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.95)', borderRadius: 12, padding: '4px 12px', textAlign: 'center' }}>
+          <div style={{ fontSize: 10, color: '#c0392b', fontWeight: 700 }}>ライフ</div>
+          <div style={{ fontSize: 18, fontWeight: 900 }}>{'❤️'.repeat(hp)}{'🖤'.repeat(3 - hp)}</div>
+        </div>
       </div>
 
-      {/* Game Lanes Container */}
-      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100% - 80px)', gap: '8px', padding: '10px', backgroundColor: '#fff8f0' }}>
-        {[0, 1, 2].map(laneIdx => (
+      {/* ── 3 レーン ── */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        {[0, 1, 2].map(lane => (
           <div
-            key={laneIdx}
+            key={lane}
             style={{
               flex: 1,
               position: 'relative',
+              background: LANE_COLORS[lane],
+              borderBottom: lane < 2 ? '2px solid rgba(200,150,120,0.35)' : 'none',
               overflow: 'hidden',
-              backgroundColor: ['rgba(255,220,220,0.3)', 'rgba(255,240,200,0.3)', 'rgba(220,240,255,0.3)'][laneIdx],
-              border: '2px solid rgba(150,100,80,0.3)',
-              borderRadius: '8px',
             }}
           >
-            {/* Items in this lane */}
+            {/* レーン内のアイテム */}
             {items
-              .filter(item => item.lane === laneIdx && item.alive)
+              .filter(item => item.lane === lane)
               .map(item => (
                 <button
                   key={item.id}
-                  onClick={() => {
-                    handleItemTap(item.id, item.isSalmon);
-                  }}
+                  onClick={() => tapItem(item.id, item.isSalmon)}
                   style={{
-                    position: 'absolute',
-                    left: `${item.x}%`,
-                    top: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: '48px',
-                    height: '48px',
-                    fontSize: '32px',
-                    border: item.isSalmon ? '2px solid #e74c3c' : '2px solid #999',
+                    position:    'absolute',
+                    left:         item.x - ITEM_PX / 2,
+                    top:         '50%',
+                    transform:   'translateY(-50%)',
+                    width:        ITEM_PX,
+                    height:       ITEM_PX,
                     borderRadius: '50%',
-                    backgroundColor: item.isSalmon ? 'rgba(255,240,240,0.9)' : 'rgba(255,255,255,0.9)',
-                    display: 'flex',
-                    alignItems: 'center',
+                    border:       item.isSalmon ? '2.5px solid #e74c3c' : '2px solid #bbb',
+                    background:   item.isSalmon ? '#fff0f0' : '#fff',
+                    fontSize:     34,
+                    display:      'flex',
+                    alignItems:   'center',
                     justifyContent: 'center',
-                    cursor: 'pointer',
-                    padding: 0,
+                    padding:       0,
+                    cursor:        'pointer',
+                    userSelect:    'none',
+                    WebkitUserSelect: 'none',
+                    touchAction:   'manipulation',
+                    boxShadow:     '0 2px 6px rgba(0,0,0,0.15)',
+                    // トラップには ✕ を重ねる（CSS で表現するため ✕ 文字を表示）
                   }}
                 >
                   {item.emoji}
+                  {!item.isSalmon && (
+                    <span style={{
+                      position: 'absolute',
+                      fontSize: 20,
+                      color: 'rgba(255,50,50,0.55)',
+                      pointerEvents: 'none',
+                      lineHeight: 1,
+                    }}>✕</span>
+                  )}
                 </button>
               ))}
           </div>
         ))}
       </div>
 
-      {/* Progress Bar */}
-      <div style={{
-        height: '20px',
-        backgroundColor: 'rgba(255,200,200,0.3)',
-        position: 'relative',
-      }}>
+      {/* ── 進捗バー ── */}
+      <div style={{ flexShrink: 0, height: PROG_H, background: 'rgba(255,200,200,0.4)', position: 'relative' }}>
         <div style={{
           height: '100%',
-          backgroundColor: '#e74c3c',
-          width: `${Math.min(salmonCaughtRef.current / stageGoalRef.current, 1) * 100}%`,
-          transition: 'width 0.3s ease',
+          background: '#e74c3c',
+          width: `${Math.min(caught / (goalR.current || 1), 1) * 100}%`,
+          transition: 'width 0.2s ease',
         }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 12, fontWeight: 700, color: '#fff',
+          textShadow: '0 1px 3px rgba(0,0,0,0.4)',
+        }}>
+          🍣 {caught} / {goalR.current}
+        </div>
       </div>
     </div>
   );
