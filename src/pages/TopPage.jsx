@@ -1,116 +1,86 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playTopPageBgm, stopBgm, toggleMute, getMuteState, ensureAudioStarted } from '../utils/audio';
+import { getPlayCount } from '../utils/playCounter';
 import './TopPage.css';
 
+/* ════════════════════════════════════════════════════
+   ① 更新日時（手動で更新する定数）
+════════════════════════════════════════════════════ */
+const LAST_UPDATE_DATE = '2025-04-23'; // ← 更新時はここを書き換える
+
+function getDaysSinceUpdate() {
+  const last = new Date(LAST_UPDATE_DATE);
+  const now  = new Date();
+  // 時間差をミリ秒→日数に変換（小数点切り捨て）
+  return Math.floor((now - last) / (1000 * 60 * 60 * 24));
+}
+
+/* ════════════════════════════════════════════════════
+   ② 季節バナー（月から自動判定）
+════════════════════════════════════════════════════ */
+function getSeason() {
+  const month = new Date().getMonth() + 1; // 1〜12
+  if (month >= 3 && month <= 5)  return { emoji: '🌸', label: 'はる',  text: 'はるのゲームパーク！',  color: '#ff8fab', glow: 'rgba(255,143,171,0.4)' };
+  if (month >= 6 && month <= 8)  return { emoji: '🌊', label: 'なつ',  text: 'なつのゲームパーク！',  color: '#00b4d8', glow: 'rgba(0,180,216,0.4)'   };
+  if (month >= 9 && month <= 11) return { emoji: '🍂', label: 'あき',  text: 'あきのゲームパーク！',  color: '#e76f51', glow: 'rgba(231,111,81,0.4)'  };
+  return                                  { emoji: '⛄', label: 'ふゆ',  text: 'ふゆのゲームパーク！',  color: '#90e0ef', glow: 'rgba(144,224,239,0.4)' };
+}
+
+/* ════════════════════════════════════════════════════
+   ④ 今日のおすすめゲーム（日付ハッシュで選出）
+════════════════════════════════════════════════════ */
+function getTodayIndex(gameCount) {
+  const str  = new Date().toDateString(); // e.g. "Wed Apr 23 2025"
+  const hash = str.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return hash % gameCount;
+}
+
+/* ════════════════════════════════════════════════════
+   ゲームリスト
+════════════════════════════════════════════════════ */
 const GAMES = [
-  {
-    id: 'g1',
-    route: '/shabondama',
-    icon: '🫧',
-    num: 1,
-    name: 'シャボンだまポン',
-    desc: 'とんでくる たまを\nタップしてわろう！',
-    stars: '⭐⭐⭐⭐⭐',
-    isNew: true,
-  },
-  {
-    id: 'g2',
-    route: '/kudamono-catch',
-    icon: '🍎',
-    num: 2,
-    name: 'くだものキャッチ',
-    desc: 'おちてくる くだものを\nキャッチしよう！',
-    stars: '⭐⭐⭐⭐',
-    isNew: false,
-  },
-  {
-    id: 'g3',
-    route: '/meiro',
-    icon: '🗺️',
-    num: 3,
-    name: 'めいろあそび',
-    desc: 'めいろを とおって\nゴールをめざせ！',
-    stars: '⭐⭐⭐⭐',
-    isNew: false,
-  },
-  {
-    id: 'g4',
-    route: '/doubutsu-puzzle',
-    icon: '🧩',
-    num: 4,
-    name: 'どうぶつパズル',
-    desc: 'どうぶつを ならべて\nパズルをとこう！',
-    stars: '⭐⭐⭐⭐⭐',
-    isNew: false,
-  },
-  {
-    id: 'g5',
-    route: '/kazu-asobi',
-    icon: '🔢',
-    num: 5,
-    name: 'かずあそび',
-    desc: 'かずを かぞえて\nたのしく まなぼう！',
-    stars: '⭐⭐⭐',
-    isNew: false,
-  },
-  {
-    id: 'g6',
-    route: '/animal-soccer',
-    icon: '⚽',
-    num: 6,
-    name: 'どうぶつサッカー',
-    desc: 'どうぶつたちと\nサッカーをしよう！',
-    stars: '⭐⭐⭐⭐⭐',
-    isNew: false,
-  },
-  {
-    id: 'g7',
-    route: '/jewelry-shop',
-    icon: '💎',
-    num: 7,
-    name: 'ほうせきやさん',
-    desc: 'やってきた どうぶつさんに\nアクセサリをわたそう！',
-    stars: '⭐⭐⭐⭐',
-    isNew: true,
-  },
-  {
-    id: 'g8',
-    route: '/sushi',
-    icon: '🍣',
-    num: 8,
-    name: 'さーもん',
-    desc: 'かいてんずし！\nサーモンだけ\nタップしよう！',
-    stars: '⭐⭐⭐⭐⭐',
-    isNew: true,
-  },
-  {
-    id: 'g9',
-    route: '/ichigo',
-    icon: '🍓',
-    num: 9,
-    name: 'いちご',
-    desc: '30びょうで\nいちごを\nあつめよう！',
-    stars: '⭐⭐⭐⭐⭐',
-    isNew: true,
-  },
+  { id: 'g1', route: '/shabondama',     icon: '🫧', num: 1, name: 'シャボンだまポン',   desc: 'とんでくる たまを\nタップしてわろう！',               stars: '⭐⭐⭐⭐⭐', isNew: false },
+  { id: 'g2', route: '/kudamono-catch', icon: '🍎', num: 2, name: 'くだものキャッチ',   desc: 'おちてくる くだものを\nキャッチしよう！',              stars: '⭐⭐⭐⭐',   isNew: false },
+  { id: 'g3', route: '/meiro',          icon: '🗺️', num: 3, name: 'めいろあそび',       desc: 'めいろを とおって\nゴールをめざせ！',                  stars: '⭐⭐⭐⭐',   isNew: false },
+  { id: 'g4', route: '/doubutsu-puzzle',icon: '🧩', num: 4, name: 'どうぶつパズル',     desc: 'どうぶつを ならべて\nパズルをとこう！',                stars: '⭐⭐⭐⭐⭐', isNew: false },
+  { id: 'g5', route: '/kazu-asobi',     icon: '🔢', num: 5, name: 'かずあそび',         desc: 'かずを かぞえて\nたのしく まなぼう！',                  stars: '⭐⭐⭐',     isNew: false },
+  { id: 'g6', route: '/animal-soccer',  icon: '⚽', num: 6, name: 'どうぶつサッカー',   desc: 'どうぶつたちと\nサッカーをしよう！',                   stars: '⭐⭐⭐⭐⭐', isNew: false },
+  { id: 'g7', route: '/jewelry-shop',   icon: '💎', num: 7, name: 'ほうせきやさん',     desc: 'やってきた どうぶつさんに\nアクセサリをわたそう！',      stars: '⭐⭐⭐⭐',   isNew: true  },
+  { id: 'g8', route: '/sushi',          icon: '🍣', num: 8, name: 'さーもん',           desc: 'かいてんずし！\nサーモンだけ\nタップしよう！',          stars: '⭐⭐⭐⭐⭐', isNew: true  },
+  { id: 'g9', route: '/ichigo',         icon: '🍓', num: 9, name: 'いちご',             desc: '30びょうで\nいちごを\nあつめよう！',                   stars: '⭐⭐⭐⭐⭐', isNew: true  },
 ];
 
-function GameCard({ game, onClick }) {
+/* ════════════════════════════════════════════════════
+   ③ ゲームカード（NEW バッジ・おすすめバナー付き）
+════════════════════════════════════════════════════ */
+function GameCard({ game, isRecommended, onClick }) {
   return (
-    <button className={`wi-card ${game.id}`} onClick={onClick}>
+    <button
+      className={`wi-card ${game.id}${isRecommended ? ' recommended' : ''}`}
+      onClick={onClick}
+    >
+      {/* ⑤ おすすめバナー */}
+      {isRecommended && (
+        <div className="recommend-banner">⭐ きょうのおすすめ！</div>
+      )}
+
       <div className="card-top">
-        {game.isNew && <span className="new-badge">NEW</span>}
+        {/* ③ NEW バッジ（キラキラ版） */}
+        {game.isNew && (
+          <span className="new-badge">✨ あたらしい！</span>
+        )}
         <span className="card-num">{game.num}</span>
         <span className="card-icon">{game.icon}</span>
       </div>
+
       <div className="card-bottom">
         <div className="card-name">{game.name}</div>
         <div className="card-desc">
-          {game.desc.split('\n').map((line, i) => (
+          {game.desc.split('\n').map((line, i, arr) => (
             <React.Fragment key={i}>
               {line}
-              {i < game.desc.split('\n').length - 1 && <br />}
+              {i < arr.length - 1 && <br />}
             </React.Fragment>
           ))}
         </div>
@@ -120,17 +90,63 @@ function GameCard({ game, onClick }) {
   );
 }
 
+/* ════════════════════════════════════════════════════
+   ⑤ プレイカウンター（カウントアップアニメーション）
+════════════════════════════════════════════════════ */
+function PlayCounter({ target }) {
+  const [display, setDisplay] = useState(0);
+  const rafRef = useRef(null);
+
+  useEffect(() => {
+    if (target === 0) return;
+    const duration = 1200; // ms
+    const start    = Date.now();
+
+    function tick() {
+      const elapsed = Date.now() - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.round(eased * target));
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    }
+
+    // 少し待ってから開始（ページ描画後）
+    const tm = setTimeout(() => { rafRef.current = requestAnimationFrame(tick); }, 400);
+    return () => { clearTimeout(tm); cancelAnimationFrame(rafRef.current); };
+  }, [target]);
+
+  return (
+    <div className="play-counter">
+      <span className="play-counter-icon">🎮</span>
+      <span className="play-counter-label">みんなであそんだかず</span>
+      <span className="play-counter-num">{display.toLocaleString()}</span>
+      <span className="play-counter-unit">かい</span>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════
+   TopPage 本体
+════════════════════════════════════════════════════ */
 export default function TopPage() {
   const navigate = useNavigate();
   const [isMuted, setIsMuted] = useState(getMuteState());
+  const [playCount, setPlayCount] = useState(0);
+
+  const season       = getSeason();
+  const daysSince    = getDaysSinceUpdate();
+  const todayIdx     = getTodayIndex(GAMES.length);
+  const recommendedId = GAMES[todayIdx].id;
 
   useEffect(() => {
-    // Initialize audio on first user interaction
     ensureAudioStarted();
     playTopPageBgm();
-    return () => {
-      stopBgm();
-    };
+    // localStorageから最新のプレイ数を取得
+    setPlayCount(getPlayCount());
+    return () => stopBgm();
   }, []);
 
   const handleMuteToggle = () => {
@@ -219,6 +235,20 @@ export default function TopPage() {
             <span className="t2">アイランド</span>
           </div>
           <div className="wi-sub">🏝️ たのしい あそびじま！</div>
+
+          {/* ② 季節バナー */}
+          <div
+            className="season-banner"
+            style={{ '--season-color': season.color, '--season-glow': season.glow }}
+          >
+            {season.emoji} {season.text}
+          </div>
+
+          {/* ① 更新日時 */}
+          <div className="last-update">
+            🕐 さいごのこうしん：
+            {daysSince === 0 ? 'きょう！' : `${daysSince}にちまえ`}
+          </div>
         </div>
 
         {/* Wave transition */}
@@ -249,12 +279,16 @@ export default function TopPage() {
         <div className="island-animal island-flower1">🌸</div>
         <div className="island-animal island-flower2">🌼</div>
 
+        {/* ⑤ 累計プレイカウンター */}
+        <PlayCounter target={playCount} />
+
         {/* Game grid */}
         <div className="wi-grid">
           {GAMES.map((game) => (
             <GameCard
               key={game.id}
               game={game}
+              isRecommended={game.id === recommendedId}
               onClick={() => navigate(game.route)}
             />
           ))}
@@ -262,14 +296,8 @@ export default function TopPage() {
 
         {/* Footer characters */}
         <div className="footer-charas">
-          <span>🦁</span>
-          <span>🦊</span>
-          <span>🐘</span>
-          <span>🐧</span>
-          <span>🐨</span>
-          <span>🐸</span>
-          <span>🐥</span>
-          <span>🦝</span>
+          <span>🦁</span><span>🦊</span><span>🐘</span><span>🐧</span>
+          <span>🐨</span><span>🐸</span><span>🐥</span><span>🦝</span>
         </div>
 
         <div className="wi-footer">🌟 あそびたいゲームをえらんでね 🌟</div>

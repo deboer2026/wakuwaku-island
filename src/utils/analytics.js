@@ -3,11 +3,16 @@
  * Provides helper functions to track game events and user interactions
  */
 
+import { incrementPlayCount } from './playCounter';
+
 /**
  * Track when a user starts playing a game
  * @param {string} gameName - Name of the game (e.g., 'Shabondama', 'KudamonoCatch')
  */
 export function trackGameStart(gameName) {
+  // 累計プレイ数をlocalStorageに記録（トップページのカウンター表示用）
+  incrementPlayCount();
+
   if (window.gtag) {
     gtag('event', 'game_start', {
       game_name: gameName,
