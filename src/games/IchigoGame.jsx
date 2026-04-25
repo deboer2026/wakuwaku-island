@@ -137,7 +137,7 @@ export default function IchigoGame() {
   }
 
   /* ─── スタート ─── */
-  function startGame() {
+  async function startGame() {
     stopAll();
     _uid = 0;
     scoreR.current  = 0;
@@ -150,7 +150,8 @@ export default function IchigoGame() {
     setScore(0); setHp(3); setCombo(1); setCollected(0); setTimeLeft(30);
     setResult(null); setScreen('game');
 
-    ensureAudioStarted();
+    await ensureAudioStarted();
+    console.log('[Game] IchigoGame: audio ready, playing BGM');
     playIchigoBgm();
     trackGameStart('IchigoGame');
 

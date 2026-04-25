@@ -315,9 +315,10 @@ export default function AnimalSoccer() {
     animIdRef.current = requestAnimationFrame(gameLoop);
   }, [update, draw]);
 
-  const startGame = useCallback((char) => {
+  const startGame = useCallback(async (char) => {
     trackGameStart('AnimalSoccer');
-    ensureAudioStarted();
+    await ensureAudioStarted();
+    console.log('[Game] AnimalSoccer: audio ready, playing BGM');
     playAnimalSoccerBgm();
 
     kickerRef.current = char;

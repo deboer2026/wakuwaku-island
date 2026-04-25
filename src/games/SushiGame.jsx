@@ -88,7 +88,7 @@ export default function SushiGame() {
   }
 
   /* ─── スタート ─── */
-  function startGame() {
+  async function startGame() {
     stopAll();
     _uid = 0;
     scoreR.current  = 0;
@@ -103,7 +103,8 @@ export default function SushiGame() {
     setItems([]); setResult(null);
     setScreen('game');
 
-    ensureAudioStarted();
+    await ensureAudioStarted();
+    console.log('[Game] SushiGame: audio ready, playing BGM');
     playSushiBgm();
     trackGameStart('SushiGame');
 
@@ -141,7 +142,7 @@ export default function SushiGame() {
     setScreen('stageClear');
   }
 
-  function goNextStage() {
+  async function goNextStage() {
     stageR.current  += 1;
     speedR.current   = stageSpeed(stageR.current);
     goalR.current    = stageGoal(stageR.current);
@@ -153,7 +154,7 @@ export default function SushiGame() {
     setItems([]);
     setScreen('game');
 
-    ensureAudioStarted();
+    await ensureAudioStarted();
     playSushiBgm();
 
     setTimeout(() => {

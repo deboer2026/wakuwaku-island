@@ -399,9 +399,10 @@ export default function Meiro() {
   }, [drawBg]);
 
   // ---- Start game ----
-  const startGame = useCallback((char) => {
+  const startGame = useCallback(async (char) => {
     trackGameStart('Meiro');
-    ensureAudioStarted();
+    await ensureAudioStarted();
+    console.log('[Game] Meiro: audio ready, playing BGM');
     playMeiroBgm();
 
     charRef.current = char;

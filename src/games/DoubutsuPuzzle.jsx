@@ -290,9 +290,10 @@ export default function DoubutsuPuzzle() {
   }, [getCardDims, showPop, celebrate, endGame]);
 
   // ─── startGame ─────────────────────────────────────────────────────────────
-  const startGame = useCallback(() => {
+  const startGame = useCallback(async () => {
     trackGameStart('DoubutsuPuzzle');
-    ensureAudioStarted();
+    await ensureAudioStarted();
+    console.log('[Game] DoubutsuPuzzle: audio ready, playing BGM');
     playDoubutsuPuzzleBgm();
 
     matchedRef.current  = 0;

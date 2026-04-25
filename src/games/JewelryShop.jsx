@@ -187,8 +187,9 @@ export default function JewelryShop() {
     advanceCustomer(q, stg);
   }
 
-  function startGame() {
-    ensureAudioStarted();
+  async function startGame() {
+    await ensureAudioStarted();
+    console.log('[Game] JewelryShop: audio ready, playing BGM');
     playJewelryShopBgm();
     trackGameStart('JewelryShop');
 

@@ -392,9 +392,10 @@ export default function KudamonoCatch() {
   }, [update, draw, endGame]);
 
   // ─── startGame ─────────────────────────────────────────────────────────────
-  const startGame = useCallback(() => {
+  const startGame = useCallback(async () => {
     trackGameStart('KudamonoCatch');
-    ensureAudioStarted();
+    await ensureAudioStarted();
+    console.log('[Game] KudamonoCatch: audio ready, playing BGM');
     playKudamonoCatchBgm();
 
     catcherEmoji.current = CHARACTERS[selectedChara].emoji;

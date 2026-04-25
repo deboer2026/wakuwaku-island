@@ -133,8 +133,9 @@ export default function KazuAsobi() {
     setScreen('result');
   }, []);
 
-  const startGame = useCallback(() => {
-    ensureAudioStarted();
+  const startGame = useCallback(async () => {
+    await ensureAudioStarted();
+    console.log('[Game] KazuAsobi: audio ready, playing BGM');
     playKazuAsobiBgm();
     trackGameStart('KazuAsobi');
 

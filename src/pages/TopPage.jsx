@@ -180,16 +180,35 @@ export default function TopPage() {
   const todayIdx  = getTodayIndex(GAMES.length);
 
   useEffect(() => {
-    ensureAudioStarted();
-    playTopPageBgm();
+    // AudioContext may already be running if user came back from a game
+    ensureAudioStarted().then(() => playTopPageBgm());
     setPlayCount(getPlayCount() + 1312);
     return () => stopBgm();
   }, []);
 
-  function handleMuteToggle() {
+  async function handleMuteToggle() {
     toggleMute();
     setIsMuted(getMuteState());
-    if (!getMuteState()) { ensureAudioStarted(); playTopPageBgm(); }
+    if (!getMuteState()) {
+      await ensureAudioStarted();
+      playTopPageBgm();
+    }
+  }
+
+  function spawnParticles(x, y) {
+    const emojis = ['✨', '💖', '⭐', '🌟', '💫', '🎉'];
+    for (let i = 0; i < 6; i++) {
+      const el = document.createElement('span');
+      el.className = 'ww-particle';
+      el.textContent = emojis[i % emojis.length];
+      el.style.left = x + 'px';
+      el.style.top  = y + 'px';
+      const angle = (i / 6) * Math.PI * 2;
+      el.style.setProperty('--px', (Math.cos(angle) * 80) + 'px');
+      el.style.setProperty('--py', (Math.sin(angle) * 80 - 40) + 'px');
+      document.body.appendChild(el);
+      setTimeout(() => { if (el.parentNode) el.remove(); }, 800);
+    }
   }
 
   function handleLangToggle() {
@@ -298,7 +317,7 @@ export default function TopPage() {
               game={game}
               lang={lang}
               isRecommended={i === todayIdx}
-              onClick={() => navigate(game.route)}
+              onClick={(e) => { spawnParticles(e.clientX, e.clientY); navigate(game.route); }}
             />
           ))}
         </div>

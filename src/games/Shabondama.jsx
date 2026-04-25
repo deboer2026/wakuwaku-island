@@ -293,9 +293,10 @@ export default function Shabondama() {
   }, []);
 
   // ---------- startGame ----------
-  const startGame = useCallback(() => {
+  const startGame = useCallback(async () => {
     trackGameStart('Shabondama');
-    ensureAudioStarted();
+    await ensureAudioStarted();
+    console.log('[Game] Shabondama: audio ready, playing BGM');
     playShabondamaBgm();
 
     scoreRef.current = 0;
