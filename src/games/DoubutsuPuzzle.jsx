@@ -41,6 +41,8 @@ function saveBestTime(v) { localStorage.setItem('puzzle_best', String(v)); }
 export default function DoubutsuPuzzle() {
   const navigate = useNavigate();
 
+  const [lang] = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
+
   // ── screen state ──
   const [screen, setScreen]         = useState('title'); // 'title' | 'game' | 'result'
   const [timeDisplay, setTimeDisplay] = useState('0:00');
@@ -374,20 +376,22 @@ export default function DoubutsuPuzzle() {
         <>
           {/* HUD */}
           <div id="dbp-hud">
+            {/* LEFT */}
             <button className="game-back-btn" onClick={() => {
               clearInterval(timerIntRef.current);
               flippedRef.current = [];
               lockRef.current = false;
               navigate('/');
             }}>🏠</button>
-            <div className="dbp-hud-box">
-              <div className="dbp-hud-label">じかん</div>
-              <div className="dbp-hud-val">{timeDisplay}</div>
+            {/* CENTER */}
+            <div className="dbp-hud-center">
+              <div id="dbp-hud-title">{lang === 'en' ? '🧩 Animal Puzzle' : '🧩 どうぶつパズル'}</div>
+              <div className="dbp-hud-score">{lang === 'en' ? 'Miss' : 'ミス'}: {missDisplay}</div>
             </div>
-            <div id="dbp-hud-title">🧩 どうぶつパズル</div>
+            {/* RIGHT */}
             <div className="dbp-hud-box">
-              <div className="dbp-hud-label">ミス</div>
-              <div className="dbp-hud-val">{missDisplay}</div>
+              <div className="dbp-hud-label">{lang === 'en' ? 'Time' : 'じかん'}</div>
+              <div className="dbp-hud-val">{timeDisplay}</div>
             </div>
           </div>
 

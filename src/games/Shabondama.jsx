@@ -21,6 +21,8 @@ function saveHi(v) { localStorage.setItem('shabondama_hi', String(v)); }
 export default function Shabondama() {
   const navigate = useNavigate();
 
+  const [lang] = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
+
   // UI screen state: 'title' | 'game' | 'result'
   const [screen, setScreen] = useState('title');
   const [scoreDisplay, setScoreDisplay] = useState(0);
@@ -478,6 +480,7 @@ export default function Shabondama() {
       {/* HUD */}
       {screen === 'game' && (
         <div id="sdm-hud">
+          {/* LEFT */}
           <button className="game-back-btn" onClick={() => {
             runningRef.current = false;
             if(timerIntRef.current) clearInterval(timerIntRef.current);
@@ -485,13 +488,14 @@ export default function Shabondama() {
             if(spawnTimeoutRef.current) clearTimeout(spawnTimeoutRef.current);
             navigate('/');
           }}>🏠</button>
-          <div className="sdm-hud-box">
-            <div className="sdm-hud-label">スコア</div>
-            <div className="sdm-hud-val">{scoreDisplay}</div>
+          {/* CENTER */}
+          <div className="sdm-hud-center">
+            <div id="sdm-hud-title">{lang === 'en' ? '🫧 Bubble Pop' : '🫧 シャボンだまポン'}</div>
+            <div className="sdm-hud-score">{lang === 'en' ? 'Score' : 'スコア'}: {scoreDisplay}</div>
           </div>
-          <div id="sdm-hud-title">🫧 シャボンだまポン</div>
+          {/* RIGHT */}
           <div className="sdm-hud-box">
-            <div className="sdm-hud-label">のこり</div>
+            <div className="sdm-hud-label">{lang === 'en' ? 'Left' : 'のこり'}</div>
             <div className="sdm-hud-val">{timeDisplay}</div>
           </div>
         </div>

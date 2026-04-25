@@ -21,6 +21,7 @@ function saveHi(v) { localStorage.setItem('soccer_hi', String(v)); }
 export default function AnimalSoccer() {
   const navigate = useNavigate();
 
+  const [lang] = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
   const [screen, setScreen] = useState('title');
   const [scoreDisplay, setScoreDisplay] = useState(0);
   const [shotsDisplay, setShotsDisplay] = useState(5);
@@ -441,10 +442,17 @@ export default function AnimalSoccer() {
   return (
     <div className="soccer-wrap" ref={wrapRef}>
       <div className="soccer-hud">
+        {/* LEFT */}
         <button className="soccer-hud-back" onClick={() => { if(animIdRef.current) cancelAnimationFrame(animIdRef.current); navigate('/'); }}>🏠</button>
-        <div className="soccer-hud-info">
-          <span>スコア: <b>{scoreDisplay}</b></span>
-          <span>のこり: {'⚽'.repeat(shotsDisplay)}</span>
+        {/* CENTER */}
+        <div className="soccer-hud-center">
+          <div className="soccer-hud-title">{lang === 'en' ? '⚽ Animal Soccer' : '⚽ どうぶつサッカー'}</div>
+          <div className="soccer-hud-score">{lang === 'en' ? 'Score' : 'スコア'}: {scoreDisplay}</div>
+        </div>
+        {/* RIGHT */}
+        <div className="soccer-hud-box">
+          <div className="soccer-hud-label">{lang === 'en' ? 'Left' : 'のこり'}</div>
+          <div className="soccer-hud-val">{'⚽'.repeat(shotsDisplay)}</div>
         </div>
       </div>
       <canvas ref={canvasRef} className="soccer-canvas" />

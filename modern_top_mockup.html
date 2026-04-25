@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>わくわくアイランド - モダンモック</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sky1: #0a1628;
+  --sky2: #0d2040;
+  --sky3: #1a3a6e;
+  --accent: #00d4ff;
+  --accent2: #ff6b35;
+  --accent3: #ffd700;
+  --glow: rgba(0,212,255,0.4);
+  --card-bg: rgba(255,255,255,0.06);
+  --card-border: rgba(255,255,255,0.12);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Nunito', 'M PLUS Rounded 1c', sans-serif;
+  background: var(--sky1);
+  color: #fff;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* ===== 星空背景 ===== */
+#starfield {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 20% 30%, #1a3a6e 0%, #0a1628 60%);
+}
+.star {
+  position: absolute; border-radius: 50%;
+  background: #fff; animation: twinkle var(--dur) ease-in-out infinite;
+}
+@keyframes twinkle { 0%,100%{opacity:0.2;transform:scale(1)} 50%{opacity:1;transform:scale(1.3)} }
+
+/* ===== ヘッダー ===== */
+#header {
+  position: relative; z-index: 10;
+  padding: 24px 20px 0;
+  text-align: center;
+}
+
+.game-park-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg, #ff6b35, #ff4500);
+  color: #fff; font-size: 11px; font-weight: 900;
+  padding: 5px 16px; border-radius: 30px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  box-shadow: 0 0 20px rgba(255,107,53,0.6), 0 4px 0 rgba(0,0,0,0.4);
+  margin-bottom: 14px;
+  animation: badgePulse 2s ease-in-out infinite;
+}
+@keyframes badgePulse { 0%,100%{box-shadow:0 0 20px rgba(255,107,53,0.6),0 4px 0 rgba(0,0,0,0.4)} 50%{box-shadow:0 0 40px rgba(255,107,53,0.9),0 4px 0 rgba(0,0,0,0.4)} }
+
+.main-title {
+  position: relative; display: inline-block;
+  line-height: 0.9; margin-bottom: 6px;
+}
+.main-title .line1 {
+  display: block; font-size: clamp(52px, 14vw, 80px);
+  font-weight: 900;
+  background: linear-gradient(180deg, #ffffff 0%, #a8d8ff 40%, #00d4ff 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 30px rgba(0,212,255,0.5));
+  letter-spacing: -0.02em;
+}
+.main-title .line2 {
+  display: block; font-size: clamp(36px, 10vw, 56px);
+  font-weight: 900;
+  background: linear-gradient(180deg, #ffffff 0%, #ffd700 60%, #ff8c00 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px rgba(255,215,0,0.4));
+  letter-spacing: -0.02em;
+}
+
+/* タイトル3Dエフェクト */
+.title-3d {
+  perspective: 800px;
+  animation: titleFloat 4s ease-in-out infinite;
+}
+@keyframes titleFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+.subtitle-pill {
+  display: inline-block;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 30px; padding: 6px 20px;
+  font-size: 13px; color: rgba(255,255,255,0.8);
+  margin-bottom: 12px;
+}
+
+/* 季節バナー */
+.season-banner {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, rgba(255,182,193,0.3), rgba(255,105,135,0.3));
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,182,193,0.4);
+  border-radius: 30px; padding: 8px 20px;
+  font-size: 14px; font-weight: 700; color: #ffb6c1;
+  margin-bottom: 8px;
+  animation: seasonGlow 3s ease-in-out infinite;
+}
+@keyframes seasonGlow { 0%,100%{border-color:rgba(255,182,193,0.4)} 50%{border-color:rgba(255,182,193,0.9)} }
+
+/* プレイカウンター */
+.play-counter {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: rgba(0,212,255,0.08);
+  border: 1px solid rgba(0,212,255,0.25);
+  border-radius: 16px; padding: 10px 24px;
+  margin: 12px 0 20px;
+}
+.play-counter .icon { font-size: 24px; }
+.play-counter .label { font-size: 12px; color: rgba(255,255,255,0.6); }
+.play-counter .count { font-size: 28px; font-weight: 900; color: var(--accent); text-shadow: 0 0 20px var(--accent); }
+
+/* ===== キャラクターデコ ===== */
+.deco-chars {
+  position: absolute; top: 0; left: 0; right: 0; height: 100%;
+  pointer-events: none; overflow: hidden; z-index: 1;
+}
+.deco-char {
+  position: absolute; font-size: 40px;
+  animation: floatChar var(--dur) ease-in-out infinite;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+}
+@keyframes floatChar { 0%,100%{transform:translateY(0) rotate(var(--rot))} 50%{transform:translateY(-12px) rotate(calc(var(--rot) + 5deg))} }
+
+/* ===== ゲームグリッド ===== */
+#game-section {
+  position: relative; z-index: 5;
+  padding: 0 16px 32px;
+  max-width: 900px; margin: 0 auto;
+}
+
+.section-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px; padding: 0 4px;
+}
+.section-header h2 { font-size: 16px; font-weight: 800; color: rgba(255,255,255,0.7); letter-spacing: 0.1em; text-transform: uppercase; }
+.section-divider { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(0,212,255,0.3), transparent); }
+
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+/* ゲームカード */
+.game-card {
+  position: relative;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  backdrop-filter: blur(10px);
+  animation: cardIn 0.5s ease both;
+}
+.game-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,212,255,0.3);
+}
+
+@keyframes cardIn { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+
+/* カード上部 カラーバー */
+.card-top {
+  position: relative;
+  height: 110px;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.card-top::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--card-color);
+  opacity: 0.15;
+}
+.card-top::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px;
+  background: linear-gradient(transparent, var(--sky1));
+}
+.card-icon { font-size: 60px; line-height: 1; position: relative; z-index: 1; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4)); transition: transform 0.2s; }
+.game-card:hover .card-icon { transform: scale(1.15) translateY(-4px); }
+
+/* カード番号 */
+.card-num {
+  position: absolute; top: 8px; right: 10px;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--card-color); color: #fff;
+  font-size: 11px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  z-index: 2;
+}
+
+/* バッジ */
+.card-badge {
+  position: absolute; top: 8px; left: 8px; z-index: 2;
+  font-size: 9px; font-weight: 900; padding: 3px 8px; border-radius: 10px;
+  letter-spacing: 0.05em;
+}
+.badge-new { background: #ff3b5c; color: #fff; animation: badgeNew 1.5s ease-in-out infinite; }
+@keyframes badgeNew { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+.badge-recommend { background: linear-gradient(135deg,#ffd700,#ff8c00); color: #fff; }
+.badge-wip { background: rgba(120,120,120,0.8); color: #fff; }
+
+/* カード下部 */
+.card-body { padding: 10px 12px 14px; }
+.card-name { font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 3px; }
+.card-desc { font-size: 10px; color: rgba(255,255,255,0.5); line-height: 1.4; margin-bottom: 6px; }
+.card-stars { font-size: 11px; color: var(--accent3); }
+
+/* カードのシャイン */
+.card-shine {
+  position: absolute; inset: 0; border-radius: 20px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* おすすめカードの輝き */
+.game-card.is-recommend {
+  border-color: rgba(255,215,0,0.5);
+  box-shadow: 0 0 20px rgba(255,215,0,0.2), inset 0 0 20px rgba(255,215,0,0.05);
+}
+
+/* ===== 島デコ ===== */
+.island-scene {
+  position: relative; z-index: 3;
+  height: 80px; overflow: hidden; margin-bottom: -20px;
+}
+.island-wave {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 60px;
+  background: linear-gradient(180deg, transparent, rgba(0,100,200,0.3));
+}
+
+/* ===== フッター動物 ===== */
+.footer-parade {
+  position: relative; z-index: 5;
+  display: flex; justify-content: center; gap: 8px;
+  padding: 20px 16px 12px; flex-wrap: wrap;
+}
+.parade-char {
+  font-size: 28px; cursor: default;
+  animation: paradeFloat var(--dur) ease-in-out infinite;
+  transition: transform 0.15s;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+}
+.parade-char:hover { transform: scale(1.4) translateY(-6px); }
+@keyframes paradeFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+
+.footer-text {
+  text-align: center; font-size: 12px;
+  color: rgba(255,255,255,0.4); padding-bottom: 24px;
+  letter-spacing: 0.1em;
+}
+
+/* ===== 右上ボタン群 ===== */
+.top-buttons {
+  position: fixed; top: 16px; right: 16px; z-index: 100;
+  display: flex; gap: 8px;
+}
+.top-btn {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.2s, transform 0.1s;
+}
+.top-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); }
+
+/* 更新バー */
+.update-bar {
+  background: rgba(0,212,255,0.08);
+  border-top: 1px solid rgba(0,212,255,0.15);
+  border-bottom: 1px solid rgba(0,212,255,0.15);
+  padding: 6px 20px; text-align: center;
+  font-size: 11px; color: rgba(255,255,255,0.45);
+  letter-spacing: 0.05em; margin-bottom: 20px;
+}
+
+/* スクロールバー非表示 */
+::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body>
+
+<!-- 星空 -->
+<div id="starfield"></div>
+
+<!-- デコキャラ -->
+<div class="deco-chars">
+  <div class="deco-char" style="left:2%;top:8%;--dur:3.2s;--rot:-8deg;">👸</div>
+  <div class="deco-char" style="right:3%;top:6%;--dur:2.8s;--rot:6deg;">🤴</div>
+  <div class="deco-char" style="left:5%;top:22%;--dur:3.8s;--rot:-4deg;font-size:28px;">🌸</div>
+  <div class="deco-char" style="right:5%;top:18%;--dur:3.5s;--rot:8deg;font-size:26px;">⭐</div>
+  <div class="deco-char" style="left:1%;top:40%;--dur:4s;--rot:-10deg;font-size:24px;">🦋</div>
+  <div class="deco-char" style="right:2%;top:38%;--dur:3.3s;--rot:5deg;font-size:22px;">✨</div>
+</div>
+
+<!-- 右上ボタン -->
+<div class="top-buttons">
+  <div class="top-btn">🔊</div>
+  <div class="top-btn">🌐</div>
+</div>
+
+<!-- ヘッダー -->
+<div id="header">
+  <div class="game-park-badge">🏝️ GAME PARK ✦</div>
+  <div class="title-3d">
+    <h1 class="main-title">
+      <span class="line1">わくわく</span>
+      <span class="line2">アイランド</span>
+    </h1>
+  </div>
+  <div class="subtitle-pill">🏝️ たのしい あそびじま！</div><br>
+  <div class="season-banner">🌸 はるのゲームパーク！</div>
+
+  <div class="play-counter">
+    <span class="icon">🎮</span>
+    <div>
+      <div class="label">みんなであそんだかず</div>
+      <div class="count" id="counter">1,315</div>
+    </div>
+    <span style="font-size:13px;color:rgba(255,255,255,0.5);">かい</span>
+  </div>
+</div>
+
+<!-- 更新バー -->
+<div class="update-bar">🕐 さいごのこうしん：0にちまえ　✦　あたらしいゲームが どんどん くるよ！</div>
+
+<!-- ゲームセクション -->
+<div id="game-section">
+  <div class="section-header">
+    <h2>🎮 ゲームえらんでね</h2>
+    <div class="section-divider"></div>
+  </div>
+
+  <div class="game-grid" id="grid"></div>
+</div>
+
+<!-- 島シーン -->
+<div class="island-scene">
+  <div class="island-wave"></div>
+</div>
+
+<!-- フッター動物 -->
+<div class="footer-parade" id="parade"></div>
+<div class="footer-text">🌟 あそびたいゲームをえらんでね 🌟</div>
+
+<script>
+// 星空生成
+const sf = document.getElementById('starfield');
+for(let i=0;i<120;i++){
+  const s=document.createElement('div');
+  s.className='star';
+  const sz=Math.random()*2.5+0.5;
+  s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--dur:${1.5+Math.random()*3}s;animation-delay:${Math.random()*3}s`;
+  sf.appendChild(s);
+}
+
+// ゲームデータ
+const GAMES = [
+  {id:1, icon:'🫧', name:'シャボンだまポン', desc:'とんでくる たまをタップしてわろう！', stars:5, color:'#4DB8FF', badge:'new'},
+  {id:2, icon:'🍎', name:'くだものキャッチ', desc:'おちてくる くだものをキャッチしよう！', stars:4, color:'#FF6B35'},
+  {id:3, icon:'🌀', name:'めいろあそび', desc:'めいろを とおってゴールをめざせ！', stars:3, color:'#7B68EE'},
+  {id:4, icon:'🐾', name:'どうぶつパズル', desc:'どうぶつを ならべてパズルをとこう！', stars:4, color:'#2ECC71'},
+  {id:5, icon:'🔢', name:'かずあそび', desc:'かずを かぞえてたのしく まなぼう！', stars:4, color:'#F4D03F'},
+  {id:6, icon:'⚽', name:'どうぶつサッカー', desc:'どうぶつたちとサッカーをしよう！', stars:5, color:'#00BCD4'},
+  {id:7, icon:'💎', name:'ほうせきやさん', desc:'やってきた どうぶつさんにアクセサリをわたそう！', stars:4, color:'#E91E63', badge:'new'},
+  {id:8, icon:'🍣', name:'さーもん', desc:'かいてんずし！サーモンだけタップしよう！', stars:5, color:'#FF5722', badge:'wip'},
+  {id:9, icon:'🍓', name:'いちご', desc:'30びょうで いちごをあつめよう！', stars:5, color:'#E91E63', badge:'wip', recommend:true},
+];
+
+// 今日のおすすめ（日付ベース）
+const todayIdx = new Date().getDate() % GAMES.length;
+GAMES[todayIdx].recommend = true;
+
+const grid = document.getElementById('grid');
+GAMES.forEach((g,i)=>{
+  const card = document.createElement('div');
+  card.className = 'game-card' + (g.recommend?' is-recommend':'');
+  card.style.setProperty('--card-color', g.color);
+  card.style.animationDelay = (i*0.06)+'s';
+
+  let badgeHtml='';
+  if(g.recommend) badgeHtml=`<div class="card-badge badge-recommend">⭐ きょうのおすすめ</div>`;
+  else if(g.badge==='new') badgeHtml=`<div class="card-badge badge-new">✨ あたらしい！</div>`;
+  else if(g.badge==='wip') badgeHtml=`<div class="card-badge badge-wip">🔧 せいさくちゅう</div>`;
+
+  const stars = '⭐'.repeat(g.stars) + '☆'.repeat(5-g.stars);
+  card.innerHTML=`
+    <div class="card-top" style="background:linear-gradient(135deg,${g.color}22,${g.color}08)">
+      ${badgeHtml}
+      <span class="card-num" style="background:${g.color}">${g.id}</span>
+      <span class="card-icon">${g.icon}</span>
+    </div>
+    <div class="card-shine"></div>
+    <div class="card-body">
+      <div class="card-name">${g.name}</div>
+      <div class="card-desc">${g.desc}</div>
+      <div class="card-stars">${stars}</div>
+    </div>`;
+  grid.appendChild(card);
+});
+
+// フッター動物
+const parade = document.getElementById('parade');
+['🦁','🐨','🦊','🐸','🐧','🦝','🐥','🦋','🐝','🌸'].forEach((e,i)=>{
+  const d=document.createElement('div');
+  d.className='parade-char';
+  d.textContent=e;
+  d.style.setProperty('--dur',(2+i*0.3)+'s');
+  d.style.animationDelay=(i*0.15)+'s';
+  parade.appendChild(d);
+});
+
+// カウンターアニメ
+let count=1312;
+const el=document.getElementById('counter');
+const target=1315;
+const tick=setInterval(()=>{
+  count++;
+  el.textContent=count.toLocaleString();
+  if(count>=target) clearInterval(tick);
+},400);
+</script>
+</body>
+</html>

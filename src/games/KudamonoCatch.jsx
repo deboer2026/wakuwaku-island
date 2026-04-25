@@ -35,6 +35,8 @@ function saveHi(v) { localStorage.setItem('kudamono_hi', String(v)); }
 export default function KudamonoCatch() {
   const navigate = useNavigate();
 
+  const [lang] = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
+
   // ── screen state ──
   const [screen, setScreen]         = useState('title'); // 'title' | 'game' | 'result'
   const [scoreDisplay, setScoreDisplay] = useState(0);
@@ -568,6 +570,7 @@ export default function KudamonoCatch() {
       {/* ── HUD ── */}
       {screen === 'game' && (
         <div id="kdc-hud">
+          {/* LEFT */}
           <button className="game-back-btn" onClick={() => {
             runningRef.current = false;
             if(timerIntRef.current) clearInterval(timerIntRef.current);
@@ -575,13 +578,14 @@ export default function KudamonoCatch() {
             if(spawnTimeoutRef.current) clearTimeout(spawnTimeoutRef.current);
             navigate('/');
           }}>🏠</button>
-          <div className="kdc-hud-box">
-            <div className="kdc-hud-label">スコア</div>
-            <div className="kdc-hud-val">{scoreDisplay}</div>
+          {/* CENTER */}
+          <div className="kdc-hud-center">
+            <div id="kdc-hud-title">{lang === 'en' ? '🍎 Fruit Catch' : '🍎 くだものキャッチ'}</div>
+            <div className="kdc-hud-score">{lang === 'en' ? 'Score' : 'スコア'}: {scoreDisplay}</div>
           </div>
-          <div id="kdc-hud-title">🍎 くだものキャッチ</div>
+          {/* RIGHT */}
           <div className="kdc-hud-box">
-            <div className="kdc-hud-label">のこり</div>
+            <div className="kdc-hud-label">{lang === 'en' ? 'Left' : 'のこり'}</div>
             <div className="kdc-hud-val">{timeDisplay}</div>
           </div>
         </div>

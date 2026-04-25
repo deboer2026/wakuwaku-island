@@ -31,6 +31,8 @@ export default function SushiGame() {
   const [hiScore,setHiScore]    = useState(getHi());
   const [resultData,setResult]  = useState(null);
 
+  const [lang] = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
+
   /* ─── Mutable Refs ─── */
   const scoreR   = useRef(0);
   const hpR      = useRef(3);
@@ -188,10 +190,10 @@ export default function SushiGame() {
   ═══════════════════════════════════════════════════════════ */
   if (screen === 'title') return (
     <div className="sushi-wrap sushi-title">
-      <button className="sushi-back-btn" onClick={() => navigate('/')}>← もどる</button>
+      <button className="sushi-back-btn" onClick={() => navigate('/')}>🏠</button>
       <div className="sushi-title-box">
         <div style={{ fontSize: 60, marginBottom: 6 }}>🍣</div>
-        <h1 className="sushi-title-text">さーもんをとろう！</h1>
+        <h1 className="sushi-title-text">{lang === 'en' ? 'Catch Salmon!' : 'さーもんをとろう！'}</h1>
         <div className="sushi-rule-card">
           <h2>📖 あそびかた</h2>
           <div className="sushi-rule-step"><div className="sushi-rule-num">1</div><div className="sushi-rule-text">かいてんずしの レーンを みてね！</div></div>
@@ -257,31 +259,24 @@ export default function SushiGame() {
         flexDirection: 'column',
       }}
     >
-      {/* ── HUD ── */}
-      <div style={{
-        flexShrink: 0,
-        height: HUD_H,
-        background: 'rgba(220,60,60,0.85)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 14px',
-        zIndex: 10,
-      }}>
-        <button
-          onClick={() => { stopAll(); navigate('/'); }}
-          style={{ fontSize: 22, background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: 10, padding: '4px 8px', cursor: 'pointer' }}
-        >🏠</button>
-        <div style={{ background: 'rgba(255,255,255,0.95)', borderRadius: 12, padding: '4px 12px', textAlign: 'center' }}>
-          <div style={{ fontSize: 10, color: '#c0392b', fontWeight: 700 }}>スコア</div>
-          <div style={{ fontSize: 20, fontWeight: 900, color: '#922b21' }}>{score}</div>
+      {/* ── HUD（3カラム：左🏠 ／ 中タイトル+スコア ／ 右ライフ） ── */}
+      <div style={{ flexShrink:0, height:HUD_H, background:'rgba(220,60,60,0.85)', display:'flex', alignItems:'center', padding:'0 12px', gap:8, zIndex:10 }}>
+        {/* LEFT */}
+        <button onClick={() => { stopAll(); navigate('/'); }}
+          style={{ fontSize:22, background:'rgba(255,255,255,0.9)', border:'none', borderRadius:10, padding:'4px 8px', cursor:'pointer', flexShrink:0 }}>🏠</button>
+        {/* CENTER */}
+        <div style={{ flex:1, textAlign:'center' }}>
+          <div style={{ fontSize:13, fontWeight:900, color:'#fff', textShadow:'1px 1px 0 rgba(0,0,0,0.3)', lineHeight:1.2 }}>
+            {lang === 'en' ? '🍣 Catch Salmon' : '🍣 さーもんをとろう'}
+          </div>
+          <div style={{ fontSize:11, color:'rgba(255,255,255,0.88)', fontWeight:700 }}>
+            {lang === 'en' ? 'Score' : 'スコア'}: {score}　{lang === 'en' ? 'Stage' : 'ステージ'} {stage}
+          </div>
         </div>
-        <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', textShadow: '1px 2px 0 #922b21' }}>
-          🍣 ステージ {stage}
-        </div>
-        <div style={{ background: 'rgba(255,255,255,0.95)', borderRadius: 12, padding: '4px 12px', textAlign: 'center' }}>
-          <div style={{ fontSize: 10, color: '#c0392b', fontWeight: 700 }}>ライフ</div>
-          <div style={{ fontSize: 18, fontWeight: 900 }}>{'❤️'.repeat(hp)}{'🖤'.repeat(3 - hp)}</div>
+        {/* RIGHT */}
+        <div style={{ background:'rgba(255,255,255,0.95)', borderRadius:12, padding:'4px 10px', textAlign:'center', flexShrink:0 }}>
+          <div style={{ fontSize:10, color:'#c0392b', fontWeight:700 }}>{lang === 'en' ? 'Lives' : 'ライフ'}</div>
+          <div style={{ fontSize:16, fontWeight:900 }}>{'❤️'.repeat(hp)}{'🖤'.repeat(3 - hp)}</div>
         </div>
       </div>
 

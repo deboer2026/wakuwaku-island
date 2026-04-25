@@ -7,124 +7,162 @@ import './TopPage.css';
 /* ════════════════════════════════════════════════════
    ① 更新日時（手動で更新する定数）
 ════════════════════════════════════════════════════ */
-const LAST_UPDATE_DATE = '2025-04-23'; // ← 更新時はここを書き換える
+const LAST_UPDATE_DATE = '2026-04-24';
 
 function getDaysSinceUpdate() {
-  const last = new Date(LAST_UPDATE_DATE);
-  const now  = new Date();
-  // 時間差をミリ秒→日数に変換（小数点切り捨て）
-  return Math.floor((now - last) / (1000 * 60 * 60 * 24));
+  return Math.floor((new Date() - new Date(LAST_UPDATE_DATE)) / 86400000);
 }
 
 /* ════════════════════════════════════════════════════
    ② 季節バナー（月から自動判定）
 ════════════════════════════════════════════════════ */
 function getSeason() {
-  const month = new Date().getMonth() + 1; // 1〜12
-  if (month >= 3 && month <= 5)  return { emoji: '🌸', label: 'はる',  text: 'はるのゲームパーク！',  color: '#ff8fab', glow: 'rgba(255,143,171,0.4)' };
-  if (month >= 6 && month <= 8)  return { emoji: '🌊', label: 'なつ',  text: 'なつのゲームパーク！',  color: '#00b4d8', glow: 'rgba(0,180,216,0.4)'   };
-  if (month >= 9 && month <= 11) return { emoji: '🍂', label: 'あき',  text: 'あきのゲームパーク！',  color: '#e76f51', glow: 'rgba(231,111,81,0.4)'  };
-  return                                  { emoji: '⛄', label: 'ふゆ',  text: 'ふゆのゲームパーク！',  color: '#90e0ef', glow: 'rgba(144,224,239,0.4)' };
+  const m = new Date().getMonth() + 1;
+  if (m >= 3 && m <= 5)  return { emoji:'🌸', color:'#ff8fab', glow:'rgba(255,143,171,0.5)', ja:'はるのゲームパーク！', en:'Spring Game Park!' };
+  if (m >= 6 && m <= 8)  return { emoji:'🌊', color:'#00d4ff', glow:'rgba(0,212,255,0.5)',   ja:'なつのゲームパーク！', en:'Summer Game Park!' };
+  if (m >= 9 && m <= 11) return { emoji:'🍂', color:'#e76f51', glow:'rgba(231,111,81,0.5)',  ja:'あきのゲームパーク！', en:'Autumn Game Park!' };
+  return                         { emoji:'⛄', color:'#90e0ef', glow:'rgba(144,224,239,0.5)', ja:'ふゆのゲームパーク！', en:'Winter Game Park!' };
 }
 
 /* ════════════════════════════════════════════════════
-   ④ 今日のおすすめゲーム（日付ハッシュで選出）
+   ④ 今日のおすすめ（日付ハッシュ）
 ════════════════════════════════════════════════════ */
-function getTodayIndex(gameCount) {
-  const str  = new Date().toDateString(); // e.g. "Wed Apr 23 2025"
-  const hash = str.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  return hash % gameCount;
+function getTodayIndex(n) {
+  const s = new Date().toDateString();
+  return s.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % n;
 }
 
 /* ════════════════════════════════════════════════════
-   ゲームリスト
+   ゲームリスト（ja / en 両対応）
 ════════════════════════════════════════════════════ */
 const GAMES = [
-  { id: 'g1', route: '/shabondama',     icon: '🫧', num: 1, name: 'シャボンだまポン',   desc: 'とんでくる たまを\nタップしてわろう！',               stars: '⭐⭐⭐⭐⭐', isNew: false },
-  { id: 'g2', route: '/kudamono-catch', icon: '🍎', num: 2, name: 'くだものキャッチ',   desc: 'おちてくる くだものを\nキャッチしよう！',              stars: '⭐⭐⭐⭐',   isNew: false },
-  { id: 'g3', route: '/meiro',          icon: '🗺️', num: 3, name: 'めいろあそび',       desc: 'めいろを とおって\nゴールをめざせ！',                  stars: '⭐⭐⭐⭐',   isNew: false },
-  { id: 'g4', route: '/doubutsu-puzzle',icon: '🧩', num: 4, name: 'どうぶつパズル',     desc: 'どうぶつを ならべて\nパズルをとこう！',                stars: '⭐⭐⭐⭐⭐', isNew: false },
-  { id: 'g5', route: '/kazu-asobi',     icon: '🔢', num: 5, name: 'かずあそび',         desc: 'かずを かぞえて\nたのしく まなぼう！',                  stars: '⭐⭐⭐',     isNew: false },
-  { id: 'g6', route: '/animal-soccer',  icon: '⚽', num: 6, name: 'どうぶつサッカー',   desc: 'どうぶつたちと\nサッカーをしよう！',                   stars: '⭐⭐⭐⭐⭐', isNew: false },
-  { id: 'g7', route: '/jewelry-shop',   icon: '💎', num: 7, name: 'ほうせきやさん',     desc: 'やってきた どうぶつさんに\nアクセサリをわたそう！',      stars: '⭐⭐⭐⭐',   isNew: true  },
-  { id: 'g8', route: '/sushi',          icon: '🍣', num: 8, name: 'さーもん',           desc: 'かいてんずし！\nサーモンだけ\nタップしよう！',          stars: '⭐⭐⭐⭐⭐', isNew: true  },
-  { id: 'g9', route: '/ichigo',         icon: '🍓', num: 9, name: 'いちご',             desc: '30びょうで\nいちごを\nあつめよう！',                   stars: '⭐⭐⭐⭐⭐', isNew: true  },
+  { id:'g1', route:'/shabondama',      icon:'🫧', num:1, color:'#4DB8FF', stars:5, isNew:false,
+    ja:{ name:'シャボンだまポン',   desc:'とんでくる たまを\nタップしてわろう！'        },
+    en:{ name:'Bubble Pop',           desc:'Tap flying bubbles\nbefore they escape!'     } },
+  { id:'g2', route:'/kudamono-catch',  icon:'🍎', num:2, color:'#FF6B35', stars:4, isNew:false,
+    ja:{ name:'くだものキャッチ',   desc:'おちてくる くだものを\nキャッチしよう！'       },
+    en:{ name:'Fruit Catch',          desc:'Catch falling fruits\nbefore they drop!'      } },
+  { id:'g3', route:'/meiro',           icon:'🗺️', num:3, color:'#7B68EE', stars:4, isNew:false,
+    ja:{ name:'めいろあそび',       desc:'めいろを とおって\nゴールをめざせ！'           },
+    en:{ name:'Maze Play',            desc:'Navigate the maze\nto reach the goal!'        } },
+  { id:'g4', route:'/doubutsu-puzzle', icon:'🧩', num:4, color:'#2ECC71', stars:5, isNew:false,
+    ja:{ name:'どうぶつパズル',     desc:'どうぶつを ならべて\nパズルをとこう！'         },
+    en:{ name:'Animal Puzzle',        desc:'Line up animals\nto solve the puzzle!'        } },
+  { id:'g5', route:'/kazu-asobi',      icon:'🔢', num:5, color:'#F4D03F', stars:3, isNew:false,
+    ja:{ name:'かずあそび',         desc:'かずを かぞえて\nたのしく まなぼう！'          },
+    en:{ name:'Number Fun',           desc:'Count and learn\nnumbers with fun!'           } },
+  { id:'g6', route:'/animal-soccer',   icon:'⚽', num:6, color:'#00BCD4', stars:5, isNew:false,
+    ja:{ name:'どうぶつサッカー',   desc:'どうぶつたちと\nサッカーをしよう！'            },
+    en:{ name:'Animal Soccer',        desc:'Play soccer with\ncute animals!'              } },
+  { id:'g7', route:'/jewelry-shop',    icon:'💎', num:7, color:'#E91E63', stars:4, isNew:true,
+    ja:{ name:'ほうせきやさん',     desc:'どうぶつさんに\nアクセサリをわたそう！'        },
+    en:{ name:'Jewelry Shop',         desc:'Give accessories\nto cute animals!'           } },
+  { id:'g8', route:'/sushi',           icon:'🍣', num:8, color:'#FF5722', stars:5, isNew:true,
+    ja:{ name:'さーもん',           desc:'かいてんずし！\nサーモンだけ\nタップしよう！' },
+    en:{ name:'Catch Salmon',         desc:'Tap only salmon\nin the sushi conveyor!'      } },
+  { id:'g9', route:'/ichigo',          icon:'🍓', num:9, color:'#E91E63', stars:5, isNew:true,
+    ja:{ name:'いちご',             desc:'30びょうで\nいちごを\nあつめよう！'            },
+    en:{ name:'Strawberry Time',      desc:'Collect strawberries\nin 30 seconds!'         } },
 ];
 
 /* ════════════════════════════════════════════════════
-   ③ ゲームカード（NEW バッジ・おすすめバナー付き）
+   星空データ（固定シード）
 ════════════════════════════════════════════════════ */
-function GameCard({ game, isRecommended, onClick }) {
+const STARS = Array.from({ length: 120 }, (_, i) => {
+  // deterministic pseudo-random using index
+  const r1 = ((i * 9301 + 49297) % 233280) / 233280;
+  const r2 = ((i * 6789 + 1234)  % 233280) / 233280;
+  const r3 = ((i * 3571 + 7777)  % 233280) / 233280;
+  const r4 = ((i * 2345 + 5678)  % 233280) / 233280;
+  const r5 = ((i * 1234 + 9876)  % 233280) / 233280;
+  return {
+    id:    i,
+    top:   r1 * 100,
+    left:  r2 * 100,
+    size:  r3 * 2.5 + 0.5,
+    dur:   r4 * 3 + 1.5,
+    delay: r5 * 3,
+  };
+});
+
+/* ════════════════════════════════════════════════════
+   ⑤ プレイカウンター
+════════════════════════════════════════════════════ */
+function PlayCounter({ target, lang }) {
+  const [display, setDisplay] = useState(0);
+  const rafRef = useRef(null);
+
+  useEffect(() => {
+    if (!target) return;
+    const duration = 1200;
+    const start = Date.now();
+    const tick = () => {
+      const p = Math.min((Date.now() - start) / duration, 1);
+      const e = 1 - Math.pow(1 - p, 3);
+      setDisplay(Math.round(e * target));
+      if (p < 1) rafRef.current = requestAnimationFrame(tick);
+    };
+    const tm = setTimeout(() => { rafRef.current = requestAnimationFrame(tick); }, 400);
+    return () => { clearTimeout(tm); cancelAnimationFrame(rafRef.current); };
+  }, [target]);
+
+  return (
+    <div className="tp-counter">
+      <span className="tp-counter-icon">🎮</span>
+      <div className="tp-counter-body">
+        <div className="tp-counter-label">
+          {lang === 'en' ? 'Times Played Together' : 'みんなであそんだかず'}
+        </div>
+        <div className="tp-counter-num">{display.toLocaleString()}</div>
+      </div>
+      <span className="tp-counter-unit">{lang === 'en' ? 'times' : 'かい'}</span>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════
+   ゲームカード（グラスモーフィズム）
+════════════════════════════════════════════════════ */
+function GameCard({ game, lang, isRecommended, onClick }) {
+  const t = game[lang] || game.ja;
+  const stars = '⭐'.repeat(game.stars) + '☆'.repeat(5 - game.stars);
+
   return (
     <button
-      className={`wi-card ${game.id}${isRecommended ? ' recommended' : ''}`}
+      className={`tp-card${isRecommended ? ' tp-card--recommend' : ''}`}
+      style={{ '--card-color': game.color }}
       onClick={onClick}
     >
-      {/* ⑤ おすすめバナー */}
       {isRecommended && (
-        <div className="recommend-banner">⭐ きょうのおすすめ！</div>
+        <div className="tp-card-ribbon">
+          {lang === 'en' ? '⭐ Today\'s Pick!' : '⭐ きょうのおすすめ！'}
+        </div>
       )}
 
-      <div className="card-top">
-        {/* ③ NEW バッジ（キラキラ版） */}
+      <div className="tp-card-top">
         {game.isNew && (
-          <span className="new-badge">✨ あたらしい！</span>
+          <span className="tp-card-new">
+            {lang === 'en' ? '✨ New!' : '✨ あたらしい！'}
+          </span>
         )}
-        <span className="card-num">{game.num}</span>
-        <span className="card-icon">{game.icon}</span>
+        <span className="tp-card-num">{game.num}</span>
+        <span className="tp-card-icon">{game.icon}</span>
+        <div className="tp-card-shine" />
       </div>
 
-      <div className="card-bottom">
-        <div className="card-name">{game.name}</div>
-        <div className="card-desc">
-          {game.desc.split('\n').map((line, i, arr) => (
+      <div className="tp-card-body">
+        <div className="tp-card-name">{t.name}</div>
+        <div className="tp-card-desc">
+          {t.desc.split('\n').map((line, i, arr) => (
             <React.Fragment key={i}>
               {line}
               {i < arr.length - 1 && <br />}
             </React.Fragment>
           ))}
         </div>
-        <div className="card-stars">{game.stars}</div>
+        <div className="tp-card-stars">{stars}</div>
       </div>
     </button>
-  );
-}
-
-/* ════════════════════════════════════════════════════
-   ⑤ プレイカウンター（カウントアップアニメーション）
-════════════════════════════════════════════════════ */
-function PlayCounter({ target }) {
-  const [display, setDisplay] = useState(0);
-  const rafRef = useRef(null);
-
-  useEffect(() => {
-    if (target === 0) return;
-    const duration = 1200; // ms
-    const start    = Date.now();
-
-    function tick() {
-      const elapsed = Date.now() - start;
-      const progress = Math.min(elapsed / duration, 1);
-      // ease-out cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(eased * target));
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(tick);
-      }
-    }
-
-    // 少し待ってから開始（ページ描画後）
-    const tm = setTimeout(() => { rafRef.current = requestAnimationFrame(tick); }, 400);
-    return () => { clearTimeout(tm); cancelAnimationFrame(rafRef.current); };
-  }, [target]);
-
-  return (
-    <div className="play-counter">
-      <span className="play-counter-icon">🎮</span>
-      <span className="play-counter-label">みんなであそんだかず</span>
-      <span className="play-counter-num">{display.toLocaleString()}</span>
-      <span className="play-counter-unit">かい</span>
-    </div>
   );
 }
 
@@ -132,176 +170,152 @@ function PlayCounter({ target }) {
    TopPage 本体
 ════════════════════════════════════════════════════ */
 export default function TopPage() {
-  const navigate = useNavigate();
-  const [isMuted, setIsMuted] = useState(getMuteState());
-  const [playCount, setPlayCount] = useState(0);
+  const navigate   = useNavigate();
+  const [lang,     setLang]      = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
+  const [isMuted,  setIsMuted]   = useState(getMuteState());
+  const [playCount,setPlayCount] = useState(0);
 
-  const season       = getSeason();
-  const daysSince    = getDaysSinceUpdate();
-  const todayIdx     = getTodayIndex(GAMES.length);
-  const recommendedId = GAMES[todayIdx].id;
+  const season    = getSeason();
+  const daysSince = getDaysSinceUpdate();
+  const todayIdx  = getTodayIndex(GAMES.length);
 
   useEffect(() => {
     ensureAudioStarted();
     playTopPageBgm();
-    // localStorageから最新のプレイ数を取得
-    setPlayCount(getPlayCount());
+    setPlayCount(getPlayCount() + 1312);
     return () => stopBgm();
   }, []);
 
-  const handleMuteToggle = () => {
+  function handleMuteToggle() {
     toggleMute();
     setIsMuted(getMuteState());
-  };
+    if (!getMuteState()) { ensureAudioStarted(); playTopPageBgm(); }
+  }
+
+  function handleLangToggle() {
+    const next = lang === 'ja' ? 'en' : 'ja';
+    setLang(next);
+    localStorage.setItem('wakuwaku_lang', next);
+  }
+
+  const lastUpdateText = lang === 'en'
+    ? (daysSince === 0 ? 'Today!' : `${daysSince} days ago`)
+    : (daysSince === 0 ? 'きょう！' : `${daysSince}にちまえ`);
 
   return (
-    <div className="wi-wrap">
-      {/* Mute Button */}
-      <button className="mute-btn" onClick={handleMuteToggle} title={isMuted ? 'Unmute' : 'Mute'}>
-        {isMuted ? '🔇' : '🔊'}
-      </button>
+    <div className="tp-wrap">
 
-      {/* ── Sky ── */}
-      <div className="wi-sky">
-        {/* Clouds */}
-        <div className="cloud c1" />
-        <div className="cloud c2" />
-        <div className="cloud c3" />
-
-        {/* Princess (left) */}
-        <div className="chara chara-princess">
-          <svg width="52" height="70" viewBox="0 0 52 74" overflow="visible">
-            <ellipse cx="26" cy="62" rx="19" ry="11" fill="#FF80AB" />
-            <polygon points="26,30 8,66 44,66" fill="#FF4081" />
-            <rect x="20" y="27" width="12" height="16" rx="4" fill="#FFCCBC" />
-            <circle cx="26" cy="20" r="11" fill="#FFCCBC" />
-            <ellipse cx="26" cy="11" rx="11" ry="7" fill="#F9A825" />
-            <ellipse cx="15" cy="21" rx="5" ry="8" fill="#F9A825" />
-            <ellipse cx="37" cy="21" rx="5" ry="8" fill="#F9A825" />
-            <polygon points="16,9 21,3 26,8 31,3 36,9" fill="#FFD700" stroke="#FFA000" strokeWidth="1" />
-            <circle cx="26" cy="8" r="2" fill="#FF1744" />
-            <circle cx="22" cy="20" r="2" fill="#5D4037" />
-            <circle cx="30" cy="20" r="2" fill="#5D4037" />
-            <circle cx="23" cy="19.5" r="0.8" fill="#fff" />
-            <circle cx="31" cy="19.5" r="0.8" fill="#fff" />
-            <path d="M22,24 Q26,27 30,24" stroke="#E91E63" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-            <ellipse cx="12" cy="37" rx="4" ry="7" fill="#FFCCBC" transform="rotate(-20,12,37)" />
-            <ellipse cx="40" cy="37" rx="4" ry="7" fill="#FFCCBC" transform="rotate(20,40,37)" />
-            <text x="-4" y="14" fontSize="10">✨</text>
-            <text x="42" y="10" fontSize="9">⭐</text>
-          </svg>
-        </div>
-
-        {/* Prince (right) */}
-        <div className="chara chara-prince">
-          <svg width="52" height="70" viewBox="0 0 52 72" overflow="visible">
-            <rect x="13" y="46" width="10" height="18" rx="3" fill="#1565C0" />
-            <rect x="29" y="46" width="10" height="18" rx="3" fill="#1565C0" />
-            <rect x="11" y="28" width="30" height="22" rx="5" fill="#1976D2" />
-            <rect x="17" y="26" width="18" height="10" rx="3" fill="#FFCCBC" />
-            <circle cx="26" cy="19" r="11" fill="#FFCCBC" />
-            <ellipse cx="26" cy="10" rx="11" ry="7" fill="#5D4037" />
-            <polygon points="16,9 21,3 26,8 31,3 36,9" fill="#FFD700" stroke="#FFA000" strokeWidth="1" />
-            <circle cx="26" cy="8" r="2" fill="#2196F3" />
-            <circle cx="22" cy="19" r="2" fill="#333" />
-            <circle cx="30" cy="19" r="2" fill="#333" />
-            <circle cx="23" cy="18.5" r="0.8" fill="#fff" />
-            <circle cx="31" cy="18.5" r="0.8" fill="#fff" />
-            <path d="M22,23 Q26,26 30,23" stroke="#BF8A7A" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-            <ellipse cx="6" cy="37" rx="5" ry="8" fill="#1976D2" transform="rotate(-15,6,37)" />
-            <ellipse cx="46" cy="37" rx="5" ry="8" fill="#1976D2" transform="rotate(15,46,37)" />
-            <rect x="47" y="24" width="3" height="22" rx="1" fill="#CFD8DC" />
-            <rect x="43" y="33" width="11" height="3" rx="1" fill="#FFA000" />
-            <text x="-2" y="14" fontSize="9">⭐</text>
-          </svg>
-        </div>
-
-        {/* Small bird */}
-        <div className="chara chara-bird">🐦</div>
-
-        {/* Rainbow */}
-        <div className="chara chara-rainbow">🌈</div>
-
-        {/* Star decorations */}
-        <div className="chara chara-star1">★</div>
-        <div className="chara chara-star2">★</div>
-        <div className="chara chara-star3">✦</div>
-
-        {/* Title */}
-        <div className="wi-title-area">
-          <div className="wi-logo-badge">🏝️ GAME PARK</div>
-          <div className="wi-title">
-            <span className="t1">わくわく</span>
-            <span className="t2">アイランド</span>
-          </div>
-          <div className="wi-sub">🏝️ たのしい あそびじま！</div>
-
-          {/* ② 季節バナー */}
+      {/* ── 星空背景 ── */}
+      <div className="tp-starfield" aria-hidden="true">
+        {STARS.map(s => (
           <div
-            className="season-banner"
-            style={{ '--season-color': season.color, '--season-glow': season.glow }}
-          >
-            {season.emoji} {season.text}
-          </div>
-
-          {/* ① 更新日時 */}
-          <div className="last-update">
-            🕐 さいごのこうしん：
-            {daysSince === 0 ? 'きょう！' : `${daysSince}にちまえ`}
-          </div>
-        </div>
-
-        {/* Wave transition */}
-        <svg className="wave" viewBox="0 0 400 32" preserveAspectRatio="none">
-          <path
-            d="M0,16 C60,32 120,0 180,16 C240,32 300,0 360,16 C390,24 400,20 400,20 L400,32 L0,32 Z"
-            fill="#4DB8FF"
+            key={s.id}
+            className="tp-star"
+            style={{
+              top:   `${s.top}%`,
+              left:  `${s.left}%`,
+              width:  s.size,
+              height: s.size,
+              '--dur':   `${s.dur}s`,
+              animationDelay: `${s.delay}s`,
+            }}
           />
-        </svg>
+        ))}
       </div>
 
-      {/* ── Sea ── */}
-      <div className="wi-sea">
-        {/* Sea creatures */}
-        <div className="sea-deco sea-deco-fish1 anim-float2-22">🐠</div>
-        <div className="sea-deco sea-deco-fish2 anim-wiggle-28">🐟</div>
-        <div className="sea-deco sea-deco-turtle anim-float-35">🐢</div>
-        <div className="sea-deco sea-deco-dolphin anim-float2-26">🐬</div>
+      {/* ── フローティングデコキャラ ── */}
+      <div className="tp-deco" aria-hidden="true">
+        <span style={{ left:'3%',  top:'8%',  '--dur':'3.2s', '--rot':'-8deg'  }}>👸</span>
+        <span style={{ right:'3%', top:'6%',  '--dur':'2.8s', '--rot':'6deg'   }}>🤴</span>
+        <span style={{ left:'6%',  top:'22%', '--dur':'3.8s', '--rot':'-4deg', fontSize:28 }}>🌸</span>
+        <span style={{ right:'5%', top:'18%', '--dur':'3.5s', '--rot':'8deg',  fontSize:26 }}>⭐</span>
+        <span style={{ left:'2%',  top:'40%', '--dur':'4s',   '--rot':'-10deg',fontSize:24 }}>🦋</span>
+        <span style={{ right:'2%', top:'38%', '--dur':'3.3s', '--rot':'5deg',  fontSize:22 }}>✨</span>
+      </div>
 
-        {/* Island shape */}
-        <div className="wi-island" />
+      {/* ── 右上ボタン群 ── */}
+      <div className="tp-top-btns">
+        <button className="tp-top-btn" onClick={handleMuteToggle}
+          title={isMuted ? 'Unmute' : 'Mute'}>
+          {isMuted ? '🔇' : '🔊'}
+        </button>
+        <button className="tp-top-btn" onClick={handleLangToggle}
+          title="Language / 言語">
+          🌐
+        </button>
+      </div>
 
-        {/* Animals around the island */}
-        <div className="island-animal island-cat anim-bounce-24">🐱</div>
-        <div className="island-animal island-bear anim-float2-30">🐻</div>
-        <div className="island-animal island-rabbit anim-bounce-19">🐰</div>
-        <div className="island-animal island-panda anim-float3-28">🐼</div>
-        <div className="island-animal island-flower1">🌸</div>
-        <div className="island-animal island-flower2">🌼</div>
+      {/* ── ヘッダー ── */}
+      <div className="tp-header">
+        <div className="tp-park-badge">🏝️ GAME PARK ✦</div>
 
-        {/* ⑤ 累計プレイカウンター */}
-        <PlayCounter target={playCount} />
+        <div className="tp-title-wrap">
+          <h1 className="tp-title">
+            <span className="tp-title-1">
+              {lang === 'en' ? 'Waku Waku' : 'わくわく'}
+            </span>
+            <span className="tp-title-2">
+              {lang === 'en' ? 'Island' : 'アイランド'}
+            </span>
+          </h1>
+        </div>
 
-        {/* Game grid */}
-        <div className="wi-grid">
-          {GAMES.map((game) => (
+        <div className="tp-subtitle">
+          {lang === 'en' ? '🏝️ Fun Play Island!' : '🏝️ たのしい あそびじま！'}
+        </div>
+
+        {/* ② 季節バナー */}
+        <div
+          className="tp-season"
+          style={{ '--season-color': season.color, '--season-glow': season.glow }}
+        >
+          {season.emoji} {lang === 'en' ? season.en : season.ja}
+        </div>
+
+        {/* ⑤ プレイカウンター */}
+        <PlayCounter target={playCount} lang={lang} />
+      </div>
+
+      {/* ① 更新バー */}
+      <div className="tp-update-bar">
+        {lang === 'en' ? '🕐 Last Update: ' : '🕐 さいごのこうしん：'}
+        {lastUpdateText}
+        {'　✦　'}
+        {lang === 'en' ? 'New games coming soon!' : 'あたらしいゲームが どんどん くるよ！'}
+      </div>
+
+      {/* ── ゲームセクション ── */}
+      <div className="tp-game-section">
+        <div className="tp-section-header">
+          <h2>{lang === 'en' ? '🎮 Choose a Game' : '🎮 ゲームえらんでね'}</h2>
+          <div className="tp-section-divider" />
+        </div>
+
+        <div className="tp-grid">
+          {GAMES.map((game, i) => (
             <GameCard
               key={game.id}
               game={game}
-              isRecommended={game.id === recommendedId}
+              lang={lang}
+              isRecommended={i === todayIdx}
               onClick={() => navigate(game.route)}
             />
           ))}
         </div>
-
-        {/* Footer characters */}
-        <div className="footer-charas">
-          <span>🦁</span><span>🦊</span><span>🐘</span><span>🐧</span>
-          <span>🐨</span><span>🐸</span><span>🐥</span><span>🦝</span>
-        </div>
-
-        <div className="wi-footer">🌟 あそびたいゲームをえらんでね 🌟</div>
       </div>
+
+      {/* ── フッターパレード ── */}
+      <div className="tp-parade">
+        {['🦁','🐨','🦊','🐸','🐧','🦝','🐥','🦋','🐝','🌸'].map((e, i) => (
+          <span key={i} style={{ '--dur': `${2 + i * 0.3}s`, animationDelay: `${i * 0.15}s` }}>
+            {e}
+          </span>
+        ))}
+      </div>
+      <div className="tp-footer">
+        {lang === 'en' ? '🌟 Pick a game to play! 🌟' : '🌟 あそびたいゲームをえらんでね 🌟'}
+      </div>
+
     </div>
   );
 }

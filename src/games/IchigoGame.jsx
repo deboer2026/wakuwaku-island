@@ -31,6 +31,8 @@ export default function IchigoGame() {
   const [hiScore,   setHiScore]  = useState(getHi());
   const [resultData,setResult]   = useState(null);
 
+  const [lang] = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
+
   /* ─── Mutable Refs ─── */
   const scoreR     = useRef(0);
   const hpR        = useRef(3);
@@ -238,10 +240,10 @@ export default function IchigoGame() {
   ════════════════════════════════════════════════ */
   if (screen === 'title') return (
     <div className="ichigo-wrap ichigo-title">
-      <button className="ichigo-back-btn" onClick={() => navigate('/')}>← もどる</button>
+      <button className="ichigo-back-btn" onClick={() => navigate('/')}>🏠</button>
       <div className="ichigo-title-box">
         <div style={{ fontSize: 64, marginBottom: 6 }}>🍓</div>
-        <h1 className="ichigo-title-text">いちごをあつめよう！</h1>
+        <h1 className="ichigo-title-text">{lang === 'en' ? 'Strawberry Time!' : 'いちごをあつめよう！'}</h1>
         <div className="ichigo-rule-card">
           <h2>📖 あそびかた</h2>
           <div className="ichigo-rule-step"><div className="ichigo-rule-num">1</div><div className="ichigo-rule-text"><b>いちご🍓</b> がポップアップ！どんどんタップしよう！</div></div>
@@ -294,32 +296,24 @@ export default function IchigoGame() {
         overflow:   'hidden',
       }}
     >
-      {/* ── HUD ── */}
-      <div style={{
-        position:        'fixed',
-        top: 0, left: 0, right: 0,
-        height:           HUD_H,
-        background:      'rgba(233,30,99,0.82)',
-        display:         'flex',
-        alignItems:      'center',
-        justifyContent:  'space-between',
-        padding:         '0 14px',
-        zIndex:           10,
-      }}>
-        <button
-          onClick={() => { stopAll(); navigate('/'); }}
-          style={{ fontSize: 22, background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: 10, padding: '4px 8px', cursor: 'pointer' }}
-        >🏠</button>
-        <div style={{ background: 'rgba(255,255,255,0.95)', borderRadius: 12, padding: '4px 12px', textAlign: 'center' }}>
-          <div style={{ fontSize: 10, color: '#880e4f', fontWeight: 700 }}>スコア</div>
-          <div style={{ fontSize: 20, fontWeight: 900, color: '#560027' }}>{score}</div>
+      {/* ── HUD（3カラム：左🏠 ／ 中タイトル+スコア ／ 右のこり時間） ── */}
+      <div style={{ position:'fixed', top:0, left:0, right:0, height:HUD_H, background:'rgba(233,30,99,0.82)', display:'flex', alignItems:'center', padding:'0 12px', gap:8, zIndex:10 }}>
+        {/* LEFT */}
+        <button onClick={() => { stopAll(); navigate('/'); }}
+          style={{ fontSize:22, background:'rgba(255,255,255,0.9)', border:'none', borderRadius:10, padding:'4px 8px', cursor:'pointer', flexShrink:0 }}>🏠</button>
+        {/* CENTER */}
+        <div style={{ flex:1, textAlign:'center' }}>
+          <div style={{ fontSize:13, fontWeight:900, color:'#fff', textShadow:'1px 1px 0 rgba(0,0,0,0.3)', lineHeight:1.2 }}>
+            {lang === 'en' ? '🍓 Strawberry Time' : '🍓 いちごあつめ'}
+          </div>
+          <div style={{ fontSize:11, color:'rgba(255,255,255,0.88)', fontWeight:700 }}>
+            {lang === 'en' ? 'Score' : 'スコア'}: {score}
+          </div>
         </div>
-        <div style={{ fontSize: 15, fontWeight: 900, color: '#fff', textShadow: '1px 2px 0 #880e4f' }}>
-          🍓 いちごあつめ
-        </div>
-        <div style={{ background: 'rgba(255,255,255,0.95)', borderRadius: 12, padding: '4px 12px', textAlign: 'center' }}>
-          <div style={{ fontSize: 10, color: '#880e4f', fontWeight: 700 }}>のこり</div>
-          <div style={{ fontSize: 20, fontWeight: 900, color: '#560027' }}>{timeLeft}</div>
+        {/* RIGHT */}
+        <div style={{ background:'rgba(255,255,255,0.95)', borderRadius:12, padding:'4px 10px', textAlign:'center', flexShrink:0 }}>
+          <div style={{ fontSize:10, color:'#880e4f', fontWeight:700 }}>{lang === 'en' ? 'Left' : 'のこり'}</div>
+          <div style={{ fontSize:20, fontWeight:900, color:'#560027' }}>{timeLeft}</div>
         </div>
       </div>
 

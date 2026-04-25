@@ -29,6 +29,7 @@ function fmtTime(s) {
 export default function Meiro() {
   const navigate = useNavigate();
 
+  const [lang] = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
   const [screen, setScreen] = useState('title');
   const [hpDisplay, setHpDisplay] = useState(MAX_HP);
   const [timeDisplay, setTimeDisplay] = useState(0);
@@ -548,6 +549,7 @@ export default function Meiro() {
       <canvas ref={bgCanvasRef} className="meiro-canvas-bg" />
       {/* HUD */}
       <div className="meiro-hud">
+        {/* LEFT */}
         <button className="meiro-hud-back" onClick={() => {
           runningRef.current = false;
           if (timerIntRef.current) clearInterval(timerIntRef.current);
@@ -555,9 +557,15 @@ export default function Meiro() {
           if (bgAnimRef.current) cancelAnimationFrame(bgAnimRef.current);
           navigate('/');
         }}>🏠</button>
-        <div className="meiro-hud-info">
-          <span>じかん: <b>{fmtTime(timeDisplay)}</b></span>
-          <span>ライフ: {hpHearts.join('')}</span>
+        {/* CENTER */}
+        <div className="meiro-hud-center">
+          <div className="meiro-hud-title">{lang === 'en' ? '🗺️ Maze Play' : '🗺️ めいろあそび'}</div>
+          <div className="meiro-hud-score">{lang === 'en' ? 'Time' : 'じかん'}: {fmtTime(timeDisplay)}</div>
+        </div>
+        {/* RIGHT */}
+        <div className="meiro-hud-box">
+          <div className="meiro-hud-label">{lang === 'en' ? 'Lives' : 'ライフ'}</div>
+          <div className="meiro-hud-val">{hpHearts.join('')}</div>
         </div>
       </div>
       {/* Maze canvas (interactive) */}

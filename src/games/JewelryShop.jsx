@@ -64,6 +64,8 @@ export default function JewelryShop() {
   const currentAnswerRef = useRef(null);
   const servingRef = useRef(false);
 
+  const [lang] = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
+
   // UI state
   const [screen, setScreen] = useState('title');
   const [hiScore, setHiScore] = useState(getHi);
@@ -281,14 +283,16 @@ export default function JewelryShop() {
       {/* ── HUD ── */}
       {(screen === 'game' || screen === 'stageClear') && (
         <div className="js-hud">
+          {/* LEFT */}
           <button className="js-hud-back" onClick={() => { servingRef.current = false; if (rafRef.current) cancelAnimationFrame(rafRef.current); navigate('/'); }}>🏠</button>
-          <div className="js-hud-box">
-            <div className="js-hud-label">スコア</div>
-            <div className="js-hud-val">{score}</div>
+          {/* CENTER */}
+          <div className="js-hud-center">
+            <div className="js-hud-title">{lang === 'en' ? '💎 Jewelry Shop' : '💎 ほうせきやさん'}</div>
+            <div className="js-hud-score">{lang === 'en' ? 'Score' : 'スコア'}: {score}</div>
           </div>
-          <div className="js-hud-title">💎 ほうせきやさん</div>
+          {/* RIGHT */}
           <div className="js-hud-box">
-            <div className="js-hud-label">ステージ</div>
+            <div className="js-hud-label">{lang === 'en' ? 'Stage' : 'ステージ'}</div>
             <div className="js-hud-val">{stage}</div>
           </div>
         </div>

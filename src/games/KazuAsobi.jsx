@@ -14,6 +14,7 @@ function saveHi(v) { localStorage.setItem('kazu_hi', String(v)); }
 export default function KazuAsobi() {
   const navigate = useNavigate();
 
+  const [lang] = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
   const [screen, setScreen] = useState('title');
   const [timeDisplay, setTimeDisplay] = useState(GAME_DURATION);
   const [correctDisplay, setCorrectDisplay] = useState(0);
@@ -289,10 +290,17 @@ export default function KazuAsobi() {
       <div className="kazu-overlay">
         {/* HUD */}
         <div className="kazu-hud">
+          {/* LEFT */}
           <button className="kazu-hud-back" onClick={() => { runningRef.current=false; if(timerRef.current) clearInterval(timerRef.current); if(animIdRef.current) cancelAnimationFrame(animIdRef.current); navigate('/'); }}>🏠</button>
-          <div className="kazu-hud-info">
-            <span>⏱ <b>{timeDisplay}</b></span>
-            <span>⭕ <b>{correctDisplay}</b></span>
+          {/* CENTER */}
+          <div className="kazu-hud-center">
+            <div className="kazu-hud-title">{lang === 'en' ? '🔢 Number Fun' : '🔢 かずあそび'}</div>
+            <div className="kazu-hud-score">{lang === 'en' ? 'Correct' : 'せいかい'}: {correctDisplay}</div>
+          </div>
+          {/* RIGHT */}
+          <div className="kazu-hud-box">
+            <div className="kazu-hud-label">{lang === 'en' ? 'Time' : 'のこり'}</div>
+            <div className="kazu-hud-val">{timeDisplay}</div>
           </div>
         </div>
 
