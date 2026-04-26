@@ -1,0 +1,350 @@
+/* ═══════════════════════════════════════════════
+   KISEKAE  —  着せ替え スタイル
+═══════════════════════════════════════════════ */
+
+/* ── アニメーション ── */
+@keyframes ksk-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  35%       { transform: translateY(-9px) rotate(-2deg); }
+  70%       { transform: translateY(-4px) rotate(2deg); }
+}
+
+@keyframes ksk-slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes ksk-sparkle-out {
+  0%   { opacity: 1; transform: translate(0, 0) scale(1.1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.15); }
+}
+
+@keyframes ksk-btn-pulse {
+  0%, 100% { box-shadow: 0 0 0 0   rgba(0, 212, 255, 0.0); }
+  50%       { box-shadow: 0 0 14px 4px rgba(0, 212, 255, 0.5); }
+}
+
+/* ── タイトルゾーン（キャラクターのアンカー） ── */
+.ksk-title-zone {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── キャラクターラップ ── */
+.ksk-chara-wrap {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  animation: ksk-float 3.5s ease-in-out infinite;
+}
+
+.ksk-chara-wrap--left  { left:  12px; }
+.ksk-chara-wrap--right { right: 12px; animation-duration: 4.1s; animation-delay: 0.6s; }
+
+.ksk-chara-wrap:hover .ksk-svg {
+  filter: drop-shadow(0 0 10px rgba(255, 220, 80, 0.9));
+}
+.ksk-chara-wrap:hover .ksk-chara-inner {
+  transform: scale(1.07);
+}
+
+/* ── キャラクター内コンテナ ── */
+.ksk-chara-inner {
+  position: relative;
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+/* ── SVG 本体 ── */
+.ksk-svg {
+  width: 68px;
+  height: 108px;
+  display: block;
+  transition: filter 0.2s;
+}
+
+/* ── ペット絵文字 ── */
+.ksk-pet {
+  position: absolute;
+  font-size: 18px;
+  bottom: 6px;
+  animation: ksk-float 2.4s ease-in-out infinite;
+}
+.ksk-pet--left  { left:  -14px; animation-delay: 0.4s; }
+.ksk-pet--right { right: -14px; animation-delay: 0.9s; }
+
+/* ── ラベルバッジ（ホバー時フェードイン） ── */
+.ksk-chara-badge {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  color: #ffe082;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 10px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(5px);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+}
+.ksk-chara-wrap:hover .ksk-chara-badge,
+.ksk-chara-wrap:focus-visible .ksk-chara-badge {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── 👗きがえボタン（右上） ── */
+.ksk-top-btn {
+  /* tp-top-btn のスタイルを継承しつつ強調 */
+  background: linear-gradient(135deg, rgba(255, 150, 200, 0.25), rgba(180, 100, 255, 0.25)) !important;
+  border-color: rgba(255, 150, 200, 0.5) !important;
+  animation: ksk-btn-pulse 2s ease infinite;
+}
+
+/* ── キラキラスパークル ── */
+.ksk-sparkle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  font-size: 17px;
+  line-height: 1;
+  animation: ksk-sparkle-out 0.72s ease forwards;
+}
+
+/* ══════════════════════════════════════════════
+   パネル
+══════════════════════════════════════════════ */
+
+/* ── オーバーレイ（背景） ── */
+.ksk-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 5, 20, 0.72);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  backdrop-filter: blur(5px);
+}
+
+/* ── パネル本体 ── */
+.ksk-panel {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  max-height: 84vh;
+  background: linear-gradient(170deg, #1c1050 0%, #0b0b28 100%);
+  border-top: 2px solid rgba(0, 212, 255, 0.45);
+  border-left:  2px solid rgba(0, 212, 255, 0.2);
+  border-right: 2px solid rgba(0, 212, 255, 0.2);
+  border-radius: 24px 24px 0 0;
+  padding: 16px 14px 28px;
+  overflow-y: auto;
+  animation: ksk-slide-up 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  box-shadow: 0 -10px 48px rgba(0, 0, 0, 0.7);
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 212, 255, 0.3) transparent;
+}
+
+/* ── パネルヘッダー ── */
+.ksk-panel-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.ksk-panel-title {
+  font-size: 18px;
+  font-weight: 900;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  color: #ffe082;
+  text-shadow: 0 0 10px rgba(255, 200, 60, 0.65);
+}
+
+.ksk-close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+.ksk-close-btn:hover  { background: rgba(255, 80, 80, 0.4); }
+.ksk-close-btn:active { transform: scale(0.9); }
+
+/* ── キャラタブ ── */
+.ksk-chara-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.ksk-chara-tab {
+  flex: 1;
+  padding: 9px 6px;
+  border: 2px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.ksk-chara-tab.active {
+  background: rgba(0, 212, 255, 0.18);
+  border-color: #00d4ff;
+  color: #00d4ff;
+  animation: ksk-btn-pulse 1.8s ease infinite;
+}
+.ksk-tab-icon { font-size: 24px; line-height: 1; }
+
+/* ── カテゴリ行 ── */
+.ksk-cat-row {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+  scrollbar-width: none;
+}
+.ksk-cat-row::-webkit-scrollbar { display: none; }
+
+.ksk-cat-btn {
+  flex-shrink: 0;
+  padding: 5px 11px;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.ksk-cat-btn.active {
+  background: rgba(255, 200, 60, 0.22);
+  border-color: #ffe082;
+  color: #ffe082;
+}
+.ksk-cat-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+/* ── アイテムグリッド ── */
+.ksk-items-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.ksk-item-btn {
+  position: relative;
+  padding: 10px 4px 7px;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.12s;
+  min-height: 70px;
+}
+.ksk-item-btn.active {
+  background: rgba(0, 212, 255, 0.2);
+  border-color: #00d4ff;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.35);
+}
+.ksk-item-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  transform: scale(1.05);
+}
+.ksk-item-btn:active { transform: scale(0.95); }
+
+.ksk-ib-emoji {
+  font-size: 24px;
+  line-height: 1;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+}
+.ksk-ib-name {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  line-height: 1.2;
+}
+.ksk-ib-check {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 11px;
+  color: #00d4ff;
+  font-weight: 900;
+}
+
+/* ── ミニプレビュー ── */
+.ksk-mini-preview {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  padding: 14px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ksk-mini-chara {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.ksk-mini-chara .ksk-svg {
+  width: 52px;
+  height: 83px;
+}
+.ksk-mini-chara > span { font-size: 16px; }
+
+/* ── レスポンシブ ── */
+@media (max-width: 500px) {
+  .ksk-chara-wrap { display: none; }
+}
+
+@media (min-width: 501px) and (max-width: 700px) {
+  .ksk-chara-wrap--left  { left:  5px; }
+  .ksk-chara-wrap--right { right: 5px; }
+  .ksk-svg { width: 56px; height: 89px; }
+}

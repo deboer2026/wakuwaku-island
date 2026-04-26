@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playTopPageBgm, stopBgm, toggleMute, getMuteState, ensureAudioStarted } from '../utils/audio';
 import { getPlayCount } from '../utils/playCounter';
+import { KisekaeCharacters, KisekaePanel, DEFAULT_KISEKAE } from '../components/Kisekae';
 import './TopPage.css';
 
 /* ════════════════════════════════════════════════════
@@ -171,9 +172,17 @@ function GameCard({ game, lang, isRecommended, onClick }) {
 ════════════════════════════════════════════════════ */
 export default function TopPage() {
   const navigate   = useNavigate();
-  const [lang,     setLang]      = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
-  const [isMuted,  setIsMuted]   = useState(getMuteState());
-  const [playCount,setPlayCount] = useState(0);
+  const [lang,        setLang]        = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
+  const [isMuted,     setIsMuted]     = useState(getMuteState());
+  const [playCount,   setPlayCount]   = useState(0);
+  const [kisekaeState,setKisekaeState]= useState(() => {
+    try {
+      const saved = localStorage.getItem('kisekae_state');
+      return saved ? JSON.parse(saved) : DEFAULT_KISEKAE;
+    } catch { return DEFAULT_KISEKAE; }
+  });
+  const [panelOpen,   setPanelOpen]   = useState(false);
+  const [panelChara,  setPanelChara]  = useState('princess');
 
   const season    = getSeason();
   const daysSince = getDaysSinceUpdate();
@@ -211,6 +220,16 @@ export default function TopPage() {
     }
   }
 
+  function openPanel(chara) {
+    setPanelChara(chara);
+    setPanelOpen(true);
+  }
+
+  function handleKisekaeChange(next) {
+    setKisekaeState(next);
+    localStorage.setItem('kisekae_state', JSON.stringify(next));
+  }
+
   function handleLangToggle() {
     const next = lang === 'ja' ? 'en' : 'ja';
     setLang(next);
@@ -244,8 +263,6 @@ export default function TopPage() {
 
       {/* ── フローティングデコキャラ ── */}
       <div className="tp-deco" aria-hidden="true">
-        <span style={{ left:'3%',  top:'8%',  '--dur':'3.2s', '--rot':'-8deg'  }}>👸</span>
-        <span style={{ right:'3%', top:'6%',  '--dur':'2.8s', '--rot':'6deg'   }}>🤴</span>
         <span style={{ left:'6%',  top:'22%', '--dur':'3.8s', '--rot':'-4deg', fontSize:28 }}>🌸</span>
         <span style={{ right:'5%', top:'18%', '--dur':'3.5s', '--rot':'8deg',  fontSize:26 }}>⭐</span>
         <span style={{ left:'2%',  top:'40%', '--dur':'4s',   '--rot':'-10deg',fontSize:24 }}>🦋</span>
@@ -254,6 +271,10 @@ export default function TopPage() {
 
       {/* ── 右上ボタン群 ── */}
       <div className="tp-top-btns">
+        <button className="tp-top-btn ksk-top-btn" onClick={() => openPanel('princess')}
+          title={lang === 'en' ? 'Dress up' : 'きがえ'}>
+          👗
+        </button>
         <button className="tp-top-btn" onClick={handleMuteToggle}
           title={isMuted ? 'Unmute' : 'Mute'}>
           {isMuted ? '🔇' : '🔊'}
@@ -268,19 +289,27 @@ export default function TopPage() {
       <div className="tp-header">
         <div className="tp-park-badge">🏝️ GAME PARK ✦</div>
 
-        <div className="tp-title-wrap">
-          <h1 className="tp-title">
-            <span className="tp-title-1">
-              {lang === 'en' ? 'Waku Waku' : 'わくわく'}
-            </span>
-            <span className="tp-title-2">
-              {lang === 'en' ? 'Island' : 'アイランド'}
-            </span>
-          </h1>
-        </div>
+        <div className="ksk-title-zone">
+          <KisekaeCharacters
+            kisekaeState={kisekaeState}
+            onOpen={openPanel}
+            lang={lang}
+          />
 
-        <div className="tp-subtitle">
-          {lang === 'en' ? '🏝️ Fun Play Island!' : '🏝️ たのしい あそびじま！'}
+          <div className="tp-title-wrap">
+            <h1 className="tp-title">
+              <span className="tp-title-1">
+                {lang === 'en' ? 'Waku Waku' : 'わくわく'}
+              </span>
+              <span className="tp-title-2">
+                {lang === 'en' ? 'Island' : 'アイランド'}
+              </span>
+            </h1>
+          </div>
+
+          <div className="tp-subtitle">
+            {lang === 'en' ? '🏝️ Fun Play Island!' : '🏝️ たのしい あそびじま！'}
+          </div>
         </div>
 
         {/* ② 季節バナー */}
@@ -334,6 +363,16 @@ export default function TopPage() {
       <div className="tp-footer">
         {lang === 'en' ? '🌟 Pick a game to play! 🌟' : '🌟 あそびたいゲームをえらんでね 🌟'}
       </div>
+
+      {/* ── 着せ替えパネル ── */}
+      <KisekaePanel
+        isOpen={panelOpen}
+        initialChara={panelChara}
+        onClose={() => setPanelOpen(false)}
+        kisekaeState={kisekaeState}
+        onStateChange={handleKisekaeChange}
+        lang={lang}
+      />
 
     </div>
   );
