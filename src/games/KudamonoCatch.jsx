@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playKudamonoCatchBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
+import { addCoins } from '../utils/coins';
 import './KudamonoCatch.css';
 
 // ─── constants ───────────────────────────────────────────────────────────────
@@ -355,6 +356,7 @@ export default function KudamonoCatch() {
     cancelAnimationFrame(animIdRef.current);
     stopBgm();
     playSoundClear();
+    addCoins(5);
 
     const score = scoreRef.current;
     const hi    = getHi();
@@ -362,6 +364,7 @@ export default function KudamonoCatch() {
     if (isNew) {
       saveHi(score);
       trackNewHighScore('KudamonoCatch', score);
+      addCoins(10);
     }
     trackGameClear('KudamonoCatch', score, 1);
     setHiScore(isNew ? score : hi);
@@ -397,6 +400,7 @@ export default function KudamonoCatch() {
     await ensureAudioStarted();
     console.log('[Game] KudamonoCatch: audio ready, playing BGM');
     playKudamonoCatchBgm();
+    addCoins(1);
 
     catcherEmoji.current = CHARACTERS[selectedChara].emoji;
 

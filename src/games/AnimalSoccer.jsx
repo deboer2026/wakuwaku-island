@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playAnimalSoccerBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
+import { addCoins } from '../utils/coins';
 import './AnimalSoccer.css';
 
 const FRUITS = ['🍎','🍊','🍋','🍇','🍓','🍑','🍒','🍌'];
@@ -99,12 +100,14 @@ export default function AnimalSoccer() {
     animIdRef.current = null;
     stopBgm();
     playSoundClear();
+    addCoins(5);
     const s = scoreRef.current;
     const hi = getHi();
     const isNew = s > hi;
     if (isNew) {
       saveHi(s);
       trackNewHighScore('AnimalSoccer', s);
+      addCoins(10);
     }
     trackGameClear('AnimalSoccer', s, 1);
     setHiScore(isNew ? s : hi);
@@ -320,6 +323,7 @@ export default function AnimalSoccer() {
     await ensureAudioStarted();
     console.log('[Game] AnimalSoccer: audio ready, playing BGM');
     playAnimalSoccerBgm();
+    addCoins(1);
 
     kickerRef.current = char;
     scoreRef.current = 0;
@@ -386,6 +390,7 @@ export default function AnimalSoccer() {
     return () => {
       if (animIdRef.current) cancelAnimationFrame(animIdRef.current);
       if (speechTimerRef.current) clearTimeout(speechTimerRef.current);
+      stopBgm();
     };
   }, []);
 

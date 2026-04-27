@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playDoubutsuPuzzleBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
+import { addCoins } from '../utils/coins';
 import './DoubutsuPuzzle.css';
 
 // ─── constants ────────────────────────────────────────────────────────────────
@@ -197,6 +198,7 @@ export default function DoubutsuPuzzle() {
     clearInterval(timerIntRef.current);
     stopBgm();
     playSoundClear();
+    addCoins(5);
 
     const stars = misses <= 3 ? '⭐⭐⭐' : misses <= 7 ? '⭐⭐' : '⭐';
     const prevBest = getBestTime();
@@ -204,6 +206,7 @@ export default function DoubutsuPuzzle() {
     if (isNewBest) {
       saveBestTime(elapsed);
       trackNewHighScore('DoubutsuPuzzle', elapsed);
+      addCoins(10);
     }
     trackGameClear('DoubutsuPuzzle', elapsed, 1);
     setBestTimeDisplay(isNewBest ? elapsed : prevBest);
@@ -295,6 +298,7 @@ export default function DoubutsuPuzzle() {
     await ensureAudioStarted();
     console.log('[Game] DoubutsuPuzzle: audio ready, playing BGM');
     playDoubutsuPuzzleBgm();
+    addCoins(1);
 
     matchedRef.current  = 0;
     missRef.current     = 0;
@@ -333,6 +337,7 @@ export default function DoubutsuPuzzle() {
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(galAnimIdRef.current);
       clearInterval(timerIntRef.current);
+      stopBgm();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

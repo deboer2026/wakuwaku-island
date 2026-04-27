@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playShabondamaBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
+import { addCoins } from '../utils/coins';
 import './Shabondama.css';
 
 const GALLERY_CHARS = ['👸','🤴','👑','🦁','🐨','🦝','🐮','🐷','🐔','🐦','🦄','🐯','🐺','🦋','🐝','🦀','🐙','🐭','🐹'];
@@ -264,6 +265,7 @@ export default function Shabondama() {
     cancelAnimationFrame(animIdRef.current);
     stopBgm();
     playSoundClear();
+    addCoins(5);
 
     const score = scoreRef.current;
     const hi = getHi();
@@ -271,6 +273,7 @@ export default function Shabondama() {
     if (isNew) {
       saveHi(score);
       trackNewHighScore('Shabondama', score);
+      addCoins(10);
     }
     trackGameClear('Shabondama', score, 1);
     setHiScore(isNew ? score : hi);
@@ -298,6 +301,7 @@ export default function Shabondama() {
     await ensureAudioStarted();
     console.log('[Game] Shabondama: audio ready, playing BGM');
     playShabondamaBgm();
+    addCoins(1);
 
     scoreRef.current = 0;
     timeLeftRef.current = 30;

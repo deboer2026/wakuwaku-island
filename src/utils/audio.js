@@ -3,9 +3,8 @@
 
 let audioInitialized = false;
 let isMuted = localStorage.getItem('wakuwaku_muted') === '1';
-let currentBgm = null;
-let bgmSynth = null;
-let bassSynth = null;
+let currentBgm   = null;
+let currentSynth = null;
 
 const VOLUME = -14; // dB
 const SE_VOLUME = -12; // Sound effect volume
@@ -54,14 +53,26 @@ function stopAllBgm() {
     try { currentBgm.stop(); currentBgm.dispose(); } catch (_) {}
     currentBgm = null;
   }
-  if (bgmSynth) {
-    try { bgmSynth.triggerRelease(); bgmSynth.dispose(); } catch (_) {}
-    bgmSynth = null;
+  if (currentSynth) {
+    try { currentSynth.releaseAll?.(); currentSynth.dispose(); } catch (_) {}
+    currentSynth = null;
   }
-  if (bassSynth) {
-    try { bassSynth.triggerRelease(); bassSynth.dispose(); } catch (_) {}
-    bassSynth = null;
-  }
+}
+
+// visibilitychange — pause BGM when tab hidden / screen locked, resume on return
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (!window.Tone) return;
+    if (document.hidden) {
+      if (window.Tone.Transport.state === 'started') {
+        window.Tone.Transport.pause();
+      }
+    } else {
+      if (!isMuted && window.Tone.Transport.state === 'paused') {
+        window.Tone.Transport.start();
+      }
+    }
+  });
 }
 
 // Public stop
@@ -119,6 +130,7 @@ export function playTopPageBgm() {
     envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.5 },
   }).toDestination();
   synth.volume.value = VOLUME;
+  currentSynth = synth;
 
   const melody = [
     { note: 'C4', dur: '8n' }, { note: 'E4', dur: '8n' },
@@ -147,6 +159,7 @@ export function playShabondamaBgm() {
     envelope: { attack: 0.01, decay: 0.15, sustain: 0.2, release: 0.4 },
   }).toDestination();
   synth.volume.value = VOLUME;
+  currentSynth = synth;
 
   const melody = ['D5', 'E5', 'F#5', 'A5', 'G5', 'E5', 'D5', 'E5'];
 
@@ -170,6 +183,7 @@ export function playKudamonoCatchBgm() {
     envelope: { attack: 0.005, decay: 0.1, sustain: 0.4, release: 0.3 },
   }).toDestination();
   synth.volume.value = VOLUME;
+  currentSynth = synth;
 
   const melody = ['C5', 'D5', 'E5', 'F5', 'G5', 'F5', 'E5', 'D5'];
 
@@ -193,6 +207,7 @@ export function playMeiroBgm() {
     envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.5 },
   }).toDestination();
   synth.volume.value = VOLUME;
+  currentSynth = synth;
 
   const melody = ['G4', 'B4', 'D5', 'B4', 'G4', 'A4', 'C5', 'A4'];
 
@@ -216,6 +231,7 @@ export function playDoubutsuPuzzleBgm() {
     envelope: { attack: 0.02, decay: 0.15, sustain: 0.35, release: 0.5 },
   }).toDestination();
   synth.volume.value = VOLUME;
+  currentSynth = synth;
 
   const melody = ['E4', 'G4', 'B4', 'G4', 'E4', 'F#4', 'A4', 'F#4'];
 
@@ -239,6 +255,7 @@ export function playKazuAsobiBgm() {
     envelope: { attack: 0.005, decay: 0.12, sustain: 0.3, release: 0.4 },
   }).toDestination();
   synth.volume.value = VOLUME;
+  currentSynth = synth;
 
   const melody = ['C5', 'E5', 'G5', 'C6', 'G5', 'E5', 'C5', 'D5'];
 
@@ -262,6 +279,7 @@ export function playAnimalSoccerBgm() {
     envelope: { attack: 0.01, decay: 0.1, sustain: 0.4, release: 0.3 },
   }).toDestination();
   synth.volume.value = VOLUME;
+  currentSynth = synth;
 
   const melody = ['G4', 'B4', 'D5', 'G5', 'D5', 'B4', 'G4', 'A4'];
 
@@ -285,6 +303,7 @@ export function playJewelryShopBgm() {
     envelope: { attack: 0.01, decay: 0.15, sustain: 0.3, release: 0.4 },
   }).toDestination();
   synth.volume.value = VOLUME;
+  currentSynth = synth;
 
   const melody = ['D5', 'F#5', 'A5', 'F#5', 'D5', 'E5', 'G5', 'E5'];
 
@@ -308,6 +327,7 @@ export function playSushiBgm() {
     envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.5 },
   }).toDestination();
   synth.volume.value = VOLUME;
+  currentSynth = synth;
 
   const melody = [
     ['C4', '8n'], ['E4', '8n'], ['G4', '8n'], ['C5', '8n'],
@@ -334,6 +354,7 @@ export function playIchigoBgm() {
     envelope: { attack: 0.005, decay: 0.15, sustain: 0.2, release: 0.6 },
   }).toDestination();
   synth.volume.value = VOLUME;
+  currentSynth = synth;
 
   const melody = [
     ['D4', '8n'], ['F4', '8n'], ['A4', '8n'], ['D5', '8n'],

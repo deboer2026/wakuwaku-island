@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
+import { getUnlockedItems } from '../utils/coins';
+import { SHOP_ITEMS } from '../utils/shopItems';
 import './Kisekae.css';
+
+// Build extra items to show in a category from purchased shop items
+function getShopExtras(chara, cat) {
+  const unlocked = getUnlockedItems();
+  return SHOP_ITEMS
+    .filter(s => s.chara === chara && s.cat === cat && unlocked.includes(s.id))
+    .map(s => s.itemData);
+}
 
 /* ════════════════════════════════════════════════════
    データ定義
@@ -339,7 +349,9 @@ export function KisekaePanel({ isOpen, initialChara, onClose, kisekaeState, onSt
 
   if (!isOpen) return null;
 
-  const items      = KISEKAE_ITEMS[activeChara][activeCat] || [];
+  const baseItems  = KISEKAE_ITEMS[activeChara][activeCat] || [];
+  const shopExtras = getShopExtras(activeChara, activeCat);
+  const items      = [...baseItems, ...shopExtras];
   const currentVal = kisekaeState[activeChara][activeCat] || '';
 
   function handleSelect(item, e) {

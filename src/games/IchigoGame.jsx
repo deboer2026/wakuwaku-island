@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playIchigoBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
+import { addCoins } from '../utils/coins';
 import './IchigoGame.css';
 
 const TRAPS = ['🐱','🐶','🐸','🐼','🦊','🐰','🐧','🐻','🐮','🐷'];
@@ -153,6 +154,7 @@ export default function IchigoGame() {
     await ensureAudioStarted();
     console.log('[Game] IchigoGame: audio ready, playing BGM');
     playIchigoBgm();
+    addCoins(1);
     trackGameStart('IchigoGame');
 
     // 初期アイテム（画面中に最初からいくつか）
@@ -215,12 +217,13 @@ export default function IchigoGame() {
   function gameOver() {
     stopAll();
     playSoundClear();
+    addCoins(5);
 
     const s   = scoreR.current;
     const col = collR.current;
     const hi  = getHi();
     const isNew = s > hi;
-    if (isNew) { saveHi(s); trackNewHighScore('IchigoGame', s); }
+    if (isNew) { saveHi(s); trackNewHighScore('IchigoGame', s); addCoins(10); }
     trackGameClear('IchigoGame', s, 1);
     setHiScore(isNew ? s : hi);
 

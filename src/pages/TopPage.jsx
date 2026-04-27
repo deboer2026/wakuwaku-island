@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { playTopPageBgm, stopBgm, toggleMute, getMuteState, ensureAudioStarted } from '../utils/audio';
 import { getPlayCount } from '../utils/playCounter';
 import { KisekaeCharacters, KisekaePanel, DEFAULT_KISEKAE } from '../components/Kisekae';
+import LoginBonus from '../components/LoginBonus';
+import Shop from '../components/Shop';
+import { getCoins, checkLoginBonus, claimLoginBonus } from '../utils/coins';
 import './TopPage.css';
 
 /* ════════════════════════════════════════════════════
@@ -183,15 +186,20 @@ export default function TopPage() {
   });
   const [panelOpen,   setPanelOpen]   = useState(false);
   const [panelChara,  setPanelChara]  = useState('princess');
+  const [shopOpen,    setShopOpen]    = useState(false);
+  const [coins,       setCoins]       = useState(getCoins);
+  const [loginBonus,  setLoginBonus]  = useState(null);
 
   const season    = getSeason();
   const daysSince = getDaysSinceUpdate();
   const todayIdx  = getTodayIndex(GAMES.length);
 
   useEffect(() => {
-    // AudioContext may already be running if user came back from a game
     ensureAudioStarted().then(() => playTopPageBgm());
     setPlayCount(getPlayCount() + 1312);
+    // Check login bonus
+    const bonus = checkLoginBonus();
+    if (bonus) setLoginBonus(bonus);
     return () => stopBgm();
   }, []);
 
@@ -223,6 +231,12 @@ export default function TopPage() {
   function openPanel(chara) {
     setPanelChara(chara);
     setPanelOpen(true);
+  }
+
+  function handleLoginBonusClaim() {
+    claimLoginBonus();
+    setCoins(getCoins());
+    setLoginBonus(null);
   }
 
   function handleKisekaeChange(next) {
@@ -269,8 +283,18 @@ export default function TopPage() {
         <span style={{ right:'2%', top:'38%', '--dur':'3.3s', '--rot':'5deg',  fontSize:22 }}>✨</span>
       </div>
 
+      {/* ── コイン残高（左上） ── */}
+      <div className="tp-coin-badge">
+        🪙 <span className="tp-coin-num">{coins}</span>
+        <span className="tp-coin-unit">{lang === 'en' ? 'coins' : 'まい'}</span>
+      </div>
+
       {/* ── 右上ボタン群 ── */}
       <div className="tp-top-btns">
+        <button className="tp-top-btn tp-shop-btn" onClick={() => setShopOpen(true)}
+          title={lang === 'en' ? 'Shop' : 'ショップ'}>
+          🛍️
+        </button>
         <button className="tp-top-btn ksk-top-btn" onClick={() => openPanel('princess')}
           title={lang === 'en' ? 'Dress up' : 'きがえ'}>
           👗
@@ -373,6 +397,24 @@ export default function TopPage() {
         onStateChange={handleKisekaeChange}
         lang={lang}
       />
+
+      {/* ── ショップ ── */}
+      <Shop
+        isOpen={shopOpen}
+        onClose={() => setShopOpen(false)}
+        lang={lang}
+        onCoinsChange={setCoins}
+      />
+
+      {/* ── ログインボーナス ── */}
+      {loginBonus && (
+        <LoginBonus
+          bonus={loginBonus.bonus}
+          streak={loginBonus.streak}
+          onClaim={handleLoginBonusClaim}
+          lang={lang}
+        />
+      )}
 
     </div>
   );

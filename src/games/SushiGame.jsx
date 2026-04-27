@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playSushiBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
+import { addCoins } from '../utils/coins';
 import './SushiGame.css';
 
 const SALMON = '🍣';
@@ -106,6 +107,7 @@ export default function SushiGame() {
     await ensureAudioStarted();
     console.log('[Game] SushiGame: audio ready, playing BGM');
     playSushiBgm();
+    addCoins(1);
     trackGameStart('SushiGame');
 
     // setScreen が適用された後に開始する
@@ -167,10 +169,11 @@ export default function SushiGame() {
   function gameOver(allClear = false) {
     stopAll();
     playSoundClear();
+    addCoins(5);
     const s   = scoreR.current;
     const hi  = getHi();
     const isNew = s > hi;
-    if (isNew) { saveHi(s); trackNewHighScore('SushiGame', s); }
+    if (isNew) { saveHi(s); trackNewHighScore('SushiGame', s); addCoins(10); }
     trackGameClear('SushiGame', s, stageR.current);
     setHiScore(isNew ? s : hi);
 

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>わくわくアイランド - きがえプロトタイプ</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pink: #ff80ab; --pink2: #f06292; --blue: #87CEEB;
+  --gold: #ffd700; --purple: #ce93d8;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'M PLUS Rounded 1c', sans-serif; background: var(--blue); overflow-x: hidden; }
+
+/* ===== 空エリア ===== */
+.sky { background: #87CEEB; padding: 20px 16px 0; position: relative; min-height: 280px; }
+
+/* 雲 */
+.cloud { position: absolute; background: #fff; border-radius: 50px; opacity: 0.9; }
+.cloud::before, .cloud::after { content:''; position:absolute; background:#fff; border-radius:50%; }
+.c1{width:80px;height:28px;top:18px;left:16px;} .c1::before{width:36px;height:36px;top:-18px;left:8px;} .c1::after{width:26px;height:26px;top:-12px;left:34px;}
+.c2{width:60px;height:22px;top:30px;right:24px;} .c2::before{width:28px;height:28px;top:-14px;left:6px;} .c2::after{width:20px;height:20px;top:-9px;left:26px;}
+
+/* タイトルエリア */
+.title-area { text-align: center; position: relative; z-index: 2; padding-bottom: 16px; }
+.logo-badge { display:inline-block; background:#FF6B35; color:#fff; font-size:12px; font-weight:700; padding:4px 14px; border-radius:20px; margin-bottom:8px; box-shadow:0 3px 0 #c94d1e; }
+.main-title { font-size:48px; font-weight:900; line-height:1; }
+.t1 { display:block; color:#FF6B35; text-shadow:3px 3px 0 #fff,5px 5px 0 #ffb347; }
+.t2 { display:block; color:#fff; text-shadow:3px 3px 0 #5ba3d9,5px 5px 0 #3a7fb5; font-size:38px; }
+
+/* ===== キャラクターエリア ===== */
+.chara-strip {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none; z-index: 3;
+}
+
+/* プリンセス（左） */
+#princess-wrap {
+  position: absolute; left: 4px; bottom: 0;
+  display: flex; flex-direction: column; align-items: center;
+  pointer-events: auto; cursor: pointer;
+  animation: charaFloat 3s ease-in-out infinite;
+  position: absolute;
+}
+/* プリンス（右） */
+#prince-wrap {
+  position: absolute; right: 4px; bottom: 0;
+  display: flex; flex-direction: column; align-items: center;
+  pointer-events: auto; cursor: pointer;
+  animation: charaFloat 3.4s ease-in-out infinite;
+}
+@keyframes charaFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+
+.chara-svg { width: 72px; height: 110px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.15)); }
+.chara-badge {
+  background: rgba(255,255,255,0.9); border-radius: 10px;
+  font-size: 9px; font-weight: 700; color: #666;
+  padding: 2px 8px; margin-top: 2px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* ===== 着せ替えボタン ===== */
+#kisekae-btn {
+  position: absolute; top: 12px; right: 12px; z-index: 20;
+  background: linear-gradient(135deg, #f06292, #ce93d8);
+  color: #fff; border: none; border-radius: 20px;
+  padding: 8px 14px; font-size: 12px; font-weight: 800;
+  cursor: pointer; box-shadow: 0 4px 0 #ad1457;
+  font-family: inherit; display: flex; align-items: center; gap: 4px;
+  transition: transform .1s;
+  animation: btnPulse 2s ease-in-out infinite;
+}
+#kisekae-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #ad1457; }
+@keyframes btnPulse { 0%,100%{box-shadow:0 4px 0 #ad1457,0 0 0 rgba(240,98,146,0)} 50%{box-shadow:0 4px 0 #ad1457,0 0 12px rgba(240,98,146,0.5)} }
+
+/* ===== 着せ替えパネル（モーダル） ===== */
+#kisekae-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  z-index: 100; display: none; align-items: flex-end; justify-content: center;
+}
+#kisekae-overlay.open { display: flex; }
+
+#kisekae-panel {
+  background: linear-gradient(160deg,#fce4ec,#e8eaf6);
+  border-radius: 28px 28px 0 0;
+  width: 100%; max-width: 480px;
+  padding: 20px 16px 32px;
+  animation: slideUp .3s ease;
+  max-height: 70vh; overflow-y: auto;
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+
+.panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.panel-title { font-size: 18px; font-weight: 900; color: #ad1457; }
+#close-panel {
+  background: #f8bbd0; border: none; border-radius: 50%;
+  width: 32px; height: 32px; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* キャラ切替タブ */
+.chara-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.chara-tab {
+  flex: 1; background: rgba(255,255,255,0.6); border: 3px solid transparent;
+  border-radius: 14px; padding: 8px; cursor: pointer;
+  text-align: center; font-size: 12px; font-weight: 700; color: #666;
+  transition: .15s;
+}
+.chara-tab.active { border-color: #f06292; background: #fff; color: #f06292; }
+.chara-tab .tab-preview { font-size: 28px; display: block; margin-bottom: 2px; }
+
+/* カテゴリ */
+.cat-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.cat-btn {
+  background: rgba(255,255,255,0.7); border: 2px solid transparent;
+  border-radius: 10px; padding: 5px 10px; cursor: pointer;
+  font-size: 11px; font-weight: 700; color: #888;
+  font-family: inherit; transition: .12s;
+}
+.cat-btn.active { border-color: #f06292; background: #fff; color: #f06292; }
+
+/* アイテムグリッド */
+.items-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+.item-btn {
+  background: rgba(255,255,255,0.85); border: 3px solid transparent;
+  border-radius: 14px; padding: 8px 4px; cursor: pointer;
+  text-align: center; transition: .12s; position: relative;
+  font-family: inherit;
+}
+.item-btn:active { transform: scale(0.92); }
+.item-btn.active { border-color: #f06292; background: #fff3f8; }
+.item-btn .ib-emoji { font-size: 26px; display: block; line-height: 1.1; }
+.item-btn .ib-name  { font-size: 9px; color: #aaa; margin-top: 2px; font-weight: 700; }
+.item-btn .ib-check { position:absolute; top:3px; right:4px; font-size:10px; display:none; }
+.item-btn.active .ib-check { display:block; }
+
+/* ===== 海エリア ===== */
+.sea { background: #4DB8FF; padding: 0 16px 20px; position: relative; }
+.island { background: #F4D03F; border-radius: 50% 50% 40% 40%; height: 24px; margin: 0 auto; width: 90%; top: -4px; position: relative; box-shadow: 0 6px 0 #E6B800; }
+.game-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(130px,1fr)); gap: 10px; max-width: 680px; margin: 8px auto 0; }
+.game-card { background: #fff; border-radius: 18px; padding: 0; overflow: hidden; text-align: center; }
+.card-top { padding: 14px 10px 6px; }
+.card-top .ci { font-size: 40px; display: block; }
+.card-bottom { padding: 6px 8px 12px; }
+.card-name { font-size: 12px; font-weight: 700; color: #333; }
+.card-desc { font-size: 9px; color: #aaa; margin-top: 2px; line-height: 1.4; }
+.g1{box-shadow:0 5px 0 #FF6B35;} .g1 .card-top{background:#FFF0EB;}
+.g2{box-shadow:0 5px 0 #4DB8FF;} .g2 .card-top{background:#EBF5FF;}
+.g3{box-shadow:0 5px 0 #7B68EE;} .g3 .card-top{background:#EEF0FF;}
+.g4{box-shadow:0 5px 0 #2ECC71;} .g4 .card-top{background:#EAFAF1;}
+
+/* キラキラ */
+.sparkle { position:fixed; pointer-events:none; z-index:150; font-size:18px; animation:spkOut .7s forwards; }
+@keyframes spkOut { 0%{opacity:1;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0)} }
+</style>
+</head>
+<body>
+
+<!-- 着せ替えオーバーレイ -->
+<div id="kisekae-overlay" onclick="closePanel(event)">
+  <div id="kisekae-panel">
+    <div class="panel-header">
+      <div class="panel-title">✨ きがえしよう！</div>
+      <button id="close-panel" onclick="closePanelDirect()">✕</button>
+    </div>
+
+    <!-- キャラ選択タブ -->
+    <div class="chara-tabs">
+      <div class="chara-tab active" data-chara="princess" onclick="switchChara('princess',this)">
+        <span class="tab-preview" id="tab-princess-preview">👸</span>
+        プリンセス
+      </div>
+      <div class="chara-tab" data-chara="prince" onclick="switchChara('prince',this)">
+        <span class="tab-preview" id="tab-prince-preview">🤴</span>
+        プリンス
+      </div>
+    </div>
+
+    <!-- カテゴリ -->
+    <div class="cat-row" id="cat-row"></div>
+
+    <!-- アイテム -->
+    <div class="items-grid" id="items-grid"></div>
+  </div>
+</div>
+
+<!-- メイン -->
+<div class="sky">
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+
+  <!-- 着せ替えボタン -->
+  <button id="kisekae-btn" onclick="openPanel()">👗 きがえ</button>
+
+  <!-- キャラクター -->
+  <div class="chara-strip">
+    <div id="princess-wrap" onclick="openPanel('princess')">
+      <svg class="chara-svg" id="princess-svg" viewBox="0 0 72 110" xmlns="http://www.w3.org/2000/svg">
+        <!-- ドレス -->
+        <ellipse cx="36" cy="90" rx="26" ry="20" id="ps-skirt" fill="#ff80ab"/>
+        <polygon points="36,60 14,100 58,100" id="ps-skirt2" fill="#f06292"/>
+        <!-- 体 -->
+        <rect x="28" y="54" width="16" height="14" rx="4" fill="#FFCCBC"/>
+        <!-- 首 -->
+        <rect x="33" y="48" width="6" height="10" rx="3" fill="#FFCCBC"/>
+        <!-- 顔 -->
+        <circle cx="36" cy="38" r="16" fill="#FFCCBC"/>
+        <!-- 髪 -->
+        <ellipse cx="36" cy="28" rx="16" ry="12" id="ps-hair" fill="#F9A825"/>
+        <ellipse cx="22" cy="38" rx="6" ry="10" id="ps-hair2" fill="#F9A825"/>
+        <ellipse cx="50" cy="38" rx="6" ry="10" id="ps-hair3" fill="#F9A825"/>
+        <!-- かんむり -->
+        <g id="ps-crown"><polygon points="22,24 27,17 32,23 36,16 40,23 45,17 50,24" fill="#FFD700" stroke="#FFA000" stroke-width="1"/><circle cx="36" cy="16" r="3" fill="#FF1744"/></g>
+        <!-- 目 -->
+        <circle cx="30" cy="37" r="3.5" fill="#5D4037"/>
+        <circle cx="42" cy="37" r="3.5" fill="#5D4037"/>
+        <circle cx="31" cy="36" r="1.2" fill="#fff"/>
+        <circle cx="43" cy="36" r="1.2" fill="#fff"/>
+        <!-- 口 -->
+        <path d="M31,44 Q36,48 41,44" stroke="#E91E63" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <!-- 頬 -->
+        <ellipse cx="24" cy="41" rx="5" ry="3" fill="#FFB3C1" opacity=".5"/>
+        <ellipse cx="48" cy="41" rx="5" ry="3" fill="#FFB3C1" opacity=".5"/>
+        <!-- アクセサリ -->
+        <text id="ps-accessory" x="36" y="52" font-size="8" text-anchor="middle" dominant-baseline="middle"></text>
+        <!-- くつ -->
+        <text id="ps-shoes" x="36" y="106" font-size="10" text-anchor="middle" dominant-baseline="middle"></text>
+        <!-- こもの -->
+        <text id="ps-item" x="58" y="70" font-size="10" text-anchor="middle" dominant-baseline="middle"></text>
+        <!-- ペット -->
+        <text id="ps-pet" x="-16" y="90" font-size="16" text-anchor="middle" dominant-baseline="middle"></text>
+      </svg>
+      <div id="ps-pet-display" style="position:absolute;bottom:18px;left:50%;transform:translateX(-110%);font-size:26px;filter:drop-shadow(1px 2px 4px rgba(0,0,0,0.2));animation:charaFloat 2.5s ease-in-out infinite;"></div>
+      <div class="chara-badge">👆 タップしてきがえ</div>
+    </div>
+
+    <div id="prince-wrap" onclick="openPanel('prince')">
+      <svg class="chara-svg" id="prince-svg" viewBox="0 0 72 110" xmlns="http://www.w3.org/2000/svg">
+        <!-- ズボン -->
+        <rect x="24" y="72" width="10" height="24" rx="3" id="pr-pants" fill="#1565C0"/>
+        <rect x="38" y="72" width="10" height="24" rx="3" id="pr-pants2" fill="#1565C0"/>
+        <!-- 上着 -->
+        <rect x="20" y="52" width="32" height="24" rx="6" id="pr-jacket" fill="#1976D2"/>
+        <!-- 体 -->
+        <rect x="28" y="50" width="16" height="10" rx="3" fill="#FFCCBC"/>
+        <!-- 首 -->
+        <rect x="33" y="44" width="6" height="10" rx="3" fill="#FFCCBC"/>
+        <!-- 顔 -->
+        <circle cx="36" cy="34" r="16" fill="#FFCCBC"/>
+        <!-- 髪 -->
+        <ellipse cx="36" cy="24" rx="16" ry="11" id="pr-hair" fill="#5D4037"/>
+        <!-- かんむり -->
+        <g id="pr-crown"><polygon points="22,20 27,13 32,19 36,12 40,19 45,13 50,20" fill="#FFD700" stroke="#FFA000" stroke-width="1"/><circle cx="36" cy="12" r="3" fill="#2196F3"/></g>
+        <!-- 目 -->
+        <circle cx="30" cy="33" r="3.5" fill="#333"/>
+        <circle cx="42" cy="33" r="3.5" fill="#333"/>
+        <circle cx="31" cy="32" r="1.2" fill="#fff"/>
+        <circle cx="43" cy="32" r="1.2" fill="#fff"/>
+        <!-- 口 -->
+        <path d="M31,40 Q36,44 41,40" stroke="#BF8A7A" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <!-- 頬 -->
+        <ellipse cx="24" cy="37" rx="5" ry="3" fill="#FFB3C1" opacity=".3"/>
+        <ellipse cx="48" cy="37" rx="5" ry="3" fill="#FFB3C1" opacity=".3"/>
+        <!-- けん -->
+        <rect x="55" y="52" width="3" height="22" rx="1" id="pr-sword" fill="#CFD8DC"/>
+        <rect x="51" y="60" width="11" height="3" rx="1" fill="#FFA000"/>
+        <!-- アクセサリ -->
+        <text id="pr-accessory" x="36" y="48" font-size="8" text-anchor="middle" dominant-baseline="middle"></text>
+        <!-- こもの -->
+        <text id="pr-item" x="14" y="66" font-size="10" text-anchor="middle" dominant-baseline="middle"></text>
+        <!-- ペット -->
+        <text id="pr-pet" x="88" y="90" font-size="16" text-anchor="middle" dominant-baseline="middle"></text>
+      </svg>
+      <div id="pr-pet-display" style="position:absolute;bottom:18px;left:50%;transform:translateX(10%);font-size:26px;filter:drop-shadow(1px 2px 4px rgba(0,0,0,0.2));animation:charaFloat 2.2s ease-in-out infinite;"></div>
+      <div class="chara-badge">👆 タップしてきがえ</div>
+    </div>
+  </div>
+
+  <!-- タイトル -->
+  <div class="title-area" style="padding:0 90px;">
+    <div class="logo-badge">🏝️ GAME PARK</div>
+    <div class="main-title">
+      <span class="t1">わくわく</span>
+      <span class="t2">アイランド</span>
+    </div>
+  </div>
+
+  <svg viewBox="0 0 400 32" preserveAspectRatio="none" style="display:block;height:32px;width:100%;margin-top:8px;">
+    <path d="M0,16 C60,32 120,0 180,16 C240,32 300,0 360,16 C390,24 400,20 400,20 L400,32 L0,32 Z" fill="#4DB8FF"/>
+  </svg>
+</div>
+
+<!-- 海エリア -->
+<div class="sea">
+  <div class="island"></div>
+  <div class="game-grid">
+    <div class="game-card g1"><div class="card-top"><span class="ci">🫧</span></div><div class="card-bottom"><div class="card-name">シャボンだまポン</div><div class="card-desc">とんでくるたまをタップ！</div></div></div>
+    <div class="game-card g2"><div class="card-top"><span class="ci">🍎</span></div><div class="card-bottom"><div class="card-name">くだものキャッチ</div><div class="card-desc">おちてくるくだものをキャッチ！</div></div></div>
+    <div class="game-card g3"><div class="card-top"><span class="ci">🌀</span></div><div class="card-bottom"><div class="card-name">めいろあそび</div><div class="card-desc">ゴールをめざせ！</div></div></div>
+    <div class="game-card g4"><div class="card-top"><span class="ci">🐾</span></div><div class="card-bottom"><div class="card-name">どうぶつパズル</div><div class="card-desc">おなじどうぶつをみつけよう！</div></div></div>
+  </div>
+</div>
+
+<script>
+// ===== データ =====
+const CATS = [
+  {id:'crown',     label:'👑 かんむり'},
+  {id:'dress',     label:'👗 いろ'},
+  {id:'accessory', label:'📿 アクセ'},
+  {id:'item',      label:'🪄 こもの'},
+  {id:'pet',       label:'🐾 ペット'},
+];
+
+const ITEMS = {
+  princess: {
+    crown: [
+      {id:'c0',emoji:'👑',name:'おうかん'},{id:'c1',emoji:'🌸',name:'はな'},{id:'c2',emoji:'⭐',name:'スター'},
+      {id:'c3',emoji:'🌈',name:'にじ'},{id:'c4',emoji:'🎀',name:'リボン'},{id:'c5',emoji:'🦋',name:'ちょうちょ'},
+      {id:'c6',emoji:'💎',name:'ダイヤ'},{id:'c7',emoji:'',name:'なし'},
+    ],
+    dress: [
+      {id:'d0',emoji:'🩷',name:'ピンク', c1:'#ff80ab',c2:'#f06292',hair:'#F9A825'},
+      {id:'d1',emoji:'💜',name:'むらさき',c1:'#ce93d8',c2:'#ab47bc',hair:'#F9A825'},
+      {id:'d2',emoji:'💙',name:'あお',   c1:'#90caf9',c2:'#42a5f5',hair:'#FBC02D'},
+      {id:'d3',emoji:'💚',name:'みどり', c1:'#a5d6a7',c2:'#66bb6a',hair:'#8D6E63'},
+      {id:'d4',emoji:'🤍',name:'しろ',   c1:'#f8f8ff',c2:'#e0e0e0',hair:'#BDBDBD'},
+      {id:'d5',emoji:'🧡',name:'オレンジ',c1:'#ffb74d',c2:'#ff9800',hair:'#F9A825'},
+      {id:'d6',emoji:'❤️',name:'あか',   c1:'#ef9a9a',c2:'#e53935',hair:'#5D4037'},
+      {id:'d7',emoji:'🖤',name:'くろ',   c1:'#757575',c2:'#212121',hair:'#212121'},
+    ],
+    accessory: [
+      {id:'a0',emoji:'📿',name:'ネックレス'},{id:'a1',emoji:'💍',name:'ゆびわ'},{id:'a2',emoji:'💎',name:'ダイヤ'},
+      {id:'a3',emoji:'❤️',name:'ハート'},{id:'a4',emoji:'⭐',name:'スター'},{id:'a5',emoji:'🌸',name:'はな'},
+      {id:'a6',emoji:'🌟',name:'キラキラ'},{id:'a7',emoji:'',name:'なし'},
+    ],
+    item: [
+      {id:'i0',emoji:'🪄',name:'ステッキ'},{id:'i1',emoji:'👜',name:'バッグ'},{id:'i2',emoji:'🌹',name:'バラ'},
+      {id:'i3',emoji:'🌂',name:'パラソル'},{id:'i4',emoji:'🧸',name:'ぬいぐるみ'},{id:'i5',emoji:'💐',name:'はなたば'},
+      {id:'i6',emoji:'🌈',name:'にじ'},{id:'i7',emoji:'',name:'なし'},
+    ],
+    pet: [
+      {id:'p0',emoji:'🐱',name:'ねこ'},{id:'p1',emoji:'🐶',name:'いぬ'},{id:'p2',emoji:'🐰',name:'うさぎ'},
+      {id:'p3',emoji:'🦊',name:'きつね'},{id:'p4',emoji:'🐸',name:'かえる'},{id:'p5',emoji:'🦋',name:'ちょうちょ'},
+      {id:'p6',emoji:'🐼',name:'パンダ'},{id:'p7',emoji:'',name:'なし'},
+    ],
+  },
+  prince: {
+    crown: [
+      {id:'c0',emoji:'👑',name:'おうかん'},{id:'c1',emoji:'⭐',name:'スター'},{id:'c2',emoji:'🌟',name:'キラキラ'},
+      {id:'c3',emoji:'💎',name:'ダイヤ'},{id:'c4',emoji:'🎩',name:'ぼうし'},{id:'c5',emoji:'🪖',name:'ヘルメット'},
+      {id:'c6',emoji:'🌈',name:'にじ'},{id:'c7',emoji:'',name:'なし'},
+    ],
+    dress: [
+      {id:'d0',emoji:'💙',name:'あお',   c1:'#1976D2',c2:'#1565C0',hair:'#5D4037'},
+      {id:'d1',emoji:'💜',name:'むらさき',c1:'#7B1FA2',c2:'#4A148C',hair:'#5D4037'},
+      {id:'d2',emoji:'❤️',name:'あか',   c1:'#C62828',c2:'#B71C1C',hair:'#3E2723'},
+      {id:'d3',emoji:'💚',name:'みどり', c1:'#2E7D32',c2:'#1B5E20',hair:'#5D4037'},
+      {id:'d4',emoji:'🖤',name:'くろ',   c1:'#424242',c2:'#212121',hair:'#212121'},
+      {id:'d5',emoji:'🤍',name:'しろ',   c1:'#ECEFF1',c2:'#B0BEC5',hair:'#FBC02D'},
+      {id:'d6',emoji:'🧡',name:'オレンジ',c1:'#E65100',c2:'#BF360C',hair:'#5D4037'},
+      {id:'d7',emoji:'💛',name:'きいろ', c1:'#F9A825',c2:'#F57F17',hair:'#5D4037'},
+    ],
+    accessory: [
+      {id:'a0',emoji:'⚔️',name:'つるぎ'},{id:'a1',emoji:'🛡️',name:'たて'},{id:'a2',emoji:'💎',name:'ダイヤ'},
+      {id:'a3',emoji:'⭐',name:'スター'},{id:'a4',emoji:'🏆',name:'トロフィー'},{id:'a5',emoji:'🎖️',name:'メダル'},
+      {id:'a6',emoji:'💍',name:'ゆびわ'},{id:'a7',emoji:'',name:'なし'},
+    ],
+    item: [
+      {id:'i0',emoji:'⚔️',name:'けん'},{id:'i1',emoji:'🪄',name:'ステッキ'},{id:'i2',emoji:'🏇',name:'うま'},
+      {id:'i3',emoji:'🌹',name:'バラ'},{id:'i4',emoji:'🎺',name:'らっぱ'},{id:'i5',emoji:'🗺️',name:'ちず'},
+      {id:'i6',emoji:'🌈',name:'にじ'},{id:'i7',emoji:'',name:'なし'},
+    ],
+    pet: [
+      {id:'p0',emoji:'🐻',name:'くま'},{id:'p1',emoji:'🦁',name:'らいおん'},{id:'p2',emoji:'🐯',name:'とら'},
+      {id:'p3',emoji:'🐺',name:'おおかみ'},{id:'p4',emoji:'🐲',name:'ドラゴン'},{id:'p5',emoji:'🦅',name:'わし'},
+      {id:'p6',emoji:'🐴',name:'うま'},{id:'p7',emoji:'',name:'なし'},
+    ],
+  },
+};
+
+// 状態
+const DEFAULT_STATE = {
+  princess: {crown:'c0', dress:'d0', accessory:'', item:'', pet:''},
+  prince:   {crown:'c0', dress:'d0', accessory:'', item:'', pet:''},
+};
+let state = JSON.parse(localStorage.getItem('kisekae_state')||'null') || DEFAULT_STATE;
+let currentChara = 'princess';
+let currentCat = 'crown';
+
+// ===== パネル開閉 =====
+function openPanel(chara='princess'){
+  currentChara = chara;
+  document.getElementById('kisekae-overlay').classList.add('open');
+  updateCharaTabs();
+  renderCats();
+  renderItems();
+}
+function closePanel(e){ if(e.target===document.getElementById('kisekae-overlay')) closePanelDirect(); }
+function closePanelDirect(){ document.getElementById('kisekae-overlay').classList.remove('open'); }
+
+function switchChara(chara, el){
+  currentChara = chara;
+  document.querySelectorAll('.chara-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderCats(); renderItems();
+}
+
+function updateCharaTabs(){
+  document.querySelectorAll('.chara-tab').forEach(tab=>{
+    tab.classList.toggle('active', tab.dataset.chara===currentChara);
+  });
+}
+
+// ===== カテゴリ =====
+function renderCats(){
+  const el=document.getElementById('cat-row');
+  el.innerHTML='';
+  // プリンスはdressを「いろ」として表示
+  CATS.forEach(cat=>{
+    const btn=document.createElement('button');
+    btn.className='cat-btn'+(cat.id===currentCat?' active':'');
+    btn.textContent=cat.label;
+    btn.onclick=()=>{ currentCat=cat.id; renderCats(); renderItems(); };
+    el.appendChild(btn);
+  });
+}
+
+// ===== アイテム =====
+function renderItems(){
+  const grid=document.getElementById('items-grid');
+  grid.innerHTML='';
+  const items=ITEMS[currentChara][currentCat]||[];
+  items.forEach(item=>{
+    const btn=document.createElement('button');
+    const isActive=state[currentChara][currentCat]===item.id;
+    btn.className='item-btn'+(isActive?' active':'');
+    btn.innerHTML=`<span class="ib-emoji">${item.emoji||'✖️'}</span><span class="ib-name">${item.name}</span><span class="ib-check">✓</span>`;
+    btn.onclick=()=>selectItem(item);
+    grid.appendChild(btn);
+  });
+}
+
+function selectItem(item){
+  state[currentChara][currentCat]=item.id;
+  localStorage.setItem('kisekae_state', JSON.stringify(state));
+  renderItems();
+  applyAll();
+  spawnSparkles();
+}
+
+// ===== SVG適用 =====
+function applyAll(){
+  applyPrincess();
+  applyPrince();
+  updateTabPreviews();
+}
+
+function applyPrincess(){
+  const s=state.princess;
+  // ドレス色
+  const d=ITEMS.princess.dress.find(i=>i.id===s.dress);
+  if(d){
+    document.getElementById('ps-skirt').setAttribute('fill',d.c1);
+    document.getElementById('ps-skirt2').setAttribute('fill',d.c2);
+    document.getElementById('ps-hair').setAttribute('fill',d.hair);
+    document.getElementById('ps-hair2').setAttribute('fill',d.hair);
+    document.getElementById('ps-hair3').setAttribute('fill',d.hair);
+  }
+  // かんむり
+  const c=ITEMS.princess.crown.find(i=>i.id===s.crown);
+  const crownG=document.getElementById('ps-crown');
+  if(c?.emoji){
+    crownG.innerHTML=`<text x="36" y="20" font-size="14" text-anchor="middle" dominant-baseline="middle">${c.emoji}</text>`;
+  } else {
+    crownG.innerHTML=`<polygon points="22,24 27,17 32,23 36,16 40,23 45,17 50,24" fill="#FFD700" stroke="#FFA000" stroke-width="1"/><circle cx="36" cy="16" r="3" fill="#FF1744"/>`;
+  }
+  // アクセ
+  const a=ITEMS.princess.accessory.find(i=>i.id===s.accessory);
+  document.getElementById('ps-accessory').textContent=a?.emoji||'';
+  // こもの
+  const it=ITEMS.princess.item.find(i=>i.id===s.item);
+  document.getElementById('ps-item').textContent=it?.emoji||'';
+  // ペット
+  const pt=ITEMS.princess.pet.find(i=>i.id===s.pet);
+  document.getElementById('ps-pet-display').textContent=pt?.emoji||'';
+}
+
+function applyPrince(){
+  const s=state.prince;
+  // 上着・ズボン色
+  const d=ITEMS.prince.dress.find(i=>i.id===s.dress);
+  if(d){
+    document.getElementById('pr-jacket').setAttribute('fill',d.c1);
+    document.getElementById('pr-pants').setAttribute('fill',d.c2);
+    document.getElementById('pr-pants2').setAttribute('fill',d.c2);
+    document.getElementById('pr-hair').setAttribute('fill',d.hair);
+  }
+  // かんむり
+  const c=ITEMS.prince.crown.find(i=>i.id===s.crown);
+  const crownG=document.getElementById('pr-crown');
+  if(c?.emoji){
+    crownG.innerHTML=`<text x="36" y="16" font-size="14" text-anchor="middle" dominant-baseline="middle">${c.emoji}</text>`;
+  } else {
+    crownG.innerHTML=`<polygon points="22,20 27,13 32,19 36,12 40,19 45,13 50,20" fill="#FFD700" stroke="#FFA000" stroke-width="1"/><circle cx="36" cy="12" r="3" fill="#2196F3"/>`;
+  }
+  // アクセ
+  const a=ITEMS.prince.accessory.find(i=>i.id===s.accessory);
+  document.getElementById('pr-accessory').textContent=a?.emoji||'';
+  // こもの
+  const it=ITEMS.prince.item.find(i=>i.id===s.item);
+  document.getElementById('pr-item').textContent=it?.emoji||'';
+  // ペット
+  const pt=ITEMS.prince.pet.find(i=>i.id===s.pet);
+  document.getElementById('pr-pet-display').textContent=pt?.emoji||'';
+}
+
+function updateTabPreviews(){
+  const pd=ITEMS.princess.dress.find(i=>i.id===state.princess.dress);
+  const prd=ITEMS.prince.dress.find(i=>i.id===state.prince.dress);
+  // タブのプレビューは絵文字で
+  document.getElementById('tab-princess-preview').textContent='👸';
+  document.getElementById('tab-prince-preview').textContent='🤴';
+}
+
+// ===== キラキラ =====
+function spawnSparkles(){
+  const btn=document.getElementById('kisekae-btn');
+  const rect=btn.getBoundingClientRect();
+  const cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
+  ['✨','⭐','💫','🌟','💖'].forEach((em,i)=>{
+    const el=document.createElement('div');
+    el.className='sparkle'; el.textContent=em;
+    const a=Math.random()*Math.PI*2, d=40+Math.random()*60;
+    el.style.cssText=`left:${cx}px;top:${cy}px;--dx:${Math.cos(a)*d}px;--dy:${Math.sin(a)*d}px;animation-delay:${i*.06}s`;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),800);
+  });
+}
+
+// 初期適用
+applyAll();
+renderCats();
+</script>
+</body>
+</html>

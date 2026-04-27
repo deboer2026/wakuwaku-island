@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playJewelryShopBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
+import { addCoins } from '../utils/coins';
 import './JewelryShop.css';
 
 const ACCESSORIES = [
@@ -133,6 +134,7 @@ export default function JewelryShop() {
     return () => {
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener('resize', resize);
+      stopBgm();
     };
   }, []);
 
@@ -191,6 +193,7 @@ export default function JewelryShop() {
     await ensureAudioStarted();
     console.log('[Game] JewelryShop: audio ready, playing BGM');
     playJewelryShopBgm();
+    addCoins(1);
     trackGameStart('JewelryShop');
 
     scoreRef.current = 0;
@@ -214,12 +217,14 @@ export default function JewelryShop() {
   function doGameOver() {
     stopBgm();
     playSoundClear();
+    addCoins(5);
 
     const hi = getHi();
     const isNew = scoreRef.current > hi;
     if (isNew) {
       saveHi(scoreRef.current);
       trackNewHighScore('JewelryShop', scoreRef.current);
+      addCoins(10);
     }
     trackGameClear('JewelryShop', scoreRef.current, stageRef.current);
     setHiScore(isNew ? scoreRef.current : hi);

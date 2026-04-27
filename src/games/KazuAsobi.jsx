@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playKazuAsobiBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
+import { addCoins } from '../utils/coins';
 import './KazuAsobi.css';
 
 const ANIMALS = ['🐱','🐶','🐸','🐼','🦊','🐰','🐧','🐻','🐮','🐷','🦁','🐨','🦝','🦄','🐯','🐺'];
@@ -116,12 +117,14 @@ export default function KazuAsobi() {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     stopBgm();
     playSoundClear();
+    addCoins(5);
     const c = correctCountRef.current;
     const hi = getHi();
     const isNew = c > hi;
     if (isNew) {
       saveHi(c);
       trackNewHighScore('KazuAsobi', c);
+      addCoins(10);
     }
     trackGameClear('KazuAsobi', c, 1);
     setHiScore(isNew ? c : hi);
@@ -137,6 +140,7 @@ export default function KazuAsobi() {
     await ensureAudioStarted();
     console.log('[Game] KazuAsobi: audio ready, playing BGM');
     playKazuAsobiBgm();
+    addCoins(1);
     trackGameStart('KazuAsobi');
 
     correctCountRef.current = 0;
@@ -237,6 +241,7 @@ export default function KazuAsobi() {
       if (animIdRef.current) cancelAnimationFrame(animIdRef.current);
       if (timerRef.current) clearInterval(timerRef.current);
       if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+      stopBgm();
     };
   }, []);
 
