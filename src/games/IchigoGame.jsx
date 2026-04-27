@@ -249,17 +249,19 @@ export default function IchigoGame() {
         <div style={{ fontSize: 64, marginBottom: 6 }}>🍓</div>
         <h1 className="ichigo-title-text">{lang === 'en' ? 'Strawberry Time!' : 'いちごをあつめよう！'}</h1>
         <div className="ichigo-rule-card">
-          <h2>📖 あそびかた</h2>
-          <div className="ichigo-rule-step"><div className="ichigo-rule-num">1</div><div className="ichigo-rule-text"><b>いちご🍓</b> がポップアップ！どんどんタップしよう！</div></div>
-          <div className="ichigo-rule-step"><div className="ichigo-rule-num">2</div><div className="ichigo-rule-text"><b>ちいさい</b>いちごほど こうとく！すばやくタップ！</div></div>
-          <div className="ichigo-rule-step"><div className="ichigo-rule-num">3</div><div className="ichigo-rule-text"><b>きんいちご⭐</b> がでたら チャンス！おおきくもらえるよ！</div></div>
-          <div className="ichigo-rule-step"><div className="ichigo-rule-num">4</div><div className="ichigo-rule-text"><b>どうぶつ</b>はタップしちゃダメ！ライフがへるよ！</div></div>
+          <h2>{lang === 'en' ? '📖 How to Play' : '📖 あそびかた'}</h2>
+          <div className="ichigo-rule-step"><div className="ichigo-rule-num">1</div><div className="ichigo-rule-text">{lang === 'en' ? <><b>Strawberries🍓</b> pop up — tap them fast!</> : <><b>いちご🍓</b> がポップアップ！どんどんタップしよう！</>}</div></div>
+          <div className="ichigo-rule-step"><div className="ichigo-rule-num">2</div><div className="ichigo-rule-text">{lang === 'en' ? <><b>Smaller</b> berries = more points!</> : <><b>ちいさい</b>いちごほど こうとく！すばやくタップ！</>}</div></div>
+          <div className="ichigo-rule-step"><div className="ichigo-rule-num">3</div><div className="ichigo-rule-text">{lang === 'en' ? <><b>Gold star⭐</b> = big bonus!</> : <><b>きんいちご⭐</b> がでたら チャンス！おおきくもらえるよ！</>}</div></div>
+          <div className="ichigo-rule-step"><div className="ichigo-rule-num">4</div><div className="ichigo-rule-text">{lang === 'en' ? <>Don't tap <b>animals</b> — you'll lose a life!</> : <><b>どうぶつ</b>はタップしちゃダメ！ライフがへるよ！</>}</div></div>
           <div className="ichigo-rule-ex">
-            れんぞくタップで<b style={{ color: '#e91e63' }}>コンボ</b>ボーナス！<br />🍓🍓🍓 → コンボ×2！
+            {lang === 'en'
+              ? <>Tap in a row for a <b style={{ color: '#e91e63' }}>Combo</b> bonus!<br />🍓🍓🍓 → Combo ×2!</>
+              : <>れんぞくタップで<b style={{ color: '#e91e63' }}>コンボ</b>ボーナス！<br />🍓🍓🍓 → コンボ×2！</>}
           </div>
         </div>
-        {hiScore > 0 && <div className="ichigo-hi-badge">🏆 ハイスコア: {hiScore}てん</div>}
-        <button className="ichigo-start-btn" onClick={startGame}>▶ スタート！</button>
+        {hiScore > 0 && <div className="ichigo-hi-badge">🏆 {lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}てん`}</div>}
+        <button className="ichigo-start-btn" onClick={startGame}>{lang === 'en' ? '▶ Start!' : '▶ スタート！'}</button>
       </div>
     </div>
   );

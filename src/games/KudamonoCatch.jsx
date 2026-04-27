@@ -14,12 +14,12 @@ const FRUIT_PTS = {
 };
 
 const CHARACTERS = [
-  { emoji: '🐱', name: 'ねこ' },
-  { emoji: '🐻', name: 'くま' },
-  { emoji: '🐸', name: 'かえる' },
-  { emoji: '🦊', name: 'きつね' },
-  { emoji: '🐼', name: 'パンダ' },
-  { emoji: '🐰', name: 'うさぎ' },
+  { emoji: '🐱', name: 'ねこ',   nameEn: 'Cat'    },
+  { emoji: '🐻', name: 'くま',   nameEn: 'Bear'   },
+  { emoji: '🐸', name: 'かえる', nameEn: 'Frog'   },
+  { emoji: '🦊', name: 'きつね', nameEn: 'Fox'    },
+  { emoji: '🐼', name: 'パンダ', nameEn: 'Panda'  },
+  { emoji: '🐰', name: 'うさぎ', nameEn: 'Bunny'  },
 ];
 
 // gallery bobbing emojis
@@ -539,14 +539,12 @@ export default function KudamonoCatch() {
       {screen === 'title' && (
         <div className="kdc-screen" id="kdc-title-screen">
           <div style={{ fontSize: '52px', marginBottom: '6px' }}>🍎</div>
-          <h1>くだものキャッチ</h1>
+          <h1>{lang === 'en' ? 'Fruit Catch!' : 'くだものキャッチ'}</h1>
           <p>
-            おちてくる くだものを<br />
-            かごでキャッチしよう！
+            {lang === 'en' ? <>Catch the falling fruits<br />in your basket!</> : <>おちてくる くだものを<br />かごでキャッチしよう！</>}
           </p>
           <div className="kdc-warn-box">
-            ⚠️ どうぶつがまじってるよ！<br />
-            どうぶつは とっちゃダメ！
+            {lang === 'en' ? <>⚠️ Animals are mixed in!<br />Don't catch the animals!</> : <>⚠️ どうぶつがまじってるよ！<br />どうぶつは とっちゃダメ！</>}
           </div>
 
           {/* character select */}
@@ -558,16 +556,16 @@ export default function KudamonoCatch() {
                 onClick={() => setSelectedChara(i)}
               >
                 <span className="kdc-ci">{c.emoji}</span>
-                {c.name}
+                {lang === 'en' ? c.nameEn : c.name}
               </button>
             ))}
           </div>
 
-          <div className="kdc-hi-badge">🏆 ハイスコア: {hiScore}てん</div>
+          <div className="kdc-hi-badge">🏆 {lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}てん`}</div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
-            <button className="kdc-big-btn" onClick={startGame}>▶ スタート！</button>
-            <button className="kdc-big-btn blue" onClick={() => navigate('/')}>🏝️ トップへもどる</button>
+            <button className="kdc-big-btn" onClick={startGame}>{lang === 'en' ? '▶ Start!' : '▶ スタート！'}</button>
+            <button className="kdc-big-btn blue" onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
           </div>
         </div>
       )}

@@ -362,17 +362,16 @@ export default function DoubutsuPuzzle() {
       {screen === 'title' && (
         <div className="dbp-screen" id="dbp-title-screen">
           <div style={{ fontSize: '52px', marginBottom: '6px' }}>🧩</div>
-          <h1>どうぶつパズル</h1>
+          <h1>{lang === 'en' ? 'Animal Puzzle!' : 'どうぶつパズル'}</h1>
           <p>
-            おなじ どうぶつを<br />
-            ふたつ みつけよう！
+            {lang === 'en' ? <>Find two matching<br />animals!</> : <>おなじ どうぶつを<br />ふたつ みつけよう！</>}
           </p>
           <div className="dbp-hi-badge">
-            🏆 ベストタイム: {bestTimeDisplay > 0 ? fmtTime(bestTimeDisplay) : 'なし'}
+            🏆 {lang === 'en' ? `Best: ${bestTimeDisplay > 0 ? fmtTime(bestTimeDisplay) : 'None'}` : `ベストタイム: ${bestTimeDisplay > 0 ? fmtTime(bestTimeDisplay) : 'なし'}`}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
-            <button className="dbp-big-btn" onClick={startGame}>▶ スタート！</button>
-            <button className="dbp-big-btn blue" onClick={() => navigate('/')}>🏝️ トップへもどる</button>
+            <button className="dbp-big-btn" onClick={startGame}>{lang === 'en' ? '▶ Start!' : '▶ スタート！'}</button>
+            <button className="dbp-big-btn blue" onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
           </div>
         </div>
       )}

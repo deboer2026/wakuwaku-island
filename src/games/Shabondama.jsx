@@ -469,15 +469,15 @@ export default function Shabondama() {
       {screen === 'title' && (
         <div className="sdm-screen" id="sdm-title-screen">
           <div style={{ fontSize: '64px', marginBottom: '8px' }}>🫧</div>
-          <h1>シャボンだまポン！</h1>
-          <p>とんでくる シャボンだまを<br />どんどんタップしよう！</p>
+          <h1>{lang === 'en' ? 'Bubble Pop!' : 'シャボンだまポン！'}</h1>
+          <p>{lang === 'en' ? <>Tap the bubbles as they float up!</> : <>とんでくる シャボンだまを<br />どんどんタップしよう！</>}</p>
           <div className="sdm-warn-box">
-            ⚠️ どうぶつがまじってるよ！<br />どうぶつは おしちゃダメ！
+            {lang === 'en' ? <>⚠️ Animals are mixed in!<br />Don't tap the animals!</> : <>⚠️ どうぶつがまじってるよ！<br />どうぶつは おしちゃダメ！</>}
           </div>
-          <div className="sdm-hi-badge">🏆 ハイスコア: {currentHi}てん</div>
+          <div className="sdm-hi-badge">🏆 {lang === 'en' ? `Best: ${currentHi}pts` : `ハイスコア: ${currentHi}てん`}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
-            <button className="sdm-big-btn" onClick={startGame}>▶ スタート！</button>
-            <button className="sdm-big-btn sdm-blue" onClick={() => navigate('/')}>🏝️ トップへもどる</button>
+            <button className="sdm-big-btn" onClick={startGame}>{lang === 'en' ? '▶ Start!' : '▶ スタート！'}</button>
+            <button className="sdm-big-btn sdm-blue" onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
           </div>
         </div>
       )}

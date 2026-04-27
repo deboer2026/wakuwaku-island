@@ -8,12 +8,12 @@ import './AnimalSoccer.css';
 const FRUITS = ['🍎','🍊','🍋','🍇','🍓','🍑','🍒','🍌'];
 const GALLERY_CHARS = ['👸','🤴','👑','🦁','🐨','🦝','🐮','🐷','🐔','🐦','🦄','🐯','🐺','🦋','🐝','🦀','🐙','🐭','🐹'];
 const CHARACTERS = [
-  { emoji: '🐱', name: 'ねこ' },
-  { emoji: '🐰', name: 'うさぎ' },
-  { emoji: '🐸', name: 'かえる' },
-  { emoji: '🐼', name: 'パンダ' },
-  { emoji: '🦊', name: 'きつね' },
-  { emoji: '🐧', name: 'ペンギン' },
+  { emoji: '🐱', name: 'ねこ',    nameEn: 'Cat'     },
+  { emoji: '🐰', name: 'うさぎ',  nameEn: 'Bunny'   },
+  { emoji: '🐸', name: 'かえる',  nameEn: 'Frog'    },
+  { emoji: '🐼', name: 'パンダ',  nameEn: 'Panda'   },
+  { emoji: '🦊', name: 'きつね',  nameEn: 'Fox'     },
+  { emoji: '🐧', name: 'ペンギン', nameEn: 'Penguin' },
 ];
 
 function getHi() { return parseInt(localStorage.getItem('soccer_hi') || '0'); }
@@ -398,11 +398,11 @@ export default function AnimalSoccer() {
   if (screen === 'title') {
     return (
       <div className="soccer-wrap soccer-title">
-        <button className="soccer-back-btn" onClick={() => navigate('/')}>← もどる</button>
+        <button className="soccer-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '← Back' : '← もどる'}</button>
         <div className="soccer-title-box">
           <div className="soccer-title-emoji">⚽</div>
-          <h1 className="soccer-title-text">どうぶつサッカー</h1>
-          <p className="soccer-subtitle">キャラをえらんでシュートしよう！</p>
+          <h1 className="soccer-title-text">{lang === 'en' ? 'Animal Soccer!' : 'どうぶつサッカー'}</h1>
+          <p className="soccer-subtitle">{lang === 'en' ? 'Pick a character and shoot!' : 'キャラをえらんでシュートしよう！'}</p>
           <div className="soccer-char-grid">
             {CHARACTERS.map(ch => (
               <button
@@ -411,14 +411,14 @@ export default function AnimalSoccer() {
                 onClick={() => setSelectedChar(ch)}
               >
                 <span className="soccer-char-emoji">{ch.emoji}</span>
-                <span className="soccer-char-name">{ch.name}</span>
+                <span className="soccer-char-name">{lang === 'en' ? ch.nameEn : ch.name}</span>
               </button>
             ))}
           </div>
           <button className="soccer-start-btn" onClick={() => startGame(selectedChar)}>
-            ⚽ はじめる！
+            {lang === 'en' ? '⚽ Start!' : '⚽ はじめる！'}
           </button>
-          {hiScore > 0 && <div className="soccer-hi">ハイスコア: {hiScore}</div>}
+          {hiScore > 0 && <div className="soccer-hi">{lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}`}</div>}
         </div>
       </div>
     );

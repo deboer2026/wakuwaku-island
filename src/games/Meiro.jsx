@@ -8,12 +8,12 @@ import './Meiro.css';
 const COLS = 11, ROWS = 11;
 const GALLERY_CHARS = ['👸','🤴','👑','🦁','🐨','🦝','🐮','🐷','🐔','🐦','🦄','🐯','🐺','🦋','🐝','🦀','🐙','🐭','🐹','🦕','🐳','🦭'];
 const CHARACTERS = [
-  { emoji: '🐱', name: 'ねこ' },
-  { emoji: '🐰', name: 'うさぎ' },
-  { emoji: '🐸', name: 'かえる' },
-  { emoji: '🐼', name: 'パンダ' },
-  { emoji: '🦊', name: 'きつね' },
-  { emoji: '🐧', name: 'ペンギン' },
+  { emoji: '🐱', name: 'ねこ',    nameEn: 'Cat'     },
+  { emoji: '🐰', name: 'うさぎ',  nameEn: 'Bunny'   },
+  { emoji: '🐸', name: 'かえる',  nameEn: 'Frog'    },
+  { emoji: '🐼', name: 'パンダ',  nameEn: 'Panda'   },
+  { emoji: '🦊', name: 'きつね',  nameEn: 'Fox'     },
+  { emoji: '🐧', name: 'ペンギン', nameEn: 'Penguin' },
 ];
 const HUD_H = 56;
 const DPAD_H = 0; // no dpad, tap-on-canvas control
@@ -498,15 +498,15 @@ export default function Meiro() {
   if (screen === 'title') {
     return (
       <div className="meiro-wrap meiro-title">
-        <button className="meiro-back-btn" onClick={() => navigate('/')}>← もどる</button>
+        <button className="meiro-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '← Back' : '← もどる'}</button>
         <div className="meiro-title-box">
           <div className="meiro-title-emoji">🗺️</div>
-          <h1 className="meiro-title-text">めいろあそび</h1>
-          <p className="meiro-subtitle">めいろをぬけてゴールしよう！</p>
+          <h1 className="meiro-title-text">{lang === 'en' ? 'Maze Adventure!' : 'めいろあそび'}</h1>
+          <p className="meiro-subtitle">{lang === 'en' ? 'Find your way through the maze!' : 'めいろをぬけてゴールしよう！'}</p>
           <div className="meiro-title-rules">
-            <div>👆 タップ or キーボードで うごく</div>
-            <div>👾 てきにあたると ❤️ がへる</div>
-            <div>🏁 ゴールに たどりつこう！</div>
+            <div>{lang === 'en' ? '👆 Tap or use keyboard to move' : '👆 タップ or キーボードで うごく'}</div>
+            <div>{lang === 'en' ? '👾 Hitting enemies loses ❤️' : '👾 てきにあたると ❤️ がへる'}</div>
+            <div>{lang === 'en' ? '🏁 Reach the goal!' : '🏁 ゴールに たどりつこう！'}</div>
           </div>
           <div className="meiro-char-grid">
             {CHARACTERS.map(ch => (
@@ -516,12 +516,12 @@ export default function Meiro() {
                 onClick={() => setSelectedChar(ch)}
               >
                 <span className="meiro-char-emoji">{ch.emoji}</span>
-                <span className="meiro-char-name">{ch.name}</span>
+                <span className="meiro-char-name">{lang === 'en' ? ch.nameEn : ch.name}</span>
               </button>
             ))}
           </div>
-          <button className="meiro-start-btn" onClick={() => startGame(selectedChar)}>🗺️ はじめる！</button>
-          {hiScore > 0 && <div className="meiro-hi">ベストタイム: {fmtTime(hiScore)}</div>}
+          <button className="meiro-start-btn" onClick={() => startGame(selectedChar)}>{lang === 'en' ? '🗺️ Start!' : '🗺️ はじめる！'}</button>
+          {hiScore > 0 && <div className="meiro-hi">{lang === 'en' ? `Best: ${fmtTime(hiScore)}` : `ベストタイム: ${fmtTime(hiScore)}`}</div>}
         </div>
       </div>
     );

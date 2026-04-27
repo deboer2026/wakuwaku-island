@@ -199,14 +199,14 @@ export default function SushiGame() {
         <div style={{ fontSize: 60, marginBottom: 6 }}>🍣</div>
         <h1 className="sushi-title-text">{lang === 'en' ? 'Catch Salmon!' : 'さーもんをとろう！'}</h1>
         <div className="sushi-rule-card">
-          <h2>📖 あそびかた</h2>
-          <div className="sushi-rule-step"><div className="sushi-rule-num">1</div><div className="sushi-rule-text">かいてんずしの レーンを みてね！</div></div>
-          <div className="sushi-rule-step"><div className="sushi-rule-num">2</div><div className="sushi-rule-text"><b>さーもん🍣</b> がながれてきたら タップ！</div></div>
-          <div className="sushi-rule-step"><div className="sushi-rule-num">3</div><div className="sushi-rule-text"><b>どうぶつ・ほかのもの</b>はタップしちゃダメ！</div></div>
-          <div className="sushi-rule-step"><div className="sushi-rule-num">4</div><div className="sushi-rule-text">ステージ3まで クリアしよう！スピードがあがるよ！</div></div>
+          <h2>{lang === 'en' ? '📖 How to Play' : '📖 あそびかた'}</h2>
+          <div className="sushi-rule-step"><div className="sushi-rule-num">1</div><div className="sushi-rule-text">{lang === 'en' ? 'Watch the conveyor belt lanes!' : 'かいてんずしの レーンを みてね！'}</div></div>
+          <div className="sushi-rule-step"><div className="sushi-rule-num">2</div><div className="sushi-rule-text">{lang === 'en' ? <><b>Salmon🍣</b> comes along — tap it!</> : <><b>さーもん🍣</b> がながれてきたら タップ！</>}</div></div>
+          <div className="sushi-rule-step"><div className="sushi-rule-num">3</div><div className="sushi-rule-text">{lang === 'en' ? <><b>Animals & other items</b> — don't tap!</> : <><b>どうぶつ・ほかのもの</b>はタップしちゃダメ！</>}</div></div>
+          <div className="sushi-rule-step"><div className="sushi-rule-num">4</div><div className="sushi-rule-text">{lang === 'en' ? 'Clear all 3 stages — speed increases!' : 'ステージ3まで クリアしよう！スピードがあがるよ！'}</div></div>
         </div>
-        {hiScore > 0 && <div className="sushi-hi-badge">🏆 ハイスコア: {hiScore}てん</div>}
-        <button className="sushi-start-btn" onClick={startGame}>▶ スタート！</button>
+        {hiScore > 0 && <div className="sushi-hi-badge">🏆 {lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}てん`}</div>}
+        <button className="sushi-start-btn" onClick={startGame}>{lang === 'en' ? '▶ Start!' : '▶ スタート！'}</button>
       </div>
     </div>
   );

@@ -254,17 +254,17 @@ export default function KazuAsobi() {
   if (screen === 'title') {
     return (
       <div className="kazu-wrap kazu-title">
-        <button className="kazu-back-btn" onClick={() => navigate('/')}>← もどる</button>
+        <button className="kazu-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '← Back' : '← もどる'}</button>
         <div className="kazu-title-box">
           <div className="kazu-title-emoji">🔢</div>
-          <h1 className="kazu-title-text">かずあそび</h1>
-          <p className="kazu-subtitle">おなじかずだけタップしよう！</p>
+          <h1 className="kazu-title-text">{lang === 'en' ? 'Number Play!' : 'かずあそび'}</h1>
+          <p className="kazu-subtitle">{lang === 'en' ? 'Tap exactly that many times!' : 'おなじかずだけタップしよう！'}</p>
           <div className="kazu-title-rules">
-            <div>⏱ 30びょうゲーム</div>
-            <div>🐱 どうぶつを かぞえてね</div>
+            <div>{lang === 'en' ? '⏱ 30-second game' : '⏱ 30びょうゲーム'}</div>
+            <div>{lang === 'en' ? '🐱 Count the animals!' : '🐱 どうぶつを かぞえてね'}</div>
           </div>
-          <button className="kazu-start-btn" onClick={startGame}>🎮 はじめる！</button>
-          {hiScore > 0 && <div className="kazu-hi">ハイスコア: {hiScore}</div>}
+          <button className="kazu-start-btn" onClick={startGame}>{lang === 'en' ? '🎮 Start!' : '🎮 はじめる！'}</button>
+          {hiScore > 0 && <div className="kazu-hi">{lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}`}</div>}
         </div>
       </div>
     );

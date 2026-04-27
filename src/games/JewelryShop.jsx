@@ -273,16 +273,15 @@ export default function JewelryShop() {
       {screen === 'title' && (
         <div className="js-screen js-title-screen">
           <div style={{ fontSize: 60, marginBottom: 6 }}>💎</div>
-          <h1>ほうせきやさん</h1>
+          <h1>{lang === 'en' ? 'Jewelry Shop!' : 'ほうせきやさん'}</h1>
           <p>
-            やってきた どうぶつさんに<br />
-            ほしい アクセサリを<br />
-            わたしてあげよう！<br />
-            たなから えらんで タップ！
+            {lang === 'en'
+              ? <>Give the visiting animals<br />the accessory they want!<br />Pick it from the shelf!</>
+              : <>やってきた どうぶつさんに<br />ほしい アクセサリを<br />わたしてあげよう！<br />たなから えらんで タップ！</>}
           </p>
-          <div className="js-hi-badge">🏆 ハイスコア: {hiScore}てん</div>
-          <button className="js-big-btn" onClick={startGame}>▶ スタート！</button>
-          <button className="js-back-link" onClick={() => navigate('/')}>← もどる</button>
+          <div className="js-hi-badge">🏆 {lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}てん`}</div>
+          <button className="js-big-btn" onClick={startGame}>{lang === 'en' ? '▶ Start!' : '▶ スタート！'}</button>
+          <button className="js-back-link" onClick={() => navigate('/')}>{lang === 'en' ? '← Back' : '← もどる'}</button>
         </div>
       )}
 
