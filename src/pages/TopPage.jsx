@@ -385,7 +385,19 @@ export default function TopPage() {
         ))}
       </div>
       <div className="tp-footer">
-        {lang === 'en' ? '🌟 Pick a game to play! 🌟' : '🌟 あそびたいゲームをえらんでね 🌟'}
+        <div>{lang === 'en' ? '🌟 Pick a game to play! 🌟' : '🌟 あそびたいゲームをえらんでね 🌟'}</div>
+        <div className="tp-footer-links">
+          <button className="tp-footer-link" onClick={() => navigate('/privacy')}>
+            {lang === 'en' ? '🔒 Privacy Policy' : '🔒 プライバシーポリシー'}
+          </button>
+          <span className="tp-footer-sep">|</span>
+          <button className="tp-footer-link" onClick={() => navigate('/terms')}>
+            {lang === 'en' ? '📜 Terms of Use' : '📜 利用規約'}
+          </button>
+        </div>
+        <div style={{ marginTop: 6, fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
+          © 2025 Wakuwaku Island
+        </div>
       </div>
 
       {/* ── 着せ替えパネル ── */}

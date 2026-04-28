@@ -498,7 +498,6 @@ export default function Meiro() {
   if (screen === 'title') {
     return (
       <div className="meiro-wrap meiro-title">
-        <button className="meiro-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '← Back' : '← もどる'}</button>
         <div className="meiro-title-box">
           <div className="meiro-title-emoji">🗺️</div>
           <h1 className="meiro-title-text">{lang === 'en' ? 'Maze Adventure!' : 'めいろあそび'}</h1>
@@ -522,6 +521,7 @@ export default function Meiro() {
           </div>
           <button className="meiro-start-btn" onClick={() => startGame(selectedChar)}>{lang === 'en' ? '🗺️ Start!' : '🗺️ はじめる！'}</button>
           {hiScore > 0 && <div className="meiro-hi">{lang === 'en' ? `Best: ${fmtTime(hiScore)}` : `ベストタイム: ${fmtTime(hiScore)}`}</div>}
+          <button className="ww-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
         </div>
       </div>
     );

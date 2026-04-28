@@ -477,7 +477,7 @@ export default function Shabondama() {
           <div className="sdm-hi-badge">🏆 {lang === 'en' ? `Best: ${currentHi}pts` : `ハイスコア: ${currentHi}てん`}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
             <button className="sdm-big-btn" onClick={startGame}>{lang === 'en' ? '▶ Start!' : '▶ スタート！'}</button>
-            <button className="sdm-big-btn sdm-blue" onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
+            <button className="ww-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
           </div>
         </div>
       )}

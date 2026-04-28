@@ -244,7 +244,6 @@ export default function IchigoGame() {
   ════════════════════════════════════════════════ */
   if (screen === 'title') return (
     <div className="ichigo-wrap ichigo-title">
-      <button className="ichigo-back-btn" onClick={() => navigate('/')}>🏠</button>
       <div className="ichigo-title-box">
         <div style={{ fontSize: 64, marginBottom: 6 }}>🍓</div>
         <h1 className="ichigo-title-text">{lang === 'en' ? 'Strawberry Time!' : 'いちごをあつめよう！'}</h1>
@@ -262,6 +261,7 @@ export default function IchigoGame() {
         </div>
         {hiScore > 0 && <div className="ichigo-hi-badge">🏆 {lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}てん`}</div>}
         <button className="ichigo-start-btn" onClick={startGame}>{lang === 'en' ? '▶ Start!' : '▶ スタート！'}</button>
+        <button className="ww-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
       </div>
     </div>
   );

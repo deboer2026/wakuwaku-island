@@ -281,7 +281,7 @@ export default function JewelryShop() {
           </p>
           <div className="js-hi-badge">🏆 {lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}てん`}</div>
           <button className="js-big-btn" onClick={startGame}>{lang === 'en' ? '▶ Start!' : '▶ スタート！'}</button>
-          <button className="js-back-link" onClick={() => navigate('/')}>{lang === 'en' ? '← Back' : '← もどる'}</button>
+          <button className="ww-back-btn" style={{ marginTop: 6 }} onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
         </div>
       )}
 

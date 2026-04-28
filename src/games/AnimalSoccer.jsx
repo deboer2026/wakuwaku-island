@@ -398,7 +398,6 @@ export default function AnimalSoccer() {
   if (screen === 'title') {
     return (
       <div className="soccer-wrap soccer-title">
-        <button className="soccer-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '← Back' : '← もどる'}</button>
         <div className="soccer-title-box">
           <div className="soccer-title-emoji">⚽</div>
           <h1 className="soccer-title-text">{lang === 'en' ? 'Animal Soccer!' : 'どうぶつサッカー'}</h1>
@@ -419,6 +418,7 @@ export default function AnimalSoccer() {
             {lang === 'en' ? '⚽ Start!' : '⚽ はじめる！'}
           </button>
           {hiScore > 0 && <div className="soccer-hi">{lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}`}</div>}
+          <button className="ww-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
         </div>
       </div>
     );

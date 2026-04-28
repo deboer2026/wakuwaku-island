@@ -194,7 +194,6 @@ export default function SushiGame() {
   ═══════════════════════════════════════════════════════════ */
   if (screen === 'title') return (
     <div className="sushi-wrap sushi-title">
-      <button className="sushi-back-btn" onClick={() => navigate('/')}>🏠</button>
       <div className="sushi-title-box">
         <div style={{ fontSize: 60, marginBottom: 6 }}>🍣</div>
         <h1 className="sushi-title-text">{lang === 'en' ? 'Catch Salmon!' : 'さーもんをとろう！'}</h1>
@@ -207,6 +206,7 @@ export default function SushiGame() {
         </div>
         {hiScore > 0 && <div className="sushi-hi-badge">🏆 {lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}てん`}</div>}
         <button className="sushi-start-btn" onClick={startGame}>{lang === 'en' ? '▶ Start!' : '▶ スタート！'}</button>
+        <button className="ww-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
       </div>
     </div>
   );
