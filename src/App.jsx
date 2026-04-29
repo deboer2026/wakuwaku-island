@@ -9,6 +9,7 @@ import AnimalSoccer from './games/AnimalSoccer'
 import JewelryShop from './games/JewelryShop'
 import SushiGame from './games/SushiGame'
 import IchigoGame from './games/IchigoGame'
+import DoubutsuKakurenbo from './games/DoubutsuKakurenbo'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 
@@ -25,6 +26,7 @@ export default function App() {
       <Route path="/jewelry-shop" element={<JewelryShop />} />
       <Route path="/sushi" element={<SushiGame />} />
       <Route path="/ichigo" element={<IchigoGame />} />
+      <Route path="/kakurenbo" element={<DoubutsuKakurenbo />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
     </Routes>

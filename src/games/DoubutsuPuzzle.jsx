@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { playDoubutsuPuzzleBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
+import { playDoubutsuPuzzleBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './DoubutsuPuzzle.css';
@@ -58,6 +58,7 @@ export default function DoubutsuPuzzle() {
   const [resultData, setResultData] = useState({
     stars: '', time: '', misses: 0, isNewBest: false, bestTime: 0,
   });
+  const [muted, setMuted] = useState(() => getMuteState());
 
   // ── DOM refs ──
   const wrapRef        = useRef(null);
@@ -398,6 +399,10 @@ export default function DoubutsuPuzzle() {
               <div className="dbp-hud-label">{lang === 'en' ? 'Time' : 'じかん'}</div>
               <div className="dbp-hud-val">{timeDisplay}</div>
             </div>
+            <button onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playDoubutsuPuzzleBgm(); }}
+              style={{ fontSize:20, background:'rgba(255,255,255,0.9)', border:'none', borderRadius:10, padding:'4px 8px', cursor:'pointer', flexShrink:0 }}>
+              {muted ? '🔇' : '🔊'}
+            </button>
           </div>
 
           {/* Field with gallery canvas + card grid */}
@@ -440,23 +445,23 @@ export default function DoubutsuPuzzle() {
       {/* ── Result overlay ── */}
       {screen === 'result' && (
         <div id="dbp-result-overlay">
-          <h2>🎉 クリア！</h2>
+          <h2>🎉 {lang === 'en' ? 'Clear!' : 'クリア！'}</h2>
           <div className="dbp-stars-disp">{resultData.stars}</div>
           <p>
-            タイム: <b style={{ fontSize: '24px', color: '#FFD700' }}>{resultData.time}</b><br />
-            ミス: {resultData.misses}かい
+            {lang === 'en' ? 'Time' : 'タイム'}: <b style={{ fontSize: '24px', color: '#FFD700' }}>{resultData.time}</b><br />
+            {lang === 'en' ? `Miss: ${resultData.misses}` : `ミス: ${resultData.misses}かい`}
           </p>
           {resultData.isNewBest && (
-            <div className="dbp-new-hi-txt">🏆 ベストタイム こうしん！</div>
+            <div className="dbp-new-hi-txt">🏆 {lang === 'en' ? 'Best Time Updated!' : 'ベストタイム こうしん！'}</div>
           )}
           {!resultData.isNewBest && (
             <div className="dbp-hi-badge" style={{ color: '#fff' }}>
-              ベストタイム: {fmtTime(resultData.bestTime)}
+              {lang === 'en' ? `Best: ${fmtTime(resultData.bestTime)}` : `ベストタイム: ${fmtTime(resultData.bestTime)}`}
             </div>
           )}
           <div style={{ display: 'flex', gap: '10px' }}>
-            <button className="dbp-big-btn" onClick={startGame}>もういちど</button>
-            <button className="dbp-big-btn blue" onClick={goTitle}>タイトルへ</button>
+            <button className="dbp-big-btn" onClick={startGame}>{lang === 'en' ? 'Play Again' : 'もういちど'}</button>
+            <button className="dbp-big-btn blue" onClick={goTitle}>{lang === 'en' ? 'Back to Title' : 'タイトルへ'}</button>
           </div>
         </div>
       )}

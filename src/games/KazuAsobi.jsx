@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { playKazuAsobiBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
+import { playKazuAsobiBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './KazuAsobi.css';
@@ -21,6 +21,7 @@ export default function KazuAsobi() {
   const [correctDisplay, setCorrectDisplay] = useState(0);
   const [hiScore, setHiScore] = useState(getHi());
   const [resultData, setResultData] = useState({ title: '', msg: '', hiText: '', isNew: false });
+  const [muted, setMuted] = useState(() => getMuteState());
 
   // question state (useState for re-render on question change)
   const [targetNum, setTargetNum] = useState(3);
@@ -129,10 +130,17 @@ export default function KazuAsobi() {
     trackGameClear('KazuAsobi', c, 1);
     setHiScore(isNew ? c : hi);
     let title, msg;
-    if (c >= 12)     { title = '🏆 すごい！'; msg = 'てんさいキッズ！'; }
-    else if (c >= 6) { title = '⭐ ナイス！'; msg = 'よくできました！'; }
-    else             { title = '🔢 もういちど'; msg = 'れんしゅうしよう！'; }
-    setResultData({ title, msg, hiText: `ハイスコア: ${isNew ? c : hi}`, isNew });
+    if (c >= 12) {
+      title = lang === 'en' ? '🏆 Amazing!' : '🏆 すごい！';
+      msg   = lang === 'en' ? 'Genius Kid!' : 'てんさいキッズ！';
+    } else if (c >= 6) {
+      title = lang === 'en' ? '⭐ Nice!' : '⭐ ナイス！';
+      msg   = lang === 'en' ? 'Well done!' : 'よくできました！';
+    } else {
+      title = lang === 'en' ? '🔢 Try Again!' : '🔢 もういちど';
+      msg   = lang === 'en' ? 'Keep practicing!' : 'れんしゅうしよう！';
+    }
+    setResultData({ title, msg, hiText: lang === 'en' ? `Best: ${isNew ? c : hi}pts` : `ハイスコア: ${isNew ? c : hi}`, isNew });
     setScreen('result');
   }, []);
 
@@ -276,13 +284,13 @@ export default function KazuAsobi() {
       <div className="kazu-wrap kazu-result">
         <div className="kazu-result-box">
           <div className="kazu-result-title">{resultData.title}</div>
-          <div className="kazu-result-score">せいかい: {correctCountRef.current}もん</div>
+          <div className="kazu-result-score">{lang === 'en' ? `Correct: ${correctCountRef.current}` : `せいかい: ${correctCountRef.current}もん`}</div>
           <div className="kazu-result-msg">{resultData.msg}</div>
-          {resultData.isNew && <div className="kazu-result-new">🌟 新記録！</div>}
+          {resultData.isNew && <div className="kazu-result-new">🌟 {lang === 'en' ? 'New Record!' : '新記録！'}</div>}
           <div className="kazu-result-hi">{resultData.hiText}</div>
           <div className="kazu-result-btns">
-            <button className="kazu-start-btn" onClick={startGame}>もういちど</button>
-            <button className="kazu-back-btn2" onClick={() => navigate('/')}>もどる</button>
+            <button className="kazu-start-btn" onClick={startGame}>{lang === 'en' ? 'Play Again' : 'もういちど'}</button>
+            <button className="kazu-back-btn2" onClick={() => navigate('/')}>{lang === 'en' ? 'Back' : 'もどる'}</button>
           </div>
         </div>
       </div>
@@ -308,12 +316,16 @@ export default function KazuAsobi() {
             <div className="kazu-hud-label">{lang === 'en' ? 'Time' : 'のこり'}</div>
             <div className="kazu-hud-val">{timeDisplay}</div>
           </div>
+          <button onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playKazuAsobiBgm(); }}
+            style={{ fontSize:20, background:'rgba(255,255,255,0.9)', border:'none', borderRadius:10, padding:'4px 8px', cursor:'pointer', flexShrink:0 }}>
+            {muted ? '🔇' : '🔊'}
+          </button>
         </div>
 
         {/* Big number */}
         <div className="kazu-number-area">
           <div className="kazu-number">{targetNum}</div>
-          <div className="kazu-number-label">ひきえらんでね！</div>
+          <div className="kazu-number-label">{lang === 'en' ? 'Tap that many!' : 'ひきえらんでね！'}</div>
           <div className="kazu-animal-label">{currentAnimal}</div>
         </div>
 

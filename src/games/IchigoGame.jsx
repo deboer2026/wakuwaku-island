@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { playIchigoBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
+import { playIchigoBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './IchigoGame.css';
@@ -33,6 +33,7 @@ export default function IchigoGame() {
   const [resultData,setResult]   = useState(null);
 
   const [lang] = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
+  const [muted, setMuted] = useState(() => getMuteState());
 
   /* ─── Mutable Refs ─── */
   const scoreR     = useRef(0);
@@ -228,9 +229,22 @@ export default function IchigoGame() {
     setHiScore(isNew ? s : hi);
 
     let title, msg;
-    if (s >= 60)      { title = '🏆 すごい！';    msg = `スコア ${s} てん！<br>${col}こ あつめたよ！<br>いちごの天才だ！`; }
-    else if (s >= 30) { title = '🍓 ナイス！';    msg = `スコア ${s} てん！<br>${col}こ あつめたよ！<br>よくできました！`; }
-    else              { title = '😊 もういちど';  msg = `スコア ${s} てん<br>${col}こ あつめたよ！<br>またちょうせん！`; }
+    if (s >= 60) {
+      title = lang === 'en' ? '🏆 Amazing!' : '🏆 すごい！';
+      msg   = lang === 'en'
+        ? `Score: ${s}pts!<br>Collected ${col}!<br>Strawberry Genius!`
+        : `スコア ${s} てん！<br>${col}こ あつめたよ！<br>いちごの天才だ！`;
+    } else if (s >= 30) {
+      title = lang === 'en' ? '🍓 Nice!' : '🍓 ナイス！';
+      msg   = lang === 'en'
+        ? `Score: ${s}pts!<br>Collected ${col}!<br>Well done!`
+        : `スコア ${s} てん！<br>${col}こ あつめたよ！<br>よくできました！`;
+    } else {
+      title = lang === 'en' ? '😊 Try Again!' : '😊 もういちど';
+      msg   = lang === 'en'
+        ? `Score: ${s}pts<br>Collected ${col}!<br>Keep challenging!`
+        : `スコア ${s} てん<br>${col}こ あつめたよ！<br>またちょうせん！`;
+    }
 
     setResult({ title, msg, score: s, collected: col, isNew, hi: isNew ? s : hi });
     setScreen('result');
@@ -274,11 +288,11 @@ export default function IchigoGame() {
       <div className="ichigo-result-box">
         <h2 className="ichigo-result-title">{resultData?.title}</h2>
         <p className="ichigo-result-msg" dangerouslySetInnerHTML={{ __html: resultData?.msg ?? '' }} />
-        {resultData?.isNew && <div className="ichigo-result-new">🏆 ニューレコード！</div>}
-        <div className="ichigo-result-hi">ハイスコア: {resultData?.hi ?? hiScore}てん</div>
+        {resultData?.isNew && <div className="ichigo-result-new">🏆 {lang === 'en' ? 'New Record!' : 'ニューレコード！'}</div>}
+        <div className="ichigo-result-hi">{lang === 'en' ? `Best: ${resultData?.hi ?? hiScore}pts` : `ハイスコア: ${resultData?.hi ?? hiScore}てん`}</div>
         <div className="ichigo-result-btns">
-          <button className="ichigo-start-btn" onClick={startGame}>もういちど</button>
-          <button className="ichigo-back-btn"  onClick={() => navigate('/')}>タイトルへ</button>
+          <button className="ichigo-start-btn" onClick={startGame}>{lang === 'en' ? 'Play Again' : 'もういちど'}</button>
+          <button className="ichigo-back-btn"  onClick={() => navigate('/')}>{lang === 'en' ? 'Back to Title' : 'タイトルへ'}</button>
         </div>
       </div>
     </div>
@@ -317,9 +331,15 @@ export default function IchigoGame() {
           </div>
         </div>
         {/* RIGHT */}
-        <div style={{ background:'rgba(255,255,255,0.95)', borderRadius:12, padding:'4px 10px', textAlign:'center', flexShrink:0 }}>
-          <div style={{ fontSize:10, color:'#880e4f', fontWeight:700 }}>{lang === 'en' ? 'Left' : 'のこり'}</div>
-          <div style={{ fontSize:20, fontWeight:900, color:'#560027' }}>{timeLeft}</div>
+        <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+          <div style={{ background:'rgba(255,255,255,0.95)', borderRadius:12, padding:'4px 10px', textAlign:'center' }}>
+            <div style={{ fontSize:10, color:'#880e4f', fontWeight:700 }}>{lang === 'en' ? 'Left' : 'のこり'}</div>
+            <div style={{ fontSize:20, fontWeight:900, color:'#560027' }}>{timeLeft}</div>
+          </div>
+          <button onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playIchigoBgm(); }}
+            style={{ fontSize:20, background:'rgba(255,255,255,0.9)', border:'none', borderRadius:10, padding:'4px 8px', cursor:'pointer' }}>
+            {muted ? '🔇' : '🔊'}
+          </button>
         </div>
       </div>
 

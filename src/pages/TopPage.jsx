@@ -67,6 +67,9 @@ const GAMES = [
   { id:'g9', route:'/ichigo',          icon:'🍓', num:9, color:'#E91E63', stars:5, isNew:true,
     ja:{ name:'いちご',             desc:'30びょうで\nいちごを\nあつめよう！'            },
     en:{ name:'Strawberry Time',      desc:'Collect strawberries\nin 30 seconds!'         } },
+  { id:'g10', route:'/kakurenbo',      icon:'🔍', num:10, color:'#2d6a4f', stars:5, isNew:true,
+    ja:{ name:'どうぶつかくれんぼ', desc:'くさむらや きのうらに\nどうぶつが かくれてるよ！' },
+    en:{ name:'Animal Hide & Seek',   desc:'Find the animals\nhiding in the bushes!'      } },
 ];
 
 /* ════════════════════════════════════════════════════

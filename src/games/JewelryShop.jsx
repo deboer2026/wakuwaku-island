@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { playJewelryShopBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
+import { playJewelryShopBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './JewelryShop.css';
@@ -82,6 +82,7 @@ export default function JewelryShop() {
   const [wrongItem, setWrongItem] = useState(null);
   const [resultData, setResultData] = useState(null);
   const [isNewHi, setIsNewHi] = useState(false);
+  const [muted, setMuted] = useState(() => getMuteState());
 
   // Canvas background
   useEffect(() => {
@@ -300,6 +301,10 @@ export default function JewelryShop() {
             <div className="js-hud-label">{lang === 'en' ? 'Stage' : 'ステージ'}</div>
             <div className="js-hud-val">{stage}</div>
           </div>
+          <button onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playJewelryShopBgm(); }}
+            style={{ fontSize:20, background:'rgba(255,255,255,0.9)', border:'none', borderRadius:10, padding:'4px 8px', cursor:'pointer', flexShrink:0 }}>
+            {muted ? '🔇' : '🔊'}
+          </button>
         </div>
       )}
 
@@ -347,29 +352,27 @@ export default function JewelryShop() {
       {/* ── Stage Clear ── */}
       {screen === 'stageClear' && (
         <div className="js-stage-clear">
-          <h2>🌟 ステージ{stage} クリア！</h2>
+          <h2>🌟 {lang === 'en' ? `Stage ${stage} Clear!` : `ステージ${stage} クリア！`}</h2>
           <p>
-            ぜんいんに わたせたよ！<br />
-            スコア: <b style={{ color: '#FFD700', fontSize: 20 }}>{score}</b>てん
+            {lang === 'en' ? <>All delivered!<br />Score: <b style={{ color: '#FFD700', fontSize: 20 }}>{score}</b>pts</> : <>ぜんいんに わたせたよ！<br />スコア: <b style={{ color: '#FFD700', fontSize: 20 }}>{score}</b>てん</>}
           </p>
-          <button className="js-big-btn" onClick={nextStage}>つぎへ ▶</button>
+          <button className="js-big-btn" onClick={nextStage}>{lang === 'en' ? 'Next ▶' : 'つぎへ ▶'}</button>
         </div>
       )}
 
       {/* ── Result ── */}
       {screen === 'result' && resultData && (
         <div className="js-result-overlay">
-          <h2>💔 ざんねん…</h2>
+          <h2>💔 {lang === 'en' ? 'Too bad...' : 'ざんねん…'}</h2>
           <p>
-            スコア <b style={{ fontSize: 26, color: '#FFD700' }}>{resultData.score}</b> てん<br />
-            ステージ {resultData.stage} まで すすんだよ！
+            {lang === 'en' ? <>Score: <b style={{ fontSize: 26, color: '#FFD700' }}>{resultData.score}</b>pts<br />Reached Stage {resultData.stage}!</> : <>スコア <b style={{ fontSize: 26, color: '#FFD700' }}>{resultData.score}</b> てん<br />ステージ {resultData.stage} まで すすんだよ！</>}
           </p>
           <div className="js-new-hi" style={{ color: isNewHi ? '#FFD700' : 'rgba(255,255,255,0.6)' }}>
-            {isNewHi ? '🏆 ニューレコード！' : `ハイスコア: ${hiScore}てん`}
+            {isNewHi ? `🏆 ${lang === 'en' ? 'New Record!' : 'ニューレコード！'}` : (lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}てん`)}
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button className="js-big-btn" onClick={startGame}>もういちど</button>
-            <button className="js-big-btn js-blue-btn" onClick={() => navigate('/')}>タイトルへ</button>
+            <button className="js-big-btn" onClick={startGame}>{lang === 'en' ? 'Play Again' : 'もういちど'}</button>
+            <button className="js-big-btn js-blue-btn" onClick={() => navigate('/')}>{lang === 'en' ? 'Back to Title' : 'タイトルへ'}</button>
           </div>
         </div>
       )}

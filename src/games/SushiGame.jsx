@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { playSushiBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted } from '../utils/audio';
+import { playSushiBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './SushiGame.css';
@@ -8,7 +8,7 @@ import './SushiGame.css';
 const SALMON = '🍣';
 const TRAPS = ['🐱','🐶','🐸','🐼','🦊','🐰','🐧','🐻','🍊','🍎','🎀','⭐','🐙','🦐','🥚','🐟'];
 const LANE_COLORS = ['#ffe8e8','#fff8e0','#e8f0ff'];
-const ITEM_PX = 56; // アイテムの直径(px)
+const ITEM_PX = 84; // アイテムの直径(px) — salmonを大きく
 
 function getHi() { return parseInt(localStorage.getItem('sushi_hi') || '0'); }
 function saveHi(v) { localStorage.setItem('sushi_hi', String(v)); }
@@ -33,6 +33,7 @@ export default function SushiGame() {
   const [resultData,setResult]  = useState(null);
 
   const [lang] = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
+  const [muted, setMuted] = useState(() => getMuteState());
 
   /* ─── Mutable Refs ─── */
   const scoreR   = useRef(0);
@@ -178,9 +179,16 @@ export default function SushiGame() {
     setHiScore(isNew ? s : hi);
 
     let title, msg;
-    if (allClear)    { title = '🏆 チャンピオン！'; msg = `スコア ${s} てん！<br>ぜんぶクリアしたよ！`; }
-    else if (s >= 80){ title = '🍣 ナイス！';       msg = `スコア ${s} てん！<br>ステージ${stageR.current}まで！`; }
-    else             { title = '😅 もういちど';      msg = `スコア ${s} てん<br>またちょうせん！`; }
+    if (allClear) {
+      title = lang === 'en' ? '🏆 Champion!' : '🏆 チャンピオン！';
+      msg   = lang === 'en' ? `Score: ${s}pts!<br>You cleared all stages!` : `スコア ${s} てん！<br>ぜんぶクリアしたよ！`;
+    } else if (s >= 80) {
+      title = lang === 'en' ? '🍣 Nice!' : '🍣 ナイス！';
+      msg   = lang === 'en' ? `Score: ${s}pts!<br>You reached Stage ${stageR.current}!` : `スコア ${s} てん！<br>ステージ${stageR.current}まで！`;
+    } else {
+      title = lang === 'en' ? '😅 Try Again!' : '😅 もういちど';
+      msg   = lang === 'en' ? `Score: ${s}pts<br>Keep challenging!` : `スコア ${s} てん<br>またちょうせん！`;
+    }
 
     setResult({ title, msg, score: s, isNew, hi: isNew ? s : hi });
     setScreen('result');
@@ -218,9 +226,9 @@ export default function SushiGame() {
     <div className="sushi-wrap sushi-stageclear">
       <div className="sushi-stageclear-box">
         <div style={{ fontSize: 64, marginBottom: 8 }}>🎉</div>
-        <h2 className="sushi-stageclear-title">ステージ{stage} クリア！</h2>
-        <p className="sushi-stageclear-msg">🍣×{caught} とれたよ！つぎは もっとはやいよ！</p>
-        <button className="sushi-start-btn" onClick={goNextStage}>つぎへ ▶</button>
+        <h2 className="sushi-stageclear-title">{lang === 'en' ? `Stage ${stage} Clear!` : `ステージ${stage} クリア！`}</h2>
+        <p className="sushi-stageclear-msg">{lang === 'en' ? `🍣×${caught} caught! Next is faster!` : `🍣×${caught} とれたよ！つぎは もっとはやいよ！`}</p>
+        <button className="sushi-start-btn" onClick={goNextStage}>{lang === 'en' ? 'Next ▶' : 'つぎへ ▶'}</button>
       </div>
     </div>
   );
@@ -233,11 +241,11 @@ export default function SushiGame() {
       <div className="sushi-result-box">
         <h2 className="sushi-result-title">{resultData?.title}</h2>
         <p className="sushi-result-msg" dangerouslySetInnerHTML={{ __html: resultData?.msg ?? '' }} />
-        {resultData?.isNew && <div className="sushi-result-new">🏆 ニューレコード！</div>}
-        <div className="sushi-result-hi">ハイスコア: {resultData?.hi ?? hiScore}てん</div>
+        {resultData?.isNew && <div className="sushi-result-new">🏆 {lang === 'en' ? 'New Record!' : 'ニューレコード！'}</div>}
+        <div className="sushi-result-hi">{lang === 'en' ? `Best: ${resultData?.hi ?? hiScore}pts` : `ハイスコア: ${resultData?.hi ?? hiScore}てん`}</div>
         <div className="sushi-result-btns">
-          <button className="sushi-start-btn" onClick={startGame}>もういちど</button>
-          <button className="sushi-back-btn"  onClick={() => navigate('/')}>タイトルへ</button>
+          <button className="sushi-start-btn" onClick={startGame}>{lang === 'en' ? 'Play Again' : 'もういちど'}</button>
+          <button className="sushi-back-btn"  onClick={() => navigate('/')}>{lang === 'en' ? 'Back to Title' : 'タイトルへ'}</button>
         </div>
       </div>
     </div>
@@ -278,9 +286,15 @@ export default function SushiGame() {
           </div>
         </div>
         {/* RIGHT */}
-        <div style={{ background:'rgba(255,255,255,0.95)', borderRadius:12, padding:'4px 10px', textAlign:'center', flexShrink:0 }}>
-          <div style={{ fontSize:10, color:'#c0392b', fontWeight:700 }}>{lang === 'en' ? 'Lives' : 'ライフ'}</div>
-          <div style={{ fontSize:16, fontWeight:900 }}>{'❤️'.repeat(hp)}{'🖤'.repeat(3 - hp)}</div>
+        <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+          <div style={{ background:'rgba(255,255,255,0.95)', borderRadius:12, padding:'4px 10px', textAlign:'center' }}>
+            <div style={{ fontSize:10, color:'#c0392b', fontWeight:700 }}>{lang === 'en' ? 'Lives' : 'ライフ'}</div>
+            <div style={{ fontSize:16, fontWeight:900 }}>{'❤️'.repeat(hp)}{'🖤'.repeat(3 - hp)}</div>
+          </div>
+          <button onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playSushiBgm(); }}
+            style={{ fontSize:20, background:'rgba(255,255,255,0.9)', border:'none', borderRadius:10, padding:'4px 8px', cursor:'pointer' }}>
+            {muted ? '🔇' : '🔊'}
+          </button>
         </div>
       </div>
 
@@ -314,7 +328,7 @@ export default function SushiGame() {
                     borderRadius: '50%',
                     border:       item.isSalmon ? '2.5px solid #e74c3c' : '2px solid #bbb',
                     background:   item.isSalmon ? '#fff0f0' : '#fff',
-                    fontSize:     34,
+                    fontSize:     52,
                     display:      'flex',
                     alignItems:   'center',
                     justifyContent: 'center',

@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { playMeiroBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted } from '../utils/audio';
+import { playMeiroBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './Meiro.css';
@@ -37,6 +37,7 @@ export default function Meiro() {
   const [hiScore, setHiScore] = useState(getHi());
   const [resultData, setResultData] = useState({ title: '', msg: '', hiText: '', isNew: false });
   const [selectedChar, setSelectedChar] = useState(CHARACTERS[0]);
+  const [muted, setMuted] = useState(() => getMuteState());
 
   const mazeCanvasRef = useRef(null);
   const bgCanvasRef = useRef(null);
@@ -300,9 +301,12 @@ export default function Meiro() {
     trackGameClear('Meiro', t, 1);
     addCoins(5);
     setHiScore(isNew ? t : hi);
-    const title = isNew ? '🏆 ベストタイム こうしん！' : 'クリア！🏁';
-    const hiText = `ベスト: ${fmtTime(isNew ? t : hi)}`;
-    setResultData({ title, msg: `タイム: ${fmtTime(t)}`, hiText, isNew });
+    const title = isNew
+      ? (lang === 'en' ? '🏆 Best Time!' : '🏆 ベストタイム こうしん！')
+      : (lang === 'en' ? 'Clear! 🏁' : 'クリア！🏁');
+    const hiText = lang === 'en' ? `Best: ${fmtTime(isNew ? t : hi)}` : `ベスト: ${fmtTime(isNew ? t : hi)}`;
+    const msg    = lang === 'en' ? `Time: ${fmtTime(t)}` : `タイム: ${fmtTime(t)}`;
+    setResultData({ title, msg, hiText, isNew });
     setScreen('result');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -313,7 +317,12 @@ export default function Meiro() {
     stopBgm();
     trackGameOver('Meiro', timeRef.current);
     const hi = getHi();
-    setResultData({ title: 'ゲームオーバー 😢', msg: 'もういちどチャレンジ！', hiText: hi > 0 ? `ベスト: ${fmtTime(hi)}` : '', isNew: false });
+    setResultData({
+      title: lang === 'en' ? 'Game Over 😢' : 'ゲームオーバー 😢',
+      msg:   lang === 'en' ? 'Keep challenging!' : 'もういちどチャレンジ！',
+      hiText: hi > 0 ? (lang === 'en' ? `Best: ${fmtTime(hi)}` : `ベスト: ${fmtTime(hi)}`) : '',
+      isNew: false,
+    });
     setScreen('result');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -534,12 +543,12 @@ export default function Meiro() {
         <div className="meiro-result-box">
           <div className="meiro-result-title">{resultData.title}</div>
           <div className="meiro-result-msg">{resultData.msg}</div>
-          {resultData.isNew && <div className="meiro-result-new">🌟 新記録！</div>}
+          {resultData.isNew && <div className="meiro-result-new">🌟 {lang === 'en' ? 'New Record!' : '新記録！'}</div>}
           {resultData.hiText && <div className="meiro-result-hi">{resultData.hiText}</div>}
           <div className="meiro-result-btns">
-            <button className="meiro-start-btn" onClick={() => startGame(charRef.current)}>もういちど</button>
-            <button className="meiro-back-btn2" onClick={() => setScreen('title')}>キャラ選択</button>
-            <button className="meiro-back-btn2" onClick={() => navigate('/')}>もどる</button>
+            <button className="meiro-start-btn" onClick={() => startGame(charRef.current)}>{lang === 'en' ? 'Play Again' : 'もういちど'}</button>
+            <button className="meiro-back-btn2" onClick={() => setScreen('title')}>{lang === 'en' ? 'Characters' : 'キャラ選択'}</button>
+            <button className="meiro-back-btn2" onClick={() => navigate('/')}>{lang === 'en' ? 'Back' : 'もどる'}</button>
           </div>
         </div>
       </div>
@@ -573,6 +582,10 @@ export default function Meiro() {
           <div className="meiro-hud-label">{lang === 'en' ? 'Lives' : 'ライフ'}</div>
           <div className="meiro-hud-val">{hpHearts.join('')}</div>
         </div>
+        <button onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playMeiroBgm(); }}
+          style={{ fontSize:20, background:'rgba(255,255,255,0.9)', border:'none', borderRadius:10, padding:'4px 8px', cursor:'pointer', flexShrink:0 }}>
+          {muted ? '🔇' : '🔊'}
+        </button>
       </div>
       {/* Maze canvas (interactive) */}
       <canvas

@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { playAnimalSoccerBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted } from '../utils/audio';
+import { playAnimalSoccerBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './AnimalSoccer.css';
@@ -28,6 +28,7 @@ export default function AnimalSoccer() {
   const [shotsDisplay, setShotsDisplay] = useState(5);
   const [hiScore, setHiScore] = useState(getHi());
   const [resultData, setResultData] = useState({ title: '', msg: '', hiText: '', isNew: false });
+  const [muted, setMuted] = useState(() => getMuteState());
   const [speech, setSpeech] = useState({ text: '', visible: false });
   const [selectedChar, setSelectedChar] = useState(CHARACTERS[0]);
 
@@ -112,10 +113,17 @@ export default function AnimalSoccer() {
     trackGameClear('AnimalSoccer', s, 1);
     setHiScore(isNew ? s : hi);
     let title, msg;
-    if (s >= 12) { title = '🏆 チャンピオン！'; msg = 'かんぺきなシュート！'; }
-    else if (s >= 6) { title = '⭐ ナイス！'; msg = 'すごいシュート！'; }
-    else { title = '😢 ざんねん…'; msg = 'もういちどチャレンジ！'; }
-    setResultData({ title, msg, hiText: `ハイスコア: ${isNew ? s : hi}`, isNew });
+    if (s >= 12) {
+      title = lang === 'en' ? '🏆 Champion!' : '🏆 チャンピオン！';
+      msg   = lang === 'en' ? 'Perfect shots!' : 'かんぺきなシュート！';
+    } else if (s >= 6) {
+      title = lang === 'en' ? '⭐ Nice!' : '⭐ ナイス！';
+      msg   = lang === 'en' ? 'Great shots!' : 'すごいシュート！';
+    } else {
+      title = lang === 'en' ? '😢 Too bad...' : '😢 ざんねん…';
+      msg   = lang === 'en' ? 'Keep challenging!' : 'もういちどチャレンジ！';
+    }
+    setResultData({ title, msg, hiText: lang === 'en' ? `Best: ${isNew ? s : hi}pts` : `ハイスコア: ${isNew ? s : hi}`, isNew });
     setScreen('result');
   }, []);
 
@@ -430,14 +438,14 @@ export default function AnimalSoccer() {
       <div className="soccer-wrap soccer-result">
         <div className="soccer-result-box">
           <div className="soccer-result-title">{resultData.title}</div>
-          <div className="soccer-result-score">スコア: {scoreRef.current}</div>
+          <div className="soccer-result-score">{lang === 'en' ? `Score: ${scoreRef.current}pts` : `スコア: ${scoreRef.current}`}</div>
           <div className="soccer-result-msg">{resultData.msg}</div>
-          {resultData.isNew && <div className="soccer-result-new">🌟 新記録！</div>}
+          {resultData.isNew && <div className="soccer-result-new">🌟 {lang === 'en' ? 'New Record!' : '新記録！'}</div>}
           <div className="soccer-result-hi">{resultData.hiText}</div>
           <div className="soccer-result-btns">
-            <button className="soccer-start-btn" onClick={() => startGame(kickerRef.current)}>もういちど</button>
-            <button className="soccer-back-btn2" onClick={() => setScreen('title')}>キャラ選択</button>
-            <button className="soccer-back-btn2" onClick={() => navigate('/')}>もどる</button>
+            <button className="soccer-start-btn" onClick={() => startGame(kickerRef.current)}>{lang === 'en' ? 'Play Again' : 'もういちど'}</button>
+            <button className="soccer-back-btn2" onClick={() => setScreen('title')}>{lang === 'en' ? 'Characters' : 'キャラ選択'}</button>
+            <button className="soccer-back-btn2" onClick={() => navigate('/')}>{lang === 'en' ? 'Back' : 'もどる'}</button>
           </div>
         </div>
       </div>
@@ -460,6 +468,10 @@ export default function AnimalSoccer() {
           <div className="soccer-hud-label">{lang === 'en' ? 'Left' : 'のこり'}</div>
           <div className="soccer-hud-val">{'⚽'.repeat(shotsDisplay)}</div>
         </div>
+        <button onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playAnimalSoccerBgm(); }}
+          style={{ fontSize:20, background:'rgba(255,255,255,0.9)', border:'none', borderRadius:10, padding:'4px 8px', cursor:'pointer', flexShrink:0 }}>
+          {muted ? '🔇' : '🔊'}
+        </button>
       </div>
       <canvas ref={canvasRef} className="soccer-canvas" />
       {speech.visible && (

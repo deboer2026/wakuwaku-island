@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { playShabondamaBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted } from '../utils/audio';
+import { playShabondamaBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './Shabondama.css';
@@ -26,6 +26,7 @@ export default function Shabondama() {
 
   // UI screen state: 'title' | 'game' | 'result'
   const [screen, setScreen] = useState('title');
+  const [muted, setMuted] = useState(() => getMuteState());
   const [scoreDisplay, setScoreDisplay] = useState(0);
   const [timeDisplay, setTimeDisplay] = useState(30);
   const [hiScore, setHiScore] = useState(getHi());
@@ -280,17 +281,25 @@ export default function Shabondama() {
 
     let title, msg;
     if (score >= 40) {
-      title = '🏆 すごい！';
-      msg = `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！<br>シャボンだまの<br>チャンピオン！`;
+      title = lang === 'en' ? '🏆 Amazing!' : '🏆 すごい！';
+      msg   = lang === 'en'
+        ? `Score: <b style="font-size:28px;color:#FFD700">${score}</b>pts!<br>Bubble Champion!`
+        : `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！<br>シャボンだまの<br>チャンピオン！`;
     } else if (score >= 20) {
-      title = '⭐ ナイス！';
-      msg = `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！<br>よくできました！`;
+      title = lang === 'en' ? '⭐ Nice!' : '⭐ ナイス！';
+      msg   = lang === 'en'
+        ? `Score: <b style="font-size:28px;color:#FFD700">${score}</b>pts!<br>Well done!`
+        : `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！<br>よくできました！`;
     } else {
-      title = '🫧 もういちど';
-      msg = `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん<br>またちょうせん！`;
+      title = lang === 'en' ? '🫧 Try Again!' : '🫧 もういちど';
+      msg   = lang === 'en'
+        ? `Score: <b style="font-size:28px;color:#FFD700">${score}</b>pts<br>Keep challenging!`
+        : `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん<br>またちょうせん！`;
     }
 
-    const hiText = isNew ? '🏆 ニューレコード！' : `ハイスコア: ${hi}てん`;
+    const hiText = isNew
+      ? (lang === 'en' ? '🏆 New Record!' : '🏆 ニューレコード！')
+      : (lang === 'en' ? `Best: ${hi}pts` : `ハイスコア: ${hi}てん`);
     setResultData({ title, msg, hiText, isNew });
     setScreen('result');
   }, []);
@@ -503,6 +512,10 @@ export default function Shabondama() {
             <div className="sdm-hud-label">{lang === 'en' ? 'Left' : 'のこり'}</div>
             <div className="sdm-hud-val">{timeDisplay}</div>
           </div>
+          <button onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playShabondamaBgm(); }}
+            style={{ fontSize:20, background:'rgba(255,255,255,0.9)', border:'none', borderRadius:10, padding:'4px 8px', cursor:'pointer', flexShrink:0 }}>
+            {muted ? '🔇' : '🔊'}
+          </button>
         </div>
       )}
 
@@ -518,8 +531,8 @@ export default function Shabondama() {
             {resultData.hiText}
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
-            <button className="sdm-big-btn" onClick={startGame}>もういちど</button>
-            <button className="sdm-big-btn sdm-blue" onClick={goTitle}>タイトルへ</button>
+            <button className="sdm-big-btn" onClick={startGame}>{lang === 'en' ? 'Play Again' : 'もういちど'}</button>
+            <button className="sdm-big-btn sdm-blue" onClick={goTitle}>{lang === 'en' ? 'Back to Title' : 'タイトルへ'}</button>
           </div>
         </div>
       )}
