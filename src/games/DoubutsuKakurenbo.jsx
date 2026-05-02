@@ -298,6 +298,13 @@ export default function DoubutsuKakurenbo() {
     if (!m) playKakurenboBgm();
   };
 
+  // ─── Page title ────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    document.title = 'どうぶつかくれんぼ | わくわくアイランド - 無料子供向けゲーム';
+    return () => { document.title = 'わくわくアイランド | 無料の子供向けブラウザゲーム'; };
+  }, []);
+
   // ─── Cleanup ───────────────────────────────────────────────────────────────
 
   useEffect(() => {

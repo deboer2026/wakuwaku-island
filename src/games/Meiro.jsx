@@ -326,6 +326,12 @@ export default function Meiro() {
     setScreen('result');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // page title
+  useEffect(() => {
+    document.title = 'めいろあそび | わくわくアイランド - 無料子供向けゲーム';
+    return () => { document.title = 'わくわくアイランド | 無料の子供向けブラウザゲーム'; };
+  }, []);
+
   // Keep refs in sync so closures defined before these functions can call them
   useEffect(() => { triggerClearRef.current = triggerClear; }, [triggerClear]);
   useEffect(() => { triggerGameOverRef.current = triggerGameOver; }, [triggerGameOver]);

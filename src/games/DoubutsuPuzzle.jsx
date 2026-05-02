@@ -327,6 +327,12 @@ export default function DoubutsuPuzzle() {
     setScreen('title');
   }, []);
 
+  // page title
+  useEffect(() => {
+    document.title = 'どうぶつパズル | わくわくアイランド - 無料子供向けゲーム';
+    return () => { document.title = 'わくわくアイランド | 無料の子供向けブラウザゲーム'; };
+  }, []);
+
   // ─── initial mount ─────────────────────────────────────────────────────────
   useEffect(() => {
     resize();

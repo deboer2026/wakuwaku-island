@@ -366,6 +366,12 @@ export default function AnimalSoccer() {
     buildGallery();
   }, [buildGallery]);
 
+  // page title
+  useEffect(() => {
+    document.title = 'どうぶつサッカー | わくわくアイランド - 無料子供向けゲーム';
+    return () => { document.title = 'わくわくアイランド | 無料の子供向けブラウザゲーム'; };
+  }, []);
+
   // Start/stop game loop on screen change
   useEffect(() => {
     if (screen !== 'game') {

@@ -408,6 +408,12 @@ export default function Shabondama() {
 
   // ---------- effects ----------
 
+  // page title
+  useEffect(() => {
+    document.title = 'シャボンだまポン | わくわくアイランド - 無料子供向けゲーム';
+    return () => { document.title = 'わくわくアイランド | 無料の子供向けブラウザゲーム'; };
+  }, []);
+
   // Initial setup: resize + start title loop
   useEffect(() => {
     resize();

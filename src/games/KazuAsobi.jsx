@@ -192,6 +192,12 @@ export default function KazuAsobi() {
     });
   }, [nextQuestion]);
 
+  // page title
+  useEffect(() => {
+    document.title = 'かずあそび | わくわくアイランド - 無料子供向けゲーム';
+    return () => { document.title = 'わくわくアイランド | 無料の子供向けブラウザゲーム'; };
+  }, []);
+
   // timer
   useEffect(() => {
     if (screen !== 'game') return;

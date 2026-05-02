@@ -468,6 +468,12 @@ export default function KudamonoCatch() {
     titleAnimIdRef.current = requestAnimationFrame(titleLoop);
   }, [drawClouds, drawGallery]);
 
+  // page title
+  useEffect(() => {
+    document.title = 'くだものキャッチ | わくわくアイランド - 無料子供向けゲーム';
+    return () => { document.title = 'わくわくアイランド | 無料の子供向けブラウザゲーム'; };
+  }, []);
+
   // ─── mouse / touch input ───────────────────────────────────────────────────
   useEffect(() => {
     const canvas = canvasRef.current;

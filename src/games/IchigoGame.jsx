@@ -250,6 +250,12 @@ export default function IchigoGame() {
     setScreen('result');
   }
 
+  /* ─── ページタイトル ─── */
+  useEffect(() => {
+    document.title = 'いちごをあつめよう | わくわくアイランド - 無料子供向けゲーム';
+    return () => { document.title = 'わくわくアイランド | 無料の子供向けブラウザゲーム'; };
+  }, []);
+
   /* ─── アンマウント時クリーンアップ ─── */
   useEffect(() => () => stopAll(), []); // eslint-disable-line
 

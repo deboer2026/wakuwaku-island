@@ -84,6 +84,12 @@ export default function JewelryShop() {
   const [isNewHi, setIsNewHi] = useState(false);
   const [muted, setMuted] = useState(() => getMuteState());
 
+  // page title
+  useEffect(() => {
+    document.title = 'ほうせきやさん | わくわくアイランド - 無料子供向けゲーム';
+    return () => { document.title = 'わくわくアイランド | 無料の子供向けブラウザゲーム'; };
+  }, []);
+
   // Canvas background
   useEffect(() => {
     const canvas = bgRef.current;
