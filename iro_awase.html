@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>いろあわせ</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'M PLUS Rounded 1c', sans-serif; background: linear-gradient(160deg,#fce4ec,#e8eaf6); min-height: 100vh; overflow: hidden; }
+#game-wrap { width: 100vw; height: 100vh; max-width: 480px; margin: 0 auto; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+
+#hud { background: rgba(156,39,176,0.82); padding: 10px 14px 8px; display: none; flex-shrink: 0; }
+.hud-inner { display: flex; justify-content: space-between; align-items: center; }
+.hud-box { background: rgba(255,255,255,0.95); border-radius: 12px; padding: 4px 12px; text-align: center; min-width: 68px; }
+.hud-label { font-size: 10px; color: #6a1b9a; font-weight: 700; }
+.hud-val   { font-size: 20px; font-weight: 900; color: #4a148c; }
+#hud-title { font-size: 15px; font-weight: 900; color: #fff; text-shadow: 1px 2px 0 #4a148c; }
+
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 0 20px; }
+#title-screen { background: linear-gradient(160deg,#ce93d8,#fce4ec); }
+#title-screen h1 { font-size: 30px; font-weight: 900; color: #6a1b9a; text-shadow: 2px 2px 0 #fff; margin-bottom: 6px; }
+#title-screen p  { font-size: 13px; color: #7b1fa2; margin-bottom: 20px; text-align: center; line-height: 1.8; }
+.hi-badge { background: rgba(106,27,154,0.1); color: #6a1b9a; font-size: 13px; font-weight: 700; padding: 4px 16px; border-radius: 20px; margin-bottom: 14px; }
+.big-btn { background: #9c27b0; color: #fff; border: none; border-radius: 50px; padding: 14px 44px; font-size: 20px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 0 #6a1b9a; touch-action: manipulation; font-family: inherit; }
+.big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #6a1b9a; }
+.big-btn.orange { background: #FF6B35; box-shadow: 0 6px 0 #c94d1e; }
+
+#game-area { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: space-around; padding: 10px 16px 16px; }
+
+/* 問題エリア */
+#color-question { width: 100%; max-width: 360px; background: rgba(255,255,255,0.88); border-radius: 24px; padding: 18px 16px; box-shadow: 0 6px 0 rgba(156,39,176,0.25); }
+#q-mode-label { font-size: 13px; font-weight: 700; color: #7b1fa2; text-align: center; margin-bottom: 14px; }
+
+/* 色混ぜ表示 */
+#mix-display { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 14px; }
+.color-circle {
+  width: 64px; height: 64px; border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.9);
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  flex-shrink: 0;
+  transition: transform .2s;
+}
+.color-circle.large { width: 80px; height: 80px; font-size: 13px; }
+.mix-op { font-size: 26px; font-weight: 900; color: #9c27b0; }
+.mix-eq { font-size: 26px; font-weight: 900; color: #9c27b0; }
+.question-blob {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: linear-gradient(135deg,#e0e0e0,#f5f5f5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  animation: blobPulse 1.2s ease-in-out infinite;
+}
+@keyframes blobPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+
+/* 選択肢 */
+#choices { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; width: 100%; max-width: 340px; }
+.choice-btn {
+  background: #fff; border: 4px solid #e1bee7;
+  border-radius: 20px; padding: 12px 8px;
+  cursor: pointer; text-align: center; transition: transform .1s;
+  box-shadow: 0 5px 0 #f3e5f5; touch-action: manipulation;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  font-family: inherit;
+}
+.choice-btn:active   { transform: translateY(3px); box-shadow: 0 2px 0 #f3e5f5; }
+.choice-btn.correct  { border-color: #4CAF50; background: #f1f8e9; animation: correctPop .4s; }
+.choice-btn.wrong    { border-color: #f44336; background: #ffebee; animation: wrongShake .4s; }
+.choice-color { width: 44px; height: 44px; border-radius: 50%; box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
+.choice-name  { font-size: 13px; font-weight: 800; color: #555; }
+@keyframes correctPop  { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
+@keyframes wrongShake  { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+/* 進捗 */
+#progress-wrap { width: 100%; max-width: 340px; }
+#progress-bar-bg { background: rgba(0,0,0,0.1); border-radius: 10px; height: 10px; overflow: hidden; }
+#progress-bar    { background: linear-gradient(90deg,#ce93d8,#ab47bc); height: 100%; border-radius: 10px; transition: width .4s; }
+#progress-text   { font-size: 11px; color: #555; text-align: right; margin-top: 3px; }
+
+#feedback { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 15; pointer-events: none; opacity: 0; transition: opacity .2s; }
+#feedback-text { font-size: 72px; }
+
+#result-overlay { position: absolute; inset: 0; z-index: 30; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(106,27,154,0.9); }
+#result-overlay h2 { font-size: 44px; font-weight: 900; color: #FFD700; text-shadow: 3px 3px 0 #4a148c; margin-bottom: 8px; }
+#result-overlay p  { font-size: 16px; color: #fff; text-align: center; line-height: 1.8; margin-bottom: 8px; }
+.new-hi-txt { font-size: 18px; font-weight: 900; color: #FFD700; margin-bottom: 16px; }
+.pop-label { position: fixed; font-weight: 900; pointer-events: none; animation: popUp .7s forwards; z-index: 25; }
+@keyframes popUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-70px) scale(1.5)} }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+
+  <div id="title-screen" class="screen">
+    <div style="font-size:64px;margin-bottom:8px;">🎨</div>
+    <h1>いろあわせ！</h1>
+    <p>いろを まぜると<br>なんいろになるかな？<br>こたえをえらんでね！</p>
+    <div id="hi-title" class="hi-badge">🏆 ハイスコア: 0もん</div>
+    <button class="big-btn" onclick="startGame()">▶ スタート！</button>
+  </div>
+
+  <div id="hud">
+    <div class="hud-inner">
+      <div class="hud-box"><div class="hud-label">せいかい</div><div class="hud-val" id="score-disp">0</div></div>
+      <div id="hud-title">🎨 いろあわせ</div>
+      <div class="hud-box"><div class="hud-label">もんだい</div><div class="hud-val" id="q-num-disp">1/10</div></div>
+    </div>
+  </div>
+
+  <div id="game-area">
+    <div id="progress-wrap">
+      <div id="progress-bar-bg"><div id="progress-bar" style="width:0%"></div></div>
+      <div id="progress-text">0 / 10</div>
+    </div>
+    <div id="color-question">
+      <div id="q-mode-label">まぜると なにいろ？</div>
+      <div id="mix-display"></div>
+    </div>
+    <div id="choices"></div>
+  </div>
+
+  <div id="feedback"><div id="feedback-text">⭕</div></div>
+
+  <div id="result-overlay" style="display:none;">
+    <h2 id="r-title">🎉</h2>
+    <p id="r-msg"></p>
+    <div id="r-hi" class="new-hi-txt"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="big-btn" onclick="startGame()">もういちど</button>
+      <button class="big-btn orange" onclick="goTitle()">タイトルへ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const wrap=document.getElementById('game-wrap');
+
+// 色データ
+const COLORS = {
+  あか:    {hex:'#f44336', emoji:'🔴'},
+  あお:    {hex:'#2196F3', emoji:'🔵'},
+  きいろ:  {hex:'#FFEB3B', emoji:'🟡'},
+  しろ:    {hex:'#FFFFFF', emoji:'⚪'},
+  くろ:    {hex:'#212121', emoji:'⚫'},
+  みどり:  {hex:'#4CAF50', emoji:'🟢'},
+  きみどり:{hex:'#8BC34A', emoji:'🍏'},
+  オレンジ:{hex:'#FF9800', emoji:'🟠'},
+  むらさき:{hex:'#9C27B0', emoji:'🟣'},
+  ピンク:  {hex:'#E91E63', emoji:'🌸'},
+  みずいろ:{hex:'#03A9F4', emoji:'🩵'},
+  ちゃいろ:{hex:'#795548', emoji:'🟤'},
+  はいいろ:{hex:'#9E9E9E', emoji:'🩶'},
+};
+
+// 色混ぜルール
+const MIX_RULES = [
+  {a:'あか', b:'あお',   result:'むらさき'},
+  {a:'あか', b:'きいろ', result:'オレンジ'},
+  {a:'あお', b:'きいろ', result:'みどり'},
+  {a:'あか', b:'しろ',   result:'ピンク'},
+  {a:'あお', b:'しろ',   result:'みずいろ'},
+  {a:'あか', b:'くろ',   result:'ちゃいろ'},
+  {a:'しろ', b:'くろ',   result:'はいいろ'},
+  {a:'あお', b:'みどり', result:'きみどり'},
+  {a:'きいろ',b:'みどり',result:'きみどり'},
+  {a:'あか', b:'むらさき',result:'ピンク'},
+];
+
+// 色当てクイズ（この色は何？）
+const NAME_RULES = [
+  {color:'あか',    q:'この いろは なに？'},
+  {color:'あお',    q:'この いろは なに？'},
+  {color:'きいろ',  q:'この いろは なに？'},
+  {color:'みどり',  q:'この いろは なに？'},
+  {color:'オレンジ',q:'この いろは なに？'},
+  {color:'むらさき',q:'この いろは なに？'},
+  {color:'ピンク',  q:'この いろは なに？'},
+  {color:'みずいろ',q:'この いろは なに？'},
+];
+
+let qIdx=0, score=0, locked=false, current=null, queue=[];
+const TOTAL=10;
+
+function getHi(){ return parseInt(localStorage.getItem('iro_hi')||'0'); }
+function saveHi(v){ localStorage.setItem('iro_hi',v); }
+function updateHiBadge(){ document.getElementById('hi-title').textContent='🏆 ハイスコア: '+getHi()+'もん'; }
+function shuffle(arr){ return [...arr].sort(()=>Math.random()-.5); }
+
+function buildQueue(){
+  // 混ぜ問題7問＋名前問題3問
+  const mix=shuffle(MIX_RULES).slice(0,7).map(r=>({type:'mix',...r}));
+  const name=shuffle(NAME_RULES).slice(0,3).map(r=>({type:'name',...r}));
+  return shuffle([...mix,...name]);
+}
+
+function startGame(){
+  score=0; qIdx=0; locked=false;
+  queue=buildQueue();
+  document.getElementById('title-screen').style.display='none';
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='block';
+  document.getElementById('game-area').style.display='flex';
+  nextQ();
+}
+
+function goTitle(){
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='none';
+  document.getElementById('game-area').style.display='none';
+  document.getElementById('title-screen').style.display='flex';
+  updateHiBadge();
+}
+
+function nextQ(){
+  if(qIdx>=TOTAL){ endGame(); return; }
+  locked=false;
+  current=queue[qIdx];
+  document.getElementById('progress-bar').style.width=(qIdx/TOTAL*100)+'%';
+  document.getElementById('progress-text').textContent=qIdx+' / '+TOTAL;
+  document.getElementById('q-num-disp').textContent=(qIdx+1)+'/'+TOTAL;
+  document.getElementById('score-disp').textContent=score;
+
+  const mix=document.getElementById('mix-display');
+  const label=document.getElementById('q-mode-label');
+
+  if(current.type==='mix'){
+    label.textContent='まぜると なにいろ？';
+    const cA=COLORS[current.a], cB=COLORS[current.b];
+    mix.innerHTML=`
+      <div class="color-circle" style="background:${cA.hex}">${current.a}</div>
+      <div class="mix-op">＋</div>
+      <div class="color-circle" style="background:${cB.hex}">${current.b}</div>
+      <div class="mix-eq">＝</div>
+      <div class="question-blob">？</div>`;
+    // 選択肢：正解＋ダミー3
+    const allColors=Object.keys(COLORS).filter(c=>c!==current.a&&c!==current.b);
+    const dummies=shuffle(allColors).slice(0,3);
+    renderChoices([current.result,...dummies]);
+  } else {
+    label.textContent='この いろは なに？';
+    const c=COLORS[current.color];
+    mix.innerHTML=`<div class="color-circle large" style="background:${c.hex};width:100px;height:100px;"></div>`;
+    const allColors=Object.keys(COLORS).filter(c2=>c2!==current.color);
+    const dummies=shuffle(allColors).slice(0,3);
+    renderChoices([current.color,...dummies]);
+  }
+}
+
+function renderChoices(choices){
+  const shuffled=shuffle(choices);
+  const grid=document.getElementById('choices');
+  grid.innerHTML='';
+  shuffled.forEach(name=>{
+    const c=COLORS[name];
+    const btn=document.createElement('button');
+    btn.className='choice-btn';
+    btn.innerHTML=`<div class="choice-color" style="background:${c.hex};border:2px solid rgba(0,0,0,0.1)"></div><div class="choice-name">${name}</div>`;
+    btn.onclick=()=>onAnswer(btn,name);
+    btn.addEventListener('touchend',e=>{e.preventDefault();onAnswer(btn,name);},{passive:false});
+    grid.appendChild(btn);
+  });
+}
+
+function onAnswer(btn,chosen){
+  if(locked) return; locked=true;
+  const correctAns=current.type==='mix'?current.result:current.color;
+  const correct=chosen===correctAns;
+  btn.classList.add(correct?'correct':'wrong');
+  if(correct){
+    score++;
+    document.getElementById('score-disp').textContent=score;
+    showFeedback('⭕');
+    spawnPop(window.innerWidth/2,window.innerHeight/2,'✨ せいかい！','#9c27b0',24);
+  } else {
+    showFeedback('❌');
+    document.querySelectorAll('.choice-btn').forEach(b=>{
+      if(b.querySelector('.choice-name').textContent===correctAns) b.classList.add('correct');
+    });
+    spawnPop(window.innerWidth/2,window.innerHeight/2,'こたえは「'+correctAns+'」！','#f44336',20);
+  }
+  setTimeout(()=>{ hideFeedback(); qIdx++; nextQ(); },1200);
+}
+
+function showFeedback(t){ const f=document.getElementById('feedback'); document.getElementById('feedback-text').textContent=t; f.style.opacity='1'; }
+function hideFeedback(){ document.getElementById('feedback').style.opacity='0'; }
+function spawnPop(x,y,text,color,size){
+  const el=document.createElement('div'); el.className='pop-label';
+  el.textContent=text; el.style.color=color; el.style.fontSize=size+'px';
+  el.style.left=(x-100)+'px'; el.style.top=(y-30)+'px';
+  wrap.appendChild(el); setTimeout(()=>el.remove(),800);
+}
+
+function endGame(){
+  document.getElementById('hud').style.display='none';
+  document.getElementById('game-area').style.display='none';
+  document.getElementById('result-overlay').style.display='flex';
+  const hi=getHi(); const isNew=score>hi;
+  if(isNew) saveHi(score);
+  updateHiBadge();
+  const hiEl=document.getElementById('r-hi');
+  hiEl.textContent=isNew?'🏆 ニューレコード！':'ハイスコア: '+hi+'もん';
+  hiEl.style.color=isNew?'#FFD700':'rgba(255,255,255,0.6)';
+  const t=document.getElementById('r-title'), m=document.getElementById('r-msg');
+  if(score>=9)     {t.textContent='🏆 かんぺき！'; m.innerHTML=`<b style="font-size:28px;color:#FFD700">${score}</b> もん せいかい！<br>いろはかせだ！`;}
+  else if(score>=6){t.textContent='⭐ ナイス！';   m.innerHTML=`<b style="font-size:28px;color:#FFD700">${score}</b> もん せいかい！<br>よくできました！`;}
+  else             {t.textContent='🎨 もういちど'; m.innerHTML=`<b style="font-size:28px;color:#FFD700">${score}</b> もん せいかい<br>れんしゅうしよう！`;}
+}
+
+updateHiBadge();
+</script>
+</body>
+</html>

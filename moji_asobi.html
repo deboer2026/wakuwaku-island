@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>もじあそび</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'M PLUS Rounded 1c', sans-serif; background: linear-gradient(160deg,#e8f5e9,#f3e5f5); min-height: 100vh; overflow: hidden; }
+#game-wrap { width: 100vw; height: 100vh; max-width: 480px; margin: 0 auto; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+
+/* HUD */
+#hud { background: rgba(76,175,80,0.85); padding: 10px 14px 8px; display: none; flex-shrink: 0; }
+.hud-inner { display: flex; justify-content: space-between; align-items: center; }
+.hud-box { background: rgba(255,255,255,0.95); border-radius: 12px; padding: 4px 12px; text-align: center; min-width: 68px; }
+.hud-label { font-size: 10px; color: #2e7d32; font-weight: 700; }
+.hud-val   { font-size: 20px; font-weight: 900; color: #1b5e20; }
+#hud-title { font-size: 15px; font-weight: 900; color: #fff; text-shadow: 1px 2px 0 #2e7d32; }
+
+/* SCREENS */
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 0 20px; }
+#title-screen { background: linear-gradient(160deg,#a5d6a7,#e8f5e9); }
+#title-screen h1 { font-size: 32px; font-weight: 900; color: #2e7d32; text-shadow: 2px 2px 0 #fff; margin-bottom: 6px; }
+#title-screen p  { font-size: 14px; color: #388e3c; margin-bottom: 20px; text-align: center; line-height: 1.8; }
+.hi-badge { background: rgba(46,125,50,0.12); color: #2e7d32; font-size: 13px; font-weight: 700; padding: 4px 16px; border-radius: 20px; margin-bottom: 14px; }
+.big-btn { background: #4CAF50; color: #fff; border: none; border-radius: 50px; padding: 14px 44px; font-size: 20px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 0 #2e7d32; touch-action: manipulation; font-family: inherit; }
+.big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #2e7d32; }
+.big-btn.blue { background: #4DB8FF; box-shadow: 0 6px 0 #2a9ad4; }
+
+/* GAME AREA */
+#game-area { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: space-around; padding: 12px 16px 16px; }
+
+/* 問題エリア */
+#question-area { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+#q-label { font-size: 14px; font-weight: 700; color: #388e3c; }
+#q-image  { font-size: 100px; line-height: 1; filter: drop-shadow(2px 4px 8px rgba(0,0,0,0.15)); animation: imgFloat 2s ease-in-out infinite; }
+@keyframes imgFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+#q-word   { font-size: 22px; font-weight: 900; color: #1b5e20; letter-spacing: 0.15em; min-height: 36px; }
+
+/* 進捗バー */
+#progress-wrap { width: 100%; max-width: 340px; }
+#progress-bar-bg { background: rgba(0,0,0,0.1); border-radius: 10px; height: 10px; overflow: hidden; }
+#progress-bar    { background: linear-gradient(90deg,#66bb6a,#43a047); height: 100%; border-radius: 10px; transition: width .4s; }
+#progress-text   { font-size: 11px; color: #555; text-align: right; margin-top: 3px; }
+
+/* 選択肢グリッド */
+#choices { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; width: 100%; max-width: 340px; }
+.choice-btn {
+  background: #fff; border: 4px solid #a5d6a7;
+  border-radius: 20px; padding: 14px 8px;
+  font-size: 32px; font-weight: 900; color: #2e7d32;
+  cursor: pointer; text-align: center; transition: transform .1s;
+  box-shadow: 0 5px 0 #c8e6c9; touch-action: manipulation;
+  font-family: inherit; line-height: 1;
+}
+.choice-btn .ch-hira { font-size: 36px; display: block; }
+.choice-btn .ch-roma { font-size: 11px; color: #aaa; margin-top: 2px; display: block; }
+.choice-btn:active   { transform: translateY(3px); box-shadow: 0 2px 0 #c8e6c9; }
+.choice-btn.correct  { border-color: #4CAF50; background: #f1f8e9; animation: correctPop .4s; box-shadow: 0 5px 0 #a5d6a7; }
+.choice-btn.wrong    { border-color: #f44336; background: #ffebee; animation: wrongShake .4s; box-shadow: 0 5px 0 #ffcdd2; }
+@keyframes correctPop  { 0%{transform:scale(1)} 50%{transform:scale(1.12)} 100%{transform:scale(1)} }
+@keyframes wrongShake  { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+/* フィードバック */
+#feedback { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 15; pointer-events: none; opacity: 0; transition: opacity .2s; }
+#feedback-text { font-size: 72px; }
+
+/* RESULT */
+#result-overlay { position: absolute; inset: 0; z-index: 30; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(46,125,50,0.9); }
+#result-overlay h2 { font-size: 44px; font-weight: 900; color: #FFD700; text-shadow: 3px 3px 0 #1b5e20; margin-bottom: 8px; }
+#result-overlay p  { font-size: 16px; color: #fff; text-align: center; line-height: 1.8; margin-bottom: 8px; }
+.new-hi-txt { font-size: 18px; font-weight: 900; color: #FFD700; margin-bottom: 16px; }
+
+.pop-label { position: fixed; font-weight: 900; pointer-events: none; animation: popUp .7s forwards; z-index: 25; }
+@keyframes popUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-70px) scale(1.5)} }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+
+  <!-- タイトル -->
+  <div id="title-screen" class="screen">
+    <div style="font-size:64px;margin-bottom:8px;">🔤</div>
+    <h1>もじあそび！</h1>
+    <p>えをみて ただしい<br>ひらがなを えらんでね！</p>
+    <div id="hi-title" class="hi-badge">🏆 ハイスコア: 0もん</div>
+    <button class="big-btn" onclick="startGame()">▶ スタート！</button>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-inner">
+      <div class="hud-box"><div class="hud-label">せいかい</div><div class="hud-val" id="score-disp">0</div></div>
+      <div id="hud-title">🔤 もじあそび</div>
+      <div class="hud-box"><div class="hud-label">もんだい</div><div class="hud-val" id="q-num-disp">1/10</div></div>
+    </div>
+  </div>
+
+  <!-- ゲームエリア -->
+  <div id="game-area">
+    <div id="progress-wrap">
+      <div id="progress-bar-bg"><div id="progress-bar" style="width:0%"></div></div>
+      <div id="progress-text">0 / 10</div>
+    </div>
+    <div id="question-area">
+      <div id="q-label">これは なんという どうぶつ？</div>
+      <div id="q-image">🐱</div>
+      <div id="q-word"></div>
+    </div>
+    <div id="choices"></div>
+  </div>
+
+  <!-- フィードバック -->
+  <div id="feedback"><div id="feedback-text">⭕</div></div>
+
+  <!-- 結果 -->
+  <div id="result-overlay" style="display:none;">
+    <h2 id="r-title">🎉</h2>
+    <p id="r-msg"></p>
+    <div id="r-hi" class="new-hi-txt"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="big-btn" onclick="startGame()">もういちど</button>
+      <button class="big-btn blue" onclick="goTitle()">タイトルへ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const wrap = document.getElementById('game-wrap');
+
+// 問題データ（絵文字・ひらがな・ローマ字・ダミー候補）
+const QUESTIONS = [
+  {emoji:'🐱', word:'ねこ',    roma:'neko',    dummies:['いぬ','うさぎ','くま','とり','さる','へび']},
+  {emoji:'🐶', word:'いぬ',    roma:'inu',     dummies:['ねこ','うさぎ','くま','とり','さる','へび']},
+  {emoji:'🐰', word:'うさぎ',  roma:'usagi',   dummies:['ねこ','いぬ','くま','とり','さる','へび']},
+  {emoji:'🐻', word:'くま',    roma:'kuma',    dummies:['ねこ','いぬ','うさぎ','とり','さる','へび']},
+  {emoji:'🐸', word:'かえる',  roma:'kaeru',   dummies:['ねこ','いぬ','うさぎ','くま','とり','さる']},
+  {emoji:'🐼', word:'パンダ',  roma:'panda',   dummies:['ねこ','いぬ','うさぎ','くま','とり','さる']},
+  {emoji:'🦊', word:'きつね',  roma:'kitsune', dummies:['ねこ','いぬ','うさぎ','くま','とり','さる']},
+  {emoji:'🐧', word:'ペンギン',roma:'pengin',  dummies:['ねこ','いぬ','うさぎ','くま','とり','さる']},
+  {emoji:'🐮', word:'うし',    roma:'ushi',    dummies:['ねこ','いぬ','うさぎ','くま','とり','さる']},
+  {emoji:'🐷', word:'ぶた',    roma:'buta',    dummies:['ねこ','いぬ','うさぎ','くま','とり','さる']},
+  {emoji:'🦁', word:'らいおん',roma:'raion',   dummies:['ねこ','いぬ','うさぎ','くま','とり','さる']},
+  {emoji:'🐯', word:'とら',    roma:'tora',    dummies:['ねこ','いぬ','うさぎ','くま','とり','さる']},
+  {emoji:'🐘', word:'ぞう',    roma:'zou',     dummies:['ねこ','いぬ','うさぎ','くま','とり','さる']},
+  {emoji:'🦒', word:'きりん',  roma:'kirin',   dummies:['ねこ','いぬ','うさぎ','くま','とり','さる']},
+  {emoji:'🐨', word:'コアラ',  roma:'koara',   dummies:['ねこ','いぬ','うさぎ','くま','とり','さる']},
+  {emoji:'🐙', word:'たこ',    roma:'tako',    dummies:['ねこ','いぬ','うさぎ','くま','さかな','かに']},
+  {emoji:'🐟', word:'さかな',  roma:'sakana',  dummies:['ねこ','いぬ','うさぎ','たこ','かに','えび']},
+  {emoji:'🦀', word:'かに',    roma:'kani',    dummies:['ねこ','いぬ','たこ','さかな','えび','くじら']},
+  {emoji:'🐬', word:'いるか',  roma:'iruka',   dummies:['ねこ','いぬ','たこ','さかな','くじら','えび']},
+  {emoji:'🦋', word:'ちょうちょ',roma:'choucho',dummies:['ねこ','いぬ','うさぎ','とり','さる','へび']},
+];
+
+// ゲーム状態
+let queue=[], current=null, qIdx=0, score=0, locked=false;
+const TOTAL=10;
+
+function getHi(){ return parseInt(localStorage.getItem('moji_hi')||'0'); }
+function saveHi(v){ localStorage.setItem('moji_hi',v); }
+function updateHiBadge(){ document.getElementById('hi-title').textContent='🏆 ハイスコア: '+getHi()+'もん'; }
+
+function shuffle(arr){ return [...arr].sort(()=>Math.random()-.5); }
+
+function startGame(){
+  score=0; qIdx=0; locked=false;
+  queue=shuffle(QUESTIONS).slice(0,TOTAL);
+  document.getElementById('title-screen').style.display='none';
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='block';
+  document.getElementById('game-area').style.display='flex';
+  nextQuestion();
+}
+
+function goTitle(){
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='none';
+  document.getElementById('game-area').style.display='none';
+  document.getElementById('title-screen').style.display='flex';
+  updateHiBadge();
+}
+
+function nextQuestion(){
+  if(qIdx>=TOTAL){ endGame(); return; }
+  locked=false;
+  current=queue[qIdx];
+  // 進捗
+  const prog=(qIdx/TOTAL)*100;
+  document.getElementById('progress-bar').style.width=prog+'%';
+  document.getElementById('progress-text').textContent=qIdx+' / '+TOTAL;
+  document.getElementById('q-num-disp').textContent=(qIdx+1)+'/'+TOTAL;
+  document.getElementById('score-disp').textContent=score;
+  // 問題
+  document.getElementById('q-image').textContent=current.emoji;
+  document.getElementById('q-word').textContent='';
+  // 選択肢生成（正解1＋ダミー3）
+  const choices=shuffle([current.word,...shuffle(current.dummies).slice(0,3)]);
+  const grid=document.getElementById('choices');
+  grid.innerHTML='';
+  choices.forEach(ch=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn';
+    btn.innerHTML=`<span class="ch-hira">${ch}</span>`;
+    btn.onclick=()=>onAnswer(btn,ch);
+    btn.addEventListener('touchend',e=>{e.preventDefault();onAnswer(btn,ch);},{passive:false});
+    grid.appendChild(btn);
+  });
+}
+
+function onAnswer(btn, chosen){
+  if(locked) return;
+  locked=true;
+  const correct=chosen===current.word;
+  btn.classList.add(correct?'correct':'wrong');
+  // 正解を表示
+  document.getElementById('q-word').textContent=current.word;
+  if(correct){
+    score++;
+    document.getElementById('score-disp').textContent=score;
+    showFeedback('⭕');
+    spawnPop(window.innerWidth/2, window.innerHeight/2, '✨ せいかい！', '#4CAF50', 24);
+  } else {
+    showFeedback('❌');
+    // 正解ボタンをハイライト
+    document.querySelectorAll('.choice-btn').forEach(b=>{
+      if(b.querySelector('.ch-hira').textContent===current.word) b.classList.add('correct');
+    });
+    spawnPop(window.innerWidth/2, window.innerHeight/2, 'ざんねん…', '#f44336', 22);
+  }
+  setTimeout(()=>{ hideFeedback(); qIdx++; nextQuestion(); },1100);
+}
+
+function showFeedback(t){ const f=document.getElementById('feedback'); document.getElementById('feedback-text').textContent=t; f.style.opacity='1'; }
+function hideFeedback(){ document.getElementById('feedback').style.opacity='0'; }
+
+function spawnPop(x,y,text,color,size){
+  const el=document.createElement('div'); el.className='pop-label';
+  el.textContent=text; el.style.color=color; el.style.fontSize=size+'px';
+  el.style.left=(x-80)+'px'; el.style.top=(y-30)+'px';
+  wrap.appendChild(el); setTimeout(()=>el.remove(),800);
+}
+
+function endGame(){
+  document.getElementById('hud').style.display='none';
+  document.getElementById('game-area').style.display='none';
+  document.getElementById('result-overlay').style.display='flex';
+  const hi=getHi(); const isNew=score>hi;
+  if(isNew) saveHi(score);
+  updateHiBadge();
+  const hiEl=document.getElementById('r-hi');
+  hiEl.textContent=isNew?'🏆 ニューレコード！':'ハイスコア: '+hi+'もん';
+  hiEl.style.color=isNew?'#FFD700':'rgba(255,255,255,0.6)';
+  const t=document.getElementById('r-title'), m=document.getElementById('r-msg');
+  if(score>=9)     {t.textContent='🏆 かんぺき！'; m.innerHTML=`<b style="font-size:28px;color:#FFD700">${score}</b> もん せいかい！<br>もじはかせだ！`;}
+  else if(score>=6){t.textContent='⭐ ナイス！';   m.innerHTML=`<b style="font-size:28px;color:#FFD700">${score}</b> もん せいかい！<br>よくできました！`;}
+  else             {t.textContent='📖 もういちど'; m.innerHTML=`<b style="font-size:28px;color:#FFD700">${score}</b> もん せいかい<br>れんしゅうしよう！`;}
+}
+
+updateHiBadge();
+</script>
+</body>
+</html>

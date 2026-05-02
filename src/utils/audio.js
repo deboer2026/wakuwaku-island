@@ -501,6 +501,104 @@ export function playKakurenboBgm() {
   playMelodyLoop(synth, steps, 6.85);
 }
 
+// もじあそび — やさしいガクシュウBGM (C major, triangle, 学校っぽい)
+export function playMojiAsobiBgm() {
+  if (!canPlayAudio()) return;
+  stopAllBgm();
+  console.log('[Audio] playMojiAsobiBgm');
+
+  const synth = new window.Tone.PolySynth(window.Tone.Synth, {
+    oscillator: { type: 'triangle' },
+    envelope: { attack: 0.03, decay: 0.18, sustain: 0.28, release: 0.8 },
+  }).toDestination();
+  synth.volume.value = VOLUME;
+
+  // C major — gentle school/learning feel
+  const steps = [
+    { note: 'C5', dur: '8n',  t: 0.00 },
+    { note: 'E5', dur: '8n',  t: 0.30 },
+    { note: 'G5', dur: '4n',  t: 0.60 },
+    { note: 'E5', dur: '8n',  t: 1.20 },
+    { note: 'D5', dur: '8n',  t: 1.50 },
+    { note: 'C5', dur: '4n',  t: 1.80 },
+    { note: 'A4', dur: '8n',  t: 2.40 },
+    { note: 'C5', dur: '8n',  t: 2.70 },
+    { note: 'E5', dur: '8n',  t: 3.00 },
+    { note: 'G5', dur: '4n',  t: 3.30 },
+    { note: 'F5', dur: '8n',  t: 3.90 },
+    { note: 'E5', dur: '8n',  t: 4.20 },
+    { note: 'D5', dur: '8n',  t: 4.50 },
+    { note: 'C5', dur: '4n',  t: 4.80 },
+  ];
+
+  playMelodyLoop(synth, steps, 5.6);
+}
+
+// たしざんゲーム — 楽しくポップな算数BGM (G major, triangle, はじける)
+export function playTashizanBgm() {
+  if (!canPlayAudio()) return;
+  stopAllBgm();
+  console.log('[Audio] playTashizanBgm');
+
+  const synth = new window.Tone.PolySynth(window.Tone.Synth, {
+    oscillator: { type: 'triangle' },
+    envelope: { attack: 0.02, decay: 0.15, sustain: 0.22, release: 0.6 },
+  }).toDestination();
+  synth.volume.value = VOLUME;
+
+  // G major — upbeat fun math energy
+  const steps = [
+    { note: 'G4', dur: '8n',  t: 0.00 },
+    { note: 'B4', dur: '8n',  t: 0.25 },
+    { note: 'D5', dur: '4n',  t: 0.50 },
+    { note: 'G5', dur: '8n',  t: 1.00 },
+    { note: 'D5', dur: '8n',  t: 1.25 },
+    { note: 'B4', dur: '4n',  t: 1.50 },
+    { note: 'A4', dur: '8n',  t: 2.00 },
+    { note: 'C5', dur: '8n',  t: 2.25 },
+    { note: 'E5', dur: '4n',  t: 2.50 },
+    { note: 'D5', dur: '8n',  t: 3.00 },
+    { note: 'B4', dur: '8n',  t: 3.25 },
+    { note: 'G4', dur: '8n',  t: 3.50 },
+    { note: 'A4', dur: '8n',  t: 3.75 },
+    { note: 'B4', dur: '8n',  t: 4.00 },
+    { note: 'G4', dur: '4n',  t: 4.25 },
+  ];
+
+  playMelodyLoop(synth, steps, 5.0);
+}
+
+// いろあわせ — ゆめかわいい色彩BGM (A major, sine, ふんわり)
+export function playIroAwaseBgm() {
+  if (!canPlayAudio()) return;
+  stopAllBgm();
+  console.log('[Audio] playIroAwaseBgm');
+
+  const synth = new window.Tone.PolySynth(window.Tone.Synth, {
+    oscillator: { type: 'sine' },
+    envelope: { attack: 0.05, decay: 0.25, sustain: 0.30, release: 1.0 },
+  }).toDestination();
+  synth.volume.value = VOLUME;
+
+  // A major — dreamy, dreamy art/color palette feel
+  const steps = [
+    { note: 'A4',  dur: '4n',  t: 0.00 },
+    { note: 'C#5', dur: '8n',  t: 0.55 },
+    { note: 'E5',  dur: '8n',  t: 0.90 },
+    { note: 'A5',  dur: '8n',  t: 1.25 },
+    { note: 'E5',  dur: '8n',  t: 1.65 },
+    { note: 'C#5', dur: '4n',  t: 2.00 },
+    { note: 'B4',  dur: '8n',  t: 2.55 },
+    { note: 'D5',  dur: '8n',  t: 2.90 },
+    { note: 'F#5', dur: '4n',  t: 3.25 },
+    { note: 'E5',  dur: '8n',  t: 3.80 },
+    { note: 'C#5', dur: '8n',  t: 4.15 },
+    { note: 'A4',  dur: '4n',  t: 4.50 },
+  ];
+
+  playMelodyLoop(synth, steps, 5.2);
+}
+
 // ===== Sound Effects =====
 
 // 正解・上昇音

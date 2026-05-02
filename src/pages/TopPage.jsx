@@ -70,6 +70,15 @@ const GAMES = [
   { id:'g10', route:'/kakurenbo',      icon:'🔍', num:10, color:'#2d6a4f', stars:5, isNew:true,
     ja:{ name:'どうぶつかくれんぼ', desc:'くさむらや きのうらに\nどうぶつが かくれてるよ！' },
     en:{ name:'Animal Hide & Seek',   desc:'Find the animals\nhiding in the bushes!'      } },
+  { id:'g11', route:'/moji',           icon:'🔤', num:11, color:'#4CAF50', stars:3, isNew:true,
+    ja:{ name:'もじあそび',         desc:'えをみて ただしい\nひらがなを えらんでね！'        },
+    en:{ name:'Letter Fun',          desc:'Look at the picture\nand choose the right hiragana!' } },
+  { id:'g12', route:'/tashizan',       icon:'➕', num:12, color:'#2196F3', stars:3, isNew:true,
+    ja:{ name:'たしざんゲーム',     desc:'どうぶつを かぞえて\nこたえをえらんでね！'          },
+    en:{ name:'Math Quiz',           desc:'Count animals and\nchoose the right answer!'        } },
+  { id:'g13', route:'/iro',            icon:'🎨', num:13, color:'#9C27B0', stars:3, isNew:true,
+    ja:{ name:'いろあわせ',         desc:'いろを まぜると\nなんいろになるかな？'              },
+    en:{ name:'Color Match',         desc:'Mix colors and find\nthe right answer!'             } },
 ];
 
 /* ════════════════════════════════════════════════════

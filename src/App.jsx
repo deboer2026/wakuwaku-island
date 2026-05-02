@@ -10,6 +10,9 @@ import JewelryShop from './games/JewelryShop'
 import SushiGame from './games/SushiGame'
 import IchigoGame from './games/IchigoGame'
 import DoubutsuKakurenbo from './games/DoubutsuKakurenbo'
+import MojiAsobi from './games/MojiAsobi'
+import TashizanGame from './games/TashizanGame'
+import IroAwase from './games/IroAwase'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 
@@ -27,6 +30,9 @@ export default function App() {
       <Route path="/sushi" element={<SushiGame />} />
       <Route path="/ichigo" element={<IchigoGame />} />
       <Route path="/kakurenbo" element={<DoubutsuKakurenbo />} />
+      <Route path="/moji" element={<MojiAsobi />} />
+      <Route path="/tashizan" element={<TashizanGame />} />
+      <Route path="/iro" element={<IroAwase />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
     </Routes>

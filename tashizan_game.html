@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>たしざんゲーム</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'M PLUS Rounded 1c', sans-serif; background: linear-gradient(160deg,#e3f2fd,#fff8e1); min-height: 100vh; overflow: hidden; }
+#game-wrap { width: 100vw; height: 100vh; max-width: 480px; margin: 0 auto; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+
+#hud { background: rgba(33,150,243,0.85); padding: 10px 14px 8px; display: none; flex-shrink: 0; }
+.hud-inner { display: flex; justify-content: space-between; align-items: center; }
+.hud-box { background: rgba(255,255,255,0.95); border-radius: 12px; padding: 4px 12px; text-align: center; min-width: 68px; }
+.hud-label { font-size: 10px; color: #1565c0; font-weight: 700; }
+.hud-val   { font-size: 20px; font-weight: 900; color: #0d47a1; }
+#hud-title { font-size: 15px; font-weight: 900; color: #fff; text-shadow: 1px 2px 0 #1565c0; }
+
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 0 20px; }
+#title-screen { background: linear-gradient(160deg,#90caf9,#e3f2fd); }
+#title-screen h1 { font-size: 30px; font-weight: 900; color: #1565c0; text-shadow: 2px 2px 0 #fff; margin-bottom: 6px; }
+#title-screen p  { font-size: 13px; color: #1976d2; margin-bottom: 20px; text-align: center; line-height: 1.8; }
+.hi-badge { background: rgba(21,101,192,0.1); color: #1565c0; font-size: 13px; font-weight: 700; padding: 4px 16px; border-radius: 20px; margin-bottom: 14px; }
+.big-btn { background: #2196F3; color: #fff; border: none; border-radius: 50px; padding: 14px 44px; font-size: 20px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 0 #1565c0; touch-action: manipulation; font-family: inherit; }
+.big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #1565c0; }
+.big-btn.green { background: #4CAF50; box-shadow: 0 6px 0 #2e7d32; }
+
+#game-area { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: space-around; padding: 10px 16px 16px; }
+
+/* 問題表示 */
+#equation-area { width: 100%; max-width: 360px; background: rgba(255,255,255,0.85); border-radius: 24px; padding: 16px; box-shadow: 0 6px 0 rgba(33,150,243,0.3); }
+#eq-label { font-size: 13px; font-weight: 700; color: #1976d2; text-align: center; margin-bottom: 10px; }
+
+/* 動物列 */
+.animal-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; min-height: 52px; align-items: center; }
+.animal-item { font-size: 32px; line-height: 1; animation: animalPop .3s ease both; }
+@keyframes animalPop { 0%{transform:scale(0) rotate(-20deg);opacity:0} 60%{transform:scale(1.2)} 100%{transform:scale(1);opacity:1} }
+
+.op-sign { font-size: 28px; font-weight: 900; color: #1565c0; margin: 0 8px; align-self: center; }
+.eq-sign  { font-size: 28px; font-weight: 900; color: #1565c0; margin: 0 6px; }
+.question-mark { font-size: 40px; font-weight: 900; color: #FF6B35; animation: qPulse 1s ease-in-out infinite; }
+@keyframes qPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+
+.eq-row { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+
+/* 数字表示 */
+.num-badge { background: linear-gradient(135deg,#42a5f5,#1e88e5); color: #fff; border-radius: 14px; padding: 6px 16px; font-size: 22px; font-weight: 900; box-shadow: 0 3px 0 #1565c0; }
+
+/* 選択肢 */
+#choices { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; width: 100%; max-width: 340px; }
+.choice-btn {
+  background: #fff; border: 4px solid #90caf9; border-radius: 20px;
+  padding: 14px 8px; font-size: 28px; font-weight: 900; color: #1565c0;
+  cursor: pointer; text-align: center; transition: transform .1s;
+  box-shadow: 0 5px 0 #bbdefb; touch-action: manipulation; font-family: inherit;
+}
+.choice-btn:active   { transform: translateY(3px); box-shadow: 0 2px 0 #bbdefb; }
+.choice-btn.correct  { border-color: #4CAF50; background: #f1f8e9; animation: correctPop .4s; }
+.choice-btn.wrong    { border-color: #f44336; background: #ffebee; animation: wrongShake .4s; }
+@keyframes correctPop  { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
+@keyframes wrongShake  { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+/* 進捗 */
+#progress-wrap { width: 100%; max-width: 340px; }
+#progress-bar-bg { background: rgba(0,0,0,0.1); border-radius: 10px; height: 10px; overflow: hidden; }
+#progress-bar    { background: linear-gradient(90deg,#42a5f5,#1e88e5); height: 100%; border-radius: 10px; transition: width .4s; }
+#progress-text   { font-size: 11px; color: #555; text-align: right; margin-top: 3px; }
+
+#feedback { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 15; pointer-events: none; opacity: 0; transition: opacity .2s; }
+#feedback-text { font-size: 72px; }
+
+#result-overlay { position: absolute; inset: 0; z-index: 30; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(21,101,192,0.9); }
+#result-overlay h2 { font-size: 44px; font-weight: 900; color: #FFD700; text-shadow: 3px 3px 0 #0d47a1; margin-bottom: 8px; }
+#result-overlay p  { font-size: 16px; color: #fff; text-align: center; line-height: 1.8; margin-bottom: 8px; }
+.new-hi-txt { font-size: 18px; font-weight: 900; color: #FFD700; margin-bottom: 16px; }
+.pop-label { position: fixed; font-weight: 900; pointer-events: none; animation: popUp .7s forwards; z-index: 25; }
+@keyframes popUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-70px) scale(1.5)} }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+
+  <div id="title-screen" class="screen">
+    <div style="font-size:64px;margin-bottom:8px;">➕</div>
+    <h1>たしざんゲーム！</h1>
+    <p>どうぶつを かぞえて<br>こたえをえらんでね！</p>
+    <div id="hi-title" class="hi-badge">🏆 ハイスコア: 0もん</div>
+    <button class="big-btn" onclick="startGame()">▶ スタート！</button>
+  </div>
+
+  <div id="hud">
+    <div class="hud-inner">
+      <div class="hud-box"><div class="hud-label">せいかい</div><div class="hud-val" id="score-disp">0</div></div>
+      <div id="hud-title">➕ たしざん</div>
+      <div class="hud-box"><div class="hud-label">もんだい</div><div class="hud-val" id="q-num-disp">1/10</div></div>
+    </div>
+  </div>
+
+  <div id="game-area">
+    <div id="progress-wrap">
+      <div id="progress-bar-bg"><div id="progress-bar" style="width:0%"></div></div>
+      <div id="progress-text">0 / 10</div>
+    </div>
+
+    <div id="equation-area">
+      <div id="eq-label">あわせると いくつ？</div>
+      <div id="eq-display"></div>
+    </div>
+
+    <div id="choices"></div>
+  </div>
+
+  <div id="feedback"><div id="feedback-text">⭕</div></div>
+
+  <div id="result-overlay" style="display:none;">
+    <h2 id="r-title">🎉</h2>
+    <p id="r-msg"></p>
+    <div id="r-hi" class="new-hi-txt"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="big-btn" onclick="startGame()">もういちど</button>
+      <button class="big-btn green" onclick="goTitle()">タイトルへ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const wrap=document.getElementById('game-wrap');
+const ANIMALS=['🐱','🐶','🐰','🐸','🐼','🦊','🐧','🐮','🐷','🦁','🐯','🐨'];
+
+let qIdx=0, score=0, locked=false, current=null;
+const TOTAL=10;
+
+function getHi(){ return parseInt(localStorage.getItem('tashizan_hi')||'0'); }
+function saveHi(v){ localStorage.setItem('tashizan_hi',v); }
+function updateHiBadge(){ document.getElementById('hi-title').textContent='🏆 ハイスコア: '+getHi()+'もん'; }
+
+function mkQuestion(){
+  // 6歳向け：1〜5の足し算・引き算（答えが1〜9）
+  const ops=['+','-'];
+  const op=ops[Math.floor(Math.random()*ops.length)];
+  let a,b;
+  if(op==='+'){
+    a=1+Math.floor(Math.random()*5);
+    b=1+Math.floor(Math.random()*5);
+    if(a+b>9){ b=Math.max(1,9-a); }
+  } else {
+    a=2+Math.floor(Math.random()*7);
+    b=1+Math.floor(Math.random()*(a-1));
+  }
+  const ans=op==='+'?a+b:a-b;
+  const animal=ANIMALS[Math.floor(Math.random()*ANIMALS.length)];
+  const animal2=ANIMALS[Math.floor(Math.random()*ANIMALS.length)];
+  return {a,b,op,ans,animal,animal2};
+}
+
+function startGame(){
+  score=0; qIdx=0; locked=false;
+  document.getElementById('title-screen').style.display='none';
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='block';
+  document.getElementById('game-area').style.display='flex';
+  nextQ();
+}
+
+function goTitle(){
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='none';
+  document.getElementById('game-area').style.display='none';
+  document.getElementById('title-screen').style.display='flex';
+  updateHiBadge();
+}
+
+function nextQ(){
+  if(qIdx>=TOTAL){ endGame(); return; }
+  locked=false;
+  current=mkQuestion();
+  // 進捗
+  document.getElementById('progress-bar').style.width=(qIdx/TOTAL*100)+'%';
+  document.getElementById('progress-text').textContent=qIdx+' / '+TOTAL;
+  document.getElementById('q-num-disp').textContent=(qIdx+1)+'/'+TOTAL;
+  document.getElementById('score-disp').textContent=score;
+
+  // ラベル
+  const label=document.getElementById('eq-label');
+  label.textContent=current.op==='+'?'あわせると いくつ？':'のこりは いくつ？';
+
+  // 式表示
+  const disp=document.getElementById('eq-display');
+  disp.innerHTML='';
+
+  // A列
+  const rowA=document.createElement('div');
+  rowA.className='animal-row';
+  for(let i=0;i<current.a;i++){
+    const s=document.createElement('span');
+    s.className='animal-item'; s.textContent=current.animal;
+    s.style.animationDelay=(i*.05)+'s';
+    rowA.appendChild(s);
+  }
+
+  // 演算子
+  const op=document.createElement('div');
+  op.className='eq-row';
+  op.style.margin='6px 0';
+
+  const numA=document.createElement('span'); numA.className='num-badge'; numA.textContent=current.a;
+  const opSign=document.createElement('span'); opSign.className='op-sign'; opSign.textContent=current.op;
+  const numB=document.createElement('span'); numB.className='num-badge'; numB.textContent=current.b;
+  const eqSign=document.createElement('span'); eqSign.className='eq-sign'; eqSign.textContent='＝';
+  const qm=document.createElement('span'); qm.className='question-mark'; qm.textContent='？';
+  op.appendChild(numA); op.appendChild(opSign); op.appendChild(numB);
+  op.appendChild(eqSign); op.appendChild(qm);
+
+  // B列（引き算は赤くなるものを示す）
+  const rowB=document.createElement('div');
+  rowB.className='animal-row';
+  for(let i=0;i<current.b;i++){
+    const s=document.createElement('span');
+    s.className='animal-item';
+    s.textContent=current.op==='+'?current.animal2:current.animal;
+    if(current.op==='-') s.style.opacity='0.35';
+    s.style.animationDelay=(i*.05)+'s';
+    rowB.appendChild(s);
+  }
+
+  disp.appendChild(rowA);
+  disp.appendChild(op);
+  disp.appendChild(rowB);
+
+  // 選択肢
+  const choices=mkChoices(current.ans);
+  const grid=document.getElementById('choices');
+  grid.innerHTML='';
+  choices.forEach(ch=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn';
+    btn.textContent=ch;
+    btn.onclick=()=>onAnswer(btn,ch);
+    btn.addEventListener('touchend',e=>{e.preventDefault();onAnswer(btn,ch);},{passive:false});
+    grid.appendChild(btn);
+  });
+}
+
+function mkChoices(ans){
+  const set=new Set([ans]);
+  while(set.size<4){
+    const delta=Math.floor(Math.random()*4)+1;
+    const c=Math.random()<.5?ans+delta:Math.max(0,ans-delta);
+    if(c!==ans&&c>=0&&c<=10) set.add(c);
+  }
+  return [...set].sort(()=>Math.random()-.5);
+}
+
+function onAnswer(btn,chosen){
+  if(locked) return; locked=true;
+  const correct=chosen===current.ans;
+  btn.classList.add(correct?'correct':'wrong');
+  if(correct){
+    score++;
+    document.getElementById('score-disp').textContent=score;
+    showFeedback('⭕');
+    spawnPop(window.innerWidth/2,window.innerHeight/2,'✨ せいかい！','#2196F3',24);
+  } else {
+    showFeedback('❌');
+    document.querySelectorAll('.choice-btn').forEach(b=>{ if(parseInt(b.textContent)===current.ans) b.classList.add('correct'); });
+    spawnPop(window.innerWidth/2,window.innerHeight/2,'こたえは '+current.ans+'！','#f44336',22);
+  }
+  setTimeout(()=>{ hideFeedback(); qIdx++; nextQ(); },1200);
+}
+
+function showFeedback(t){ const f=document.getElementById('feedback'); document.getElementById('feedback-text').textContent=t; f.style.opacity='1'; }
+function hideFeedback(){ document.getElementById('feedback').style.opacity='0'; }
+function spawnPop(x,y,text,color,size){
+  const el=document.createElement('div'); el.className='pop-label';
+  el.textContent=text; el.style.color=color; el.style.fontSize=size+'px';
+  el.style.left=(x-90)+'px'; el.style.top=(y-30)+'px';
+  wrap.appendChild(el); setTimeout(()=>el.remove(),800);
+}
+
+function endGame(){
+  document.getElementById('hud').style.display='none';
+  document.getElementById('game-area').style.display='none';
+  document.getElementById('result-overlay').style.display='flex';
+  const hi=getHi(); const isNew=score>hi;
+  if(isNew) saveHi(score);
+  updateHiBadge();
+  const hiEl=document.getElementById('r-hi');
+  hiEl.textContent=isNew?'🏆 ニューレコード！':'ハイスコア: '+hi+'もん';
+  hiEl.style.color=isNew?'#FFD700':'rgba(255,255,255,0.6)';
+  const t=document.getElementById('r-title'), m=document.getElementById('r-msg');
+  if(score>=9)     {t.textContent='🏆 かんぺき！'; m.innerHTML=`<b style="font-size:28px;color:#FFD700">${score}</b> もん せいかい！<br>さんすうはかせだ！`;}
+  else if(score>=6){t.textContent='⭐ ナイス！';   m.innerHTML=`<b style="font-size:28px;color:#FFD700">${score}</b> もん せいかい！<br>よくできました！`;}
+  else             {t.textContent='📖 もういちど'; m.innerHTML=`<b style="font-size:28px;color:#FFD700">${score}</b> もん せいかい<br>れんしゅうしよう！`;}
+}
+
+updateHiBadge();
+</script>
+</body>
+</html>
