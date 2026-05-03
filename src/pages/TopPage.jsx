@@ -11,7 +11,7 @@ import './TopPage.css';
 /* ════════════════════════════════════════════════════
    ① 更新日時（手動で更新する定数）
 ════════════════════════════════════════════════════ */
-const LAST_UPDATE_DATE = '2026-04-24';
+const LAST_UPDATE_DATE = '2026-05-03';
 
 function getDaysSinceUpdate() {
   return Math.floor((new Date() - new Date(LAST_UPDATE_DATE)) / 86400000);
@@ -79,27 +79,22 @@ const GAMES = [
   { id:'g13', route:'/iro',            icon:'🎨', num:13, color:'#9C27B0', stars:3, isNew:true,
     ja:{ name:'いろあわせ',         desc:'いろを まぜると\nなんいろになるかな？'              },
     en:{ name:'Color Match',         desc:'Mix colors and find\nthe right answer!'             } },
+  { id:'g14', route:'/machi',          icon:'🏙️', num:14, color:'#00897B', stars:5, isNew:true,
+    ja:{ name:'わくわくまちづくり', desc:'じぶんだけの\nすてきなまちを\nつくろう！'            },
+    en:{ name:'City Builder',        desc:'Build your own\namazing city!'                      } },
 ];
 
 /* ════════════════════════════════════════════════════
-   星空データ（固定シード）
+   雲データ（空に浮かぶ雲）
 ════════════════════════════════════════════════════ */
-const STARS = Array.from({ length: 120 }, (_, i) => {
-  // deterministic pseudo-random using index
-  const r1 = ((i * 9301 + 49297) % 233280) / 233280;
-  const r2 = ((i * 6789 + 1234)  % 233280) / 233280;
-  const r3 = ((i * 3571 + 7777)  % 233280) / 233280;
-  const r4 = ((i * 2345 + 5678)  % 233280) / 233280;
-  const r5 = ((i * 1234 + 9876)  % 233280) / 233280;
-  return {
-    id:    i,
-    top:   r1 * 100,
-    left:  r2 * 100,
-    size:  r3 * 2.5 + 0.5,
-    dur:   r4 * 3 + 1.5,
-    delay: r5 * 3,
-  };
-});
+const CLOUDS = [
+  { id:0, top:'8%',  left:'5%',  size:52, dur:'7s',  delay:'0s'   },
+  { id:1, top:'5%',  left:'30%', size:64, dur:'9s',  delay:'1.5s' },
+  { id:2, top:'12%', left:'55%', size:46, dur:'6s',  delay:'3s'   },
+  { id:3, top:'4%',  left:'75%', size:58, dur:'8s',  delay:'0.8s' },
+  { id:4, top:'18%', left:'88%', size:42, dur:'7.5s',delay:'2s'   },
+  { id:5, top:'22%', left:'15%', size:36, dur:'6.5s',delay:'4s'   },
+];
 
 /* ════════════════════════════════════════════════════
    ⑤ プレイカウンター
@@ -269,30 +264,31 @@ export default function TopPage() {
   return (
     <div className="tp-wrap">
 
-      {/* ── 星空背景 ── */}
-      <div className="tp-starfield" aria-hidden="true">
-        {STARS.map(s => (
+      {/* ── 空の雲 ── */}
+      <div className="tp-clouds" aria-hidden="true">
+        {CLOUDS.map(c => (
           <div
-            key={s.id}
-            className="tp-star"
+            key={c.id}
+            className="tp-cloud"
             style={{
-              top:   `${s.top}%`,
-              left:  `${s.left}%`,
-              width:  s.size,
-              height: s.size,
-              '--dur':   `${s.dur}s`,
-              animationDelay: `${s.delay}s`,
+              top: c.top,
+              left: c.left,
+              fontSize: c.size,
+              '--dur':   c.dur,
+              '--delay': c.delay,
             }}
-          />
+          >
+            ☁️
+          </div>
         ))}
       </div>
 
       {/* ── フローティングデコキャラ ── */}
       <div className="tp-deco" aria-hidden="true">
-        <span style={{ left:'6%',  top:'22%', '--dur':'3.8s', '--rot':'-4deg', fontSize:28 }}>🌸</span>
-        <span style={{ right:'5%', top:'18%', '--dur':'3.5s', '--rot':'8deg',  fontSize:26 }}>⭐</span>
-        <span style={{ left:'2%',  top:'40%', '--dur':'4s',   '--rot':'-10deg',fontSize:24 }}>🦋</span>
-        <span style={{ right:'2%', top:'38%', '--dur':'3.3s', '--rot':'5deg',  fontSize:22 }}>✨</span>
+        <span style={{ left:'4%',  top:'28%', '--dur':'3.8s', '--rot':'-4deg', fontSize:28 }}>🌺</span>
+        <span style={{ right:'4%', top:'24%', '--dur':'3.5s', '--rot':'8deg',  fontSize:26 }}>🌟</span>
+        <span style={{ left:'3%',  top:'48%', '--dur':'4s',   '--rot':'-8deg', fontSize:24 }}>🦋</span>
+        <span style={{ right:'3%', top:'46%', '--dur':'3.3s', '--rot':'5deg',  fontSize:22 }}>🌈</span>
       </div>
 
       {/* ── コイン残高（左上） ── */}
@@ -407,7 +403,7 @@ export default function TopPage() {
             {lang === 'en' ? '📜 Terms of Use' : '📜 利用規約'}
           </button>
         </div>
-        <div style={{ marginTop: 6, fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
+        <div style={{ marginTop: 6, fontSize: 11, color: 'rgba(0,0,0,0.28)' }}>
           © 2025 Wakuwaku Island
         </div>
       </div>

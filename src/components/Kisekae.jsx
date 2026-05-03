@@ -294,9 +294,15 @@ export function PrinceSVG({ state }) {
 /* ════════════════════════════════════════════════════
    キャラクターウィジェット（タイトル左右に常駐）
 ════════════════════════════════════════════════════ */
+function findKisekaeItem(chara, cat, id) {
+  const base = KISEKAE_ITEMS[chara][cat].find(i => i.id === id);
+  if (base) return base;
+  return getShopExtras(chara, cat).find(i => i.id === id);
+}
+
 export function KisekaeCharacters({ kisekaeState, onOpen, lang }) {
-  const psPet = KISEKAE_ITEMS.princess.pet.find(i => i.id === kisekaeState.princess.pet);
-  const prPet = KISEKAE_ITEMS.prince.pet.find(i => i.id === kisekaeState.prince.pet);
+  const psPet = findKisekaeItem('princess', 'pet', kisekaeState.princess.pet);
+  const prPet = findKisekaeItem('prince',   'pet', kisekaeState.prince.pet);
 
   return (
     <>

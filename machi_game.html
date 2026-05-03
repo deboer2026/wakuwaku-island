@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>わくわくまちづくり</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; user-select: none; }
+body { font-family: 'M PLUS Rounded 1c', sans-serif; background: #1a1a2e; overflow: hidden; }
+#gw { width: 100vw; height: 100vh; max-width: 480px; margin: 0 auto; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+
+/* HUD */
+#hud { background: linear-gradient(135deg,rgba(20,20,60,0.97),rgba(40,40,90,0.97)); border-bottom: 2px solid rgba(100,150,255,0.3); padding: 8px 10px; display: flex; align-items: center; gap: 6px; flex-shrink: 0; z-index: 20; }
+#hud-title { font-size: 13px; font-weight: 900; color: #fff; flex: 1; }
+.hs { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 3px 7px; font-size: 11px; font-weight: 800; color: #fff; white-space: nowrap; }
+.hs span { color: #FFD700; }
+.hb { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 4px 7px; font-size: 11px; font-weight: 700; cursor: pointer; color: #fff; font-family: inherit; }
+
+/* Field */
+#fw { flex: 1; position: relative; overflow: hidden; background: linear-gradient(180deg,#0a0820 0%,#1a1540 50%,#0f0c29 100%); }
+canvas { position: absolute; top: 0; left: 0; }
+#bc { z-index: 1; } #cc { z-index: 2; cursor: pointer; }
+
+/* Panel */
+#panel { background: linear-gradient(135deg,rgba(15,15,45,0.98),rgba(30,30,70,0.98)); border-top: 2px solid rgba(100,150,255,0.3); flex-shrink: 0; z-index: 20; }
+#tabs { display: flex; overflow-x: auto; padding: 0 4px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+#tabs::-webkit-scrollbar { display: none; }
+.tb { flex-shrink: 0; padding: 7px 11px; font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.45); border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -1px; font-family: inherit; white-space: nowrap; }
+.tb.on { color: #7ec8ff; border-bottom-color: #7ec8ff; }
+#ilist { display: flex; gap: 7px; padding: 8px 10px; overflow-x: auto; min-height: 86px; }
+#ilist::-webkit-scrollbar { display: none; }
+.ic { flex-shrink: 0; background: rgba(255,255,255,0.07); border: 2px solid rgba(255,255,255,0.14); border-radius: 13px; padding: 6px 4px 5px; cursor: pointer; text-align: center; width: 60px; transition: .12s; }
+.ic:active { transform: scale(0.91); }
+.ic.on { border-color: #7ec8ff; background: rgba(126,200,255,0.13); box-shadow: 0 0 10px rgba(126,200,255,0.28); }
+.ic.lk { opacity: 0.4; }
+.ic .e { font-size: 25px; display: block; line-height: 1.1; }
+.ic .n { font-size: 8px; font-weight: 700; color: rgba(255,255,255,0.65); margin-top: 2px; }
+.ic .c { font-size: 9px; color: #FFD700; font-weight: 800; }
+
+/* Login popup */
+#lp { position: absolute; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.72); backdrop-filter: blur(4px); }
+#lp.show { display: flex; }
+.lcard { background: linear-gradient(135deg,#1a1a4e,#2a2a70); border: 2px solid rgba(126,200,255,0.4); border-radius: 22px; padding: 26px 22px; text-align: center; max-width: 290px; width: 90%; box-shadow: 0 0 40px rgba(100,150,255,0.28); }
+.lcard h2 { font-size: 20px; font-weight: 900; color: #FFD700; margin-bottom: 6px; }
+.lcard p  { font-size: 12px; color: rgba(255,255,255,0.75); margin-bottom: 12px; line-height: 1.6; }
+.lcoins { font-size: 44px; font-weight: 900; color: #FFD700; text-shadow: 0 0 18px rgba(255,215,0,0.5); margin-bottom: 14px; }
+.pb { background: linear-gradient(135deg,#FFD700,#FF9800); color: #fff; border: none; border-radius: 28px; padding: 11px 30px; font-size: 16px; font-weight: 900; cursor: pointer; font-family: inherit; box-shadow: 0 4px 0 rgba(180,90,0,0.4); }
+
+/* Title */
+#ts { position: absolute; inset: 0; z-index: 60; background: linear-gradient(160deg,#0a0820,#1e1b4b,#12103a); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+#ts h1 { font-size: 24px; font-weight: 900; color: #fff; text-shadow: 0 0 20px rgba(126,200,255,0.6); margin-bottom: 6px; }
+#ts p  { font-size: 12px; color: rgba(255,255,255,0.65); margin-bottom: 22px; text-align: center; line-height: 1.8; }
+.sb { background: linear-gradient(135deg,#7ec8ff,#4a90ff); color: #fff; border: none; border-radius: 28px; padding: 13px 42px; font-size: 19px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 0 rgba(74,144,255,0.45), 0 0 28px rgba(126,200,255,0.35); font-family: inherit; }
+
+/* Pops */
+.pop { position: absolute; font-size: 12px; font-weight: 900; color: #FFD700; pointer-events: none; z-index: 10; animation: pf 1.4s forwards; text-shadow: 0 0 8px rgba(255,215,0,0.7); white-space: nowrap; }
+@keyframes pf { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-55px) scale(0.8)} }
+.toast { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.72); color: #fff; padding: 6px 14px; border-radius: 12px; font-size: 11px; font-weight: 700; z-index: 15; white-space: nowrap; transition: opacity .4s; }
+</style>
+</head>
+<body>
+<div id="gw">
+  <!-- Title -->
+  <div id="ts">
+    <div style="font-size:54px;margin-bottom:10px;filter:drop-shadow(0 0 18px rgba(126,200,255,0.55))">🏙️</div>
+    <h1>✨ わくわくまちづくり</h1>
+    <p>アイテムをおいて<br>じぶんだけの まちをつくろう！<br>🪙コインをためて まちをひろげてね</p>
+    <button class="sb" onclick="startGame()">▶ はじめる！</button>
+  </div>
+
+  <!-- Login bonus -->
+  <div id="lp">
+    <div class="lcard">
+      <h2>🎁 ログインボーナス！</h2>
+      <p id="lmsg">きょうも きてくれてありがとう！</p>
+      <div class="lcoins" id="lcoins">+20🪙</div>
+      <p id="lstreak" style="color:#7ec8ff;font-size:11px;margin-bottom:14px;"></p>
+      <button class="pb" onclick="claimLogin()">うけとる！🎉</button>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div id="hud-title">🏙️ わくわくまち</div>
+    <div class="hs">🪙 <span id="cd">0</span></div>
+    <div class="hs">🏠 <span id="id2">0</span></div>
+    <div class="hs" title="じどうしゅうにゅう/分">⏱️ <span id="ind">+0</span></div>
+    <button class="hb" onclick="saveCity()">💾</button>
+    <button class="hb" onclick="confirmClear()">🗑️</button>
+  </div>
+
+  <div id="fw">
+    <canvas id="bc"></canvas>
+    <canvas id="cc"></canvas>
+  </div>
+
+  <div id="panel">
+    <div id="tabs"></div>
+    <div id="ilist"></div>
+  </div>
+</div>
+
+<script>
+const ISO_TW=64, ISO_TH=32, GC=10, GR=10;
+let W,H,ox,oy, bctx,cctx, coins=50, placed=[], selDef=null, selItem=null, grid={}, totalItems=0, income=0, cat='house', hov=null;
+
+const CATS=[{id:'house',l:'🏠 いえ'},{id:'shop',l:'🏪 おみせ'},{id:'nature',l:'🌳 しぜん'},{id:'road',l:'🛣️ みち'},{id:'fun',l:'🎡 たのしみ'},{id:'special',l:'⭐ とくべつ'}];
+const ITEMS={
+  house:[
+    {id:'h1',e:'🏠',n:'おうち',cost:10,inc:1,ul:0},{id:'h2',e:'🏡',n:'にわつき',cost:20,inc:2,ul:0},
+    {id:'h3',e:'🛖',n:'こや',cost:5,inc:0,ul:0},{id:'h4',e:'🏗️',n:'こうじ',cost:8,inc:0,ul:0},
+    {id:'h5',e:'🏰',n:'おしろ',cost:80,inc:8,ul:50},{id:'h6',e:'🏯',n:'やかた',cost:60,inc:6,ul:40},
+    {id:'h7',e:'⛪',n:'きょうかい',cost:40,inc:3,ul:30},{id:'h8',e:'🏛️',n:'しんでん',cost:50,inc:5,ul:35},
+  ],
+  shop:[
+    {id:'s1',e:'🏪',n:'おみせ',cost:15,inc:2,ul:0},{id:'s2',e:'🍰',n:'ケーキや',cost:20,inc:3,ul:0},
+    {id:'s3',e:'🍎',n:'くだものや',cost:18,inc:2,ul:0},{id:'s4',e:'📚',n:'としょかん',cost:30,inc:2,ul:20},
+    {id:'s5',e:'🏬',n:'デパート',cost:50,inc:6,ul:30},{id:'s6',e:'🏥',n:'びょういん',cost:40,inc:4,ul:25},
+    {id:'s7',e:'🏫',n:'がっこう',cost:45,inc:4,ul:30},{id:'s8',e:'🎪',n:'サーカス',cost:60,inc:8,ul:40},
+  ],
+  nature:[
+    {id:'n1',e:'🌳',n:'き',cost:5,inc:0,ul:0},{id:'n2',e:'🌲',n:'もみのき',cost:5,inc:0,ul:0},
+    {id:'n3',e:'🌸',n:'さくら',cost:8,inc:0,ul:0},{id:'n4',e:'🌺',n:'はな',cost:3,inc:0,ul:0},
+    {id:'n5',e:'⛲',n:'ふんすい',cost:20,inc:1,ul:15},{id:'n6',e:'🌊',n:'うみ',cost:15,inc:0,ul:10},
+    {id:'n7',e:'⛰️',n:'やま',cost:10,inc:0,ul:0},{id:'n8',e:'🌈',n:'にじ',cost:8,inc:0,ul:0},
+  ],
+  road:[
+    {id:'r1',e:'🛣️',n:'みち',cost:3,inc:0,ul:0},{id:'r2',e:'🚦',n:'しんごう',cost:5,inc:0,ul:0},
+    {id:'r3',e:'🌉',n:'はし',cost:15,inc:0,ul:10},{id:'r4',e:'🚉',n:'えき',cost:30,inc:4,ul:20},
+    {id:'r5',e:'✈️',n:'くうこう',cost:60,inc:8,ul:40},{id:'r6',e:'⛽',n:'ガススタ',cost:10,inc:1,ul:5},
+    {id:'r7',e:'🅿️',n:'ちゅうしゃ',cost:8,inc:1,ul:5},{id:'r8',e:'🚀',n:'ロケット',cost:80,inc:0,ul:60},
+  ],
+  fun:[
+    {id:'f1',e:'🎡',n:'かんらんしゃ',cost:40,inc:5,ul:25},{id:'f2',e:'🎠',n:'メリーゴー',cost:35,inc:4,ul:20},
+    {id:'f3',e:'🏟️',n:'スタジアム',cost:70,inc:9,ul:50},{id:'f4',e:'🎆',n:'はなび',cost:15,inc:0,ul:10},
+    {id:'f5',e:'⛺',n:'キャンプ',cost:8,inc:0,ul:0},{id:'f6',e:'🏖️',n:'ビーチ',cost:25,inc:3,ul:15},
+    {id:'f7',e:'🎭',n:'げきじょう',cost:45,inc:6,ul:30},{id:'f8',e:'🎰',n:'ゲームセンター',cost:30,inc:4,ul:20},
+  ],
+  special:[
+    {id:'sp1',e:'🗼',n:'タワー',cost:80,inc:10,ul:60},{id:'sp2',e:'🏆',n:'トロフィー',cost:50,inc:0,ul:40},
+    {id:'sp3',e:'💎',n:'ダイヤ',cost:120,inc:15,ul:80},{id:'sp4',e:'🌟',n:'スター',cost:30,inc:2,ul:20},
+    {id:'sp5',e:'🦄',n:'ユニコーン',cost:60,inc:8,ul:40},{id:'sp6',e:'🐉',n:'ドラゴン',cost:150,inc:20,ul:100},
+    {id:'sp7',e:'🏗️',n:'まほうのとう',cost:90,inc:12,ul:60},{id:'sp8',e:'🎪',n:'まほうサーカス',cost:100,inc:15,ul:70},
+  ],
+};
+
+function iso(gx,gy){ return {x:ox+(gx-gy)*(ISO_TW/2), y:oy+(gx+gy)*(ISO_TH/2)}; }
+function fromIso(sx,sy){ const dx=sx-ox,dy=sy-oy; const gx=Math.round((dx/(ISO_TW/2)+dy/(ISO_TH/2))/2); const gy=Math.round((dy/(ISO_TH/2)-dx/(ISO_TW/2))/2); return {gx,gy}; }
+
+function startGame(){
+  document.getElementById('ts').style.display='none';
+  const fw=document.getElementById('fw');
+  W=fw.clientWidth; H=fw.clientHeight;
+  ox=W/2; oy=H*0.15;
+  ['bc','cc'].forEach(id=>{ const c=document.getElementById(id); c.width=W; c.height=H; });
+  bctx=document.getElementById('bc').getContext('2d');
+  cctx=document.getElementById('cc').getContext('2d');
+  document.getElementById('cc').addEventListener('click',onClick);
+  document.getElementById('cc').addEventListener('mousemove',e=>{ const r=e.target.getBoundingClientRect(); const {gx,gy}=fromIso(e.clientX-r.left,e.clientY-r.top); hov=(gx>=0&&gx<GC&&gy>=0&&gy<GR)?{gx,gy}:null; });
+  coins=parseInt(localStorage.getItem('machi_c')||'50');
+  buildBg(); buildTabs(); buildList(); loadPlaced(); updateHUD(); checkLogin();
+  setInterval(()=>{ if(income>0){ const e=Math.ceil(income/6); coins+=e; savec(); updateHUD(); const pi=placed[Math.floor(Math.random()*placed.length)]; if(pi){ const {x,y}=iso(pi.gx,pi.gy); showPop(x,y-30,`+${e}🪙`); } } },10000);
+  setInterval(()=>{ if(income>0){ coins+=income; savec(); updateHUD(); } },60000);
+  loop();
+}
+
+function buildBg(){
+  const g=bctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#080620'); g.addColorStop(.5,'#150f3a'); g.addColorStop(1,'#0a0820');
+  bctx.fillStyle=g; bctx.fillRect(0,0,W,H);
+  for(let i=0;i<100;i++){
+    const x=Math.random()*W, y=Math.random()*H*.55, r=Math.random()*1.5+.3;
+    bctx.fillStyle=`rgba(255,255,255,${Math.random()*.8+.15})`; bctx.beginPath(); bctx.arc(x,y,r,0,Math.PI*2); bctx.fill();
+  }
+  bctx.fillStyle='rgba(255,240,160,.88)'; bctx.beginPath(); bctx.arc(W*.82,H*.1,20,0,Math.PI*2); bctx.fill();
+  bctx.fillStyle='rgba(255,255,255,.12)'; bctx.beginPath(); bctx.arc(W*.82-5,H*.1-5,16,0,Math.PI*2); bctx.fill();
+}
+
+function loop(){ cctx.clearRect(0,0,W,H); drawGrid(); drawItems(); requestAnimationFrame(loop); }
+
+function drawGrid(){
+  for(let gy=0;gy<GR;gy++) for(let gx=0;gx<GC;gx++){
+    const {x,y}=iso(gx,gy); const tw=ISO_TW, th=ISO_TH;
+    const even=(gx+gy)%2===0;
+    // タイル
+    cctx.beginPath(); cctx.moveTo(x,y); cctx.lineTo(x+tw/2,y+th/2); cctx.lineTo(x,y+th); cctx.lineTo(x-tw/2,y+th/2); cctx.closePath();
+    cctx.fillStyle=even?'rgba(60,140,60,.82)':'rgba(50,125,50,.82)'; cctx.fill();
+    // 枠
+    cctx.strokeStyle='rgba(80,160,80,.35)'; cctx.lineWidth=.6; cctx.stroke();
+    // タイル側面（3D感）
+    cctx.beginPath(); cctx.moveTo(x,y+th); cctx.lineTo(x+tw/2,y+th/2); cctx.lineTo(x+tw/2,y+th/2+4); cctx.lineTo(x,y+th+4); cctx.closePath();
+    cctx.fillStyle='rgba(40,110,40,.6)'; cctx.fill();
+    cctx.beginPath(); cctx.moveTo(x,y+th); cctx.lineTo(x-tw/2,y+th/2); cctx.lineTo(x-tw/2,y+th/2+4); cctx.lineTo(x,y+th+4); cctx.closePath();
+    cctx.fillStyle='rgba(30,90,30,.6)'; cctx.fill();
+    // ホバー
+    if(hov&&hov.gx===gx&&hov.gy===gy&&selDef){
+      cctx.beginPath(); cctx.moveTo(x,y); cctx.lineTo(x+tw/2,y+th/2); cctx.lineTo(x,y+th); cctx.lineTo(x-tw/2,y+th/2); cctx.closePath();
+      cctx.fillStyle='rgba(126,200,255,.28)'; cctx.fill();
+      cctx.strokeStyle='rgba(126,200,255,.7)'; cctx.lineWidth=1.5; cctx.stroke();
+    }
+  }
+}
+
+function drawItems(){
+  const sorted=[...placed].sort((a,b)=>(a.gx+a.gy)-(b.gx+b.gy));
+  sorted.forEach(item=>{
+    const {x,y}=iso(item.gx,item.gy);
+    const sz=ISO_TW*.88;
+    const isSel=item===selItem;
+    cctx.save();
+    cctx.translate(x,y+ISO_TH*.5);
+    // 影
+    cctx.fillStyle='rgba(0,0,0,.28)'; cctx.beginPath(); cctx.ellipse(0,0,sz*.3,sz*.09,0,0,Math.PI*2); cctx.fill();
+    // グロー（選択時）
+    if(isSel){ cctx.shadowColor='rgba(255,140,40,.85)'; cctx.shadowBlur=18; }
+    // 絵文字
+    cctx.font=`${Math.round(sz*.68)}px serif`; cctx.textAlign='center'; cctx.textBaseline='bottom';
+    cctx.fillText(item.def.e,0,-sz*.05);
+    // 収入バッジ
+    if(item.def.inc>0){
+      cctx.shadowBlur=0;
+      cctx.fillStyle='rgba(0,0,0,.55)'; cctx.beginPath(); cctx.roundRect(-15,-sz*.75,30,13,5); cctx.fill();
+      cctx.fillStyle='#FFD700'; cctx.font=`bold 8px sans-serif`; cctx.textAlign='center'; cctx.textBaseline='middle';
+      cctx.fillText(`+${item.def.inc}🪙`,0,-sz*.75+6.5);
+    }
+    cctx.restore();
+  });
+}
+
+function onClick(e){
+  const r=e.target.getBoundingClientRect();
+  const {gx,gy}=fromIso(e.clientX-r.left,e.clientY-r.top);
+  if(gx<0||gx>=GC||gy<0||gy>=GR) return;
+  const hit=placed.find(i=>i.gx===gx&&i.gy===gy);
+  if(hit){
+    if(selItem===hit){ if(confirm(`「${hit.def.n}」をとりのぞく？\n🪙${Math.floor(hit.def.cost/2)}かえってくるよ！`)){ removeItem(hit); } selItem=null; }
+    else { selItem=hit; selDef=null; document.querySelectorAll('.ic').forEach(c=>c.classList.remove('on')); }
+    return;
+  }
+  if(!selDef) return;
+  if(grid[`${gx},${gy}`]){ const {x,y}=iso(gx,gy); showPop(x,y-30,'ここにはおけない！'); return; }
+  if(coins<selDef.cost){ const {x,y}=iso(gx,gy); showPop(x,y-30,'🪙 コインがたりない！'); return; }
+  placeItem(selDef,gx,gy,true); selItem=null;
+}
+
+function placeItem(def,gx,gy,spend){
+  const item={def,gx,gy}; placed.push(item); grid[`${gx},${gy}`]=item;
+  totalItems++; income+=def.inc;
+  if(spend){ coins-=def.cost; savec(); const {x,y}=iso(gx,gy); showPop(x,y-40,'✨ おいたよ！'); savep(); }
+  updateHUD();
+}
+
+function removeItem(item){
+  placed=placed.filter(i=>i!==item); delete grid[`${item.gx},${item.gy}`];
+  totalItems--; income-=item.def.inc; coins+=Math.floor(item.def.cost/2);
+  savec(); savep(); updateHUD();
+  const {x,y}=iso(item.gx,item.gy); showPop(x,y-30,'🗑️ とりのぞいたよ');
+}
+
+function buildTabs(){
+  const el=document.getElementById('tabs');
+  CATS.forEach(c=>{ const b=document.createElement('button'); b.className='tb'+(c.id===cat?' on':''); b.textContent=c.l; b.onclick=()=>{ cat=c.id; document.querySelectorAll('.tb').forEach(x=>x.classList.remove('on')); b.classList.add('on'); buildList(); }; el.appendChild(b); });
+}
+
+function buildList(){
+  const list=document.getElementById('ilist'); list.innerHTML='';
+  (ITEMS[cat]||[]).forEach(item=>{
+    const lk=coins<item.ul&&item.ul>0;
+    const card=document.createElement('div');
+    card.className='ic'+(selDef?.id===item.id?' on':'')+(lk?' lk':'');
+    card.innerHTML=`<span class="e">${item.e}</span><span class="n">${item.n}</span><span class="c">🪙${item.cost}</span>${lk?'<span style="position:absolute;top:2px;right:3px;font-size:8px">🔒</span>':''}`;
+    card.onclick=()=>{
+      if(lk){ showToast(`🔒 🪙${item.ul}まいためると かいほう！`); return; }
+      selDef=item; selItem=null;
+      document.querySelectorAll('.ic').forEach(c=>c.classList.remove('on')); card.classList.add('on');
+      showToast(`${item.e} ${item.n} をえらんだ！まちにタップ！`);
+    };
+    list.appendChild(card);
+  });
+}
+
+function updateHUD(){ document.getElementById('cd').textContent=coins; document.getElementById('id2').textContent=totalItems; document.getElementById('ind').textContent='+'+income; buildList(); }
+function savec(){ localStorage.setItem('machi_c',coins); }
+function savep(){ localStorage.setItem('machi_p',JSON.stringify(placed.map(i=>({id:i.def.id,gx:i.gx,gy:i.gy})))); }
+function loadPlaced(){ try{ JSON.parse(localStorage.getItem('machi_p')||'[]').forEach(({id,gx,gy})=>{ const def=Object.values(ITEMS).flat().find(i=>i.id===id); if(def) placeItem(def,gx,gy,false); }); }catch{} }
+function saveCity(){ savec(); savep(); showToast('💾 セーブしたよ！'); }
+function confirmClear(){ if(confirm('まちをリセットしますか？')){ placed=[]; grid={}; totalItems=0; income=0; coins=50; savec(); savep(); updateHUD(); showToast('リセットしたよ！'); } }
+
+function checkLogin(){
+  const last=localStorage.getItem('machi_ll')||'';
+  const today=new Date().toDateString();
+  if(last===today) return;
+  const streak=parseInt(localStorage.getItem('machi_sk')||'0');
+  const bonus=streak<1?10:streak<2?15:streak<3?20:streak<4?25:30;
+  const ns=streak+1;
+  document.getElementById('lcoins').textContent=`+${bonus}🪙`;
+  document.getElementById('lmsg').textContent=`${ns}にちれんぞく！きょうのボーナス`;
+  document.getElementById('lstreak').textContent=ns>=3?`🔥 ${ns}にち れんぞく！`:'';
+  document.getElementById('lp').classList.add('show');
+  window._lb=bonus; window._ls=ns;
+}
+function claimLogin(){ coins+=window._lb||10; savec(); updateHUD(); localStorage.setItem('machi_ll',new Date().toDateString()); localStorage.setItem('machi_sk',window._ls||1); document.getElementById('lp').classList.remove('show'); showToast(`🎁 +${window._lb}🪙 ゲット！`); }
+
+function showPop(x,y,text){ const fw=document.getElementById('fw'); const el=document.createElement('div'); el.className='pop'; el.style.left=(x-30)+'px'; el.style.top=(y)+'px'; el.textContent=text; fw.appendChild(el); setTimeout(()=>el.remove(),1500); }
+function showToast(text){ const fw=document.getElementById('fw'); const old=fw.querySelector('.toast'); if(old) old.remove(); const t=document.createElement('div'); t.className='toast'; t.textContent=text; fw.appendChild(t); setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),400); },2200); }
+</script>
+</body>
+</html>

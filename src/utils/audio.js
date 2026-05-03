@@ -599,6 +599,39 @@ export function playIroAwaseBgm() {
   playMelodyLoop(synth, steps, 5.2);
 }
 
+export function playMachiBgm() {
+  if (!canPlayAudio()) return;
+  stopAllBgm();
+  const synth = new window.Tone.PolySynth(window.Tone.Synth, {
+    oscillator: { type: 'triangle' },
+    envelope: { attack: 0.02, decay: 0.25, sustain: 0.3, release: 0.6 },
+  }).toDestination();
+  synth.volume.value = -8;
+  const steps = [
+    { note: 'G4',  dur: '4n',  t: 0.0  },
+    { note: 'B4',  dur: '8n',  t: 0.5  },
+    { note: 'D5',  dur: '8n',  t: 0.75 },
+    { note: 'G5',  dur: '4n',  t: 1.0  },
+    { note: 'E5',  dur: '8n',  t: 1.5  },
+    { note: 'D5',  dur: '8n',  t: 1.75 },
+    { note: 'C5',  dur: '4n',  t: 2.0  },
+    { note: 'E5',  dur: '8n',  t: 2.5  },
+    { note: 'G5',  dur: '4n',  t: 2.75 },
+    { note: 'A5',  dur: '8n',  t: 3.25 },
+    { note: 'G5',  dur: '8n',  t: 3.5  },
+    { note: 'F#5', dur: '8n',  t: 3.75 },
+    { note: 'G5',  dur: '4n+', t: 4.0  },
+    { note: 'D5',  dur: '8n',  t: 4.75 },
+    { note: 'G4',  dur: '4n',  t: 5.0  },
+    { note: 'B4',  dur: '8n',  t: 5.5  },
+    { note: 'D5',  dur: '8n',  t: 5.75 },
+    { note: 'C5',  dur: '4n',  t: 6.0  },
+    { note: 'A4',  dur: '4n',  t: 6.5  },
+    { note: 'G4',  dur: '2n',  t: 7.0  },
+  ];
+  playMelodyLoop(synth, steps, 8.2);
+}
+
 // ===== Sound Effects =====
 
 // 正解・上昇音
