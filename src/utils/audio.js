@@ -64,14 +64,40 @@ if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
     if (!window.Tone) return;
     if (document.hidden) {
-      if (window.Tone.Transport.state === 'started') {
-        window.Tone.Transport.pause();
-      }
+      // タブ非表示 or スマホロック → Transport を一時停止
+      try {
+        if (window.Tone.Transport.state === 'started') {
+          window.Tone.Transport.pause();
+          console.log('[Audio] visibilitychange: hidden → Transport paused');
+        }
+      } catch (_) {}
     } else {
-      if (!isMuted && window.Tone.Transport.state === 'paused') {
-        window.Tone.Transport.start();
+      // 復帰時 — ミュートでなく BGM が生きている場合のみ再開
+      if (!isMuted && currentBgm !== null) {
+        const tryResume = () => {
+          try {
+            if (window.Tone.Transport.state === 'paused') {
+              window.Tone.Transport.start();
+              console.log('[Audio] visibilitychange: visible → Transport resumed');
+            }
+          } catch (_) {}
+        };
+        // スマホロック後は AudioContext が suspended になるため先に resume()
+        if (window.Tone.context.state === 'suspended') {
+          window.Tone.context.resume().then(tryResume).catch(() => {});
+        } else {
+          tryResume();
+        }
       }
     }
+  });
+
+  // ページ離脱時も Transport を停止
+  window.addEventListener('beforeunload', () => {
+    try {
+      if (window.Tone) window.Tone.Transport.stop();
+      stopAllBgm();
+    } catch (_) {}
   });
 }
 

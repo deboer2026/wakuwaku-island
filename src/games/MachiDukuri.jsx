@@ -175,6 +175,37 @@ export default function MachiDukuri() {
     };
   }, []);
 
+  // 画面回転・リサイズ時にキャンバスを再フィット（パン位置は維持）
+  useEffect(() => {
+    if (screen !== 'game') return;
+    const handleResize = () => {
+      const c = canvasRef.current;
+      const bg = bgCanvasRef.current;
+      if (!c || !bg) return;
+      const parent = c.parentElement;
+      if (!parent) return;
+      const W = parent.clientWidth;
+      const H = parent.clientHeight;
+      if (W === c.width && H === c.height) return; // 変化なし
+      c.width = bg.width = W;
+      c.height = bg.height = H;
+      bgReadyRef.current = false;
+      drawBg();
+      // パン位置が画面外に出た場合のみ軽く補正
+      const maxPanX = W * 0.8;
+      const minPanX = W * 0.2;
+      if (panXRef.current > maxPanX) panXRef.current = maxPanX;
+      if (panXRef.current < minPanX - W) panXRef.current = minPanX - W;
+    };
+    const handleOrient = () => setTimeout(handleResize, 200);
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleOrient);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrient);
+    };
+  }, [screen, drawBg]);
+
   const showToast = useCallback((msg) => {
     setToast(msg);
     if (toastTmRef.current) clearTimeout(toastTmRef.current);
@@ -635,6 +666,9 @@ export default function MachiDukuri() {
         </button>
       </div>
 
+      {/* Field + Panel row (横向き時は左右並び) */}
+      <div className="machi-body-row">
+
       {/* Canvas area */}
       <div className="machi-field">
         <canvas ref={bgCanvasRef} className="machi-bg-canvas" />
@@ -686,6 +720,8 @@ export default function MachiDukuri() {
           })}
         </div>
       </div>
+
+      </div>{/* end machi-body-row */}
 
       {/* Login bonus modal */}
       {loginBonus && (
