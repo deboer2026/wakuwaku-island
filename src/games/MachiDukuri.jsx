@@ -184,8 +184,8 @@ export default function MachiDukuri() {
       if (!c || !bg) return;
       const parent = c.parentElement;
       if (!parent) return;
-      const W = parent.clientWidth;
-      const H = parent.clientHeight;
+      let W = parent.clientWidth  || window.innerWidth;
+      let H = parent.clientHeight || Math.max(window.innerHeight - 100, 200);
       if (W === c.width && H === c.height) return; // 変化なし
       c.width = bg.width = W;
       c.height = bg.height = H;
@@ -367,14 +367,16 @@ export default function MachiDukuri() {
     const bg = bgCanvasRef.current;
     if (!c || !bg) return;
     const parent = c.parentElement;
-    const W = parent.clientWidth;
-    const H = parent.clientHeight;
+    // flex layout が 0 を返す場合は window 寸法にフォールバック
+    let W = parent ? parent.clientWidth  : 0;
+    let H = parent ? parent.clientHeight : 0;
+    if (W <= 0) W = window.innerWidth;
+    if (H <= 0) H = Math.max(window.innerHeight - 100, 200); // 100px≒HUD+panel概算
     c.width = bg.width = W;
     c.height = bg.height = H;
     bgReadyRef.current = false;
     drawBg();
     // set initial pan: center of grid at ~30% from top
-    // grid center (GC/2, GR/2)
     const sc = scaleRef.current;
     const cx = GC / 2, cy = GR / 2;
     panXRef.current = W / 2 - (cx - cy) * (ISO_TW / 2) * sc;
@@ -561,43 +563,45 @@ export default function MachiDukuri() {
 
     setScreen('game');
 
-    // wait for next frame so canvas is mounted
-    setTimeout(() => {
-      initCanvas();
-      // load placed items
-      try {
-        const ps = JSON.parse(localStorage.getItem('machi_p') || '[]');
-        ps.forEach(({ id, gx, gy }) => {
-          const def = ALL_ITEMS.find(i => i.id === id);
-          if (def) placeItem(def, gx, gy, false);
-        });
-      } catch {}
-      // start render loop
-      if (animRef.current) cancelAnimationFrame(animRef.current);
-      drawFrame();
-      // auto-income: small every 10s
-      incTimerRef.current = setInterval(() => {
-        if (incomeRef.current > 0) {
-          const e = Math.ceil(incomeRef.current / 6);
-          coinsRef.current += e;
-          addCoins(e);
-          localStorage.setItem('machi_c', String(coinsRef.current));
-          setCoins(coinsRef.current);
-        }
-      }, 10000);
-      // big income every 60s
-      bigTimerRef.current = setInterval(() => {
-        if (incomeRef.current > 0) {
-          coinsRef.current += incomeRef.current;
-          addCoins(incomeRef.current);
-          localStorage.setItem('machi_c', String(coinsRef.current));
-          setCoins(coinsRef.current);
-        }
-      }, 60000);
-      // check login bonus
-      const lb = getMachiLoginBonus();
-      if (lb) setLoginBonus(lb);
-    }, 50);
+    // 二重 rAF でブラウザが描画・レイアウト完了してから初期化
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        initCanvas();
+        // load placed items
+        try {
+          const ps = JSON.parse(localStorage.getItem('machi_p') || '[]');
+          ps.forEach(({ id, gx, gy }) => {
+            const def = ALL_ITEMS.find(i => i.id === id);
+            if (def) placeItem(def, gx, gy, false);
+          });
+        } catch {}
+        // start render loop
+        if (animRef.current) cancelAnimationFrame(animRef.current);
+        drawFrame();
+        // auto-income: small every 10s
+        incTimerRef.current = setInterval(() => {
+          if (incomeRef.current > 0) {
+            const e = Math.ceil(incomeRef.current / 6);
+            coinsRef.current += e;
+            addCoins(e);
+            localStorage.setItem('machi_c', String(coinsRef.current));
+            setCoins(coinsRef.current);
+          }
+        }, 10000);
+        // big income every 60s
+        bigTimerRef.current = setInterval(() => {
+          if (incomeRef.current > 0) {
+            coinsRef.current += incomeRef.current;
+            addCoins(incomeRef.current);
+            localStorage.setItem('machi_c', String(coinsRef.current));
+            setCoins(coinsRef.current);
+          }
+        }, 60000);
+        // check login bonus
+        const lb = getMachiLoginBonus();
+        if (lb) setLoginBonus(lb);
+      });
+    });
   }, [initCanvas, drawFrame, placeItem]);
 
   /* ─── select item handler ────────────────────────── */
