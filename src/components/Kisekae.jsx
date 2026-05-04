@@ -72,6 +72,7 @@ export const KISEKAE_ITEMS = {
       { id:'p4', emoji:'🐸', name:'かえる'   },
       { id:'p5', emoji:'🦋', name:'ちょうちょ' },
       { id:'p6', emoji:'🐼', name:'パンダ'   },
+      { id:'p8', emoji:'🦄', name:'ユニコーン' },
       { id:'p7', emoji:'',   name:'なし'     },
     ],
   },
