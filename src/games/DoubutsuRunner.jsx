@@ -11,8 +11,8 @@ import './DoubutsuRunner.css';
 
 const W = 400, H = 240;
 const GROUND_Y = 185;
-const GRAVITY   = 0.55;
-const JUMP_V    = -12.5;
+const GRAVITY   = 0.33;   // 重力を60%に（滞空時間↑）
+const JUMP_V    = -16.25; // ジャンプ初速を1.3倍に
 const PLAYER_X  = 72;
 const PLAYERS   = ['🐱','🐰','🦊','🐸','🐧'];
 const OBSTACLES  = ['🌵','🪨','💣','🌊','🌴'];
@@ -166,7 +166,7 @@ export default function DoubutsuRunner() {
     g.time += dt*60;
     g.score = Math.floor(g.time/10);
 
-    const speed = g.speed = 3 + Math.floor(g.score/100)*0.5;
+    const speed = g.speed = 3 + Math.floor(g.score/100)*0.35; // 速度上昇を70%に緩和
 
     // Player physics
     const p=g.player;
@@ -177,11 +177,11 @@ export default function DoubutsuRunner() {
       else p.onGround=false;
     }
 
-    // Spawn obstacles
+    // Spawn obstacles（間隔を約25%広げる）
     obsTimRef.current -= dt;
     if (obsTimRef.current <= 0) {
       g.obstacles.push(spawnObstacle(speed));
-      obsTimRef.current = 1.2 + Math.random()*1.4 - speed*0.05;
+      obsTimRef.current = 1.5 + Math.random()*1.75 - speed*0.05;
     }
     // Spawn coins
     coinTimRef.current -= dt;

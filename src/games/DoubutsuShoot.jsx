@@ -14,7 +14,7 @@ const ENEMIES_EM = ['🐙','🦂','🐛','🦑','👾','🦇','🐜'];
 const BOSS_HP_MAX = 20;
 
 function mkPlayer(x) {
-  return { x, y:H-60, size:36, emoji:'🚀', hp:3, maxHp:3, invincible:0, shootCd:0, power:1 };
+  return { x, y:H-60, size:36, emoji:'🚀', hp:5, maxHp:5, invincible:0, shootCd:0, power:1 };
 }
 function mkBullet(x,y)  { return {x,y,w:6,h:14,active:true,type:'player'}; }
 function mkEnemy(score)  {
@@ -97,7 +97,7 @@ function drawFrame(canvas, g) {
 
   // Player
   const p=g.player;
-  if (p.invincible%4<2) {
+  if (p.invincible%8<4) { // 点滅周期を遅くしてわかりやすく
     // Thruster
     ctx.font='14px serif'; ctx.textAlign='center';
     ctx.fillText('🔥', p.x+p.size/2, p.y+p.size+4);
@@ -113,12 +113,19 @@ function drawFrame(canvas, g) {
 
   // HUD
   ctx.fillStyle='rgba(0,0,0,.45)'; ctx.fillRect(0,0,W,26);
-  ctx.fillStyle='#fff'; ctx.font='bold 12px sans-serif'; ctx.textAlign='left'; ctx.textBaseline='middle';
-  ctx.fillText(`❤️ ${'❤️'.repeat(p.hp)}`, 6, 13);
+  ctx.fillStyle='#fff'; ctx.font='bold 11px sans-serif'; ctx.textAlign='left'; ctx.textBaseline='middle';
+  ctx.fillText('❤️'.repeat(Math.max(0,p.hp)), 6, 13);
   ctx.textAlign='center';
   ctx.fillText(`スコア: ${g.score}`, W/2, 13);
   ctx.textAlign='right';
   ctx.fillText(`最高: ${g.best}`, W-6, 13);
+  // 序盤30秒：操作説明バナー
+  if (g.time < 30) {
+    const remain = Math.ceil(30 - g.time);
+    ctx.fillStyle='rgba(255,220,50,0.18)'; ctx.fillRect(0,H-34,W,34);
+    ctx.fillStyle='#FFD700'; ctx.font='bold 11px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(`✨ なれじかん あと${remain}びょう ✨ てきだんなし！`, W/2, H-17);
+  }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -135,7 +142,7 @@ export default function DoubutsuShoot() {
   const [screen,   setScreen]   = useState('title');
   const [muted,    setMuted]    = useState(getMuteState);
   const [score,    setScore]    = useState(0);
-  const [hp,       setHp]       = useState(3);
+  const [hp,       setHp]       = useState(5);
   const [best,     setBest]     = useState(() => parseInt(localStorage.getItem('shoot_hi')||'0'));
   const [gameOver, setGameOver] = useState(false);
 
@@ -178,7 +185,8 @@ export default function DoubutsuShoot() {
 
     // Move bullets
     g.bullets.forEach(b=>{ b.y-=12; if(b.y<-20) b.active=false; });
-    g.eBullets.forEach(b=>{ b.y+=5; if(b.y>H+20) b.active=false; });
+    // 通常弾30%減、ボス弾は元速度の50%（2.5px）
+    g.eBullets.forEach(b=>{ b.y+=(b.isBoss?2.5:3.5); if(b.y>H+20) b.active=false; });
     g.bullets  = g.bullets.filter(b=>b.active);
     g.eBullets = g.eBullets.filter(b=>b.active);
 
@@ -189,16 +197,17 @@ export default function DoubutsuShoot() {
       eTmRef.current = Math.max(0.3, 1.5-g.score/300);
     }
 
-    // Spawn boss
-    if (!g.boss && g.score>0 && g.score%500<10 && !g.bossDefeated) {
-      g.boss={x:W/2-40,y:-80,w:80,h:80,hp:BOSS_HP_MAX,maxHp:BOSS_HP_MAX,emoji:'👹',vx:2,vy:0.5,shootCd:30};
+    // Spawn boss（スコア3000以上から登場）
+    if (!g.boss && g.score>=3000 && g.score%500<10 && !g.bossDefeated) {
+      g.boss={x:W/2-40,y:-80,w:80,h:80,hp:BOSS_HP_MAX,maxHp:BOSS_HP_MAX,emoji:'👹',vx:2,vy:0.5,shootCd:60};
       g.bossDefeated=false;
     }
 
-    // Move enemies
+    // Move enemies（序盤30秒は弾なし）
+    const canShoot = g.time > 30;
     g.enemies.forEach(e=>{
       e.y+=e.vy;
-      if (e.shoots) {
+      if (e.shoots && canShoot) {
         e.shootCd--;
         if (e.shootCd<=0) {
           g.eBullets.push({x:e.x+e.w/2,y:e.y+e.h,w:8,h:12,active:true});
@@ -209,7 +218,7 @@ export default function DoubutsuShoot() {
     });
     g.enemies=g.enemies.filter(e=>e.active);
 
-    // Move boss
+    // Move boss（弾速50%減、発射間隔2倍）
     if (g.boss) {
       const b=g.boss;
       b.x+=b.vx; b.y+=b.vy;
@@ -217,8 +226,8 @@ export default function DoubutsuShoot() {
       if (b.y>80) { b.vy=0; b.y=80; }
       b.shootCd--;
       if (b.shootCd<=0) {
-        for (let i=-1;i<=1;i++) g.eBullets.push({x:b.x+b.w/2+i*15,y:b.y+b.h,w:8,h:12,active:true});
-        b.shootCd=30;
+        for (let i=-1;i<=1;i++) g.eBullets.push({x:b.x+b.w/2+i*15,y:b.y+b.h,w:8,h:12,active:true,isBoss:true});
+        b.shootCd=60; // 発射間隔2倍（30→60）
       }
     }
 
@@ -254,7 +263,7 @@ export default function DoubutsuShoot() {
       g.eBullets.forEach(b=>{
         if (!b.active) return;
         if (rectsHit({x:b.x-4,y:b.y,w:8,h:12}, {x:p.x+6,y:p.y+6,w:p.size-12,h:p.size-12},4)) {
-          b.active=false; p.hp--; p.invincible=90;
+          b.active=false; p.hp--; p.invincible=180; // 無敵時間2倍
           setHp(p.hp);
           if (p.hp<=0) { g.dead=true; finishGame(g); return; }
         }
@@ -263,7 +272,7 @@ export default function DoubutsuShoot() {
       g.enemies.forEach(e=>{
         if (!e.active||p.invincible>0) return;
         if (rectsHit(e, {x:p.x+6,y:p.y+6,w:p.size-12,h:p.size-12},8)) {
-          e.active=false; p.hp--; p.invincible=90; setHp(p.hp);
+          e.active=false; p.hp--; p.invincible=180; // 無敵時間2倍 setHp(p.hp);
           if (p.hp<=0) { g.dead=true; finishGame(g); return; }
         }
       });
@@ -307,7 +316,7 @@ export default function DoubutsuShoot() {
       kills:0, time:0, bgScroll:0, dead:false,
     };
     eTmRef.current=1; lastRef.current=0;
-    setScore(0); setHp(3); setGameOver(false); setScreen('game');
+    setScore(0); setHp(5); setGameOver(false); setScreen('game');
     cancelAnimationFrame(rafRef.current);
     setTimeout(()=>{ rafRef.current=requestAnimationFrame(gameLoop); },60);
   }
