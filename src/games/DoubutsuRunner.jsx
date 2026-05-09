@@ -11,8 +11,9 @@ import './DoubutsuRunner.css';
 
 const W = 400, H = 240;
 const GROUND_Y = 185;
-const GRAVITY   = 0.33;   // 重力を60%に（滞空時間↑）
-const JUMP_V    = -16.25; // ジャンプ初速を1.3倍に
+const GRAVITY     = 0.55;   // 元の値に戻す
+const JUMP_V      = -10.6;  // -12.5 × 0.85 → 頂点がH×35%以内に収まる
+const APEX_THRESH = -3;     // この速度より遅い（頂点付近）なら重力を半分に
 const PLAYER_X  = 72;
 const PLAYERS   = ['🐱','🐰','🦊','🐸','🐧'];
 const OBSTACLES  = ['🌵','🪨','💣','🌊','🌴'];
@@ -168,10 +169,14 @@ export default function DoubutsuRunner() {
 
     const speed = g.speed = 3 + Math.floor(g.score/100)*0.35; // 速度上昇を70%に緩和
 
-    // Player physics
+    // Player physics（頂点付近だけ重力を半分にしてふわっと感を出す）
     const p=g.player;
     if (!p.dead) {
-      p.vy += GRAVITY;
+      // vy が APEX_THRESH〜0 のとき（上昇がほぼ止まる頂点付近）は重力を半減
+      const grav = (!p.onGround && p.vy < 0 && p.vy > APEX_THRESH)
+        ? GRAVITY * 0.5
+        : GRAVITY;
+      p.vy += grav;
       p.y  += p.vy;
       if (p.y >= GROUND_Y) { p.y=GROUND_Y; p.vy=0; p.onGround=true; p.jumps=0; }
       else p.onGround=false;
