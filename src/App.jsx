@@ -14,6 +14,9 @@ import MojiAsobi from './games/MojiAsobi'
 import TashizanGame from './games/TashizanGame'
 import IroAwase from './games/IroAwase'
 import MachiDukuri from './games/MachiDukuri'
+import DoubutsuBlock from './games/DoubutsuBlock'
+import DoubutsuRunner from './games/DoubutsuRunner'
+import DoubutsuShoot from './games/DoubutsuShoot'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 
@@ -35,6 +38,9 @@ export default function App() {
       <Route path="/tashizan" element={<TashizanGame />} />
       <Route path="/iro" element={<IroAwase />} />
       <Route path="/machi" element={<MachiDukuri />} />
+      <Route path="/tetris" element={<DoubutsuBlock />} />
+      <Route path="/runner" element={<DoubutsuRunner />} />
+      <Route path="/shooting" element={<DoubutsuShoot />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
     </Routes>

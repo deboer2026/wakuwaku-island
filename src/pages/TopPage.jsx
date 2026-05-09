@@ -85,6 +85,21 @@ const GAMES = [
 ];
 
 /* ════════════════════════════════════════════════════
+   しょうがくせいむけゲームリスト
+════════════════════════════════════════════════════ */
+const SCHOOL_GAMES = [
+  { id:'s1', route:'/tetris',   icon:'🧱', num:1, color:'#4a90ff', stars:5, isNew:true,
+    ja:{ name:'どうぶつブロック', desc:'ブロックをならべて\nラインをけそう！\nテトリス風ゲーム！' },
+    en:{ name:'Animal Blocks',   desc:'Stack blocks and\nclear the lines!\nTetris-style game!' } },
+  { id:'s2', route:'/runner',   icon:'🏃', num:2, color:'#43A047', stars:4, isNew:true,
+    ja:{ name:'どうぶつランナー', desc:'タップでジャンプ！\n2かいジャンプもできるよ！\n障害物をよけて走れ！' },
+    en:{ name:'Animal Runner',   desc:'Tap to jump!\nDouble jump available!\nAvoid obstacles!' } },
+  { id:'s3', route:'/shooting', icon:'🚀', num:3, color:'#e53935', stars:5, isNew:true,
+    ja:{ name:'どうぶつシューティング', desc:'てきをたおして\nボスをやっつけろ！\nシューティングゲーム！' },
+    en:{ name:'Animal Shooter',  desc:'Defeat enemies\nand beat the boss!\nShooter game!' } },
+];
+
+/* ════════════════════════════════════════════════════
    雲データ（空に浮かぶ雲）
 ════════════════════════════════════════════════════ */
 const CLOUDS = [
@@ -196,10 +211,16 @@ export default function TopPage() {
   const [shopOpen,    setShopOpen]    = useState(false);
   const [coins,       setCoins]       = useState(getCoins);
   const [loginBonus,  setLoginBonus]  = useState(null);
+  const [activeTab,   setActiveTab]   = useState(() => localStorage.getItem('wakuwaku_tab') || 'kids');
 
   const season    = getSeason();
   const daysSince = getDaysSinceUpdate();
   const todayIdx  = getTodayIndex(GAMES.length);
+
+  function switchTab(tab) {
+    setActiveTab(tab);
+    localStorage.setItem('wakuwaku_tab', tab);
+  }
 
   useEffect(() => {
     ensureAudioStarted().then(() => playTopPageBgm());
@@ -371,16 +392,50 @@ export default function TopPage() {
           <div className="tp-section-divider" />
         </div>
 
-        <div className="tp-grid">
-          {GAMES.map((game, i) => (
-            <GameCard
-              key={game.id}
-              game={game}
-              lang={lang}
-              isRecommended={i === todayIdx}
-              onClick={(e) => { spawnParticles(e.clientX, e.clientY); navigate(game.route); }}
-            />
-          ))}
+        {/* ── 年齢別タブ ── */}
+        <div className="tp-tabs">
+          <button
+            className={`tp-tab${activeTab === 'kids' ? ' tp-tab--active' : ''}`}
+            onClick={() => switchTab('kids')}
+          >
+            🌸 {lang === 'en' ? 'For Kids' : 'ちいさいこむけ'}
+          </button>
+          <button
+            className={`tp-tab${activeTab === 'school' ? ' tp-tab--active' : ''}`}
+            onClick={() => switchTab('school')}
+          >
+            🎮 {lang === 'en' ? 'Elementary' : 'しょうがくせいむけ'}
+            <span className="tp-tab-new">NEW</span>
+          </button>
+        </div>
+
+        {/* ── タブコンテンツ ── */}
+        <div className={`tp-tab-panel${activeTab === 'kids' ? ' tp-tab-panel--active' : ''}`}>
+          <div className="tp-grid">
+            {GAMES.map((game, i) => (
+              <GameCard
+                key={game.id}
+                game={game}
+                lang={lang}
+                isRecommended={i === todayIdx}
+                onClick={(e) => { spawnParticles(e.clientX, e.clientY); navigate(game.route); }}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className={`tp-tab-panel${activeTab === 'school' ? ' tp-tab-panel--active' : ''}`}>
+          <div className="tp-grid">
+            {SCHOOL_GAMES.map((game) => (
+              <GameCard
+                key={game.id}
+                game={game}
+                lang={lang}
+                isRecommended={false}
+                onClick={(e) => { spawnParticles(e.clientX, e.clientY); navigate(game.route); }}
+              />
+            ))}
+          </div>
         </div>
       </div>
 

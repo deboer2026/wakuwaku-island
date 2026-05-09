@@ -469,3 +469,41 @@ export function playSoundWiggle() {
     { note:'C4', dur:'32n', t:0.12 },
   ], 'sine', SE_GAIN * 0.6);
 }
+
+// ===== 新ゲーム BGM =====
+
+export function playTetrisBgm() {
+  _bgm([
+    {note:'E5',dur:'4n',t:0},{note:'B4',dur:'8n',t:0.5},{note:'C5',dur:'8n',t:0.75},
+    {note:'D5',dur:'4n',t:1},{note:'C5',dur:'8n',t:1.5},{note:'B4',dur:'8n',t:1.75},
+    {note:'A4',dur:'4n',t:2},{note:'A4',dur:'8n',t:2.5},{note:'C5',dur:'8n',t:2.75},
+    {note:'E5',dur:'4n',t:3},{note:'D5',dur:'8n',t:3.5},{note:'C5',dur:'8n',t:3.75},
+    {note:'B4',dur:'4n.',t:4},{note:'C5',dur:'8n',t:4.75},
+    {note:'D5',dur:'4n',t:5},{note:'E5',dur:'4n',t:5.5},
+    {note:'C5',dur:'4n',t:6},{note:'A4',dur:'4n',t:6.5},{note:'A4',dur:'2n',t:7},
+  ], 8*BEAT, 'square');
+}
+
+export function playRunnerBgm() {
+  _bgm([
+    {note:'G4',dur:'8n',t:0},{note:'A4',dur:'8n',t:0.25},{note:'B4',dur:'8n',t:0.5},{note:'D5',dur:'8n',t:0.75},
+    {note:'G5',dur:'4n',t:1},{note:'F#5',dur:'8n',t:1.5},{note:'E5',dur:'8n',t:1.75},
+    {note:'D5',dur:'8n',t:2},{note:'E5',dur:'8n',t:2.25},{note:'D5',dur:'8n',t:2.5},{note:'B4',dur:'8n',t:2.75},
+    {note:'G4',dur:'4n',t:3},{note:'A4',dur:'4n',t:3.5},
+    {note:'B4',dur:'8n',t:4},{note:'C5',dur:'8n',t:4.25},{note:'D5',dur:'4n',t:4.5},{note:'E5',dur:'4n',t:5},
+    {note:'G5',dur:'8n',t:5.5},{note:'E5',dur:'8n',t:5.75},{note:'D5',dur:'4n',t:6},{note:'B4',dur:'4n',t:6.5},
+    {note:'G4',dur:'2n',t:7},
+  ], 8*BEAT, 'triangle');
+}
+
+export function playShootingBgm() {
+  _bgm([
+    {note:'A3',dur:'8n',t:0},{note:'A4',dur:'8n',t:0.25},{note:'G#4',dur:'8n',t:0.5},{note:'A4',dur:'8n',t:0.75},
+    {note:'F4',dur:'8n',t:1},{note:'A4',dur:'8n',t:1.25},{note:'E4',dur:'8n',t:1.5},{note:'A4',dur:'8n',t:1.75},
+    {note:'D4',dur:'8n',t:2},{note:'A4',dur:'8n',t:2.25},{note:'E4',dur:'8n',t:2.5},{note:'A4',dur:'8n',t:2.75},
+    {note:'F4',dur:'8n',t:3},{note:'A4',dur:'8n',t:3.25},{note:'G4',dur:'4n',t:3.5},
+    {note:'C5',dur:'8n',t:4},{note:'B4',dur:'8n',t:4.25},{note:'C5',dur:'8n',t:4.5},{note:'G#4',dur:'8n',t:4.75},
+    {note:'F4',dur:'8n',t:5},{note:'C5',dur:'8n',t:5.25},{note:'E4',dur:'8n',t:5.5},{note:'D4',dur:'8n',t:5.75},
+    {note:'A3',dur:'2n',t:6},
+  ], 7*BEAT, 'sawtooth');
+}
