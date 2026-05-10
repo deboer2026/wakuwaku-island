@@ -78,13 +78,51 @@ function _cancelLoop() {
   }
 }
 
+// ── 非アクティブ状態フラグ（ミュートとは別管理）──
+let _bgmPaused = false;
+
+// ── BGM一時停止（Android対応: setTimeout連鎖も即断ち切る）
+function _pauseBgm() {
+  if (!_loop) return;
+  _bgmPaused = true;
+  // setTimeout チェーンを即キャンセル（Android では suspend() が効かない場合もあるため必須）
+  clearTimeout(_loop.timeout);
+  // AudioContext の停止も試みる（iOS では有効）
+  if (_ctx) _ctx.suspend().catch(() => {});
+}
+
+// ── BGM再開（フォーカス復帰 / 画面復帰時）
+function _resumeBgm() {
+  if (isMuted || !_loop?.active || !_bgmPaused) return;
+  _bgmPaused = false;
+  if (!_ctx) return;
+  _ctx.resume()
+    .then(() => {
+      if (!_loop?.active || document.hidden || isMuted) return;
+      const { steps, loopDuration, type } = _loop;
+      _schedNotes(_ctx, steps, type, BGM_GAIN);
+      function tick() {
+        // Android 根本対策: hidden チェックをループ先頭で必ず行う
+        if (!_loop?.active || document.hidden || isMuted || _bgmPaused) return;
+        _schedNotes(_ctx, _loop.steps, _loop.type, BGM_GAIN);
+        _loop.timeout = setTimeout(tick, _loop.loopDuration * 1000);
+      }
+      _loop.timeout = setTimeout(tick, loopDuration * 1000);
+    })
+    .catch(() => {});
+}
+
 function _startBgmLoop(steps, loopDuration, type) {
   _cancelLoop();
+  _bgmPaused = false;
   const ctx  = _getCtx();
   const loop = { steps, loopDuration, type, active: true, timeout: null };
   _loop = loop;
   function tick() {
-    if (!loop.active || ctx.state !== 'running') return;
+    if (!loop.active) return;
+    // ── Android 根本対策: hidden/paused/muted をループ先頭で必ずチェック ──
+    if (document.hidden || isMuted || _bgmPaused) return;
+    if (ctx.state !== 'running') return;
     _schedNotes(ctx, loop.steps, loop.type, BGM_GAIN);
     loop.timeout = setTimeout(tick, loop.loopDuration * 1000);
   }
@@ -92,7 +130,6 @@ function _startBgmLoop(steps, loopDuration, type) {
 }
 
 // ===== Internal BGM helper =====
-// Handles suspended context (unmute resume, post-lock resume)
 function _bgm(steps, loopDuration, type) {
   if (isMuted) return;
   const ctx = _getCtx();
@@ -103,30 +140,37 @@ function _bgm(steps, loopDuration, type) {
   }
 }
 
-// ===== Visibility / lifecycle =====
+// ===== Visibility / lifecycle (Android 多層対応) =====
 if (typeof document !== 'undefined') {
+
+  // ① visibilitychange — 最も標準的な方法（iOS / Android 共通）
   document.addEventListener('visibilitychange', () => {
-    if (!_ctx) return;
     if (document.hidden) {
-      // Pause: cancel pending tick and suspend the audio clock
-      if (_loop) clearTimeout(_loop.timeout);
-      _ctx.suspend().catch(() => {});
-    } else if (!isMuted && _loop?.active) {
-      // Resume: restart audio clock, then reschedule loop
-      _ctx.resume().then(() => {
-        if (!_loop?.active) return;
-        const { steps, loopDuration, type } = _loop;
-        _schedNotes(_ctx, steps, type, BGM_GAIN);
-        function tick() {
-          if (!_loop?.active) return;
-          _schedNotes(_ctx, _loop.steps, _loop.type, BGM_GAIN);
-          _loop.timeout = setTimeout(tick, _loop.loopDuration * 1000);
-        }
-        _loop.timeout = setTimeout(tick, loopDuration * 1000);
-      }).catch(() => {});
+      _pauseBgm();
+    } else {
+      _resumeBgm();
     }
   });
 
+  // ② pagehide — Android Chrome でアプリ切替時に確実に発火
+  window.addEventListener('pagehide', () => {
+    _pauseBgm();
+  });
+
+  // ③ blur / focus — タブ切替・別アプリ切替（主にデスクトップ、Android でも補助的に有効）
+  window.addEventListener('blur', () => {
+    // 仮想キーボード等の誤検知を避けるため 200ms 遅延してから hidden を確認
+    setTimeout(() => {
+      if (document.hidden) _pauseBgm();
+    }, 200);
+    // blur 単体でも pause（Android でアプリ切替時に hidden より早く発火する場合がある）
+    _pauseBgm();
+  });
+  window.addEventListener('focus', () => {
+    if (!document.hidden) _resumeBgm();
+  });
+
+  // ④ beforeunload — ページ離脱時にクリーンアップ
   window.addEventListener('beforeunload', () => {
     _cancelLoop();
     if (_ctx) _ctx.suspend().catch(() => {});
@@ -152,7 +196,8 @@ export function toggleMute() {
     _cancelLoop();
     if (_ctx) _ctx.suspend().catch(() => {});
   } else {
-    // Resume context so subsequent playXxxBgm() calls work
+    // ミュート解除: _bgmPaused をリセットして AudioContext を起こす
+    _bgmPaused = false;
     if (_ctx && _ctx.state === 'suspended') {
       _ctx.resume().catch(() => {});
     }
@@ -161,7 +206,7 @@ export function toggleMute() {
 }
 
 export function getMuteState() { return isMuted; }
-export function stopBgm() { _cancelLoop(); }
+export function stopBgm() { _cancelLoop(); _bgmPaused = false; }
 
 // ===== Visual feedback =====
 
