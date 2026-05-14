@@ -38,6 +38,12 @@ export default function App() {
       <Route path="/tashizan" element={<TashizanGame />} />
       <Route path="/iro" element={<IroAwase />} />
       <Route path="/machi" element={<MachiDukuri />} />
+      {/* ── URL エイリアス（短縮URL → 正規ルートと同じコンポーネント） ── */}
+      <Route path="/kudamono"  element={<KudamonoCatch />} />
+      <Route path="/puzzle"    element={<DoubutsuPuzzle />} />
+      <Route path="/kazu"      element={<KazuAsobi />} />
+      <Route path="/soccer"    element={<AnimalSoccer />} />
+      <Route path="/jewelry"   element={<JewelryShop />} />
       <Route path="/tetris" element={<DoubutsuBlock />} />
       <Route path="/runner" element={<DoubutsuRunner />} />
       <Route path="/shooting" element={<DoubutsuShoot />} />

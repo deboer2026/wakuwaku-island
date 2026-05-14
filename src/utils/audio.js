@@ -180,11 +180,25 @@ if (typeof document !== 'undefined') {
 // ===== Public API =====
 
 export async function ensureAudioStarted() {
+  // closed 状態のコンテキストは再生成する（ページ復帰後など）
+  if (_ctx && _ctx.state === 'closed') {
+    _ctx = null;
+    _cancelLoop();
+  }
   const ctx = _getCtx();
-  console.log('[Audio] ensureAudioStarted, state:', ctx.state);
+  if (ctx.state === 'suspended') {
+    try {
+      await ctx.resume();
+    } catch (e) {
+      // resume に失敗してもクラッシュしない
+    }
+  }
+  // まだ running でなければ短い遅延後に再試行（Android Safari 対策）
   if (ctx.state !== 'running') {
-    await ctx.resume();
-    console.log('[Audio] AudioContext resumed, state:', ctx.state);
+    await new Promise(r => setTimeout(r, 80));
+    if (ctx.state === 'suspended') {
+      await ctx.resume().catch(() => {});
+    }
   }
 }
 
