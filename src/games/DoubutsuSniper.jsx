@@ -12,9 +12,9 @@ const ANIMALS = ['🐱','🐰','🦊','🐸','🐼','🐶','🐨','🐯','🐻',
 const FAKES   = ['🌿','🍀','🌸','🍃','🌱']
 
 const STAGE_CFG = [
-  { size: 52, speed: 1.6, count: 4, fakes: 0, pts: 10, time: 30 },
-  { size: 42, speed: 2.8, count: 5, fakes: 0, pts: 20, time: 30 },
-  { size: 34, speed: 4.2, count: 6, fakes: 2, pts: 30, time: 30 },
+  { size: 68, speed: 1.6, count: 4, fakes: 0, pts: 10, time: 30 },
+  { size: 55, speed: 2.8, count: 5, fakes: 0, pts: 20, time: 30 },
+  { size: 44, speed: 4.2, count: 6, fakes: 2, pts: 30, time: 30 },
 ]
 
 function rnd(a, b) { return a + Math.random() * (b - a) }
@@ -61,7 +61,7 @@ export default function DoubutsuSniper() {
   const rafRef   = useRef(null)
 
   const [screen,     setScreen]     = useState('title')
-  const [muted,      setMuted]      = useState(false)
+  const [muted,      setMuted]      = useState(() => localStorage.getItem('wakuwaku_muted') === '1')
   const [uiStage,    setUiStage]    = useState(1)
   const [uiScore,    setUiScore]    = useState(0)
   const [uiHp,       setUiHp]       = useState(3)
@@ -79,19 +79,19 @@ export default function DoubutsuSniper() {
 
     /* background */
     const grad = ctx.createLinearGradient(0, 0, 0, H)
-    grad.addColorStop(0, '#0b1f0e')
-    grad.addColorStop(1, '#1b3d22')
+    grad.addColorStop(0, '#4aae5a')
+    grad.addColorStop(1, '#2d8a3e')
     ctx.fillStyle = grad
     ctx.fillRect(0, 0, W, H)
-
-    /* grid dots (atmosphere) */
-    ctx.fillStyle = 'rgba(80,160,80,0.08)'
-    for (let x = 20; x < W; x += 40) {
-      for (let y = 20; y < H; y += 40) {
-        ctx.beginPath()
-        ctx.arc(x, y, 2, 0, Math.PI * 2)
-        ctx.fill()
-      }
+    // tree silhouettes at bottom for atmosphere
+    ctx.fillStyle = 'rgba(0,60,0,0.18)'
+    for (let i = 0; i < 8; i++) {
+      const tx = (i * 52 + 10) % W
+      ctx.beginPath()
+      ctx.moveTo(tx, H)
+      ctx.lineTo(tx + 18, H - 45)
+      ctx.lineTo(tx + 36, H)
+      ctx.fill()
     }
 
     ctx.textAlign = 'center'
@@ -99,11 +99,12 @@ export default function DoubutsuSniper() {
 
     /* targets */
     g.targets.forEach(t => {
-      ctx.shadowColor = t.isFake
-        ? 'rgba(50,200,50,0.5)'
-        : 'rgba(255,220,80,0.7)'
-      ctx.shadowBlur = t.isFake ? 8 : 16
+      // white drop shadow for legibility on bright green
+      ctx.shadowColor = 'rgba(255,255,255,0.9)'
+      ctx.shadowBlur = t.isFake ? 6 : 10
       ctx.font = `${t.size}px serif`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
       ctx.globalAlpha = 1
       ctx.fillText(t.emoji, t.x, t.y)
       ctx.shadowBlur = 0
@@ -139,12 +140,15 @@ export default function DoubutsuSniper() {
 
     /* crosshair cursor hint */
     if (!g.done) {
-      ctx.strokeStyle = 'rgba(200,255,200,0.25)'
-      ctx.lineWidth = 1
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)'
+      ctx.lineWidth = 2
       const cx = W / 2, cy = H / 2
-      ctx.beginPath(); ctx.moveTo(cx - 18, cy); ctx.lineTo(cx + 18, cy); ctx.stroke()
-      ctx.beginPath(); ctx.moveTo(cx, cy - 18); ctx.lineTo(cx, cy + 18); ctx.stroke()
-      ctx.beginPath(); ctx.arc(cx, cy, 12, 0, Math.PI * 2); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(cx - 22, cy); ctx.lineTo(cx + 22, cy); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(cx, cy - 22); ctx.lineTo(cx, cy + 22); ctx.stroke()
+      ctx.beginPath(); ctx.arc(cx, cy, 16, 0, Math.PI * 2); ctx.stroke()
+      ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2)
+      ctx.fillStyle = 'rgba(255,255,255,0.7)'
+      ctx.fill()
     }
   }
 
@@ -331,6 +335,9 @@ export default function DoubutsuSniper() {
       </div>
       <button className="sniper-start-btn" onClick={nextStage}>
         つぎのステージへ ▶
+      </button>
+      <button className="ww-back-btn" onClick={() => { stopBgm(); navigate('/') }}>
+        🏠 トップへもどる
       </button>
     </div>
   )

@@ -153,8 +153,15 @@ if (typeof document !== 'undefined') {
   });
 
   // ② pagehide — Android Chrome でアプリ切替時に確実に発火
-  window.addEventListener('pagehide', () => {
-    _pauseBgm();
+  window.addEventListener('pagehide', (e) => {
+    if (e.persisted) {
+      // BFCache（前後移動）: 一時停止のみ
+      _pauseBgm();
+    } else {
+      // 実際のアンロード（タブ閉じ等）: 完全破棄
+      _cancelLoop();
+      try { if (_ctx) { _ctx.close(); _ctx = null; } } catch(e) {}
+    }
   });
 
   // ③ blur / focus — タブ切替・別アプリ切替（主にデスクトップ、Android でも補助的に有効）
@@ -173,7 +180,10 @@ if (typeof document !== 'undefined') {
   // ④ beforeunload — ページ離脱時にクリーンアップ
   window.addEventListener('beforeunload', () => {
     _cancelLoop();
-    if (_ctx) _ctx.suspend().catch(() => {});
+    if (_ctx) {
+      try { _ctx.close(); } catch(e) {}
+      _ctx = null;
+    }
   });
 }
 

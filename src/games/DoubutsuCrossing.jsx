@@ -11,7 +11,7 @@ const H      = 480
 const LANE_H = 60
 const COLS   = 7
 const COL_W  = W / COLS          // ≈ 51.4
-const PSIZ   = 38                // player emoji size
+const PSIZ   = 50                // player emoji size
 // Player center on screen (fixed): slightly below mid
 const PLAYER_SCR_Y = H - LANE_H * 1.5  // 390
 
@@ -93,7 +93,7 @@ export default function DoubutsuCrossing() {
   const touchRef  = useRef(null)
 
   const [screen,     setScreen]     = useState('title')
-  const [muted,      setMuted]      = useState(false)
+  const [muted,      setMuted]      = useState(() => localStorage.getItem('wakuwaku_muted') === '1')
   const [charIdx,    setCharIdx]    = useState(0)
   const [uiScore,    setUiScore]    = useState(0)
   const [resultData, setResultData] = useState(null)
@@ -145,10 +145,10 @@ export default function DoubutsuCrossing() {
           }
           break
         case 'road':
-          ctx.fillStyle = r % 2 === 0 ? '#555' : '#484848'
+          ctx.fillStyle = r % 2 === 0 ? '#686868' : '#5a5a5a'
           ctx.fillRect(0, top, W, LANE_H)
           /* dashed center line */
-          ctx.fillStyle = 'rgba(255,255,180,0.28)'
+          ctx.fillStyle = 'rgba(255,255,150,0.55)'
           for (let dx = 0; dx < W; dx += 36) {
             ctx.fillRect(dx, cy - 2, 22, 4)
           }
@@ -158,7 +158,7 @@ export default function DoubutsuCrossing() {
           ctx.fillRect(0, top + LANE_H - 5, W, 5)
           break
         case 'river':
-          ctx.fillStyle = r % 2 === 0 ? '#1e7abc' : '#1a6ba8'
+          ctx.fillStyle = r % 2 === 0 ? '#2288cc' : '#1e7ab8'
           ctx.fillRect(0, top, W, LANE_H)
           /* subtle wave pattern */
           ctx.strokeStyle = 'rgba(150,220,255,0.22)'
@@ -187,7 +187,7 @@ export default function DoubutsuCrossing() {
       }
 
       /* row divider */
-      ctx.fillStyle = 'rgba(0,0,0,0.12)'
+      ctx.fillStyle = 'rgba(0,0,0,0.25)'
       ctx.fillRect(0, top, W, 2)
 
       /* lane items */
@@ -228,11 +228,15 @@ export default function DoubutsuCrossing() {
             ctx.rect(lx, ly, lw, lh)
           }
           ctx.fill()
-          ctx.font = '22px serif'
+          ctx.shadowColor = 'rgba(255,255,255,0.85)'; ctx.shadowBlur = 8
+          ctx.font = '28px serif'
           ctx.fillText('🪵', item.x, cy)
+          ctx.shadowBlur = 0
         } else {
-          ctx.font = '30px serif'
+          ctx.shadowColor = 'rgba(255,255,255,0.85)'; ctx.shadowBlur = 8
+          ctx.font = '39px serif'
           ctx.fillText(item.emoji, item.x, cy)
+          ctx.shadowBlur = 0
         }
       })
     }
@@ -248,7 +252,7 @@ export default function DoubutsuCrossing() {
       /* shadow */
       ctx.fillStyle = 'rgba(0,0,0,0.2)'
       ctx.beginPath()
-      ctx.ellipse(px, pcy + PSIZ * 0.45, 14, 5, 0, 0, Math.PI * 2)
+      ctx.ellipse(px, pcy + PSIZ * 0.42, 18, 7, 0, 0, Math.PI * 2)
       ctx.fill()
       ctx.fillText(g.player.char, px, pcy - 2)
     } else {
@@ -287,6 +291,7 @@ export default function DoubutsuCrossing() {
         x: COL_W * 3 + COL_W / 2,
         char: CHARS[charIdx],
         moveCooldown: 0,
+        rowChangeCooldown: 0,  // grace period after row change
       },
       lanes,
       maxGenRow: 20,
@@ -328,6 +333,7 @@ export default function DoubutsuCrossing() {
 
       /* move cooldown */
       g.player.moveCooldown = Math.max(0, g.player.moveCooldown - dt)
+      g.player.rowChangeCooldown = Math.max(0, (g.player.rowChangeCooldown || 0) - dt)
 
       /* ensure lanes generated ahead */
       const pr = g.player.row
@@ -384,7 +390,8 @@ export default function DoubutsuCrossing() {
 
       /* collision + river carrying */
       const curLane = g.lanes[pr]
-      if (curLane) {
+      const skipCollision = (g.player.rowChangeCooldown || 0) > 0
+      if (curLane && !skipCollision) {
         const px = g.player.x
         const hitR = PSIZ * 0.42
 
@@ -433,6 +440,7 @@ export default function DoubutsuCrossing() {
 
     if (dir === 'up') {
       g.player.row++
+      g.player.rowChangeCooldown = 0.18  // 180ms grace after row advance
       if (g.player.row > g.score) {
         g.score = g.player.row
         setUiScore(g.score)
