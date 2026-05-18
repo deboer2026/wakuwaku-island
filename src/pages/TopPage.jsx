@@ -85,18 +85,24 @@ const GAMES = [
 ];
 
 /* ════════════════════════════════════════════════════
-   しょうがくせいむけゲームリスト
+   🔥チャレンジ タブ ゲームリスト
 ════════════════════════════════════════════════════ */
 const SCHOOL_GAMES = [
-  { id:'s1', route:'/tetris',   icon:'🧱', num:1, color:'#4a90ff', stars:5, isNew:true,
+  { id:'s1', route:'/tetris',   icon:'🧱', num:1, color:'#4a90ff', stars:5, isNew:false,
     ja:{ name:'どうぶつブロック', desc:'ブロックをならべて\nラインをけそう！\nテトリス風ゲーム！' },
     en:{ name:'Animal Blocks',   desc:'Stack blocks and\nclear the lines!\nTetris-style game!' } },
-  { id:'s2', route:'/runner',   icon:'🏃', num:2, color:'#43A047', stars:4, isNew:true,
+  { id:'s2', route:'/runner',   icon:'🏃', num:2, color:'#43A047', stars:4, isNew:false,
     ja:{ name:'どうぶつランナー', desc:'タップでジャンプ！\n2かいジャンプもできるよ！\n障害物をよけて走れ！' },
     en:{ name:'Animal Runner',   desc:'Tap to jump!\nDouble jump available!\nAvoid obstacles!' } },
-  { id:'s3', route:'/shooting', icon:'🚀', num:3, color:'#e53935', stars:5, isNew:true,
+  { id:'s3', route:'/shooting', icon:'🚀', num:3, color:'#e53935', stars:5, isNew:false,
     ja:{ name:'どうぶつシューティング', desc:'てきをたおして\nボスをやっつけろ！\nシューティングゲーム！' },
     en:{ name:'Animal Shooter',  desc:'Defeat enemies\nand beat the boss!\nShooter game!' } },
+  { id:'s4', route:'/sniper',   icon:'🎯', num:4, color:'#2d6a4f', stars:4, isNew:true,
+    ja:{ name:'どうぶつスナイパー', desc:'うごくどうぶつを\nタップでねらえ！\nフェイクに注意！' },
+    en:{ name:'Animal Sniper',   desc:'Tap moving animals\nto score points!\nWatch for fakes!' } },
+  { id:'s5', route:'/crossing', icon:'🐔', num:5, color:'#e65100', stars:5, isNew:true,
+    ja:{ name:'どうぶつクロッシング', desc:'みちをわたって\nどこまでいけるかな？\nくるまに気をつけて！' },
+    en:{ name:'Animal Crossing', desc:'Cross the road\nand go as far as you can!\nWatch for cars!' } },
 ];
 
 /* ════════════════════════════════════════════════════
@@ -398,13 +404,13 @@ export default function TopPage() {
             className={`tp-tab${activeTab === 'kids' ? ' tp-tab--active' : ''}`}
             onClick={() => switchTab('kids')}
           >
-            🌸 {lang === 'en' ? 'For Kids' : 'ちいさいこむけ'}
+            🌸 {lang === 'en' ? 'Easy' : 'かんたん'}
           </button>
           <button
             className={`tp-tab${activeTab === 'school' ? ' tp-tab--active' : ''}`}
             onClick={() => switchTab('school')}
           >
-            🎮 {lang === 'en' ? 'Elementary' : 'しょうがくせいむけ'}
+            🔥 {lang === 'en' ? 'Challenge' : 'チャレンジ'}
             <span className="tp-tab-new">NEW</span>
           </button>
         </div>

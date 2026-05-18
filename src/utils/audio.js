@@ -566,3 +566,26 @@ export function playShootingBgm() {
     {note:'A3',dur:'2n',t:6},
   ], 7*BEAT, 'sawtooth');
 }
+
+export function playSniperBgm() {
+  _bgm([
+    {note:'E3',dur:'4n',t:0.00},{note:'E4',dur:'8n',t:0.50},{note:'D4',dur:'8n',t:0.75},
+    {note:'C4',dur:'4n',t:1.00},{note:'B3',dur:'8n',t:1.50},{note:'A3',dur:'4n',t:1.75},
+    {note:'G3',dur:'4n',t:2.25},{note:'E3',dur:'4n',t:2.75},
+    {note:'A3',dur:'8n',t:3.25},{note:'B3',dur:'8n',t:3.50},{note:'C4',dur:'4n',t:3.75},
+    {note:'B3',dur:'4n',t:4.25},{note:'A3',dur:'8n',t:4.75},{note:'G3',dur:'8n',t:5.00},
+    {note:'E3',dur:'2n',t:5.50},
+  ], 7.0, 'sawtooth');
+}
+
+export function playCrossingBgm() {
+  _bgm([
+    {note:'C5',dur:'8n',t:0.00},{note:'E5',dur:'8n',t:0.25},{note:'G5',dur:'4n',t:0.50},
+    {note:'E5',dur:'8n',t:1.00},{note:'G5',dur:'8n',t:1.25},{note:'C6',dur:'4n',t:1.50},
+    {note:'B5',dur:'8n',t:2.00},{note:'A5',dur:'8n',t:2.25},{note:'G5',dur:'4n',t:2.50},
+    {note:'E5',dur:'8n',t:3.00},{note:'D5',dur:'8n',t:3.25},{note:'C5',dur:'4n',t:3.50},
+    {note:'D5',dur:'8n',t:4.00},{note:'F5',dur:'8n',t:4.25},{note:'A5',dur:'4n',t:4.50},
+    {note:'G5',dur:'8n',t:5.00},{note:'E5',dur:'8n',t:5.25},{note:'C5',dur:'4n',t:5.50},
+    {note:'G4',dur:'8n',t:6.00},{note:'C5',dur:'2n',t:6.25},
+  ], 6.75, 'triangle');
+}
