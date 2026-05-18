@@ -19,6 +19,7 @@ import DoubutsuRunner from './games/DoubutsuRunner'
 import DoubutsuShoot from './games/DoubutsuShoot'
 import DoubutsuSniper from './games/DoubutsuSniper'
 import DoubutsuCrossing from './games/DoubutsuCrossing'
+import KokkiQuiz from './games/KokkiQuiz'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 
@@ -51,6 +52,7 @@ export default function App() {
       <Route path="/shooting" element={<DoubutsuShoot />} />
       <Route path="/sniper"   element={<DoubutsuSniper />} />
       <Route path="/crossing" element={<DoubutsuCrossing />} />
+      <Route path="/kokki" element={<KokkiQuiz />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/terms" element={<TermsPage />} />
     </Routes>

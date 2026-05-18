@@ -5,6 +5,7 @@ import {
   playSoundCorrect, playSoundWrong, playSoundClear,
   ensureAudioStarted, toggleMute, getMuteState,
 } from '../utils/audio';
+import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './MojiAsobi.css';
@@ -97,12 +98,12 @@ export default function MojiAsobi() {
     trackGameClear('MojiAsobi', c, 1);
     setHiScore(isNew ? c : hi);
     let title, msg;
-    if (c >= 9)      { title = lang === 'en' ? '🏆 Perfect!' : '🏆 かんぺき！';   msg = lang === 'en' ? 'Word Master!' : 'もじはかせだ！'; }
-    else if (c >= 6) { title = lang === 'en' ? '⭐ Great!'   : '⭐ ナイス！';     msg = lang === 'en' ? 'Well done!'   : 'よくできました！'; }
-    else             { title = lang === 'en' ? '📖 Try Again': '📖 もういちど';   msg = lang === 'en' ? 'Keep going!'  : 'れんしゅうしよう！'; }
+    if (c >= 9)      { title = {ja:'🏆 かんぺき！', en:'🏆 Perfect!', zh:'🏆 完美！', ko:'🏆 완벽해요!', es:'🏆 ¡Perfecto!'}[lang] || '🏆 かんぺき！';   msg = {ja:'もじはかせだ！', en:'Word Master!', zh:'文字大师！', ko:'글자 마스터!', es:'¡Maestro de palabras!'}[lang] || 'もじはかせだ！'; }
+    else if (c >= 6) { title = {ja:'⭐ ナイス！', en:'⭐ Great!', zh:'⭐ 很棒！', ko:'⭐ 잘했어요!', es:'⭐ ¡Bien!'}[lang] || '⭐ ナイス！';     msg = {ja:'よくできました！', en:'Well done!', zh:'干得好！', ko:'잘했어요!', es:'¡Bien hecho!'}[lang] || 'よくできました！'; }
+    else             { title = {ja:'📖 もういちど', en:'📖 Try Again', zh:'📖 再试一次！', ko:'📖 다시 도전!', es:'📖 ¡Inténtalo!'}[lang] || '📖 もういちど';   msg = {ja:'れんしゅうしよう！', en:'Keep going!', zh:'继续练习！', ko:'계속 연습해요!', es:'¡Sigue adelante!'}[lang] || 'れんしゅうしよう！'; }
     const hiText = isNew
-      ? (lang === 'en' ? '🏆 New Record!' : '🏆 ニューレコード！')
-      : (lang === 'en' ? `Best: ${hi}pts` : `ハイスコア: ${hi}もん`);
+      ? ({ja:'🏆 ニューレコード！', en:'🏆 New Record!', zh:'🏆 新纪录！', ko:'🏆 신기록!', es:'🏆 ¡Nuevo récord!'}[lang] || '🏆 ニューレコード！')
+      : `${t(lang,'best')}: ${hi}`;
     setResultData({ title, msg, hiText, isNew });
     setScreen('result');
   }, [lang]);
@@ -151,22 +152,25 @@ export default function MojiAsobi() {
     <div className="moji-wrap">
       <div className="moji-title-screen">
         <div className="moji-title-icon">🔤</div>
-        <h1 className="moji-title-text">{lang === 'en' ? 'Letter Fun!' : 'もじあそび！'}</h1>
+        <h1 className="moji-title-text">{{ja:'もじあそび！', en:'Letter Fun!', zh:'文字游戏！', ko:'글자 놀이!', es:'¡Juego de Letras!'}[lang] || 'もじあそび！'}</h1>
         <p className="moji-title-desc">
           {lang === 'en'
             ? 'Look at the picture and\nchoose the right hiragana!'
+            : lang === 'zh' ? '看图片选择\n正确的平假名！'
+            : lang === 'ko' ? '그림을 보고\n올바른 히라가나를 골라요！'
+            : lang === 'es' ? '¡Mira el dibujo y\nelige el hiragana correcto!'
             : 'えをみて ただしい\nひらがなを えらんでね！'}
         </p>
         {hiScore > 0 && (
           <div className="moji-hi-badge">
-            🏆 {lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}もん`}
+            🏆 {t(lang,'best')}: {hiScore}
           </div>
         )}
         <button className="moji-start-btn" onClick={startGame}>
-          {lang === 'en' ? '▶ Start!' : '▶ スタート！'}
+          ▶ {t(lang,'start')}！
         </button>
         <button className="ww-back-btn" onClick={() => navigate('/')}>
-          {lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}
+          {t(lang,'back')}
         </button>
       </div>
     </div>
@@ -178,9 +182,7 @@ export default function MojiAsobi() {
       <div className="moji-result-screen">
         <div className="moji-result-title">{resultData.title}</div>
         <div className="moji-result-score">
-          {lang === 'en'
-            ? `Correct: ${scoreRef.current} / ${TOTAL}`
-            : `せいかい: ${scoreRef.current} / ${TOTAL} もん`}
+          {{ja:`せいかい: ${scoreRef.current} / ${TOTAL} もん`, en:`Correct: ${scoreRef.current} / ${TOTAL}`, zh:`正确: ${scoreRef.current} / ${TOTAL}`, ko:`정답: ${scoreRef.current} / ${TOTAL}`, es:`Correcto: ${scoreRef.current} / ${TOTAL}`}[lang] || `せいかい: ${scoreRef.current} / ${TOTAL} もん`}
         </div>
         <div className="moji-result-msg">{resultData.msg}</div>
         <div className={`moji-result-hi ${resultData.isNew ? 'moji-result-new' : ''}`} style={{ color: resultData.isNew ? '#FFD700' : 'rgba(255,255,255,0.7)' }}>
@@ -188,10 +190,10 @@ export default function MojiAsobi() {
         </div>
         <div className="moji-result-btns">
           <button className="moji-result-btn" onClick={startGame}>
-            {lang === 'en' ? 'Play Again' : 'もういちど'}
+            {t(lang,'retry')}
           </button>
           <button className="moji-result-btn secondary" onClick={() => navigate('/')}>
-            {lang === 'en' ? 'Back' : 'もどる'}
+            {t(lang,'back')}
           </button>
         </div>
       </div>
@@ -205,11 +207,11 @@ export default function MojiAsobi() {
       <div className="moji-hud">
         <button className="moji-hud-back" onClick={() => { stopBgm(); navigate('/'); }}>🏠</button>
         <div className="moji-hud-center">
-          <div className="moji-hud-title">🔤 {lang === 'en' ? 'Letter Fun' : 'もじあそび'}</div>
-          <div className="moji-hud-sub">{lang === 'en' ? `Q${qIdx + 1}/${TOTAL}` : `もんだい ${qIdx + 1}/${TOTAL}`}</div>
+          <div className="moji-hud-title">🔤 {{ja:'もじあそび', en:'Letter Fun', zh:'文字游戏', ko:'글자 놀이', es:'Letras'}[lang] || 'もじあそび'}</div>
+          <div className="moji-hud-sub">{{ja:`もんだい ${qIdx + 1}/${TOTAL}`, en:`Q${qIdx + 1}/${TOTAL}`, zh:`第${qIdx + 1}/${TOTAL}题`, ko:`문제 ${qIdx + 1}/${TOTAL}`, es:`P${qIdx + 1}/${TOTAL}`}[lang] || `もんだい ${qIdx + 1}/${TOTAL}`}</div>
         </div>
         <div className="moji-hud-box">
-          <div className="moji-hud-label">{lang === 'en' ? 'Score' : 'せいかい'}</div>
+          <div className="moji-hud-label">{t(lang,'score')}</div>
           <div className="moji-hud-val">{scoreRef.current}</div>
         </div>
         <button className="moji-mute-btn" onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playMojiAsobiBgm(); }}>
@@ -229,7 +231,7 @@ export default function MojiAsobi() {
       <div className="moji-game-area">
         <div className="moji-question">
           <div className="moji-q-label">
-            {lang === 'en' ? 'What animal is this?' : 'これは なんという どうぶつ？'}
+            {{ja:'これは なんという どうぶつ？', en:'What animal is this?', zh:'这是什么动物？', ko:'이건 어떤 동물일까요？', es:'¿Qué animal es este?'}[lang] || 'これは なんという どうぶつ？'}
           </div>
           <div className="moji-q-emoji">{qEmoji}</div>
           <div className="moji-q-reveal">{reveal}</div>

@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playSushiBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
+import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './SushiGame.css';
@@ -180,14 +181,14 @@ export default function SushiGame() {
 
     let title, msg;
     if (allClear) {
-      title = lang === 'en' ? '🏆 Champion!' : '🏆 チャンピオン！';
-      msg   = lang === 'en' ? `Score: ${s}pts!<br>You cleared all stages!` : `スコア ${s} てん！<br>ぜんぶクリアしたよ！`;
+      title = {ja:'🏆 チャンピオン！', en:'🏆 Champion!', zh:'🏆 冠军！', ko:'🏆 챔피언!', es:'🏆 ¡Campeón!'}[lang] || '🏆 チャンピオン！';
+      msg   = {ja:`スコア ${s} てん！<br>ぜんぶクリアしたよ！`, en:`Score: ${s}pts!<br>You cleared all stages!`, zh:`得分: ${s}分！<br>全部通关了！`, ko:`점수: ${s}점！<br>모두 클리어했어요!`, es:`Puntos: ${s}!<br>¡Superaste todos los niveles!`}[lang] || `スコア ${s} てん！`;
     } else if (s >= 80) {
-      title = lang === 'en' ? '🍣 Nice!' : '🍣 ナイス！';
-      msg   = lang === 'en' ? `Score: ${s}pts!<br>You reached Stage ${stageR.current}!` : `スコア ${s} てん！<br>ステージ${stageR.current}まで！`;
+      title = {ja:'🍣 ナイス！', en:'🍣 Nice!', zh:'🍣 不错！', ko:'🍣 잘했어요!', es:'🍣 ¡Bien!'}[lang] || '🍣 ナイス！';
+      msg   = {ja:`スコア ${s} てん！<br>ステージ${stageR.current}まで！`, en:`Score: ${s}pts!<br>You reached Stage ${stageR.current}!`, zh:`得分: ${s}分！<br>到达第${stageR.current}关！`, ko:`점수: ${s}점！<br>스테이지 ${stageR.current}까지!`, es:`Puntos: ${s}!<br>¡Llegaste al nivel ${stageR.current}!`}[lang] || `スコア ${s} てん！`;
     } else {
-      title = lang === 'en' ? '😅 Try Again!' : '😅 もういちど';
-      msg   = lang === 'en' ? `Score: ${s}pts<br>Keep challenging!` : `スコア ${s} てん<br>またちょうせん！`;
+      title = {ja:'😅 もういちど', en:'😅 Try Again!', zh:'😅 再试一次！', ko:'😅 다시 도전!', es:'😅 ¡Inténtalo!'}[lang] || '😅 もういちど';
+      msg   = {ja:`スコア ${s} てん<br>またちょうせん！`, en:`Score: ${s}pts<br>Keep challenging!`, zh:`得分: ${s}分<br>继续挑战！`, ko:`점수: ${s}점<br>계속 도전해요!`, es:`Puntos: ${s}<br>¡Sigue intentando!`}[lang] || `スコア ${s} てん`;
     }
 
     setResult({ title, msg, score: s, isNew, hi: isNew ? s : hi });
@@ -210,17 +211,17 @@ export default function SushiGame() {
     <div className="sushi-wrap sushi-title">
       <div className="sushi-title-box">
         <div style={{ fontSize: 60, marginBottom: 6 }}>🍣</div>
-        <h1 className="sushi-title-text">{lang === 'en' ? 'Catch Salmon!' : 'さーもんをとろう！'}</h1>
+        <h1 className="sushi-title-text">{{ja:'さーもんをとろう！', en:'Catch Salmon!', zh:'捉三文鱼！', ko:'연어를 잡아라!', es:'¡Atrapa el Salmón!'}[lang] || 'さーもんをとろう！'}</h1>
         <div className="sushi-rule-card">
-          <h2>{lang === 'en' ? '📖 How to Play' : '📖 あそびかた'}</h2>
-          <div className="sushi-rule-step"><div className="sushi-rule-num">1</div><div className="sushi-rule-text">{lang === 'en' ? 'Watch the conveyor belt lanes!' : 'かいてんずしの レーンを みてね！'}</div></div>
-          <div className="sushi-rule-step"><div className="sushi-rule-num">2</div><div className="sushi-rule-text">{lang === 'en' ? <><b>Salmon🍣</b> comes along — tap it!</> : <><b>さーもん🍣</b> がながれてきたら タップ！</>}</div></div>
-          <div className="sushi-rule-step"><div className="sushi-rule-num">3</div><div className="sushi-rule-text">{lang === 'en' ? <><b>Animals & other items</b> — don't tap!</> : <><b>どうぶつ・ほかのもの</b>はタップしちゃダメ！</>}</div></div>
-          <div className="sushi-rule-step"><div className="sushi-rule-num">4</div><div className="sushi-rule-text">{lang === 'en' ? 'Clear all 3 stages — speed increases!' : 'ステージ3まで クリアしよう！スピードがあがるよ！'}</div></div>
+          <h2>📖 {t(lang,'howToPlay')}</h2>
+          <div className="sushi-rule-step"><div className="sushi-rule-num">1</div><div className="sushi-rule-text">{{ja:'かいてんずしの レーンを みてね！', en:'Watch the conveyor belt lanes!', zh:'注意传送带的轨道！', ko:'회전 초밥 레인을 봐요!', es:'¡Mira los carriles de la cinta!'}[lang] || 'かいてんずしの レーンを みてね！'}</div></div>
+          <div className="sushi-rule-step"><div className="sushi-rule-num">2</div><div className="sushi-rule-text">{{ja:<><b>さーもん🍣</b> がながれてきたら タップ！</>, en:<><b>Salmon🍣</b> comes — tap it!</>, zh:<><b>三文鱼🍣</b>来了就点击！</>, ko:<><b>연어🍣</b>가 오면 탭해요！</>, es:<><b>¡Viene salmón🍣</b>, tócalo!</>}[lang] || <><b>さーもん🍣</b> がながれてきたら タップ！</>}</div></div>
+          <div className="sushi-rule-step"><div className="sushi-rule-num">3</div><div className="sushi-rule-text">{{ja:<><b>どうぶつ・ほかのもの</b>はタップしちゃダメ！</>, en:<><b>Animals &amp; others</b> — don't tap!</>, zh:<><b>动物等其他的</b>不要点！</>, ko:<><b>동물·기타</b>는 탭하지 마세요!</>, es:<><b>¡Animales y otros</b>, no toques!</>}[lang] || <><b>どうぶつ・ほかのもの</b>はタップしちゃダメ！</>}</div></div>
+          <div className="sushi-rule-step"><div className="sushi-rule-num">4</div><div className="sushi-rule-text">{{ja:'ステージ3まで クリアしよう！スピードがあがるよ！', en:'Clear all 3 stages — speed increases!', zh:'通关3个关卡！速度会加快！', ko:'스테이지 3까지 클리어하자! 속도가 빨라져요!', es:'¡Supera los 3 niveles, la velocidad aumenta!'}[lang] || 'ステージ3まで クリアしよう！'}</div></div>
         </div>
-        {hiScore > 0 && <div className="sushi-hi-badge">🏆 {lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}てん`}</div>}
-        <button className="sushi-start-btn" onClick={startGame}>{lang === 'en' ? '▶ Start!' : '▶ スタート！'}</button>
-        <button className="ww-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
+        {hiScore > 0 && <div className="sushi-hi-badge">🏆 {t(lang,'best')}: {hiScore}</div>}
+        <button className="sushi-start-btn" onClick={startGame}>▶ {t(lang,'start')}！</button>
+        <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang,'back')}</button>
       </div>
     </div>
   );
@@ -232,9 +233,9 @@ export default function SushiGame() {
     <div className="sushi-wrap sushi-stageclear">
       <div className="sushi-stageclear-box">
         <div style={{ fontSize: 64, marginBottom: 8 }}>🎉</div>
-        <h2 className="sushi-stageclear-title">{lang === 'en' ? `Stage ${stage} Clear!` : `ステージ${stage} クリア！`}</h2>
-        <p className="sushi-stageclear-msg">{lang === 'en' ? `🍣×${caught} caught! Next is faster!` : `🍣×${caught} とれたよ！つぎは もっとはやいよ！`}</p>
-        <button className="sushi-start-btn" onClick={goNextStage}>{lang === 'en' ? 'Next ▶' : 'つぎへ ▶'}</button>
+        <h2 className="sushi-stageclear-title">{{ja:`ステージ${stage} クリア！`, en:`Stage ${stage} Clear!`, zh:`第${stage}关通过！`, ko:`스테이지 ${stage} 클리어!`, es:`¡Nivel ${stage} superado!`}[lang] || `ステージ${stage} クリア！`}</h2>
+        <p className="sushi-stageclear-msg">{{ja:`🍣×${caught} とれたよ！つぎは もっとはやいよ！`, en:`🍣×${caught} caught! Next is faster!`, zh:`接到了🍣×${caught}个！下一关更快！`, ko:`🍣×${caught}개 잡았어요! 다음은 더 빨라요!`, es:`🍣×${caught} atrapados! ¡El siguiente es más rápido!`}[lang] || `🍣×${caught} とれたよ！`}</p>
+        <button className="sushi-start-btn" onClick={goNextStage}>{t(lang,'next')} ▶</button>
       </div>
     </div>
   );
@@ -247,11 +248,11 @@ export default function SushiGame() {
       <div className="sushi-result-box">
         <h2 className="sushi-result-title">{resultData?.title}</h2>
         <p className="sushi-result-msg" dangerouslySetInnerHTML={{ __html: resultData?.msg ?? '' }} />
-        {resultData?.isNew && <div className="sushi-result-new">🏆 {lang === 'en' ? 'New Record!' : 'ニューレコード！'}</div>}
-        <div className="sushi-result-hi">{lang === 'en' ? `Best: ${resultData?.hi ?? hiScore}pts` : `ハイスコア: ${resultData?.hi ?? hiScore}てん`}</div>
+        {resultData?.isNew && <div className="sushi-result-new">🏆 {t(lang,'newRecord')}</div>}
+        <div className="sushi-result-hi">{t(lang,'best')}: {resultData?.hi ?? hiScore}</div>
         <div className="sushi-result-btns">
-          <button className="sushi-start-btn" onClick={startGame}>{lang === 'en' ? 'Play Again' : 'もういちど'}</button>
-          <button className="sushi-back-btn"  onClick={() => navigate('/')}>{lang === 'en' ? 'Back to Title' : 'タイトルへ'}</button>
+          <button className="sushi-start-btn" onClick={startGame}>{t(lang,'retry')}</button>
+          <button className="sushi-back-btn"  onClick={() => navigate('/')}>{t(lang,'backToTitle')}</button>
         </div>
       </div>
     </div>
@@ -285,16 +286,16 @@ export default function SushiGame() {
         {/* CENTER */}
         <div style={{ flex:1, textAlign:'center' }}>
           <div style={{ fontSize:13, fontWeight:900, color:'#fff', textShadow:'1px 1px 0 rgba(0,0,0,0.3)', lineHeight:1.2 }}>
-            {lang === 'en' ? '🍣 Catch Salmon' : '🍣 さーもんをとろう'}
+            {{ja:'🍣 さーもんをとろう', en:'🍣 Catch Salmon', zh:'🍣 捉三文鱼', ko:'🍣 연어를 잡아라', es:'🍣 Atrapa el Salmón'}[lang] || '🍣 さーもんをとろう'}
           </div>
           <div style={{ fontSize:11, color:'rgba(255,255,255,0.88)', fontWeight:700 }}>
-            {lang === 'en' ? 'Score' : 'スコア'}: {score}　{lang === 'en' ? 'Stage' : 'ステージ'} {stage}
+            {t(lang,'score')}: {score}　{t(lang,'stage')} {stage}
           </div>
         </div>
         {/* RIGHT */}
         <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
           <div style={{ background:'rgba(255,255,255,0.95)', borderRadius:12, padding:'4px 10px', textAlign:'center' }}>
-            <div style={{ fontSize:10, color:'#c0392b', fontWeight:700 }}>{lang === 'en' ? 'Lives' : 'ライフ'}</div>
+            <div style={{ fontSize:10, color:'#c0392b', fontWeight:700 }}>{{ja:'ライフ', en:'Lives', zh:'生命', ko:'라이프', es:'Vidas'}[lang] || 'ライフ'}</div>
             <div style={{ fontSize:16, fontWeight:900 }}>{'❤️'.repeat(hp)}{'🖤'.repeat(3 - hp)}</div>
           </div>
           <button onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playSushiBgm(); }}

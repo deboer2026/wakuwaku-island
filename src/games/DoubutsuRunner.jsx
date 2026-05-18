@@ -7,6 +7,7 @@ import {
 } from '../utils/audio';
 import { addCoins } from '../utils/coins';
 import { trackGameStart } from '../utils/analytics';
+import { getLang, t } from '../utils/i18n';
 import './DoubutsuRunner.css';
 
 const W = 400, H = 240;
@@ -134,6 +135,7 @@ function rectsOverlap(ax,ay,aw,ah, bx,by,bw,bh, pad=6) {
 ══════════════════════════════════════════════════════════ */
 export default function DoubutsuRunner() {
   const navigate  = useNavigate();
+  const lang = getLang();
   const canvasRef = useRef(null);
   const rafRef    = useRef(null);
   const G         = useRef(null);
@@ -251,8 +253,8 @@ export default function DoubutsuRunner() {
           <button key={p} className={`dr-pick-btn${p===playerEm?' on':''}`} onClick={()=>setPlayerEm(p)}>{p}</button>
         ))}
       </div>
-      <button className="dr-start-btn" onClick={startGame}>▶ スタート！</button>
-      <button className="ww-back-btn" onClick={()=>navigate('/')}>🏝️ トップへもどる</button>
+      <button className="dr-start-btn" onClick={startGame}>▶ {t(lang, 'start')}！</button>
+      <button className="ww-back-btn" onClick={()=>navigate('/')}>{t(lang, 'back')}</button>
     </div>
   );
 
@@ -282,10 +284,10 @@ export default function DoubutsuRunner() {
         <div className="dr-overlay">
           <div className="dr-overlay-card">
             <div style={{fontSize:52}}>{playerEm}</div>
-            <h2>ゲームオーバー！</h2>
+            <h2>{t(lang, 'gameOver')}！</h2>
             <div className="dr-go-score">スコア: <b>{score}</b>m</div>
             {score >= best && score>0 && <div className="dr-go-new">🏆 ニューレコード！</div>}
-            <button className="dr-start-btn" onClick={startGame}>もういちど</button>
+            <button className="dr-start-btn" onClick={startGame}>{t(lang, 'retry')}</button>
             <button className="ww-back-btn" style={{marginTop:8}} onClick={()=>{ stopBgm(); navigate('/'); }}>🏠 もどる</button>
           </div>
         </div>

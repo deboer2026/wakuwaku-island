@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playShabondamaBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
+import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './Shabondama.css';
@@ -281,25 +282,37 @@ export default function Shabondama() {
 
     let title, msg;
     if (score >= 40) {
-      title = lang === 'en' ? '🏆 Amazing!' : '🏆 すごい！';
-      msg   = lang === 'en'
-        ? `Score: <b style="font-size:28px;color:#FFD700">${score}</b>pts!<br>Bubble Champion!`
-        : `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！<br>シャボンだまの<br>チャンピオン！`;
+      title = {ja:'🏆 すごい！', en:'🏆 Amazing!', zh:'🏆 太棒了！', ko:'🏆 대단해요!', es:'🏆 ¡Increíble!'}[lang] || '🏆 すごい！';
+      msg   = {
+        ja: `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！<br>シャボンだまの<br>チャンピオン！`,
+        en: `Score: <b style="font-size:28px;color:#FFD700">${score}</b>pts!<br>Bubble Champion!`,
+        zh: `得分: <b style="font-size:28px;color:#FFD700">${score}</b>分！<br>泡泡冠军！`,
+        ko: `점수: <b style="font-size:28px;color:#FFD700">${score}</b>점！<br>버블 챔피언!`,
+        es: `Puntos: <b style="font-size:28px;color:#FFD700">${score}</b>!<br>¡Campeón de burbujas!`,
+      }[lang] || `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！`;
     } else if (score >= 20) {
-      title = lang === 'en' ? '⭐ Nice!' : '⭐ ナイス！';
-      msg   = lang === 'en'
-        ? `Score: <b style="font-size:28px;color:#FFD700">${score}</b>pts!<br>Well done!`
-        : `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！<br>よくできました！`;
+      title = {ja:'⭐ ナイス！', en:'⭐ Nice!', zh:'⭐ 不错！', ko:'⭐ 잘했어요!', es:'⭐ ¡Bien!'}[lang] || '⭐ ナイス！';
+      msg   = {
+        ja: `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！<br>よくできました！`,
+        en: `Score: <b style="font-size:28px;color:#FFD700">${score}</b>pts!<br>Well done!`,
+        zh: `得分: <b style="font-size:28px;color:#FFD700">${score}</b>分！<br>干得好！`,
+        ko: `점수: <b style="font-size:28px;color:#FFD700">${score}</b>점！<br>잘했어요!`,
+        es: `Puntos: <b style="font-size:28px;color:#FFD700">${score}</b>!<br>¡Bien hecho!`,
+      }[lang] || `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！`;
     } else {
-      title = lang === 'en' ? '🫧 Try Again!' : '🫧 もういちど';
-      msg   = lang === 'en'
-        ? `Score: <b style="font-size:28px;color:#FFD700">${score}</b>pts<br>Keep challenging!`
-        : `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん<br>またちょうせん！`;
+      title = {ja:'🫧 もういちど', en:'🫧 Try Again!', zh:'🫧 再试一次！', ko:'🫧 다시 도전!', es:'🫧 ¡Inténtalo!'}[lang] || '🫧 もういちど';
+      msg   = {
+        ja: `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん<br>またちょうせん！`,
+        en: `Score: <b style="font-size:28px;color:#FFD700">${score}</b>pts<br>Keep challenging!`,
+        zh: `得分: <b style="font-size:28px;color:#FFD700">${score}</b>分<br>继续挑战！`,
+        ko: `점수: <b style="font-size:28px;color:#FFD700">${score}</b>점<br>계속 도전해요!`,
+        es: `Puntos: <b style="font-size:28px;color:#FFD700">${score}</b><br>¡Sigue intentando!`,
+      }[lang] || `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん`;
     }
 
     const hiText = isNew
-      ? (lang === 'en' ? '🏆 New Record!' : '🏆 ニューレコード！')
-      : (lang === 'en' ? `Best: ${hi}pts` : `ハイスコア: ${hi}てん`);
+      ? ({ja:'🏆 ニューレコード！', en:'🏆 New Record!', zh:'🏆 新纪录！', ko:'🏆 신기록!', es:'🏆 ¡Nuevo récord!'}[lang] || '🏆 ニューレコード！')
+      : `${t(lang,'best')}: ${hi}`;
     setResultData({ title, msg, hiText, isNew });
     setScreen('result');
   }, []);
@@ -484,15 +497,15 @@ export default function Shabondama() {
       {screen === 'title' && (
         <div className="sdm-screen" id="sdm-title-screen">
           <div style={{ fontSize: '64px', marginBottom: '8px' }}>🫧</div>
-          <h1>{lang === 'en' ? 'Bubble Pop!' : 'シャボンだまポン！'}</h1>
-          <p>{lang === 'en' ? <>Tap the bubbles as they float up!</> : <>とんでくる シャボンだまを<br />どんどんタップしよう！</>}</p>
+          <h1>{{ja:'シャボンだまポン！', en:'Bubble Pop!', zh:'泡泡消消乐！', ko:'비눗방울 팡!', es:'¡Burbuja Pop!'}[lang] || 'シャボンだまポン！'}</h1>
+          <p>{lang === 'en' ? <>Tap the bubbles as they float up!</> : lang === 'zh' ? <>浮上来的泡泡<br />快点击！</> : lang === 'ko' ? <>떠오르는 비눗방울을<br />계속 탭해요！</> : lang === 'es' ? <>¡Toca las burbujas<br />mientras suben!</> : <>とんでくる シャボンだまを<br />どんどんタップしよう！</>}</p>
           <div className="sdm-warn-box">
-            {lang === 'en' ? <>⚠️ Animals are mixed in!<br />Don't tap the animals!</> : <>⚠️ どうぶつがまじってるよ！<br />どうぶつは おしちゃダメ！</>}
+            {{ja:'⚠️ どうぶつがまじってるよ！どうぶつは おしちゃダメ！', en:"⚠️ Animals are mixed in! Don't tap the animals!", zh:'⚠️ 混入了动物！不要点击动物！', ko:'⚠️ 동물이 섞여있어요! 동물을 탭하지 마세요!', es:'⚠️ ¡Hay animales mezclados! ¡No toques los animales!'}[lang] || '⚠️ どうぶつがまじってるよ！'}
           </div>
-          <div className="sdm-hi-badge">🏆 {lang === 'en' ? `Best: ${currentHi}pts` : `ハイスコア: ${currentHi}てん`}</div>
+          <div className="sdm-hi-badge">🏆 {t(lang,'best')}: {currentHi}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
-            <button className="sdm-big-btn" onClick={startGame}>{lang === 'en' ? '▶ Start!' : '▶ スタート！'}</button>
-            <button className="ww-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
+            <button className="sdm-big-btn" onClick={startGame}>▶ {t(lang, 'start')}！</button>
+            <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang, 'back')}</button>
           </div>
         </div>
       )}
@@ -510,12 +523,12 @@ export default function Shabondama() {
           }}>🏠</button>
           {/* CENTER */}
           <div className="sdm-hud-center">
-            <div id="sdm-hud-title">{lang === 'en' ? '🫧 Bubble Pop' : '🫧 シャボンだまポン'}</div>
-            <div className="sdm-hud-score">{lang === 'en' ? 'Score' : 'スコア'}: {scoreDisplay}</div>
+            <div id="sdm-hud-title">{{ja:'🫧 シャボンだまポン', en:'🫧 Bubble Pop', zh:'🫧 泡泡消消乐', ko:'🫧 비눗방울 팡', es:'🫧 Burbuja Pop'}[lang] || '🫧 シャボンだまポン'}</div>
+            <div className="sdm-hud-score">{t(lang,'score')}: {scoreDisplay}</div>
           </div>
           {/* RIGHT */}
           <div className="sdm-hud-box">
-            <div className="sdm-hud-label">{lang === 'en' ? 'Left' : 'のこり'}</div>
+            <div className="sdm-hud-label">{t(lang,'timeLeft')}</div>
             <div className="sdm-hud-val">{timeDisplay}</div>
           </div>
           <button onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playShabondamaBgm(); }}
@@ -537,8 +550,8 @@ export default function Shabondama() {
             {resultData.hiText}
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
-            <button className="sdm-big-btn" onClick={startGame}>{lang === 'en' ? 'Play Again' : 'もういちど'}</button>
-            <button className="sdm-big-btn sdm-blue" onClick={goTitle}>{lang === 'en' ? 'Back to Title' : 'タイトルへ'}</button>
+            <button className="sdm-big-btn" onClick={startGame}>{t(lang, 'retry')}</button>
+            <button className="sdm-big-btn sdm-blue" onClick={goTitle}>{t(lang,'backToTitle')}</button>
           </div>
         </div>
       )}

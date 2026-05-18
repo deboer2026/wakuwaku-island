@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playJewelryShopBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
+import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './JewelryShop.css';
@@ -280,15 +281,18 @@ export default function JewelryShop() {
       {screen === 'title' && (
         <div className="js-screen js-title-screen">
           <div style={{ fontSize: 60, marginBottom: 6 }}>💎</div>
-          <h1>{lang === 'en' ? 'Jewelry Shop!' : 'ほうせきやさん'}</h1>
+          <h1>{{ja:'ほうせきやさん', en:'Jewelry Shop!', zh:'珠宝店！', ko:'보석 가게!', es:'¡Joyería!'}[lang] || 'ほうせきやさん'}</h1>
           <p>
             {lang === 'en'
               ? <>Give the visiting animals<br />the accessory they want!<br />Pick it from the shelf!</>
+              : lang === 'zh' ? <>给来访的动物<br />想要的配饰！<br />从架子上选择点击！</>
+              : lang === 'ko' ? <>찾아온 동물에게<br />원하는 액세서리를<br />건네줘요! 선반에서 선택!</>
+              : lang === 'es' ? <>¡Da a los animales<br />el accesorio que quieren!<br />¡Elige del estante!</>
               : <>やってきた どうぶつさんに<br />ほしい アクセサリを<br />わたしてあげよう！<br />たなから えらんで タップ！</>}
           </p>
-          <div className="js-hi-badge">🏆 {lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}てん`}</div>
-          <button className="js-big-btn" onClick={startGame}>{lang === 'en' ? '▶ Start!' : '▶ スタート！'}</button>
-          <button className="ww-back-btn" style={{ marginTop: 6 }} onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
+          <div className="js-hi-badge">🏆 {t(lang,'best')}: {hiScore}</div>
+          <button className="js-big-btn" onClick={startGame}>▶ {t(lang,'start')}！</button>
+          <button className="ww-back-btn" style={{ marginTop: 6 }} onClick={() => navigate('/')}>{t(lang,'back')}</button>
         </div>
       )}
 
@@ -299,12 +303,12 @@ export default function JewelryShop() {
           <button className="js-hud-back" onClick={() => { servingRef.current = false; if (rafRef.current) cancelAnimationFrame(rafRef.current); navigate('/'); }}>🏠</button>
           {/* CENTER */}
           <div className="js-hud-center">
-            <div className="js-hud-title">{lang === 'en' ? '💎 Jewelry Shop' : '💎 ほうせきやさん'}</div>
-            <div className="js-hud-score">{lang === 'en' ? 'Score' : 'スコア'}: {score}</div>
+            <div className="js-hud-title">{{ja:'💎 ほうせきやさん', en:'💎 Jewelry Shop', zh:'💎 珠宝店', ko:'💎 보석 가게', es:'💎 Joyería'}[lang] || '💎 ほうせきやさん'}</div>
+            <div className="js-hud-score">{t(lang,'score')}: {score}</div>
           </div>
           {/* RIGHT */}
           <div className="js-hud-box">
-            <div className="js-hud-label">{lang === 'en' ? 'Stage' : 'ステージ'}</div>
+            <div className="js-hud-label">{t(lang,'stage')}</div>
             <div className="js-hud-val">{stage}</div>
           </div>
           <button onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playJewelryShopBgm(); }}
@@ -358,27 +362,35 @@ export default function JewelryShop() {
       {/* ── Stage Clear ── */}
       {screen === 'stageClear' && (
         <div className="js-stage-clear">
-          <h2>🌟 {lang === 'en' ? `Stage ${stage} Clear!` : `ステージ${stage} クリア！`}</h2>
+          <h2>🌟 {{ja:`ステージ${stage} クリア！`, en:`Stage ${stage} Clear!`, zh:`第${stage}关通过！`, ko:`스테이지 ${stage} 클리어!`, es:`¡Nivel ${stage} superado!`}[lang] || `ステージ${stage} クリア！`}</h2>
           <p>
-            {lang === 'en' ? <>All delivered!<br />Score: <b style={{ color: '#FFD700', fontSize: 20 }}>{score}</b>pts</> : <>ぜんいんに わたせたよ！<br />スコア: <b style={{ color: '#FFD700', fontSize: 20 }}>{score}</b>てん</>}
+            {lang === 'en' ? <>All delivered!<br />Score: <b style={{ color: '#FFD700', fontSize: 20 }}>{score}</b>pts</>
+            : lang === 'zh' ? <>全部送达！<br />得分: <b style={{ color: '#FFD700', fontSize: 20 }}>{score}</b>分</>
+            : lang === 'ko' ? <>전부 전달했어요！<br />점수: <b style={{ color: '#FFD700', fontSize: 20 }}>{score}</b>점</>
+            : lang === 'es' ? <>¡Todo entregado！<br />Puntos: <b style={{ color: '#FFD700', fontSize: 20 }}>{score}</b></>
+            : <>ぜんいんに わたせたよ！<br />スコア: <b style={{ color: '#FFD700', fontSize: 20 }}>{score}</b>てん</>}
           </p>
-          <button className="js-big-btn" onClick={nextStage}>{lang === 'en' ? 'Next ▶' : 'つぎへ ▶'}</button>
+          <button className="js-big-btn" onClick={nextStage}>{t(lang,'next')} ▶</button>
         </div>
       )}
 
       {/* ── Result ── */}
       {screen === 'result' && resultData && (
         <div className="js-result-overlay">
-          <h2>💔 {lang === 'en' ? 'Too bad...' : 'ざんねん…'}</h2>
+          <h2>💔 {{ja:'ざんねん…', en:'Too bad...', zh:'太遗憾了…', ko:'아쉬워요…', es:'¡Qué lástima…'}[lang] || 'ざんねん…'}</h2>
           <p>
-            {lang === 'en' ? <>Score: <b style={{ fontSize: 26, color: '#FFD700' }}>{resultData.score}</b>pts<br />Reached Stage {resultData.stage}!</> : <>スコア <b style={{ fontSize: 26, color: '#FFD700' }}>{resultData.score}</b> てん<br />ステージ {resultData.stage} まで すすんだよ！</>}
+            {lang === 'en' ? <>Score: <b style={{ fontSize: 26, color: '#FFD700' }}>{resultData.score}</b>pts<br />Reached Stage {resultData.stage}!</>
+            : lang === 'zh' ? <>得分: <b style={{ fontSize: 26, color: '#FFD700' }}>{resultData.score}</b>分<br />到达第{resultData.stage}关！</>
+            : lang === 'ko' ? <>점수: <b style={{ fontSize: 26, color: '#FFD700' }}>{resultData.score}</b>점<br />스테이지 {resultData.stage}까지 진행했어요!</>
+            : lang === 'es' ? <>Puntos: <b style={{ fontSize: 26, color: '#FFD700' }}>{resultData.score}</b><br />¡Llegaste al nivel {resultData.stage}!</>
+            : <>スコア <b style={{ fontSize: 26, color: '#FFD700' }}>{resultData.score}</b> てん<br />ステージ {resultData.stage} まで すすんだよ！</>}
           </p>
           <div className="js-new-hi" style={{ color: isNewHi ? '#FFD700' : 'rgba(255,255,255,0.6)' }}>
-            {isNewHi ? `🏆 ${lang === 'en' ? 'New Record!' : 'ニューレコード！'}` : (lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}てん`)}
+            {isNewHi ? `🏆 ${t(lang,'newRecord')}` : `${t(lang,'best')}: ${hiScore}`}
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button className="js-big-btn" onClick={startGame}>{lang === 'en' ? 'Play Again' : 'もういちど'}</button>
-            <button className="js-big-btn js-blue-btn" onClick={() => navigate('/')}>{lang === 'en' ? 'Back to Title' : 'タイトルへ'}</button>
+            <button className="js-big-btn" onClick={startGame}>{t(lang,'retry')}</button>
+            <button className="js-big-btn js-blue-btn" onClick={() => navigate('/')}>{t(lang,'backToTitle')}</button>
           </div>
         </div>
       )}

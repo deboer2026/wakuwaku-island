@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playDoubutsuPuzzleBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
+import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './DoubutsuPuzzle.css';
@@ -369,16 +370,16 @@ export default function DoubutsuPuzzle() {
       {screen === 'title' && (
         <div className="dbp-screen" id="dbp-title-screen">
           <div style={{ fontSize: '52px', marginBottom: '6px' }}>🧩</div>
-          <h1>{lang === 'en' ? 'Animal Puzzle!' : 'どうぶつパズル'}</h1>
+          <h1>{{ja:'どうぶつパズル', en:'Animal Puzzle!', zh:'动物拼图！', ko:'동물 퍼즐!', es:'¡Puzzle Animal!'}[lang] || 'どうぶつパズル'}</h1>
           <p>
-            {lang === 'en' ? <>Find two matching<br />animals!</> : <>おなじ どうぶつを<br />ふたつ みつけよう！</>}
+            {lang === 'en' ? <>Find two matching<br />animals!</> : lang === 'zh' ? <>找出两只相同的动物！</> : lang === 'ko' ? <>똑같은 동물을 두 개 찾아요!</> : lang === 'es' ? <>¡Encuentra dos animales iguales!</> : <>おなじ どうぶつを<br />ふたつ みつけよう！</>}
           </p>
           <div className="dbp-hi-badge">
-            🏆 {lang === 'en' ? `Best: ${bestTimeDisplay > 0 ? fmtTime(bestTimeDisplay) : 'None'}` : `ベストタイム: ${bestTimeDisplay > 0 ? fmtTime(bestTimeDisplay) : 'なし'}`}
+            🏆 {t(lang,'best')}: {bestTimeDisplay > 0 ? fmtTime(bestTimeDisplay) : ({ja:'なし', en:'None', zh:'无', ko:'없음', es:'Ninguno'}[lang] || 'なし')}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
-            <button className="dbp-big-btn" onClick={startGame}>{lang === 'en' ? '▶ Start!' : '▶ スタート！'}</button>
-            <button className="ww-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
+            <button className="dbp-big-btn" onClick={startGame}>▶ {t(lang,'start')}！</button>
+            <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang,'back')}</button>
           </div>
         </div>
       )}
@@ -397,12 +398,12 @@ export default function DoubutsuPuzzle() {
             }}>🏠</button>
             {/* CENTER */}
             <div className="dbp-hud-center">
-              <div id="dbp-hud-title">{lang === 'en' ? '🧩 Animal Puzzle' : '🧩 どうぶつパズル'}</div>
-              <div className="dbp-hud-score">{lang === 'en' ? 'Miss' : 'ミス'}: {missDisplay}</div>
+              <div id="dbp-hud-title">{{ja:'🧩 どうぶつパズル', en:'🧩 Animal Puzzle', zh:'🧩 动物拼图', ko:'🧩 동물 퍼즐', es:'🧩 Puzzle Animal'}[lang] || '🧩 どうぶつパズル'}</div>
+              <div className="dbp-hud-score">{t(lang,'miss')}: {missDisplay}</div>
             </div>
             {/* RIGHT */}
             <div className="dbp-hud-box">
-              <div className="dbp-hud-label">{lang === 'en' ? 'Time' : 'じかん'}</div>
+              <div className="dbp-hud-label">{t(lang,'time')}</div>
               <div className="dbp-hud-val">{timeDisplay}</div>
             </div>
             <button onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playDoubutsuPuzzleBgm(); }}
@@ -451,23 +452,23 @@ export default function DoubutsuPuzzle() {
       {/* ── Result overlay ── */}
       {screen === 'result' && (
         <div id="dbp-result-overlay">
-          <h2>🎉 {lang === 'en' ? 'Clear!' : 'クリア！'}</h2>
+          <h2>🎉 {{ja:'クリア！', en:'Clear!', zh:'通关！', ko:'클리어!', es:'¡Completado!'}[lang] || 'クリア！'}</h2>
           <div className="dbp-stars-disp">{resultData.stars}</div>
           <p>
-            {lang === 'en' ? 'Time' : 'タイム'}: <b style={{ fontSize: '24px', color: '#FFD700' }}>{resultData.time}</b><br />
-            {lang === 'en' ? `Miss: ${resultData.misses}` : `ミス: ${resultData.misses}かい`}
+            {t(lang,'time')}: <b style={{ fontSize: '24px', color: '#FFD700' }}>{resultData.time}</b><br />
+            {t(lang,'miss')}: {resultData.misses}{lang === 'ja' ? 'かい' : ''}
           </p>
           {resultData.isNewBest && (
-            <div className="dbp-new-hi-txt">🏆 {lang === 'en' ? 'Best Time Updated!' : 'ベストタイム こうしん！'}</div>
+            <div className="dbp-new-hi-txt">🏆 {t(lang,'newRecord')}</div>
           )}
           {!resultData.isNewBest && (
             <div className="dbp-hi-badge" style={{ color: '#fff' }}>
-              {lang === 'en' ? `Best: ${fmtTime(resultData.bestTime)}` : `ベストタイム: ${fmtTime(resultData.bestTime)}`}
+              {t(lang,'best')}: {fmtTime(resultData.bestTime)}
             </div>
           )}
           <div style={{ display: 'flex', gap: '10px' }}>
-            <button className="dbp-big-btn" onClick={startGame}>{lang === 'en' ? 'Play Again' : 'もういちど'}</button>
-            <button className="dbp-big-btn blue" onClick={goTitle}>{lang === 'en' ? 'Back to Title' : 'タイトルへ'}</button>
+            <button className="dbp-big-btn" onClick={startGame}>{t(lang,'retry')}</button>
+            <button className="dbp-big-btn blue" onClick={goTitle}>{t(lang,'backToTitle')}</button>
           </div>
         </div>
       )}

@@ -7,6 +7,7 @@ import {
 } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
+import { t } from '../utils/i18n';
 import './TashizanGame.css';
 
 const ANIMALS = ['🐱','🐶','🐰','🐸','🐼','🦊','🐧','🐻','🐮','🐷','🦁','🐨'];
@@ -95,12 +96,12 @@ export default function TashizanGame() {
     trackGameClear('TashizanGame', c, 1);
     setHiScore(isNew ? c : hi);
     let title, msg;
-    if (c >= 9)      { title = lang === 'en' ? '🏆 Perfect!' : '🏆 かんぺき！';  msg = lang === 'en' ? 'Math Genius!' : 'さんすうはかせだ！'; }
-    else if (c >= 6) { title = lang === 'en' ? '⭐ Great!'   : '⭐ ナイス！';    msg = lang === 'en' ? 'Well done!'   : 'よくできました！'; }
-    else             { title = lang === 'en' ? '📖 Try Again': '📖 もういちど'; msg = lang === 'en' ? 'Keep going!'  : 'れんしゅうしよう！'; }
+    if (c >= 9)      { title = {ja:'🏆 かんぺき！', en:'🏆 Perfect!', zh:'🏆 完美！', ko:'🏆 완벽해요!', es:'🏆 ¡Perfecto!'}[lang] || '🏆 かんぺき！';  msg = {ja:'さんすうはかせだ！', en:'Math Genius!', zh:'数学天才！', ko:'수학 천재!', es:'¡Genio de las mates!'}[lang] || 'さんすうはかせだ！'; }
+    else if (c >= 6) { title = {ja:'⭐ ナイス！', en:'⭐ Great!', zh:'⭐ 很棒！', ko:'⭐ 잘했어요!', es:'⭐ ¡Bien!'}[lang] || '⭐ ナイス！';    msg = {ja:'よくできました！', en:'Well done!', zh:'干得好！', ko:'잘했어요!', es:'¡Bien hecho!'}[lang] || 'よくできました！'; }
+    else             { title = {ja:'📖 もういちど', en:'📖 Try Again', zh:'📖 再试一次！', ko:'📖 다시 도전!', es:'📖 ¡Inténtalo!'}[lang] || '📖 もういちど'; msg = {ja:'れんしゅうしよう！', en:'Keep going!', zh:'继续练习！', ko:'계속 연습해요!', es:'¡Sigue adelante!'}[lang] || 'れんしゅうしよう！'; }
     const hiText = isNew
-      ? (lang === 'en' ? '🏆 New Record!' : '🏆 ニューレコード！')
-      : (lang === 'en' ? `Best: ${hi}pts` : `ハイスコア: ${hi}もん`);
+      ? ({ja:'🏆 ニューレコード！', en:'🏆 New Record!', zh:'🏆 新纪录！', ko:'🏆 신기록!', es:'🏆 ¡Nuevo récord!'}[lang] || '🏆 ニューレコード！')
+      : `${t(lang,'best')}: ${hi}`;
     setResultData({ title, msg, hiText, isNew });
     setScreen('result');
   }, [lang]);
@@ -139,22 +140,20 @@ export default function TashizanGame() {
     <div className="tashi-wrap">
       <div className="tashi-title-screen">
         <div className="tashi-title-icon">➕</div>
-        <h1 className="tashi-title-text">{lang === 'en' ? 'Math Quiz!' : 'たしざんゲーム！'}</h1>
+        <h1 className="tashi-title-text">{{ja:'たしざんゲーム！', en:'Math Quiz!', zh:'算数游戏！', ko:'숫자 놀이!', es:'¡Matemáticas!'}[lang] || 'たしざんゲーム！'}</h1>
         <p className="tashi-title-desc">
-          {lang === 'en'
-            ? 'Count the animals and\nchoose the right answer!'
-            : 'どうぶつを かぞえて\nこたえをえらんでね！'}
+          {{ja:'どうぶつを かぞえて\nこたえをえらんでね！', en:'Count the animals and\nchoose the right answer!', zh:'数一数动物\n选出正确答案！', ko:'동물을 세어서\n올바른 답을 골라요！', es:'¡Cuenta los animales\ny elige la respuesta!'}[lang] || 'どうぶつを かぞえて\nこたえをえらんでね！'}
         </p>
         {hiScore > 0 && (
           <div className="tashi-hi-badge">
-            🏆 {lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}もん`}
+            🏆 {t(lang,'best')}: {hiScore}
           </div>
         )}
         <button className="tashi-start-btn" onClick={startGame}>
-          {lang === 'en' ? '▶ Start!' : '▶ スタート！'}
+          ▶ {t(lang,'start')}！
         </button>
         <button className="ww-back-btn" onClick={() => navigate('/')}>
-          {lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}
+          {t(lang,'back')}
         </button>
       </div>
     </div>
@@ -166,9 +165,7 @@ export default function TashizanGame() {
       <div className="tashi-result-screen">
         <div className="tashi-result-title">{resultData.title}</div>
         <div className="tashi-result-score">
-          {lang === 'en'
-            ? `Correct: ${scoreRef.current} / ${TOTAL}`
-            : `せいかい: ${scoreRef.current} / ${TOTAL} もん`}
+          {{ja:`せいかい: ${scoreRef.current} / ${TOTAL} もん`, en:`Correct: ${scoreRef.current} / ${TOTAL}`, zh:`正确: ${scoreRef.current} / ${TOTAL}`, ko:`정답: ${scoreRef.current} / ${TOTAL}`, es:`Correcto: ${scoreRef.current} / ${TOTAL}`}[lang] || `せいかい: ${scoreRef.current} / ${TOTAL} もん`}
         </div>
         <div className="tashi-result-msg">{resultData.msg}</div>
         <div className="tashi-result-hi" style={{ color: resultData.isNew ? '#FFD700' : 'rgba(255,255,255,0.7)' }}>
@@ -176,10 +173,10 @@ export default function TashizanGame() {
         </div>
         <div className="tashi-result-btns">
           <button className="tashi-result-btn" onClick={startGame}>
-            {lang === 'en' ? 'Play Again' : 'もういちど'}
+            {t(lang,'retry')}
           </button>
           <button className="tashi-result-btn secondary" onClick={() => navigate('/')}>
-            {lang === 'en' ? 'Back' : 'もどる'}
+            {t(lang,'back')}
           </button>
         </div>
       </div>
@@ -193,11 +190,11 @@ export default function TashizanGame() {
       <div className="tashi-hud">
         <button className="tashi-hud-back" onClick={() => { stopBgm(); navigate('/'); }}>🏠</button>
         <div className="tashi-hud-center">
-          <div className="tashi-hud-title">➕ {lang === 'en' ? 'Math Quiz' : 'たしざん'}</div>
-          <div className="tashi-hud-sub">{lang === 'en' ? `Q${qIdx + 1}/${TOTAL}` : `もんだい ${qIdx + 1}/${TOTAL}`}</div>
+          <div className="tashi-hud-title">➕ {{ja:'たしざん', en:'Math Quiz', zh:'算数', ko:'숫자 놀이', es:'Mates'}[lang] || 'たしざん'}</div>
+          <div className="tashi-hud-sub">{{ja:`もんだい ${qIdx + 1}/${TOTAL}`, en:`Q${qIdx + 1}/${TOTAL}`, zh:`第${qIdx + 1}/${TOTAL}题`, ko:`문제 ${qIdx + 1}/${TOTAL}`, es:`P${qIdx + 1}/${TOTAL}`}[lang] || `もんだい ${qIdx + 1}/${TOTAL}`}</div>
         </div>
         <div className="tashi-hud-box">
-          <div className="tashi-hud-label">{lang === 'en' ? 'Score' : 'せいかい'}</div>
+          <div className="tashi-hud-label">{t(lang,'score')}</div>
           <div className="tashi-hud-val">{scoreRef.current}</div>
         </div>
         <button className="tashi-mute-btn" onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playTashizanBgm(); }}>
@@ -220,8 +217,8 @@ export default function TashizanGame() {
           <div className="tashi-eq-card">
             <div className="tashi-eq-label">
               {current.op === '+'
-                ? (lang === 'en' ? 'How many in total?' : 'あわせると いくつ？')
-                : (lang === 'en' ? 'How many are left?'  : 'のこりは いくつ？')}
+                ? ({ja:'あわせると いくつ？', en:'How many in total?', zh:'合起来有几个？', ko:'모두 합하면 몇 개?', es:'¿Cuántos en total?'}[lang] || 'あわせると いくつ？')
+                : ({ja:'のこりは いくつ？', en:'How many are left?', zh:'还剩几个？', ko:'남은 건 몇 개?', es:'¿Cuántos quedan?'}[lang] || 'のこりは いくつ？')}
             </div>
 
             {/* Row A: animals */}

@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playAnimalSoccerBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
+import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './AnimalSoccer.css';
@@ -114,16 +115,16 @@ export default function AnimalSoccer() {
     setHiScore(isNew ? s : hi);
     let title, msg;
     if (s >= 12) {
-      title = lang === 'en' ? '🏆 Champion!' : '🏆 チャンピオン！';
-      msg   = lang === 'en' ? 'Perfect shots!' : 'かんぺきなシュート！';
+      title = {ja:'🏆 チャンピオン！', en:'🏆 Champion!', zh:'🏆 冠军！', ko:'🏆 챔피언!', es:'🏆 ¡Campeón!'}[lang] || '🏆 チャンピオン！';
+      msg   = {ja:'かんぺきなシュート！', en:'Perfect shots!', zh:'完美射门！', ko:'완벽한 슛!', es:'¡Tiros perfectos!'}[lang] || 'かんぺきなシュート！';
     } else if (s >= 6) {
-      title = lang === 'en' ? '⭐ Nice!' : '⭐ ナイス！';
-      msg   = lang === 'en' ? 'Great shots!' : 'すごいシュート！';
+      title = {ja:'⭐ ナイス！', en:'⭐ Nice!', zh:'⭐ 不错！', ko:'⭐ 잘했어요!', es:'⭐ ¡Bien!'}[lang] || '⭐ ナイス！';
+      msg   = {ja:'すごいシュート！', en:'Great shots!', zh:'好球！', ko:'훌륭한 슛!', es:'¡Buenos tiros!'}[lang] || 'すごいシュート！';
     } else {
-      title = lang === 'en' ? '😢 Too bad...' : '😢 ざんねん…';
-      msg   = lang === 'en' ? 'Keep challenging!' : 'もういちどチャレンジ！';
+      title = {ja:'😢 ざんねん…', en:'😢 Too bad...', zh:'😢 太遗憾了…', ko:'😢 아쉬워요…', es:'😢 ¡Qué lástima…'}[lang] || '😢 ざんねん…';
+      msg   = {ja:'もういちどチャレンジ！', en:'Keep challenging!', zh:'继续挑战！', ko:'다시 도전해요!', es:'¡Sigue intentando!'}[lang] || 'もういちどチャレンジ！';
     }
-    setResultData({ title, msg, hiText: lang === 'en' ? `Best: ${isNew ? s : hi}pts` : `ハイスコア: ${isNew ? s : hi}`, isNew });
+    setResultData({ title, msg, hiText: `${t(lang,'best')}: ${isNew ? s : hi}`, isNew });
     setScreen('result');
   }, []);
 
@@ -414,8 +415,8 @@ export default function AnimalSoccer() {
       <div className="soccer-wrap soccer-title">
         <div className="soccer-title-box">
           <div className="soccer-title-emoji">⚽</div>
-          <h1 className="soccer-title-text">{lang === 'en' ? 'Animal Soccer!' : 'どうぶつサッカー'}</h1>
-          <p className="soccer-subtitle">{lang === 'en' ? 'Pick a character and shoot!' : 'キャラをえらんでシュートしよう！'}</p>
+          <h1 className="soccer-title-text">{{ja:'どうぶつサッカー', en:'Animal Soccer!', zh:'动物足球！', ko:'동물 축구!', es:'¡Fútbol Animal!'}[lang] || 'どうぶつサッカー'}</h1>
+          <p className="soccer-subtitle">{{ja:'キャラをえらんでシュートしよう！', en:'Pick a character and shoot!', zh:'选择角色来射门！', ko:'캐릭터를 골라 슛을 해요!', es:'¡Elige un personaje y dispara!'}[lang] || 'キャラをえらんでシュートしよう！'}</p>
           <div className="soccer-char-grid">
             {CHARACTERS.map(ch => (
               <button
@@ -424,15 +425,15 @@ export default function AnimalSoccer() {
                 onClick={() => setSelectedChar(ch)}
               >
                 <span className="soccer-char-emoji">{ch.emoji}</span>
-                <span className="soccer-char-name">{lang === 'en' ? ch.nameEn : ch.name}</span>
+                <span className="soccer-char-name">{lang === 'ja' ? ch.name : ch.nameEn}</span>
               </button>
             ))}
           </div>
           <button className="soccer-start-btn" onClick={() => startGame(selectedChar)}>
-            {lang === 'en' ? '⚽ Start!' : '⚽ はじめる！'}
+            {{ja:'⚽ はじめる！', en:'⚽ Start!', zh:'⚽ 开始！', ko:'⚽ 시작!', es:'⚽ ¡Empezar!'}[lang] || '⚽ はじめる！'}
           </button>
-          {hiScore > 0 && <div className="soccer-hi">{lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}`}</div>}
-          <button className="ww-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
+          {hiScore > 0 && <div className="soccer-hi">{t(lang,'best')}: {hiScore}</div>}
+          <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang,'back')}</button>
         </div>
       </div>
     );
@@ -444,14 +445,14 @@ export default function AnimalSoccer() {
       <div className="soccer-wrap soccer-result">
         <div className="soccer-result-box">
           <div className="soccer-result-title">{resultData.title}</div>
-          <div className="soccer-result-score">{lang === 'en' ? `Score: ${scoreRef.current}pts` : `スコア: ${scoreRef.current}`}</div>
+          <div className="soccer-result-score">{t(lang,'score')}: {scoreRef.current}</div>
           <div className="soccer-result-msg">{resultData.msg}</div>
-          {resultData.isNew && <div className="soccer-result-new">🌟 {lang === 'en' ? 'New Record!' : '新記録！'}</div>}
+          {resultData.isNew && <div className="soccer-result-new">🌟 {t(lang,'newRecord')}</div>}
           <div className="soccer-result-hi">{resultData.hiText}</div>
           <div className="soccer-result-btns">
-            <button className="soccer-start-btn" onClick={() => startGame(kickerRef.current)}>{lang === 'en' ? 'Play Again' : 'もういちど'}</button>
-            <button className="soccer-back-btn2" onClick={() => setScreen('title')}>{lang === 'en' ? 'Characters' : 'キャラ選択'}</button>
-            <button className="soccer-back-btn2" onClick={() => navigate('/')}>{lang === 'en' ? 'Back' : 'もどる'}</button>
+            <button className="soccer-start-btn" onClick={() => startGame(kickerRef.current)}>{t(lang,'retry')}</button>
+            <button className="soccer-back-btn2" onClick={() => setScreen('title')}>{{ja:'キャラ選択', en:'Characters', zh:'角色选择', ko:'캐릭터 선택', es:'Personajes'}[lang] || 'キャラ選択'}</button>
+            <button className="soccer-back-btn2" onClick={() => navigate('/')}>{t(lang,'back')}</button>
           </div>
         </div>
       </div>
@@ -466,12 +467,12 @@ export default function AnimalSoccer() {
         <button className="soccer-hud-back" onClick={() => { if(animIdRef.current) cancelAnimationFrame(animIdRef.current); navigate('/'); }}>🏠</button>
         {/* CENTER */}
         <div className="soccer-hud-center">
-          <div className="soccer-hud-title">{lang === 'en' ? '⚽ Animal Soccer' : '⚽ どうぶつサッカー'}</div>
-          <div className="soccer-hud-score">{lang === 'en' ? 'Score' : 'スコア'}: {scoreDisplay}</div>
+          <div className="soccer-hud-title">{{ja:'⚽ どうぶつサッカー', en:'⚽ Animal Soccer', zh:'⚽ 动物足球', ko:'⚽ 동물 축구', es:'⚽ Fútbol Animal'}[lang] || '⚽ どうぶつサッカー'}</div>
+          <div className="soccer-hud-score">{t(lang,'score')}: {scoreDisplay}</div>
         </div>
         {/* RIGHT */}
         <div className="soccer-hud-box">
-          <div className="soccer-hud-label">{lang === 'en' ? 'Left' : 'のこり'}</div>
+          <div className="soccer-hud-label">{t(lang,'timeLeft')}</div>
           <div className="soccer-hud-val">{'⚽'.repeat(shotsDisplay)}</div>
         </div>
         <button onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playAnimalSoccerBgm(); }}

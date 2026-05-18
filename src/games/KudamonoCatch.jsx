@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playKudamonoCatchBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
+import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './KudamonoCatch.css';
@@ -372,25 +373,37 @@ export default function KudamonoCatch() {
 
     let title, msg;
     if (score >= 30) {
-      title = lang === 'en' ? '🏆 Amazing!' : '🏆 すごい！';
-      msg   = lang === 'en'
-        ? `Score: <b style="font-size:28px;color:#FFD700">${score}</b>pts!<br>Fruit Catch Champion!`
-        : `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！<br>くだものキャッチの<br>チャンピオン！`;
+      title = {ja:'🏆 すごい！', en:'🏆 Amazing!', zh:'🏆 太棒了！', ko:'🏆 대단해요!', es:'🏆 ¡Increíble!'}[lang] || '🏆 すごい！';
+      msg   = {
+        ja: `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！<br>くだものキャッチの<br>チャンピオン！`,
+        en: `Score: <b style="font-size:28px;color:#FFD700">${score}</b>pts!<br>Fruit Catch Champion!`,
+        zh: `得分: <b style="font-size:28px;color:#FFD700">${score}</b>分！<br>接水果冠军！`,
+        ko: `점수: <b style="font-size:28px;color:#FFD700">${score}</b>점！<br>과일 캐치 챔피언!`,
+        es: `Puntos: <b style="font-size:28px;color:#FFD700">${score}</b>!<br>¡Campeón de frutas!`,
+      }[lang] || `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！`;
     } else if (score >= 15) {
-      title = lang === 'en' ? '⭐ Nice!' : '⭐ ナイス！';
-      msg   = lang === 'en'
-        ? `Score: <b style="font-size:28px;color:#FFD700">${score}</b>pts!<br>Well done!`
-        : `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！<br>よくできました！`;
+      title = {ja:'⭐ ナイス！', en:'⭐ Nice!', zh:'⭐ 不错！', ko:'⭐ 잘했어요!', es:'⭐ ¡Bien!'}[lang] || '⭐ ナイス！';
+      msg   = {
+        ja: `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！<br>よくできました！`,
+        en: `Score: <b style="font-size:28px;color:#FFD700">${score}</b>pts!<br>Well done!`,
+        zh: `得分: <b style="font-size:28px;color:#FFD700">${score}</b>分！<br>干得好！`,
+        ko: `점수: <b style="font-size:28px;color:#FFD700">${score}</b>점！<br>잘했어요!`,
+        es: `Puntos: <b style="font-size:28px;color:#FFD700">${score}</b>!<br>¡Bien hecho!`,
+      }[lang] || `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん！`;
     } else {
-      title = lang === 'en' ? '🍎 Try Again!' : '🍎 もういちど';
-      msg   = lang === 'en'
-        ? `Score: <b style="font-size:28px;color:#FFD700">${score}</b>pts<br>Keep challenging!`
-        : `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん<br>またちょうせん！`;
+      title = {ja:'🍎 もういちど', en:'🍎 Try Again!', zh:'🍎 再试一次！', ko:'🍎 다시 도전!', es:'🍎 ¡Inténtalo!'}[lang] || '🍎 もういちど';
+      msg   = {
+        ja: `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん<br>またちょうせん！`,
+        en: `Score: <b style="font-size:28px;color:#FFD700">${score}</b>pts<br>Keep challenging!`,
+        zh: `得分: <b style="font-size:28px;color:#FFD700">${score}</b>分<br>继续挑战！`,
+        ko: `점수: <b style="font-size:28px;color:#FFD700">${score}</b>점<br>계속 도전해요!`,
+        es: `Puntos: <b style="font-size:28px;color:#FFD700">${score}</b><br>¡Sigue intentando!`,
+      }[lang] || `スコア <b style="font-size:28px;color:#FFD700">${score}</b> てん`;
     }
 
     const hiText = isNew
-      ? (lang === 'en' ? '🏆 New Record!' : '🏆 ニューレコード！')
-      : (lang === 'en' ? `Best: ${hi}pts` : `ハイスコア: ${hi}てん`);
+      ? ({ja:'🏆 ニューレコード！', en:'🏆 New Record!', zh:'🏆 新纪录！', ko:'🏆 신기록!', es:'🏆 ¡Nuevo récord!'}[lang] || '🏆 ニューレコード！')
+      : `${t(lang,'best')}: ${hi}`;
     setResultData({ title, msg, hiText, isNew });
     setScreen('result');
   }, []);
@@ -554,12 +567,12 @@ export default function KudamonoCatch() {
       {screen === 'title' && (
         <div className="kdc-screen" id="kdc-title-screen">
           <div style={{ fontSize: '52px', marginBottom: '6px' }}>🍎</div>
-          <h1>{lang === 'en' ? 'Fruit Catch!' : 'くだものキャッチ'}</h1>
+          <h1>{{ja:'くだものキャッチ', en:'Fruit Catch!', zh:'接水果！', ko:'과일 캐치!', es:'¡Atrapa Frutas!'}[lang] || 'くだものキャッチ'}</h1>
           <p>
-            {lang === 'en' ? <>Catch the falling fruits<br />in your basket!</> : <>おちてくる くだものを<br />かごでキャッチしよう！</>}
+            {lang === 'en' ? <>Catch the falling fruits<br />in your basket!</> : lang === 'zh' ? <>接住下落的水果<br />放入篮子！</> : lang === 'ko' ? <>떨어지는 과일을<br />바구니로 잡아요!</> : lang === 'es' ? <>¡Atrapa las frutas<br />en tu cesta!</> : <>おちてくる くだものを<br />かごでキャッチしよう！</>}
           </p>
           <div className="kdc-warn-box">
-            {lang === 'en' ? <>⚠️ Animals are mixed in!<br />Don't catch the animals!</> : <>⚠️ どうぶつがまじってるよ！<br />どうぶつは とっちゃダメ！</>}
+            {{ja:'⚠️ どうぶつがまじってるよ！どうぶつは とっちゃダメ！', en:"⚠️ Animals are mixed in! Don't catch the animals!", zh:'⚠️ 混入了动物！不要接动物！', ko:'⚠️ 동물이 섞여있어요! 동물은 잡지 마세요!', es:'⚠️ ¡Hay animales mezclados! ¡No los atrapes!'}[lang] || '⚠️ どうぶつがまじってるよ！'}
           </div>
 
           {/* character select */}
@@ -576,11 +589,11 @@ export default function KudamonoCatch() {
             ))}
           </div>
 
-          <div className="kdc-hi-badge">🏆 {lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}てん`}</div>
+          <div className="kdc-hi-badge">🏆 {t(lang,'best')}: {hiScore}</div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
-            <button className="kdc-big-btn" onClick={startGame}>{lang === 'en' ? '▶ Start!' : '▶ スタート！'}</button>
-            <button className="ww-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
+            <button className="kdc-big-btn" onClick={startGame}>▶ {t(lang, 'start')}！</button>
+            <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang, 'back')}</button>
           </div>
         </div>
       )}
@@ -598,12 +611,12 @@ export default function KudamonoCatch() {
           }}>🏠</button>
           {/* CENTER */}
           <div className="kdc-hud-center">
-            <div id="kdc-hud-title">{lang === 'en' ? '🍎 Fruit Catch' : '🍎 くだものキャッチ'}</div>
-            <div className="kdc-hud-score">{lang === 'en' ? 'Score' : 'スコア'}: {scoreDisplay}</div>
+            <div id="kdc-hud-title">{{ja:'🍎 くだものキャッチ', en:'🍎 Fruit Catch', zh:'🍎 接水果', ko:'🍎 과일 캐치', es:'🍎 Atrapa Frutas'}[lang] || '🍎 くだものキャッチ'}</div>
+            <div className="kdc-hud-score">{t(lang,'score')}: {scoreDisplay}</div>
           </div>
           {/* RIGHT */}
           <div className="kdc-hud-box">
-            <div className="kdc-hud-label">{lang === 'en' ? 'Left' : 'のこり'}</div>
+            <div className="kdc-hud-label">{t(lang,'timeLeft')}</div>
             <div className="kdc-hud-val">{timeDisplay}</div>
           </div>
           <button onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playKudamonoCatchBgm(); }}
@@ -625,8 +638,8 @@ export default function KudamonoCatch() {
             {resultData.hiText}
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
-            <button className="kdc-big-btn" onClick={startGame}>{lang === 'en' ? 'Play Again' : 'もういちど'}</button>
-            <button className="kdc-big-btn blue" onClick={goTitle}>{lang === 'en' ? 'Back to Title' : 'タイトルへ'}</button>
+            <button className="kdc-big-btn" onClick={startGame}>{t(lang, 'retry')}</button>
+            <button className="kdc-big-btn blue" onClick={goTitle}>{t(lang,'backToTitle')}</button>
           </div>
         </div>
       )}

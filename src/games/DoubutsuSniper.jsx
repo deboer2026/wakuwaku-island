@@ -4,6 +4,7 @@ import {
   ensureAudioStarted, playSniperBgm, stopBgm,
   toggleMute, playSoundCorrect, playSoundWrong,
 } from '../utils/audio'
+import { getLang, t } from '../utils/i18n'
 import './DoubutsuSniper.css'
 
 const W = 360, H = 480
@@ -56,6 +57,7 @@ function makeTargets(stageIdx) {
 
 export default function DoubutsuSniper() {
   const navigate = useNavigate()
+  const lang = getLang()
   const canvasRef = useRef(null)
   const stateRef = useRef(null)
   const rafRef   = useRef(null)
@@ -315,10 +317,10 @@ export default function DoubutsuSniper() {
       <div className="sniper-title-desc">
         {'動き回るどうぶつを\nタップしてやっつけよう！\n3ステージ × 30秒\n❤️ 3ライフ制\n🌿 にせものに 気をつけて！'}
       </div>
-      {hiVal > 0 && <div className="sniper-hi">🏆 ハイスコア: {hiVal}</div>}
-      <button className="sniper-start-btn" onClick={startGame}>スタート 🎯</button>
+      {hiVal > 0 && <div className="sniper-hi">🏆 {t(lang, 'hiScore')}: {hiVal}</div>}
+      <button className="sniper-start-btn" onClick={startGame}>{t(lang, 'start')} 🎯</button>
       <button className="ww-back-btn" onClick={() => { stopBgm(); navigate('/') }}>
-        🏠 トップへもどる
+        {t(lang, 'back')}
       </button>
     </div>
   )
@@ -329,15 +331,15 @@ export default function DoubutsuSniper() {
       <div className="sniper-clear-text">
         ステージ {clearData?.stage + 1} クリア！
       </div>
-      <div className="sniper-clear-score">スコア: {clearData?.score}</div>
+      <div className="sniper-clear-score">{t(lang, 'score')}: {clearData?.score}</div>
       <div className="sniper-clear-hp">
         {'❤️'.repeat(clearData?.hp || 0)}
       </div>
       <button className="sniper-start-btn" onClick={nextStage}>
-        つぎのステージへ ▶
+        {lang === 'ja' ? 'つぎのステージへ ▶' : lang === 'zh' ? '下一关 ▶' : lang === 'ko' ? '다음 스테이지 ▶' : lang === 'es' ? 'Siguiente ▶' : 'Next Stage ▶'}
       </button>
       <button className="ww-back-btn" onClick={() => { stopBgm(); navigate('/') }}>
-        🏠 トップへもどる
+        {t(lang, 'back')}
       </button>
     </div>
   )
@@ -345,12 +347,12 @@ export default function DoubutsuSniper() {
   if (screen === 'result') return (
     <div className="sniper-wrap sniper-result-screen">
       <div className="sniper-result-icon">🎯</div>
-      <div className="sniper-result-text">ゲームオーバー</div>
-      <div className="sniper-result-score">スコア: {resultData?.score}</div>
-      <div className="sniper-result-hi">🏆 ハイスコア: {resultData?.hi}</div>
-      <button className="sniper-start-btn" onClick={startGame}>もういちど</button>
+      <div className="sniper-result-text">{t(lang, 'gameOver')}</div>
+      <div className="sniper-result-score">{t(lang, 'score')}: {resultData?.score}</div>
+      <div className="sniper-result-hi">🏆 {t(lang, 'hiScore')}: {resultData?.hi}</div>
+      <button className="sniper-start-btn" onClick={startGame}>{t(lang, 'retry')}</button>
       <button className="ww-back-btn" onClick={() => { stopBgm(); navigate('/') }}>
-        🏠 トップへもどる
+        {t(lang, 'back')}
       </button>
     </div>
   )

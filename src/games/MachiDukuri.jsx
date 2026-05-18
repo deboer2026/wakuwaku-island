@@ -5,6 +5,7 @@ import {
 } from '../utils/audio';
 import { trackGameStart } from '../utils/analytics';
 import { addCoins, getCoins } from '../utils/coins';
+import { getLang, t } from '../utils/i18n';
 import './MachiDukuri.css';
 
 /* ── Isometric constants ─────────────────────────────────── */
@@ -294,6 +295,7 @@ function persist(placed, coins) {
 ══════════════════════════════════════════════════════════ */
 export default function MachiDukuri() {
   const navigate = useNavigate();
+  const lang = getLang();
 
   /* ─── Game state refs ────────────────────────────── */
   const placedRef  = useRef([]);
@@ -610,7 +612,7 @@ export default function MachiDukuri() {
         {'アイテムをおいて\nじぶんだけの まちをつくろう！\n🪙コインをためて まちをひろげてね'}
       </p>
       <button className="machi-start-btn" onClick={startGame}>▶ はじめる！</button>
-      <button className="ww-back-btn" onClick={() => navigate('/')}>🏝️ トップへもどる</button>
+      <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang, 'back')}</button>
     </div>
   );
 

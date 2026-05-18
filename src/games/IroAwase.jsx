@@ -7,6 +7,7 @@ import {
 } from '../utils/audio';
 import { trackGameStart, trackGameClear, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
+import { t } from '../utils/i18n';
 import './IroAwase.css';
 
 /* ── 色データ ──────────────────────────────────────────── */
@@ -117,12 +118,12 @@ export default function IroAwase() {
     trackGameClear('IroAwase', c, 1);
     setHiScore(isNew ? c : hi);
     let title, msg;
-    if (c >= 9)      { title = lang === 'en' ? '🏆 Perfect!' : '🏆 かんぺき！';  msg = lang === 'en' ? 'Color Master!' : 'いろはかせだ！'; }
-    else if (c >= 6) { title = lang === 'en' ? '⭐ Great!'   : '⭐ ナイス！';    msg = lang === 'en' ? 'Well done!'    : 'よくできました！'; }
-    else             { title = lang === 'en' ? '🎨 Try Again': '🎨 もういちど'; msg = lang === 'en' ? 'Keep going!'   : 'れんしゅうしよう！'; }
+    if (c >= 9)      { title = {ja:'🏆 かんぺき！', en:'🏆 Perfect!', zh:'🏆 完美！', ko:'🏆 완벽해요!', es:'🏆 ¡Perfecto!'}[lang] || '🏆 かんぺき！';  msg = {ja:'いろはかせだ！', en:'Color Master!', zh:'颜色大师！', ko:'색깔 마스터!', es:'¡Maestro del color!'}[lang] || 'いろはかせだ！'; }
+    else if (c >= 6) { title = {ja:'⭐ ナイス！', en:'⭐ Great!', zh:'⭐ 很棒！', ko:'⭐ 잘했어요!', es:'⭐ ¡Bien!'}[lang] || '⭐ ナイス！';    msg = {ja:'よくできました！', en:'Well done!', zh:'干得好！', ko:'잘했어요!', es:'¡Bien hecho!'}[lang] || 'よくできました！'; }
+    else             { title = {ja:'🎨 もういちど', en:'🎨 Try Again', zh:'🎨 再试一次！', ko:'🎨 다시 도전!', es:'🎨 ¡Inténtalo!'}[lang] || '🎨 もういちど'; msg = {ja:'れんしゅうしよう！', en:'Keep going!', zh:'继续练习！', ko:'계속 연습해요!', es:'¡Sigue adelante!'}[lang] || 'れんしゅうしよう！'; }
     const hiText = isNew
-      ? (lang === 'en' ? '🏆 New Record!' : '🏆 ニューレコード！')
-      : (lang === 'en' ? `Best: ${hi}pts` : `ハイスコア: ${hi}もん`);
+      ? ({ja:'🏆 ニューレコード！', en:'🏆 New Record!', zh:'🏆 新纪录！', ko:'🏆 신기록!', es:'🏆 ¡Nuevo récord!'}[lang] || '🏆 ニューレコード！')
+      : `${t(lang,'best')}: ${hi}`;
     setResultData({ title, msg, hiText, isNew });
     setScreen('result');
   }, [lang]);
@@ -163,22 +164,20 @@ export default function IroAwase() {
     <div className="iro-wrap">
       <div className="iro-title-screen">
         <div className="iro-title-icon">🎨</div>
-        <h1 className="iro-title-text">{lang === 'en' ? 'Color Match!' : 'いろあわせ！'}</h1>
+        <h1 className="iro-title-text">{{ja:'いろあわせ！', en:'Color Match!', zh:'颜色配对！', ko:'색깔 맞추기!', es:'¡Colores!'}[lang] || 'いろあわせ！'}</h1>
         <p className="iro-title-desc">
-          {lang === 'en'
-            ? 'Mix colors and choose\nthe right answer!'
-            : 'いろを まぜると\nなんいろになるかな？'}
+          {{ja:'いろを まぜると\nなんいろになるかな？', en:'Mix colors and choose\nthe right answer!', zh:'混合颜色\n猜猜会变成什么颜色！', ko:'색깔을 섞으면\n어떤 색이 될까요？', es:'¡Mezcla colores y\nelige la respuesta!'}[lang] || 'いろを まぜると\nなんいろになるかな？'}
         </p>
         {hiScore > 0 && (
           <div className="iro-hi-badge">
-            🏆 {lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}もん`}
+            🏆 {t(lang,'best')}: {hiScore}
           </div>
         )}
         <button className="iro-start-btn" onClick={startGame}>
-          {lang === 'en' ? '▶ Start!' : '▶ スタート！'}
+          ▶ {t(lang,'start')}！
         </button>
         <button className="ww-back-btn" onClick={() => navigate('/')}>
-          {lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}
+          {t(lang,'back')}
         </button>
       </div>
     </div>
@@ -190,9 +189,7 @@ export default function IroAwase() {
       <div className="iro-result-screen">
         <div className="iro-result-title">{resultData.title}</div>
         <div className="iro-result-score">
-          {lang === 'en'
-            ? `Correct: ${scoreRef.current} / ${TOTAL}`
-            : `せいかい: ${scoreRef.current} / ${TOTAL} もん`}
+          {{ja:`せいかい: ${scoreRef.current} / ${TOTAL} もん`, en:`Correct: ${scoreRef.current} / ${TOTAL}`, zh:`正确: ${scoreRef.current} / ${TOTAL}`, ko:`정답: ${scoreRef.current} / ${TOTAL}`, es:`Correcto: ${scoreRef.current} / ${TOTAL}`}[lang] || `せいかい: ${scoreRef.current} / ${TOTAL} もん`}
         </div>
         <div className="iro-result-msg">{resultData.msg}</div>
         <div className="iro-result-hi" style={{ color: resultData.isNew ? '#FFD700' : 'rgba(255,255,255,0.7)' }}>
@@ -200,10 +197,10 @@ export default function IroAwase() {
         </div>
         <div className="iro-result-btns">
           <button className="iro-result-btn" onClick={startGame}>
-            {lang === 'en' ? 'Play Again' : 'もういちど'}
+            {t(lang,'retry')}
           </button>
           <button className="iro-result-btn secondary" onClick={() => navigate('/')}>
-            {lang === 'en' ? 'Back' : 'もどる'}
+            {t(lang,'back')}
           </button>
         </div>
       </div>
@@ -219,11 +216,11 @@ export default function IroAwase() {
       <div className="iro-hud">
         <button className="iro-hud-back" onClick={() => { stopBgm(); navigate('/'); }}>🏠</button>
         <div className="iro-hud-center">
-          <div className="iro-hud-title">🎨 {lang === 'en' ? 'Color Match' : 'いろあわせ'}</div>
-          <div className="iro-hud-sub">{lang === 'en' ? `Q${qIdx + 1}/${TOTAL}` : `もんだい ${qIdx + 1}/${TOTAL}`}</div>
+          <div className="iro-hud-title">🎨 {{ja:'いろあわせ', en:'Color Match', zh:'颜色配对', ko:'색깔 맞추기', es:'Colores'}[lang] || 'いろあわせ'}</div>
+          <div className="iro-hud-sub">{{ja:`もんだい ${qIdx + 1}/${TOTAL}`, en:`Q${qIdx + 1}/${TOTAL}`, zh:`第${qIdx + 1}/${TOTAL}题`, ko:`문제 ${qIdx + 1}/${TOTAL}`, es:`P${qIdx + 1}/${TOTAL}`}[lang] || `もんだい ${qIdx + 1}/${TOTAL}`}</div>
         </div>
         <div className="iro-hud-box">
-          <div className="iro-hud-label">{lang === 'en' ? 'Score' : 'せいかい'}</div>
+          <div className="iro-hud-label">{t(lang,'score')}</div>
           <div className="iro-hud-val">{scoreRef.current}</div>
         </div>
         <button className="iro-mute-btn" onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playIroAwaseBgm(); }}>
@@ -246,8 +243,8 @@ export default function IroAwase() {
           <div className="iro-q-card">
             <div className="iro-q-label">
               {current.type === 'mix'
-                ? (lang === 'en' ? 'What color do you get?' : 'まぜると なにいろ？')
-                : (lang === 'en' ? 'What color is this?'   : 'この いろは なに？')}
+                ? ({ja:'まぜると なにいろ？', en:'What color do you get?', zh:'混合后是什么颜色？', ko:'섞으면 무슨 색이 될까요？', es:'¿Qué color obtienes?'}[lang] || 'まぜると なにいろ？')
+                : ({ja:'この いろは なに？', en:'What color is this?', zh:'这是什么颜色？', ko:'이 색은 무슨 색일까요？', es:'¿Qué color es este?'}[lang] || 'この いろは なに？')}
             </div>
 
             {current.type === 'mix' ? (

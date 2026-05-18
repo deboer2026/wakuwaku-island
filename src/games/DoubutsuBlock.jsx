@@ -7,6 +7,7 @@ import {
 } from '../utils/audio';
 import { addCoins } from '../utils/coins';
 import { trackGameStart } from '../utils/analytics';
+import { getLang, t } from '../utils/i18n';
 import './DoubutsuBlock.css';
 
 /* ── Board constants ─────────────────────────────────────── */
@@ -134,6 +135,7 @@ function drawNext(canvas, def) {
 ══════════════════════════════════════════════════════════ */
 export default function DoubutsuBlock() {
   const navigate  = useNavigate();
+  const lang = getLang();
   const canvasRef = useRef(null);
   const nextRef   = useRef(null);
   const rafRef    = useRef(null);
@@ -270,9 +272,9 @@ export default function DoubutsuBlock() {
       <div className="db-title-icon">🧱</div>
       <h1 className="db-title-h1">どうぶつブロック</h1>
       <p className="db-title-desc">{'どうぶつブロックをつんで\nれつをそろえよう！\nスワイプで うごかすよ'}</p>
-      <div className="db-hi-badge">🏆 ハイスコア: {hiScore}てん</div>
-      <button className="db-start-btn" onClick={startGame}>▶ スタート！</button>
-      <button className="ww-back-btn" onClick={() => navigate('/')}>🏝️ トップへもどる</button>
+      <div className="db-hi-badge">🏆 {t(lang, 'hiScore')}: {hiScore}</div>
+      <button className="db-start-btn" onClick={startGame}>▶ {t(lang, 'start')}！</button>
+      <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang, 'back')}</button>
     </div>
   );
 
@@ -329,10 +331,10 @@ export default function DoubutsuBlock() {
         <div className="db-overlay">
           <div className="db-overlay-card">
             <div style={{fontSize:48}}>💀</div>
-            <h2>ゲームオーバー</h2>
+            <h2>{t(lang, 'gameOver')}</h2>
             <div className="db-go-score">スコア: <b>{score}</b>てん</div>
             {score >= hiScore && score > 0 && <div className="db-go-new">🏆 ニューレコード！</div>}
-            <button className="db-start-btn" onClick={startGame}>もういちど</button>
+            <button className="db-start-btn" onClick={startGame}>{t(lang, 'retry')}</button>
             <button className="ww-back-btn" style={{marginTop:8}} onClick={() => { stopBgm(); navigate('/'); }}>🏠 もどる</button>
           </div>
         </div>

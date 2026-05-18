@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playMeiroBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
+import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './Meiro.css';
@@ -302,10 +303,10 @@ export default function Meiro() {
     addCoins(5);
     setHiScore(isNew ? t : hi);
     const title = isNew
-      ? (lang === 'en' ? '🏆 Best Time!' : '🏆 ベストタイム こうしん！')
-      : (lang === 'en' ? 'Clear! 🏁' : 'クリア！🏁');
-    const hiText = lang === 'en' ? `Best: ${fmtTime(isNew ? t : hi)}` : `ベスト: ${fmtTime(isNew ? t : hi)}`;
-    const msg    = lang === 'en' ? `Time: ${fmtTime(t)}` : `タイム: ${fmtTime(t)}`;
+      ? ({ja:'🏆 ベストタイム こうしん！', en:'🏆 Best Time!', zh:'🏆 最佳时间！', ko:'🏆 베스트 타임!', es:'🏆 ¡Mejor tiempo!'}[lang] || '🏆 ベストタイム こうしん！')
+      : ({ja:'クリア！🏁', en:'Clear! 🏁', zh:'通关！🏁', ko:'클리어！🏁', es:'¡Completado！🏁'}[lang] || 'クリア！🏁');
+    const hiText = `${t(lang,'best')}: ${fmtTime(isNew ? t : hi)}`;
+    const msg    = `${t(lang,'time')}: ${fmtTime(t)}`;
     setResultData({ title, msg, hiText, isNew });
     setScreen('result');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -318,9 +319,9 @@ export default function Meiro() {
     trackGameOver('Meiro', timeRef.current);
     const hi = getHi();
     setResultData({
-      title: lang === 'en' ? 'Game Over 😢' : 'ゲームオーバー 😢',
-      msg:   lang === 'en' ? 'Keep challenging!' : 'もういちどチャレンジ！',
-      hiText: hi > 0 ? (lang === 'en' ? `Best: ${fmtTime(hi)}` : `ベスト: ${fmtTime(hi)}`) : '',
+      title: {ja:'ゲームオーバー 😢', en:'Game Over 😢', zh:'游戏结束 😢', ko:'게임 오버 😢', es:'Fin del juego 😢'}[lang] || 'ゲームオーバー 😢',
+      msg:   {ja:'もういちどチャレンジ！', en:'Keep challenging!', zh:'继续挑战！', ko:'다시 도전해요!', es:'¡Sigue intentando!'}[lang] || 'もういちどチャレンジ！',
+      hiText: hi > 0 ? `${t(lang,'best')}: ${fmtTime(hi)}` : '',
       isNew: false,
     });
     setScreen('result');
@@ -515,12 +516,12 @@ export default function Meiro() {
       <div className="meiro-wrap meiro-title">
         <div className="meiro-title-box">
           <div className="meiro-title-emoji">🗺️</div>
-          <h1 className="meiro-title-text">{lang === 'en' ? 'Maze Adventure!' : 'めいろあそび'}</h1>
-          <p className="meiro-subtitle">{lang === 'en' ? 'Find your way through the maze!' : 'めいろをぬけてゴールしよう！'}</p>
+          <h1 className="meiro-title-text">{{ja:'めいろあそび', en:'Maze Adventure!', zh:'迷宫冒险！', ko:'미로 어드벤처!', es:'¡Laberinto!'}[lang] || 'めいろあそび'}</h1>
+          <p className="meiro-subtitle">{{ja:'めいろをぬけてゴールしよう！', en:'Find your way through the maze!', zh:'穿过迷宫到达终点！', ko:'미로를 통과해 골인!', es:'¡Navega el laberinto!'}[lang] || 'めいろをぬけてゴールしよう！'}</p>
           <div className="meiro-title-rules">
-            <div>{lang === 'en' ? '👆 Tap or use keyboard to move' : '👆 タップ or キーボードで うごく'}</div>
-            <div>{lang === 'en' ? '👾 Hitting enemies loses ❤️' : '👾 てきにあたると ❤️ がへる'}</div>
-            <div>{lang === 'en' ? '🏁 Reach the goal!' : '🏁 ゴールに たどりつこう！'}</div>
+            <div>{{ja:'👆 タップ or キーボードで うごく', en:'👆 Tap or use keyboard to move', zh:'👆 点击或使用键盘移动', ko:'👆 탭 또는 키보드로 이동', es:'👆 Toca o usa el teclado'}[lang] || '👆 タップ or キーボードで うごく'}</div>
+            <div>{{ja:'👾 てきにあたると ❤️ がへる', en:'👾 Hitting enemies loses ❤️', zh:'👾 碰到敌人会失去❤️', ko:'👾 적에 닿으면 ❤️ 감소', es:'👾 Golpear enemigos quita ❤️'}[lang] || '👾 てきにあたると ❤️ がへる'}</div>
+            <div>{{ja:'🏁 ゴールに たどりつこう！', en:'🏁 Reach the goal!', zh:'🏁 到达终点！', ko:'🏁 골인 지점에 도달해요！', es:'🏁 ¡Alcanza la meta!'}[lang] || '🏁 ゴールに たどりつこう！'}</div>
           </div>
           <div className="meiro-char-grid">
             {CHARACTERS.map(ch => (
@@ -530,13 +531,13 @@ export default function Meiro() {
                 onClick={() => setSelectedChar(ch)}
               >
                 <span className="meiro-char-emoji">{ch.emoji}</span>
-                <span className="meiro-char-name">{lang === 'en' ? ch.nameEn : ch.name}</span>
+                <span className="meiro-char-name">{lang === 'ja' ? ch.name : ch.nameEn}</span>
               </button>
             ))}
           </div>
-          <button className="meiro-start-btn" onClick={() => startGame(selectedChar)}>{lang === 'en' ? '🗺️ Start!' : '🗺️ はじめる！'}</button>
-          {hiScore > 0 && <div className="meiro-hi">{lang === 'en' ? `Best: ${fmtTime(hiScore)}` : `ベストタイム: ${fmtTime(hiScore)}`}</div>}
-          <button className="ww-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
+          <button className="meiro-start-btn" onClick={() => startGame(selectedChar)}>🗺️ {t(lang,'start')}！</button>
+          {hiScore > 0 && <div className="meiro-hi">{t(lang,'best')}: {fmtTime(hiScore)}</div>}
+          <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang,'back')}</button>
         </div>
       </div>
     );
@@ -549,12 +550,12 @@ export default function Meiro() {
         <div className="meiro-result-box">
           <div className="meiro-result-title">{resultData.title}</div>
           <div className="meiro-result-msg">{resultData.msg}</div>
-          {resultData.isNew && <div className="meiro-result-new">🌟 {lang === 'en' ? 'New Record!' : '新記録！'}</div>}
+          {resultData.isNew && <div className="meiro-result-new">🌟 {t(lang,'newRecord')}</div>}
           {resultData.hiText && <div className="meiro-result-hi">{resultData.hiText}</div>}
           <div className="meiro-result-btns">
-            <button className="meiro-start-btn" onClick={() => startGame(charRef.current)}>{lang === 'en' ? 'Play Again' : 'もういちど'}</button>
-            <button className="meiro-back-btn2" onClick={() => setScreen('title')}>{lang === 'en' ? 'Characters' : 'キャラ選択'}</button>
-            <button className="meiro-back-btn2" onClick={() => navigate('/')}>{lang === 'en' ? 'Back' : 'もどる'}</button>
+            <button className="meiro-start-btn" onClick={() => startGame(charRef.current)}>{t(lang,'retry')}</button>
+            <button className="meiro-back-btn2" onClick={() => setScreen('title')}>{{ja:'キャラ選択', en:'Characters', zh:'角色选择', ko:'캐릭터 선택', es:'Personajes'}[lang] || 'キャラ選択'}</button>
+            <button className="meiro-back-btn2" onClick={() => navigate('/')}>{t(lang,'back')}</button>
           </div>
         </div>
       </div>
@@ -580,12 +581,12 @@ export default function Meiro() {
         }}>🏠</button>
         {/* CENTER */}
         <div className="meiro-hud-center">
-          <div className="meiro-hud-title">{lang === 'en' ? '🗺️ Maze Play' : '🗺️ めいろあそび'}</div>
-          <div className="meiro-hud-score">{lang === 'en' ? 'Time' : 'じかん'}: {fmtTime(timeDisplay)}</div>
+          <div className="meiro-hud-title">{{ja:'🗺️ めいろあそび', en:'🗺️ Maze Play', zh:'🗺️ 迷宫冒险', ko:'🗺️ 미로 어드벤처', es:'🗺️ Laberinto'}[lang] || '🗺️ めいろあそび'}</div>
+          <div className="meiro-hud-score">{t(lang,'time')}: {fmtTime(timeDisplay)}</div>
         </div>
         {/* RIGHT */}
         <div className="meiro-hud-box">
-          <div className="meiro-hud-label">{lang === 'en' ? 'Lives' : 'ライフ'}</div>
+          <div className="meiro-hud-label">{{ja:'ライフ', en:'Lives', zh:'生命', ko:'라이프', es:'Vidas'}[lang] || 'ライフ'}</div>
           <div className="meiro-hud-val">{hpHearts.join('')}</div>
         </div>
         <button onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playMeiroBgm(); }}

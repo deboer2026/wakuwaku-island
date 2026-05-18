@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playKazuAsobiBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
+import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './KazuAsobi.css';
@@ -131,16 +132,16 @@ export default function KazuAsobi() {
     setHiScore(isNew ? c : hi);
     let title, msg;
     if (c >= 12) {
-      title = lang === 'en' ? '🏆 Amazing!' : '🏆 すごい！';
-      msg   = lang === 'en' ? 'Genius Kid!' : 'てんさいキッズ！';
+      title = {ja:'🏆 すごい！', en:'🏆 Amazing!', zh:'🏆 太棒了！', ko:'🏆 대단해요!', es:'🏆 ¡Increíble!'}[lang] || '🏆 すごい！';
+      msg   = {ja:'てんさいキッズ！', en:'Genius Kid!', zh:'天才少年！', ko:'천재 키즈!', es:'¡Niño genio!'}[lang] || 'てんさいキッズ！';
     } else if (c >= 6) {
-      title = lang === 'en' ? '⭐ Nice!' : '⭐ ナイス！';
-      msg   = lang === 'en' ? 'Well done!' : 'よくできました！';
+      title = {ja:'⭐ ナイス！', en:'⭐ Nice!', zh:'⭐ 不错！', ko:'⭐ 잘했어요!', es:'⭐ ¡Bien!'}[lang] || '⭐ ナイス！';
+      msg   = {ja:'よくできました！', en:'Well done!', zh:'干得好！', ko:'잘했어요!', es:'¡Bien hecho!'}[lang] || 'よくできました！';
     } else {
-      title = lang === 'en' ? '🔢 Try Again!' : '🔢 もういちど';
-      msg   = lang === 'en' ? 'Keep practicing!' : 'れんしゅうしよう！';
+      title = {ja:'🔢 もういちど', en:'🔢 Try Again!', zh:'🔢 再试一次！', ko:'🔢 다시 도전!', es:'🔢 ¡Inténtalo!'}[lang] || '🔢 もういちど';
+      msg   = {ja:'れんしゅうしよう！', en:'Keep practicing!', zh:'继续练习！', ko:'계속 연습해요!', es:'¡Sigue practicando!'}[lang] || 'れんしゅうしよう！';
     }
-    setResultData({ title, msg, hiText: lang === 'en' ? `Best: ${isNew ? c : hi}pts` : `ハイスコア: ${isNew ? c : hi}`, isNew });
+    setResultData({ title, msg, hiText: `${t(lang,'best')}: ${isNew ? c : hi}`, isNew });
     setScreen('result');
   }, []);
 
@@ -270,15 +271,15 @@ export default function KazuAsobi() {
       <div className="kazu-wrap kazu-title">
         <div className="kazu-title-box">
           <div className="kazu-title-emoji">🔢</div>
-          <h1 className="kazu-title-text">{lang === 'en' ? 'Number Play!' : 'かずあそび'}</h1>
-          <p className="kazu-subtitle">{lang === 'en' ? 'Tap exactly that many times!' : 'おなじかずだけタップしよう！'}</p>
+          <h1 className="kazu-title-text">{{ja:'かずあそび', en:'Number Play!', zh:'数字游戏！', ko:'숫자 놀이!', es:'¡Juego de Números!'}[lang] || 'かずあそび'}</h1>
+          <p className="kazu-subtitle">{{ja:'おなじかずだけタップしよう！', en:'Tap exactly that many times!', zh:'点击相同数量的次数！', ko:'같은 숫자만큼 탭하세요!', es:'¡Toca exactamente esa cantidad!'}[lang] || 'おなじかずだけタップしよう！'}</p>
           <div className="kazu-title-rules">
-            <div>{lang === 'en' ? '⏱ 30-second game' : '⏱ 30びょうゲーム'}</div>
-            <div>{lang === 'en' ? '🐱 Count the animals!' : '🐱 どうぶつを かぞえてね'}</div>
+            <div>{{ja:'⏱ 30びょうゲーム', en:'⏱ 30-second game', zh:'⏱ 30秒游戏', ko:'⏱ 30초 게임', es:'⏱ Juego de 30 segundos'}[lang] || '⏱ 30びょうゲーム'}</div>
+            <div>{{ja:'🐱 どうぶつを かぞえてね', en:'🐱 Count the animals!', zh:'🐱 数数动物！', ko:'🐱 동물을 세어봐요!', es:'🐱 ¡Cuenta los animales!'}[lang] || '🐱 どうぶつを かぞえてね'}</div>
           </div>
-          <button className="kazu-start-btn" onClick={startGame}>{lang === 'en' ? '🎮 Start!' : '🎮 はじめる！'}</button>
-          {hiScore > 0 && <div className="kazu-hi">{lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}`}</div>}
-          <button className="ww-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
+          <button className="kazu-start-btn" onClick={startGame}>🎮 {t(lang,'start')}！</button>
+          {hiScore > 0 && <div className="kazu-hi">{t(lang,'best')}: {hiScore}</div>}
+          <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang,'back')}</button>
         </div>
       </div>
     );
@@ -290,13 +291,13 @@ export default function KazuAsobi() {
       <div className="kazu-wrap kazu-result">
         <div className="kazu-result-box">
           <div className="kazu-result-title">{resultData.title}</div>
-          <div className="kazu-result-score">{lang === 'en' ? `Correct: ${correctCountRef.current}` : `せいかい: ${correctCountRef.current}もん`}</div>
+          <div className="kazu-result-score">{{ja:`せいかい: ${correctCountRef.current}もん`, en:`Correct: ${correctCountRef.current}`, zh:`正确: ${correctCountRef.current}题`, ko:`정답: ${correctCountRef.current}문제`, es:`Correcto: ${correctCountRef.current}`}[lang] || `せいかい: ${correctCountRef.current}もん`}</div>
           <div className="kazu-result-msg">{resultData.msg}</div>
-          {resultData.isNew && <div className="kazu-result-new">🌟 {lang === 'en' ? 'New Record!' : '新記録！'}</div>}
+          {resultData.isNew && <div className="kazu-result-new">🌟 {t(lang,'newRecord')}</div>}
           <div className="kazu-result-hi">{resultData.hiText}</div>
           <div className="kazu-result-btns">
-            <button className="kazu-start-btn" onClick={startGame}>{lang === 'en' ? 'Play Again' : 'もういちど'}</button>
-            <button className="kazu-back-btn2" onClick={() => navigate('/')}>{lang === 'en' ? 'Back' : 'もどる'}</button>
+            <button className="kazu-start-btn" onClick={startGame}>{t(lang,'retry')}</button>
+            <button className="kazu-back-btn2" onClick={() => navigate('/')}>{t(lang,'back')}</button>
           </div>
         </div>
       </div>
@@ -314,12 +315,12 @@ export default function KazuAsobi() {
           <button className="kazu-hud-back" onClick={() => { runningRef.current=false; if(timerRef.current) clearInterval(timerRef.current); if(animIdRef.current) cancelAnimationFrame(animIdRef.current); navigate('/'); }}>🏠</button>
           {/* CENTER */}
           <div className="kazu-hud-center">
-            <div className="kazu-hud-title">{lang === 'en' ? '🔢 Number Fun' : '🔢 かずあそび'}</div>
-            <div className="kazu-hud-score">{lang === 'en' ? 'Correct' : 'せいかい'}: {correctDisplay}</div>
+            <div className="kazu-hud-title">{{ja:'🔢 かずあそび', en:'🔢 Number Fun', zh:'🔢 数字游戏', ko:'🔢 숫자 놀이', es:'🔢 Juego de Números'}[lang] || '🔢 かずあそび'}</div>
+            <div className="kazu-hud-score">{{ja:'せいかい', en:'Correct', zh:'正确', ko:'정답', es:'Correcto'}[lang] || 'せいかい'}: {correctDisplay}</div>
           </div>
           {/* RIGHT */}
           <div className="kazu-hud-box">
-            <div className="kazu-hud-label">{lang === 'en' ? 'Time' : 'のこり'}</div>
+            <div className="kazu-hud-label">{t(lang,'timeLeft')}</div>
             <div className="kazu-hud-val">{timeDisplay}</div>
           </div>
           <button onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playKazuAsobiBgm(); }}
@@ -331,7 +332,7 @@ export default function KazuAsobi() {
         {/* Big number */}
         <div className="kazu-number-area">
           <div className="kazu-number">{targetNum}</div>
-          <div className="kazu-number-label">{lang === 'en' ? 'Tap that many!' : 'ひきえらんでね！'}</div>
+          <div className="kazu-number-label">{{ja:'ひきえらんでね！', en:'Tap that many!', zh:'点击相同数量！', ko:'같은 수만큼 탭해요！', es:'¡Toca esa cantidad!'}[lang] || 'ひきえらんでね！'}</div>
           <div className="kazu-animal-label">{currentAnimal}</div>
         </div>
 

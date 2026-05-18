@@ -588,6 +588,18 @@ export function playSniperBgm() {
   ], 7.0, 'sawtooth');
 }
 
+export function playKokkiBgm() {
+  _bgm([
+    {note:'C5',dur:'8n',t:0.00},{note:'E5',dur:'8n',t:0.20},{note:'G5',dur:'8n',t:0.40},
+    {note:'C6',dur:'4n',t:0.60},{note:'G5',dur:'8n',t:1.10},{note:'E5',dur:'8n',t:1.30},
+    {note:'F5',dur:'8n',t:1.50},{note:'A5',dur:'4n',t:1.70},{note:'G5',dur:'8n',t:2.20},
+    {note:'E5',dur:'8n',t:2.40},{note:'D5',dur:'8n',t:2.60},{note:'C5',dur:'4n',t:2.80},
+    {note:'D5',dur:'8n',t:3.30},{note:'F5',dur:'8n',t:3.50},{note:'A5',dur:'8n',t:3.70},
+    {note:'G5',dur:'4n',t:3.90},{note:'E5',dur:'8n',t:4.40},{note:'C5',dur:'8n',t:4.60},
+    {note:'G4',dur:'8n',t:4.80},{note:'C5',dur:'4n',t:5.00},
+  ], 5.5, 'triangle');
+}
+
 export function playCrossingBgm() {
   _bgm([
     {note:'C5',dur:'8n',t:0.00},{note:'E5',dur:'8n',t:0.25},{note:'G5',dur:'4n',t:0.50},

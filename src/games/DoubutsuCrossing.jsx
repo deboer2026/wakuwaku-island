@@ -4,6 +4,7 @@ import {
   ensureAudioStarted, playCrossingBgm, stopBgm,
   toggleMute, playSoundCorrect, playSoundWrong,
 } from '../utils/audio'
+import { getLang, t } from '../utils/i18n'
 import './DoubutsuCrossing.css'
 
 const W      = 360
@@ -87,6 +88,7 @@ function makeLane(row) {
 
 export default function DoubutsuCrossing() {
   const navigate = useNavigate()
+  const lang = getLang()
   const canvasRef = useRef(null)
   const stateRef  = useRef(null)
   const rafRef    = useRef(null)
@@ -241,26 +243,40 @@ export default function DoubutsuCrossing() {
       })
     }
 
-    /* player */
-    const px  = g.player.x
-    const pcy = rowCenterY(pr, pr)
+    /* player — animated position */
+    let displayX = g.player.x
+    let displayY = PLAYER_SCR_Y
+    // Slide: ease-out X interpolation
+    if (g.player.slideAnim) {
+      const st   = g.player.slideAnim.progress
+      const ease = 1 - Math.pow(1 - st, 2)
+      displayX   = g.player.slideAnim.fromX + (g.player.x - g.player.slideAnim.fromX) * ease
+    }
+    // Jump: parabolic arc from one row below center → center
+    if (g.player.jumpAnim) {
+      const jt   = g.player.jumpAnim.progress
+      const fromY = PLAYER_SCR_Y + LANE_H        // old row (now below)
+      displayY   = fromY + (PLAYER_SCR_Y - fromY) * jt - Math.sin(Math.PI * jt) * LANE_H * 0.7
+    }
     if (!g.dead) {
       ctx.globalAlpha = 1
       ctx.font        = `${PSIZ}px serif`
       ctx.textAlign   = 'center'
       ctx.textBaseline = 'middle'
-      /* shadow */
-      ctx.fillStyle = 'rgba(0,0,0,0.2)'
+      /* shadow — stays grounded, shrinks while airborne */
+      const airH = g.player.jumpAnim ? Math.sin(Math.PI * g.player.jumpAnim.progress) : 0
+      ctx.fillStyle = `rgba(0,0,0,${0.2 - airH * 0.12})`
       ctx.beginPath()
-      ctx.ellipse(px, pcy + PSIZ * 0.42, 18, 7, 0, 0, Math.PI * 2)
+      ctx.ellipse(displayX, PLAYER_SCR_Y + PSIZ * 0.42,
+        18 - airH * 6, Math.max(2, 7 - airH * 3), 0, 0, Math.PI * 2)
       ctx.fill()
-      ctx.fillText(g.player.char, px, pcy - 2)
+      ctx.fillText(g.player.char, displayX, displayY - 2)
     } else {
       /* death animation */
       const t = 1 - Math.max(0, g.deadTimer / 1.2)
       ctx.globalAlpha = Math.max(0, 1 - t * 1.8)
       ctx.save()
-      ctx.translate(px, pcy)
+      ctx.translate(displayX, PLAYER_SCR_Y)
       ctx.rotate(t * Math.PI * 3)
       ctx.scale(1 + t * 0.5, 1 + t * 0.5)
       ctx.font = `${PSIZ}px serif`
@@ -292,6 +308,8 @@ export default function DoubutsuCrossing() {
         char: CHARS[charIdx],
         moveCooldown: 0,
         rowChangeCooldown: 0,  // grace period after row change
+        jumpAnim:  null,       // { progress: 0..1 }  ぴょん
+        slideAnim: null,       // { fromX, progress: 0..1 }  スライド
       },
       lanes,
       maxGenRow: 20,
@@ -331,9 +349,17 @@ export default function DoubutsuCrossing() {
         return
       }
 
-      /* move cooldown */
-      g.player.moveCooldown = Math.max(0, g.player.moveCooldown - dt)
+      /* move cooldown + animation progress */
+      g.player.moveCooldown      = Math.max(0, g.player.moveCooldown - dt)
       g.player.rowChangeCooldown = Math.max(0, (g.player.rowChangeCooldown || 0) - dt)
+      if (g.player.jumpAnim) {
+        g.player.jumpAnim.progress = Math.min(1, g.player.jumpAnim.progress + dt / 0.15)
+        if (g.player.jumpAnim.progress >= 1) g.player.jumpAnim = null
+      }
+      if (g.player.slideAnim) {
+        g.player.slideAnim.progress = Math.min(1, g.player.slideAnim.progress + dt / 0.10)
+        if (g.player.slideAnim.progress >= 1) g.player.slideAnim = null
+      }
 
       /* ensure lanes generated ahead */
       const pr = g.player.row
@@ -436,20 +462,31 @@ export default function DoubutsuCrossing() {
   function handleMove(dir) {
     const g = stateRef.current
     if (!g || g.dead || g.player.moveCooldown > 0) return
-    g.player.moveCooldown = 0.13
 
     if (dir === 'up') {
+      g.player.moveCooldown     = 0.15        // block input for jump duration
+      g.player.jumpAnim         = { progress: 0 }
       g.player.row++
-      g.player.rowChangeCooldown = 0.18  // 180ms grace after row advance
+      g.player.rowChangeCooldown = 0.18
       if (g.player.row > g.score) {
         g.score = g.player.row
         setUiScore(g.score)
         playSoundCorrect()
       }
     } else if (dir === 'left') {
-      g.player.x = Math.max(COL_W * 0.5, g.player.x - COL_W)
+      const newX = Math.max(COL_W * 0.5, g.player.x - COL_W)
+      if (newX !== g.player.x) {
+        g.player.slideAnim    = { fromX: g.player.x, progress: 0 }
+        g.player.x            = newX
+        g.player.moveCooldown = 0.10          // block input for slide duration
+      }
     } else if (dir === 'right') {
-      g.player.x = Math.min(W - COL_W * 0.5, g.player.x + COL_W)
+      const newX = Math.min(W - COL_W * 0.5, g.player.x + COL_W)
+      if (newX !== g.player.x) {
+        g.player.slideAnim    = { fromX: g.player.x, progress: 0 }
+        g.player.x            = newX
+        g.player.moveCooldown = 0.10
+      }
     }
   }
 
@@ -496,10 +533,10 @@ export default function DoubutsuCrossing() {
           </button>
         ))}
       </div>
-      {hiVal > 0 && <div className="crossing-hi">🏆 ハイスコア: {hiVal}</div>}
-      <button className="crossing-start-btn" onClick={startGame}>スタート ▶</button>
+      {hiVal > 0 && <div className="crossing-hi">🏆 {t(lang, 'hiScore')}: {hiVal}</div>}
+      <button className="crossing-start-btn" onClick={startGame}>{t(lang, 'start')} ▶</button>
       <button className="ww-back-btn" onClick={() => { stopBgm(); navigate('/') }}>
-        🏠 トップへもどる
+        {t(lang, 'back')}
       </button>
     </div>
   )
@@ -508,12 +545,12 @@ export default function DoubutsuCrossing() {
   if (screen === 'result') return (
     <div className="crossing-wrap crossing-result-screen">
       <div className="crossing-result-icon">🐔</div>
-      <div className="crossing-result-text">ゲームオーバー</div>
-      <div className="crossing-result-score">スコア: {resultData?.score}</div>
-      <div className="crossing-result-hi">🏆 ハイスコア: {resultData?.hi}</div>
-      <button className="crossing-start-btn" onClick={startGame}>もういちど</button>
+      <div className="crossing-result-text">{t(lang, 'gameOver')}</div>
+      <div className="crossing-result-score">{t(lang, 'score')}: {resultData?.score}</div>
+      <div className="crossing-result-hi">🏆 {t(lang, 'hiScore')}: {resultData?.hi}</div>
+      <button className="crossing-start-btn" onClick={startGame}>{t(lang, 'retry')}</button>
       <button className="ww-back-btn" onClick={() => { stopBgm(); navigate('/') }}>
-        🏠 トップへもどる
+        {t(lang, 'back')}
       </button>
     </div>
   )

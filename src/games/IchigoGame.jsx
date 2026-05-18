@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playIchigoBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
+import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './IchigoGame.css';
@@ -230,20 +231,32 @@ export default function IchigoGame() {
 
     let title, msg;
     if (s >= 60) {
-      title = lang === 'en' ? '🏆 Amazing!' : '🏆 すごい！';
-      msg   = lang === 'en'
-        ? `Score: ${s}pts!<br>Collected ${col}!<br>Strawberry Genius!`
-        : `スコア ${s} てん！<br>${col}こ あつめたよ！<br>いちごの天才だ！`;
+      title = {ja:'🏆 すごい！', en:'🏆 Amazing!', zh:'🏆 太棒了！', ko:'🏆 대단해요!', es:'🏆 ¡Increíble!'}[lang] || '🏆 すごい！';
+      msg   = {
+        ja: `スコア ${s} てん！<br>${col}こ あつめたよ！<br>いちごの天才だ！`,
+        en: `Score: ${s}pts!<br>Collected ${col}!<br>Strawberry Genius!`,
+        zh: `得分: ${s}分！<br>收集了${col}个！<br>草莓天才！`,
+        ko: `점수: ${s}점！<br>${col}개 모았어요！<br>딸기 천재!`,
+        es: `Puntos: ${s}!<br>¡Recogiste ${col}!<br>¡Genio de las fresas!`,
+      }[lang] || `スコア ${s} てん！`;
     } else if (s >= 30) {
-      title = lang === 'en' ? '🍓 Nice!' : '🍓 ナイス！';
-      msg   = lang === 'en'
-        ? `Score: ${s}pts!<br>Collected ${col}!<br>Well done!`
-        : `スコア ${s} てん！<br>${col}こ あつめたよ！<br>よくできました！`;
+      title = {ja:'🍓 ナイス！', en:'🍓 Nice!', zh:'🍓 不错！', ko:'🍓 잘했어요!', es:'🍓 ¡Bien!'}[lang] || '🍓 ナイス！';
+      msg   = {
+        ja: `スコア ${s} てん！<br>${col}こ あつめたよ！<br>よくできました！`,
+        en: `Score: ${s}pts!<br>Collected ${col}!<br>Well done!`,
+        zh: `得分: ${s}分！<br>收集了${col}个！<br>干得好！`,
+        ko: `점수: ${s}점！<br>${col}개 모았어요！<br>잘했어요!`,
+        es: `Puntos: ${s}!<br>¡Recogiste ${col}!<br>¡Bien hecho!`,
+      }[lang] || `スコア ${s} てん！`;
     } else {
-      title = lang === 'en' ? '😊 Try Again!' : '😊 もういちど';
-      msg   = lang === 'en'
-        ? `Score: ${s}pts<br>Collected ${col}!<br>Keep challenging!`
-        : `スコア ${s} てん<br>${col}こ あつめたよ！<br>またちょうせん！`;
+      title = {ja:'😊 もういちど', en:'😊 Try Again!', zh:'😊 再试一次！', ko:'😊 다시 도전!', es:'😊 ¡Inténtalo!'}[lang] || '😊 もういちど';
+      msg   = {
+        ja: `スコア ${s} てん<br>${col}こ あつめたよ！<br>またちょうせん！`,
+        en: `Score: ${s}pts<br>Collected ${col}!<br>Keep challenging!`,
+        zh: `得分: ${s}分<br>收集了${col}个！<br>继续挑战！`,
+        ko: `점수: ${s}점<br>${col}개 모았어요！<br>계속 도전해요!`,
+        es: `Puntos: ${s}<br>¡Recogiste ${col}!<br>¡Sigue intentando!`,
+      }[lang] || `スコア ${s} てん`;
     }
 
     setResult({ title, msg, score: s, collected: col, isNew, hi: isNew ? s : hi });
@@ -266,22 +279,25 @@ export default function IchigoGame() {
     <div className="ichigo-wrap ichigo-title">
       <div className="ichigo-title-box">
         <div style={{ fontSize: 64, marginBottom: 6 }}>🍓</div>
-        <h1 className="ichigo-title-text">{lang === 'en' ? 'Strawberry Time!' : 'いちごをあつめよう！'}</h1>
+        <h1 className="ichigo-title-text">{{ja:'いちごをあつめよう！', en:'Strawberry Time!', zh:'收集草莓！', ko:'딸기를 모아라!', es:'¡Tiempo de Fresa!'}[lang] || 'いちごをあつめよう！'}</h1>
         <div className="ichigo-rule-card">
-          <h2>{lang === 'en' ? '📖 How to Play' : '📖 あそびかた'}</h2>
-          <div className="ichigo-rule-step"><div className="ichigo-rule-num">1</div><div className="ichigo-rule-text">{lang === 'en' ? <><b>Strawberries🍓</b> pop up — tap them fast!</> : <><b>いちご🍓</b> がポップアップ！どんどんタップしよう！</>}</div></div>
-          <div className="ichigo-rule-step"><div className="ichigo-rule-num">2</div><div className="ichigo-rule-text">{lang === 'en' ? <><b>Smaller</b> berries = more points!</> : <><b>ちいさい</b>いちごほど こうとく！すばやくタップ！</>}</div></div>
-          <div className="ichigo-rule-step"><div className="ichigo-rule-num">3</div><div className="ichigo-rule-text">{lang === 'en' ? <><b>Gold star⭐</b> = big bonus!</> : <><b>きんいちご⭐</b> がでたら チャンス！おおきくもらえるよ！</>}</div></div>
-          <div className="ichigo-rule-step"><div className="ichigo-rule-num">4</div><div className="ichigo-rule-text">{lang === 'en' ? <>Don't tap <b>animals</b> — you'll lose a life!</> : <><b>どうぶつ</b>はタップしちゃダメ！ライフがへるよ！</>}</div></div>
+          <h2>📖 {t(lang,'howToPlay')}</h2>
+          <div className="ichigo-rule-step"><div className="ichigo-rule-num">1</div><div className="ichigo-rule-text">{{ja:<><b>いちご🍓</b> がポップアップ！どんどんタップしよう！</>, en:<><b>Strawberries🍓</b> pop up — tap them fast!</>, zh:<><b>草莓🍓</b>弹出来了，快点击！</>, ko:<><b>딸기🍓</b>가 팝업! 빨리 탭해요!</>, es:<><b>¡Las fresas🍓</b> aparecen, tócalas rápido!</>}[lang] || <><b>いちご🍓</b> がポップアップ！</>}</div></div>
+          <div className="ichigo-rule-step"><div className="ichigo-rule-num">2</div><div className="ichigo-rule-text">{{ja:<><b>ちいさい</b>いちごほど こうとく！すばやくタップ！</>, en:<><b>Smaller</b> berries = more points!</>, zh:<><b>越小的草莓</b>得分越高！</>, ko:<><b>작은 딸기</b>일수록 고득점！</>, es:<><b>¡Las fresas más pequeñas</b> = más puntos!</>}[lang] || <><b>ちいさい</b>いちごほど こうとく！</>}</div></div>
+          <div className="ichigo-rule-step"><div className="ichigo-rule-num">3</div><div className="ichigo-rule-text">{{ja:<><b>きんいちご⭐</b> がでたら チャンス！おおきくもらえるよ！</>, en:<><b>Gold star⭐</b> = big bonus!</>, zh:<><b>金草莓⭐</b>出现了，大奖励！</>, ko:<><b>금딸기⭐</b>가 나오면 찬스!</>, es:<><b>¡Fresa dorada⭐</b> = gran bonus!</>}[lang] || <><b>きんいちご⭐</b> がでたら チャンス！</>}</div></div>
+          <div className="ichigo-rule-step"><div className="ichigo-rule-num">4</div><div className="ichigo-rule-text">{{ja:<><b>どうぶつ</b>はタップしちゃダメ！ライフがへるよ！</>, en:<>Don't tap <b>animals</b> — you'll lose a life!</>, zh:<>不要点<b>动物</b>！会减命的！</>, ko:<><b>동물</b>은 탭하지 마세요! 목숨이 줄어요!</>, es:<>¡No toques <b>animales</b> o perderás una vida!</>}[lang] || <><b>どうぶつ</b>はタップしちゃダメ！</>}</div></div>
           <div className="ichigo-rule-ex">
             {lang === 'en'
               ? <>Tap in a row for a <b style={{ color: '#e91e63' }}>Combo</b> bonus!<br />🍓🍓🍓 → Combo ×2!</>
+              : lang === 'zh' ? <>连续点击获得<b style={{ color: '#e91e63' }}>连击</b>奖励！<br />🍓🍓🍓 → 连击×2！</>
+              : lang === 'ko' ? <>연속 탭으로 <b style={{ color: '#e91e63' }}>콤보</b> 보너스！<br />🍓🍓🍓 → 콤보×2！</>
+              : lang === 'es' ? <>¡Toca seguido para un bonus <b style={{ color: '#e91e63' }}>Combo</b>！<br />🍓🍓🍓 → Combo ×2！</>
               : <>れんぞくタップで<b style={{ color: '#e91e63' }}>コンボ</b>ボーナス！<br />🍓🍓🍓 → コンボ×2！</>}
           </div>
         </div>
-        {hiScore > 0 && <div className="ichigo-hi-badge">🏆 {lang === 'en' ? `Best: ${hiScore}pts` : `ハイスコア: ${hiScore}てん`}</div>}
-        <button className="ichigo-start-btn" onClick={startGame}>{lang === 'en' ? '▶ Start!' : '▶ スタート！'}</button>
-        <button className="ww-back-btn" onClick={() => navigate('/')}>{lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}</button>
+        {hiScore > 0 && <div className="ichigo-hi-badge">🏆 {t(lang,'best')}: {hiScore}</div>}
+        <button className="ichigo-start-btn" onClick={startGame}>▶ {t(lang,'start')}！</button>
+        <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang,'back')}</button>
       </div>
     </div>
   );
@@ -294,11 +310,11 @@ export default function IchigoGame() {
       <div className="ichigo-result-box">
         <h2 className="ichigo-result-title">{resultData?.title}</h2>
         <p className="ichigo-result-msg" dangerouslySetInnerHTML={{ __html: resultData?.msg ?? '' }} />
-        {resultData?.isNew && <div className="ichigo-result-new">🏆 {lang === 'en' ? 'New Record!' : 'ニューレコード！'}</div>}
-        <div className="ichigo-result-hi">{lang === 'en' ? `Best: ${resultData?.hi ?? hiScore}pts` : `ハイスコア: ${resultData?.hi ?? hiScore}てん`}</div>
+        {resultData?.isNew && <div className="ichigo-result-new">🏆 {t(lang,'newRecord')}</div>}
+        <div className="ichigo-result-hi">{t(lang,'best')}: {resultData?.hi ?? hiScore}</div>
         <div className="ichigo-result-btns">
-          <button className="ichigo-start-btn" onClick={startGame}>{lang === 'en' ? 'Play Again' : 'もういちど'}</button>
-          <button className="ichigo-back-btn"  onClick={() => navigate('/')}>{lang === 'en' ? 'Back to Title' : 'タイトルへ'}</button>
+          <button className="ichigo-start-btn" onClick={startGame}>{t(lang,'retry')}</button>
+          <button className="ichigo-back-btn"  onClick={() => navigate('/')}>{t(lang,'backToTitle')}</button>
         </div>
       </div>
     </div>
@@ -330,16 +346,16 @@ export default function IchigoGame() {
         {/* CENTER */}
         <div style={{ flex:1, textAlign:'center' }}>
           <div style={{ fontSize:13, fontWeight:900, color:'#fff', textShadow:'1px 1px 0 rgba(0,0,0,0.3)', lineHeight:1.2 }}>
-            {lang === 'en' ? '🍓 Strawberry Time' : '🍓 いちごあつめ'}
+            {{ja:'🍓 いちごあつめ', en:'🍓 Strawberry Time', zh:'🍓 收集草莓', ko:'🍓 딸기 모으기', es:'🍓 Tiempo de Fresa'}[lang] || '🍓 いちごあつめ'}
           </div>
           <div style={{ fontSize:11, color:'rgba(255,255,255,0.88)', fontWeight:700 }}>
-            {lang === 'en' ? 'Score' : 'スコア'}: {score}
+            {t(lang,'score')}: {score}
           </div>
         </div>
         {/* RIGHT */}
         <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
           <div style={{ background:'rgba(255,255,255,0.95)', borderRadius:12, padding:'4px 10px', textAlign:'center' }}>
-            <div style={{ fontSize:10, color:'#880e4f', fontWeight:700 }}>{lang === 'en' ? 'Left' : 'のこり'}</div>
+            <div style={{ fontSize:10, color:'#880e4f', fontWeight:700 }}>{t(lang,'timeLeft')}</div>
             <div style={{ fontSize:20, fontWeight:900, color:'#560027' }}>{timeLeft}</div>
           </div>
           <button onClick={() => { const m = toggleMute(); setMuted(m); if (!m) playIchigoBgm(); }}

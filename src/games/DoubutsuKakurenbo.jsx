@@ -6,6 +6,7 @@ import {
   playSoundReveal, playSoundWiggle,
   ensureAudioStarted, toggleMute, getMuteState,
 } from '../utils/audio';
+import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './DoubutsuKakurenbo.css';
@@ -276,14 +277,14 @@ export default function DoubutsuKakurenbo() {
 
     let title, msg;
     if (allClear) {
-      title = lang === 'en' ? '🏆 All Found!' : '🏆 ぜんぶみつけた！';
-      msg   = lang === 'en' ? 'You found all the animals! Amazing!' : 'どうぶつを ぜんぶ みつけたよ！すごい！';
+      title = {ja:'🏆 ぜんぶみつけた！', en:'🏆 All Found!', zh:'🏆 全部找到了！', ko:'🏆 전부 찾았어요!', es:'🏆 ¡Todo encontrado!'}[lang] || '🏆 ぜんぶみつけた！';
+      msg   = {ja:'どうぶつを ぜんぶ みつけたよ！すごい！', en:'You found all the animals! Amazing!', zh:'找到了所有动物！太棒了！', ko:'동물을 전부 찾았어요! 대단해요!', es:'¡Encontraste todos los animales! ¡Increíble!'}[lang] || 'どうぶつを ぜんぶ みつけたよ！すごい！';
     } else if (stageRef.current >= 2) {
-      title = lang === 'en' ? '⭐ Nice Try!' : '⭐ よくがんばった！';
-      msg   = lang === 'en' ? `Cleared ${stageRef.current - 1} stage(s)! Keep going!` : `ステージ${stageRef.current - 1}まで クリア！もういちどチャレンジ！`;
+      title = {ja:'⭐ よくがんばった！', en:'⭐ Nice Try!', zh:'⭐ 不错！', ko:'⭐ 잘했어요!', es:'⭐ ¡Buen intento!'}[lang] || '⭐ よくがんばった！';
+      msg   = {ja:`ステージ${stageRef.current - 1}まで クリア！もういちどチャレンジ！`, en:`Cleared ${stageRef.current - 1} stage(s)! Keep going!`, zh:`通过了第${stageRef.current - 1}关！继续挑战！`, ko:`스테이지 ${stageRef.current - 1}까지 클리어！다시 도전해요!`, es:`¡Superaste ${stageRef.current - 1} nivel(es)! ¡Sigue!`}[lang] || `ステージ${stageRef.current - 1}まで クリア！`;
     } else {
-      title = lang === 'en' ? '🌿 Try Again!' : '🌿 もういちど！';
-      msg   = lang === 'en' ? 'The animals are hiding well! Find them all!' : 'どうぶつたちが かくれてるよ！さがしてみよう！';
+      title = {ja:'🌿 もういちど！', en:'🌿 Try Again!', zh:'🌿 再试一次！', ko:'🌿 다시 도전!', es:'🌿 ¡Inténtalo!'}[lang] || '🌿 もういちど！';
+      msg   = {ja:'どうぶつたちが かくれてるよ！さがしてみよう！', en:'The animals are hiding well! Find them all!', zh:'动物们藏得很好！找找看！', ko:'동물들이 잘 숨어있어요! 찾아봐요!', es:'¡Los animales están bien escondidos! ¡Encuéntralos!'}[lang] || 'どうぶつたちが かくれてるよ！';
     }
 
     setResultData({ title, msg, score, isNew, hi: isNew ? score : hi });
@@ -333,44 +334,44 @@ export default function DoubutsuKakurenbo() {
       <div className="kk-title-box">
         <div className="kk-title-icon">🔍</div>
         <h1 className="kk-title-text">
-          {lang === 'en' ? 'Animal Hide & Seek' : 'どうぶつかくれんぼ'}
+          {{ja:'どうぶつかくれんぼ', en:'Animal Hide & Seek', zh:'动物捉迷藏', ko:'동물 숨바꼭질', es:'Escondite Animal'}[lang] || 'どうぶつかくれんぼ'}
         </h1>
 
         <div className="kk-rule-card">
-          <h2>{lang === 'en' ? '📖 How to Play' : '📖 あそびかた'}</h2>
+          <h2>📖 {t(lang,'howToPlay')}</h2>
           <div className="kk-rule-step">
             <span className="kk-rule-num">1</span>
-            <span>{lang === 'en' ? 'A target animal is shown at the top!' : 'うえに さがすどうぶつが でるよ！'}</span>
+            <span>{{ja:'うえに さがすどうぶつが でるよ！', en:'A target animal is shown at the top!', zh:'上方会显示要找的动物！', ko:'위에 찾을 동물이 나와요!', es:'¡Se muestra el animal objetivo arriba!'}[lang] || 'うえに さがすどうぶつが でるよ！'}</span>
           </div>
           <div className="kk-rule-step">
             <span className="kk-rule-num">2</span>
-            <span>{lang === 'en' ? 'Tap the objects to find where animals are hiding!' : 'オブジェクトをタップして どうぶつをさがそう！'}</span>
+            <span>{{ja:'オブジェクトをタップして どうぶつをさがそう！', en:'Tap the objects to find where animals are hiding!', zh:'点击物体寻找藏着的动物！', ko:'오브젝트를 탭해서 동물을 찾아요!', es:'¡Toca los objetos para encontrar los animales!'}[lang] || 'オブジェクトをタップして どうぶつをさがそう！'}</span>
           </div>
           <div className="kk-rule-step">
             <span className="kk-rule-num">3</span>
-            <span>{lang === 'en' ? <>Find the <b>target animal</b> — other animals are wrong!</> : <><b>さがしているどうぶつ</b>をみつけよう！ほかはNG！</>}</span>
+            <span>{lang === 'en' ? <>Find the <b>target animal</b> — other animals are wrong!</> : lang === 'zh' ? <><b>找到目标动物</b>——其他动物不对！</> : lang === 'ko' ? <><b>목표 동물</b>을 찾아요——다른 동물은 틀려요!</> : lang === 'es' ? <>¡Encuentra el <b>animal objetivo</b>—los otros son erróneos!</> : <><b>さがしているどうぶつ</b>をみつけよう！ほかはNG！</>}</span>
           </div>
           <div className="kk-rule-step">
             <span className="kk-rule-num">4</span>
-            <span>{lang === 'en' ? 'Clear all 3 stages to win!' : 'ステージ3まで クリアしよう！'}</span>
+            <span>{{ja:'ステージ3まで クリアしよう！', en:'Clear all 3 stages to win!', zh:'通过全部3关来获胜！', ko:'스테이지 3까지 클리어해요!', es:'¡Supera los 3 niveles para ganar!'}[lang] || 'ステージ3まで クリアしよう！'}</span>
           </div>
         </div>
 
         <div className="kk-stage-info">
-          <div className="kk-stage-badge">🌿 {lang === 'en' ? 'Stage 1: 6 spots' : 'ステージ1：6つ'}</div>
-          <div className="kk-stage-badge">🌳 {lang === 'en' ? 'Stage 2: 9 spots + timer' : 'ステージ2：9つ＋タイマー'}</div>
-          <div className="kk-stage-badge">🏔️ {lang === 'en' ? 'Stage 3: 12 spots + fast!' : 'ステージ3：12つ＋はやい！'}</div>
+          <div className="kk-stage-badge">🌿 {{ja:'ステージ1：6つ', en:'Stage 1: 6 spots', zh:'第1关：6个', ko:'스테이지1: 6개', es:'Nivel 1: 6 lugares'}[lang] || 'ステージ1：6つ'}</div>
+          <div className="kk-stage-badge">🌳 {{ja:'ステージ2：9つ＋タイマー', en:'Stage 2: 9 spots + timer', zh:'第2关：9个+计时器', ko:'스테이지2: 9개+타이머', es:'Nivel 2: 9 lugares + tiempo'}[lang] || 'ステージ2：9つ＋タイマー'}</div>
+          <div className="kk-stage-badge">🏔️ {{ja:'ステージ3：12つ＋はやい！', en:'Stage 3: 12 spots + fast!', zh:'第3关：12个+快！', ko:'스테이지3: 12개+빨라요!', es:'Nivel 3: 12 lugares + ¡rápido!'}[lang] || 'ステージ3：12つ＋はやい！'}</div>
         </div>
 
         {hiScore > 0 && (
-          <div className="kk-hi-badge">🏆 {lang === 'en' ? `Best: ${hiScore}pts` : `ベストスコア: ${hiScore}てん`}</div>
+          <div className="kk-hi-badge">🏆 {t(lang,'best')}: {hiScore}</div>
         )}
 
         <button className="kk-start-btn" onClick={startGame}>
-          {lang === 'en' ? '▶ Start!' : '▶ スタート！'}
+          ▶ {t(lang,'start')}！
         </button>
         <button className="ww-back-btn" onClick={() => navigate('/')}>
-          {lang === 'en' ? '🏝️ Back to Top' : '🏝️ トップへもどる'}
+          {t(lang,'back')}
         </button>
       </div>
     </div>
@@ -383,18 +384,16 @@ export default function DoubutsuKakurenbo() {
       <div className="kk-result-box">
         <div style={{ fontSize: 72 }}>🎉</div>
         <h2 className="kk-result-title">
-          {lang === 'en' ? `Stage ${stage} Clear!` : `ステージ${stage} クリア！`}
+          {{ja:`ステージ${stage} クリア！`, en:`Stage ${stage} Clear!`, zh:`第${stage}关通过！`, ko:`스테이지 ${stage} 클리어!`, es:`¡Nivel ${stage} superado!`}[lang] || `ステージ${stage} クリア！`}
         </h2>
         <p className="kk-result-msg">
-          {lang === 'en'
-            ? `You found all ${STAGES[stage - 1].targets} animals! Next stage is faster!`
-            : `どうぶつを${STAGES[stage - 1].targets}ひき ぜんぶみつけたよ！つぎはもっとむずかしいよ！`}
+          {{ja:`どうぶつを${STAGES[stage - 1].targets}ひき ぜんぶみつけたよ！つぎはもっとむずかしいよ！`, en:`You found all ${STAGES[stage - 1].targets} animals! Next stage is faster!`, zh:`找到了${STAGES[stage - 1].targets}只动物！下一关更难！`, ko:`동물 ${STAGES[stage - 1].targets}마리를 전부 찾았어요! 다음 스테이지가 더 어려워요!`, es:`¡Encontraste los ${STAGES[stage - 1].targets} animales! ¡El siguiente nivel es más difícil!`}[lang] || `どうぶつを${STAGES[stage - 1].targets}ひき ぜんぶみつけたよ！`}
         </p>
         <div className="kk-score-display">
-          {lang === 'en' ? `Score so far: ${totalScore}pts` : `スコア: ${totalScore}てん`}
+          {t(lang,'score')}: {totalScore}
         </div>
         <button className="kk-start-btn" onClick={goNextStage}>
-          {lang === 'en' ? 'Next Stage ▶' : 'つぎへ ▶'}
+          {t(lang,'next')} ▶
         </button>
       </div>
     </div>
@@ -408,20 +407,20 @@ export default function DoubutsuKakurenbo() {
         <h2 className="kk-result-title">{resultData?.title}</h2>
         <p className="kk-result-msg">{resultData?.msg}</p>
         <div className="kk-score-display">
-          {lang === 'en' ? `Score: ${resultData?.score ?? 0}pts` : `スコア: ${resultData?.score ?? 0}てん`}
+          {t(lang,'score')}: {resultData?.score ?? 0}
         </div>
         {resultData?.isNew && (
-          <div className="kk-new-record">🏆 {lang === 'en' ? 'New Record!' : 'ニューレコード！'}</div>
+          <div className="kk-new-record">🏆 {t(lang,'newRecord')}</div>
         )}
         <div className="kk-hi-badge">
-          🏆 {lang === 'en' ? `Best: ${resultData?.hi ?? hiScore}pts` : `ベスト: ${resultData?.hi ?? hiScore}てん`}
+          🏆 {t(lang,'best')}: {resultData?.hi ?? hiScore}
         </div>
         <div className="kk-result-btns">
           <button className="kk-start-btn" onClick={startGame}>
-            {lang === 'en' ? 'Play Again' : 'もういちど'}
+            {t(lang,'retry')}
           </button>
           <button className="kk-back-btn" onClick={() => navigate('/')}>
-            {lang === 'en' ? 'Back to Title' : 'タイトルへ'}
+            {t(lang,'backToTitle')}
           </button>
         </div>
       </div>
@@ -441,12 +440,12 @@ export default function DoubutsuKakurenbo() {
         </button>
         <div className="kk-hud-center">
           <div className="kk-hud-title">
-            {lang === 'en' ? '🔍 Hide & Seek' : '🔍 どうぶつかくれんぼ'}
+            {{ja:'🔍 どうぶつかくれんぼ', en:'🔍 Hide & Seek', zh:'🔍 动物捉迷藏', ko:'🔍 동물 숨바꼭질', es:'🔍 Escondite Animal'}[lang] || '🔍 どうぶつかくれんぼ'}
           </div>
           <div className="kk-hud-sub">
-            {lang === 'en' ? `Stage ${stage}` : `ステージ${stage}`}
+            {t(lang,'stage')} {stage}
             &nbsp;|&nbsp;
-            {lang === 'en' ? `Found: ${found}/${cfg.targets}` : `みつけた: ${found}/${cfg.targets}`}
+            {{ja:`みつけた: ${found}/${cfg.targets}`, en:`Found: ${found}/${cfg.targets}`, zh:`找到: ${found}/${cfg.targets}`, ko:`찾음: ${found}/${cfg.targets}`, es:`Encontrados: ${found}/${cfg.targets}`}[lang] || `みつけた: ${found}/${cfg.targets}`}
           </div>
         </div>
         <div className="kk-hud-right">
@@ -464,12 +463,12 @@ export default function DoubutsuKakurenbo() {
       {/* Target animal */}
       <div className="kk-target-bar">
         <div className="kk-target-label">
-          {lang === 'en' ? 'Find this animal! →' : 'このどうぶつを みつけよう！→'}
+          {{ja:'このどうぶつを みつけよう！→', en:'Find this animal! →', zh:'找到这只动物！→', ko:'이 동물을 찾아요！→', es:'¡Encuentra este animal！→'}[lang] || 'このどうぶつを みつけよう！→'}
         </div>
         <div className="kk-target-animal">
           <span className="kk-target-emoji">{target?.emoji}</span>
           <span className="kk-target-name">
-            {target ? (lang === 'en' ? target.nameEn : target.name) : ''}
+            {target ? (lang === 'ja' ? target.name : target.nameEn) : ''}
           </span>
         </div>
       </div>

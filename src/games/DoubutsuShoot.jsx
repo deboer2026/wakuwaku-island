@@ -7,6 +7,7 @@ import {
 } from '../utils/audio';
 import { addCoins } from '../utils/coins';
 import { trackGameStart } from '../utils/analytics';
+import { getLang, t } from '../utils/i18n';
 import './DoubutsuShoot.css';
 
 const W = 360, H = 480;
@@ -133,6 +134,7 @@ function drawFrame(canvas, g) {
 ══════════════════════════════════════════════════════════ */
 export default function DoubutsuShoot() {
   const navigate  = useNavigate();
+  const lang = getLang();
   const canvasRef = useRef(null);
   const rafRef    = useRef(null);
   const G         = useRef(null);
@@ -327,9 +329,9 @@ export default function DoubutsuShoot() {
       <div className="ds-title-icon">🚀</div>
       <h1 className="ds-title-h1">どうぶつシューティング</h1>
       <p className="ds-title-desc">{'タップした場所に うごくよ！\n自動でたまをうつ！\nてきをやっつけよう！'}</p>
-      <div className="ds-hi-badge">🏆 ハイスコア: {best}てん</div>
-      <button className="ds-start-btn" onClick={startGame}>▶ スタート！</button>
-      <button className="ww-back-btn" onClick={()=>navigate('/')}>🏝️ トップへもどる</button>
+      <div className="ds-hi-badge">🏆 {t(lang, 'hiScore')}: {best}</div>
+      <button className="ds-start-btn" onClick={startGame}>▶ {t(lang, 'start')}！</button>
+      <button className="ww-back-btn" onClick={()=>navigate('/')}>{t(lang, 'back')}</button>
     </div>
   );
 
@@ -358,10 +360,10 @@ export default function DoubutsuShoot() {
         <div className="ds-overlay">
           <div className="ds-overlay-card">
             <div style={{fontSize:52}}>🚀</div>
-            <h2>ゲームオーバー！</h2>
+            <h2>{t(lang, 'gameOver')}！</h2>
             <div className="ds-go-score">スコア: <b>{score}</b>てん</div>
             {score>=best && score>0 && <div className="ds-go-new">🏆 ニューレコード！</div>}
-            <button className="ds-start-btn" onClick={startGame}>もういちど</button>
+            <button className="ds-start-btn" onClick={startGame}>{t(lang, 'retry')}</button>
             <button className="ww-back-btn" style={{marginTop:8}} onClick={()=>{ stopBgm(); navigate('/'); }}>🏠 もどる</button>
           </div>
         </div>
