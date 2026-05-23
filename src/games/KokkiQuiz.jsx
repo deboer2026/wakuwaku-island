@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { transitionBack } from '../utils/transition'
 import {
@@ -9,43 +9,48 @@ import { getLang, t } from '../utils/i18n'
 import './KokkiQuiz.css'
 
 // ===== Country data (30 countries, 5 langs) =====
+// code: flagcdn.com 2-letter country code
 const COUNTRIES = [
   // Asia
-  { flag:'🇯🇵', ja:'日本',        en:'Japan',         zh:'日本',       ko:'일본',        es:'Japón',      capital:{ ja:'東京', en:'Tokyo', zh:'东京', ko:'도쿄', es:'Tokio' } },
-  { flag:'🇨🇳', ja:'中国',        en:'China',         zh:'中国',       ko:'중국',        es:'China',      capital:{ ja:'北京', en:'Beijing', zh:'北京', ko:'베이징', es:'Pekín' } },
-  { flag:'🇰🇷', ja:'韓国',        en:'South Korea',   zh:'韩国',       ko:'한국',        es:'Corea del Sur', capital:{ ja:'ソウル', en:'Seoul', zh:'首尔', ko:'서울', es:'Seúl' } },
-  { flag:'🇹🇭', ja:'タイ',        en:'Thailand',      zh:'泰国',       ko:'태국',        es:'Tailandia',  capital:{ ja:'バンコク', en:'Bangkok', zh:'曼谷', ko:'방콕', es:'Bangkok' } },
-  { flag:'🇻🇳', ja:'ベトナム',    en:'Vietnam',       zh:'越南',       ko:'베트남',      es:'Vietnam',    capital:{ ja:'ハノイ', en:'Hanoi', zh:'河内', ko:'하노이', es:'Hanói' } },
-  { flag:'🇮🇩', ja:'インドネシア', en:'Indonesia',     zh:'印度尼西亚', ko:'인도네시아',  es:'Indonesia',  capital:{ ja:'ジャカルタ', en:'Jakarta', zh:'雅加达', ko:'자카르타', es:'Yakarta' } },
-  { flag:'🇮🇳', ja:'インド',      en:'India',         zh:'印度',       ko:'인도',        es:'India',      capital:{ ja:'ニューデリー', en:'New Delhi', zh:'新德里', ko:'뉴델리', es:'Nueva Delhi' } },
-  { flag:'🇵🇭', ja:'フィリピン',  en:'Philippines',   zh:'菲律宾',     ko:'필리핀',      es:'Filipinas',  capital:{ ja:'マニラ', en:'Manila', zh:'马尼拉', ko:'마닐라', es:'Manila' } },
-  { flag:'🇸🇬', ja:'シンガポール', en:'Singapore',     zh:'新加坡',     ko:'싱가포르',    es:'Singapur',   capital:{ ja:'シンガポール', en:'Singapore', zh:'新加坡', ko:'싱가포르', es:'Singapur' } },
+  { code:'jp', ja:'日本',           en:'Japan',         zh:'日本',       ko:'일본',           es:'Japón',         capital:{ ja:'東京',          en:'Tokyo',           zh:'东京',       ko:'도쿄',         es:'Tokio' } },
+  { code:'cn', ja:'中国',           en:'China',         zh:'中国',       ko:'중국',           es:'China',         capital:{ ja:'北京',          en:'Beijing',         zh:'北京',       ko:'베이징',       es:'Pekín' } },
+  { code:'kr', ja:'韓国',           en:'South Korea',   zh:'韩国',       ko:'한국',           es:'Corea del Sur', capital:{ ja:'ソウル',        en:'Seoul',           zh:'首尔',       ko:'서울',         es:'Seúl' } },
+  { code:'th', ja:'タイ',           en:'Thailand',      zh:'泰国',       ko:'태국',           es:'Tailandia',     capital:{ ja:'バンコク',      en:'Bangkok',         zh:'曼谷',       ko:'방콕',         es:'Bangkok' } },
+  { code:'vn', ja:'ベトナム',       en:'Vietnam',       zh:'越南',       ko:'베트남',         es:'Vietnam',       capital:{ ja:'ハノイ',        en:'Hanoi',           zh:'河内',       ko:'하노이',       es:'Hanói' } },
+  { code:'id', ja:'インドネシア',   en:'Indonesia',     zh:'印度尼西亚', ko:'인도네시아',     es:'Indonesia',     capital:{ ja:'ジャカルタ',    en:'Jakarta',         zh:'雅加达',     ko:'자카르타',     es:'Yakarta' } },
+  { code:'in', ja:'インド',         en:'India',         zh:'印度',       ko:'인도',           es:'India',         capital:{ ja:'ニューデリー',  en:'New Delhi',       zh:'新德里',     ko:'뉴델리',       es:'Nueva Delhi' } },
+  { code:'ph', ja:'フィリピン',     en:'Philippines',   zh:'菲律宾',     ko:'필리핀',         es:'Filipinas',     capital:{ ja:'マニラ',        en:'Manila',          zh:'马尼拉',     ko:'마닐라',       es:'Manila' } },
+  { code:'sg', ja:'シンガポール',   en:'Singapore',     zh:'新加坡',     ko:'싱가포르',       es:'Singapur',      capital:{ ja:'シンガポール',  en:'Singapore',       zh:'新加坡',     ko:'싱가포르',     es:'Singapur' } },
   // Europe
-  { flag:'🇫🇷', ja:'フランス',    en:'France',        zh:'法国',       ko:'프랑스',      es:'Francia',    capital:{ ja:'パリ', en:'Paris', zh:'巴黎', ko:'파리', es:'París' } },
-  { flag:'🇩🇪', ja:'ドイツ',      en:'Germany',       zh:'德国',       ko:'독일',        es:'Alemania',   capital:{ ja:'ベルリン', en:'Berlin', zh:'柏林', ko:'베를린', es:'Berlín' } },
-  { flag:'🇮🇹', ja:'イタリア',    en:'Italy',         zh:'意大利',     ko:'이탈리아',    es:'Italia',     capital:{ ja:'ローマ', en:'Rome', zh:'罗马', ko:'로마', es:'Roma' } },
-  { flag:'🇪🇸', ja:'スペイン',    en:'Spain',         zh:'西班牙',     ko:'스페인',      es:'España',     capital:{ ja:'マドリード', en:'Madrid', zh:'马德里', ko:'마드리드', es:'Madrid' } },
-  { flag:'🇬🇧', ja:'イギリス',    en:'UK',            zh:'英国',       ko:'영국',        es:'Reino Unido', capital:{ ja:'ロンドン', en:'London', zh:'伦敦', ko:'런던', es:'Londres' } },
-  { flag:'🇵🇹', ja:'ポルトガル',  en:'Portugal',      zh:'葡萄牙',     ko:'포르투갈',    es:'Portugal',   capital:{ ja:'リスボン', en:'Lisbon', zh:'里斯本', ko:'리스본', es:'Lisboa' } },
-  { flag:'🇷🇺', ja:'ロシア',      en:'Russia',        zh:'俄罗斯',     ko:'러시아',      es:'Rusia',      capital:{ ja:'モスクワ', en:'Moscow', zh:'莫斯科', ko:'모스크바', es:'Moscú' } },
-  { flag:'🇳🇱', ja:'オランダ',    en:'Netherlands',   zh:'荷兰',       ko:'네덜란드',    es:'Países Bajos', capital:{ ja:'アムステルダム', en:'Amsterdam', zh:'阿姆斯特丹', ko:'암스테르담', es:'Ámsterdam' } },
-  { flag:'🇨🇭', ja:'スイス',      en:'Switzerland',   zh:'瑞士',       ko:'스위스',      es:'Suiza',      capital:{ ja:'ベルン', en:'Bern', zh:'伯尔尼', ko:'베른', es:'Berna' } },
+  { code:'fr', ja:'フランス',       en:'France',        zh:'法国',       ko:'프랑스',         es:'Francia',       capital:{ ja:'パリ',          en:'Paris',           zh:'巴黎',       ko:'파리',         es:'París' } },
+  { code:'de', ja:'ドイツ',         en:'Germany',       zh:'德国',       ko:'독일',           es:'Alemania',      capital:{ ja:'ベルリン',      en:'Berlin',          zh:'柏林',       ko:'베를린',       es:'Berlín' } },
+  { code:'it', ja:'イタリア',       en:'Italy',         zh:'意大利',     ko:'이탈리아',       es:'Italia',        capital:{ ja:'ローマ',        en:'Rome',            zh:'罗马',       ko:'로마',         es:'Roma' } },
+  { code:'es', ja:'スペイン',       en:'Spain',         zh:'西班牙',     ko:'스페인',         es:'España',        capital:{ ja:'マドリード',    en:'Madrid',          zh:'马德里',     ko:'마드리드',     es:'Madrid' } },
+  { code:'gb', ja:'イギリス',       en:'UK',            zh:'英国',       ko:'영국',           es:'Reino Unido',   capital:{ ja:'ロンドン',      en:'London',          zh:'伦敦',       ko:'런던',         es:'Londres' } },
+  { code:'pt', ja:'ポルトガル',     en:'Portugal',      zh:'葡萄牙',     ko:'포르투갈',       es:'Portugal',      capital:{ ja:'リスボン',      en:'Lisbon',          zh:'里斯本',     ko:'리스본',       es:'Lisboa' } },
+  { code:'ru', ja:'ロシア',         en:'Russia',        zh:'俄罗斯',     ko:'러시아',         es:'Rusia',         capital:{ ja:'モスクワ',      en:'Moscow',          zh:'莫斯科',     ko:'모스크바',     es:'Moscú' } },
+  { code:'nl', ja:'オランダ',       en:'Netherlands',   zh:'荷兰',       ko:'네덜란드',       es:'Países Bajos',  capital:{ ja:'アムステルダム',en:'Amsterdam',       zh:'阿姆斯特丹', ko:'암스테르담',   es:'Ámsterdam' } },
+  { code:'ch', ja:'スイス',         en:'Switzerland',   zh:'瑞士',       ko:'스위스',         es:'Suiza',         capital:{ ja:'ベルン',        en:'Bern',            zh:'伯尔尼',     ko:'베른',         es:'Berna' } },
   // Americas
-  { flag:'🇺🇸', ja:'アメリカ',    en:'USA',           zh:'美国',       ko:'미국',        es:'EE.UU.',     capital:{ ja:'ワシントンD.C.', en:'Washington D.C.', zh:'华盛顿', ko:'워싱턴 D.C.', es:'Washington D.C.' } },
-  { flag:'🇨🇦', ja:'カナダ',      en:'Canada',        zh:'加拿大',     ko:'캐나다',      es:'Canadá',     capital:{ ja:'オタワ', en:'Ottawa', zh:'渥太华', ko:'오타와', es:'Ottawa' } },
-  { flag:'🇧🇷', ja:'ブラジル',    en:'Brazil',        zh:'巴西',       ko:'브라질',      es:'Brasil',     capital:{ ja:'ブラジリア', en:'Brasília', zh:'巴西利亚', ko:'브라질리아', es:'Brasilia' } },
-  { flag:'🇲🇽', ja:'メキシコ',    en:'Mexico',        zh:'墨西哥',     ko:'멕시코',      es:'México',     capital:{ ja:'メキシコシティ', en:'Mexico City', zh:'墨西哥城', ko:'멕시코시티', es:'Ciudad de México' } },
-  { flag:'🇦🇷', ja:'アルゼンチン', en:'Argentina',    zh:'阿根廷',     ko:'아르헨티나',  es:'Argentina',  capital:{ ja:'ブエノスアイレス', en:'Buenos Aires', zh:'布宜诺斯艾利斯', ko:'부에노스아이레스', es:'Buenos Aires' } },
+  { code:'us', ja:'アメリカ',       en:'USA',           zh:'美国',       ko:'미국',           es:'EE.UU.',        capital:{ ja:'ワシントンD.C.',en:'Washington D.C.', zh:'华盛顿',     ko:'워싱턴 D.C.',  es:'Washington D.C.' } },
+  { code:'ca', ja:'カナダ',         en:'Canada',        zh:'加拿大',     ko:'캐나다',         es:'Canadá',        capital:{ ja:'オタワ',        en:'Ottawa',          zh:'渥太华',     ko:'오타와',       es:'Ottawa' } },
+  { code:'br', ja:'ブラジル',       en:'Brazil',        zh:'巴西',       ko:'브라질',         es:'Brasil',        capital:{ ja:'ブラジリア',    en:'Brasília',        zh:'巴西利亚',   ko:'브라질리아',   es:'Brasilia' } },
+  { code:'mx', ja:'メキシコ',       en:'Mexico',        zh:'墨西哥',     ko:'멕시코',         es:'México',        capital:{ ja:'メキシコシティ',en:'Mexico City',     zh:'墨西哥城',   ko:'멕시코시티',   es:'Ciudad de México' } },
+  { code:'ar', ja:'アルゼンチン',   en:'Argentina',     zh:'阿根廷',     ko:'아르헨티나',     es:'Argentina',     capital:{ ja:'ブエノスアイレス',en:'Buenos Aires',  zh:'布宜诺斯艾利斯',ko:'부에노스아이레스',es:'Buenos Aires' } },
   // Africa / Middle East
-  { flag:'🇿🇦', ja:'南アフリカ',  en:'South Africa',  zh:'南非',       ko:'남아프리카',  es:'Sudáfrica',  capital:{ ja:'プレトリア', en:'Pretoria', zh:'比勒陀利亚', ko:'프리토리아', es:'Pretoria' } },
-  { flag:'🇪🇬', ja:'エジプト',    en:'Egypt',         zh:'埃及',       ko:'이집트',      es:'Egipto',     capital:{ ja:'カイロ', en:'Cairo', zh:'开罗', ko:'카이로', es:'El Cairo' } },
-  { flag:'🇦🇪', ja:'UAE',         en:'UAE',           zh:'阿联酋',     ko:'아랍에미리트', es:'EAU',        capital:{ ja:'アブダビ', en:'Abu Dhabi', zh:'阿布扎比', ko:'아부다비', es:'Abu Dabi' } },
-  { flag:'🇸🇦', ja:'サウジアラビア', en:'Saudi Arabia', zh:'沙特阿拉伯', ko:'사우디아라비아', es:'Arabia Saudí', capital:{ ja:'リヤド', en:'Riyadh', zh:'利雅得', ko:'리야드', es:'Riad' } },
-  { flag:'🇳🇬', ja:'ナイジェリア', en:'Nigeria',      zh:'尼日利亚',   ko:'나이지리아',  es:'Nigeria',    capital:{ ja:'アブジャ', en:'Abuja', zh:'阿布贾', ko:'아부자', es:'Abuya' } },
+  { code:'za', ja:'南アフリカ',     en:'South Africa',  zh:'南非',       ko:'남아프리카',     es:'Sudáfrica',     capital:{ ja:'プレトリア',    en:'Pretoria',        zh:'比勒陀利亚', ko:'프리토리아',   es:'Pretoria' } },
+  { code:'eg', ja:'エジプト',       en:'Egypt',         zh:'埃及',       ko:'이집트',         es:'Egipto',        capital:{ ja:'カイロ',        en:'Cairo',           zh:'开罗',       ko:'카이로',       es:'El Cairo' } },
+  { code:'ae', ja:'UAE',            en:'UAE',           zh:'阿联酋',     ko:'아랍에미리트',   es:'EAU',           capital:{ ja:'アブダビ',      en:'Abu Dhabi',       zh:'阿布扎比',   ko:'아부다비',     es:'Abu Dabi' } },
+  { code:'sa', ja:'サウジアラビア', en:'Saudi Arabia',  zh:'沙特阿拉伯', ko:'사우디아라비아', es:'Arabia Saudí',  capital:{ ja:'リヤド',        en:'Riyadh',          zh:'利雅得',     ko:'리야드',       es:'Riad' } },
+  { code:'ng', ja:'ナイジェリア',   en:'Nigeria',       zh:'尼日利亚',   ko:'나이지리아',     es:'Nigeria',       capital:{ ja:'アブジャ',      en:'Abuja',           zh:'阿布贾',     ko:'아부자',       es:'Abuya' } },
   // Oceania
-  { flag:'🇦🇺', ja:'オーストラリア', en:'Australia',  zh:'澳大利亚',   ko:'호주',        es:'Australia',  capital:{ ja:'キャンベラ', en:'Canberra', zh:'堪培拉', ko:'캔버라', es:'Canberra' } },
-  { flag:'🇳🇿', ja:'ニュージーランド', en:'New Zealand', zh:'新西兰',  ko:'뉴질랜드',    es:'Nueva Zelanda', capital:{ ja:'ウェリントン', en:'Wellington', zh:'惠灵顿', ko:'웰링턴', es:'Wellington' } },
+  { code:'au', ja:'オーストラリア', en:'Australia',     zh:'澳大利亚',   ko:'호주',           es:'Australia',     capital:{ ja:'キャンベラ',    en:'Canberra',        zh:'堪培拉',     ko:'캔버라',       es:'Canberra' } },
+  { code:'nz', ja:'ニュージーランド',en:'New Zealand',  zh:'新西兰',     ko:'뉴질랜드',       es:'Nueva Zelanda', capital:{ ja:'ウェリントン',  en:'Wellington',      zh:'惠灵顿',     ko:'웰링턴',       es:'Wellington' } },
 ]
+
+function flagUrl(code) {
+  return `https://flagcdn.com/w160/${code}.png`
+}
 
 // ===== Stage definitions =====
 const STAGES = [
@@ -112,6 +117,7 @@ export default function KokkiQuiz() {
   const [timer,        setTimer]        = useState(10)
   const [clearData,    setClearData]    = useState(null)
   const [finalData,    setFinalData]    = useState(null)
+  const [imgLoaded,    setImgLoaded]    = useState(false)
 
   const stageQueueRef  = useRef([])
   const timerRef       = useRef(null)
@@ -147,6 +153,7 @@ export default function KokkiQuiz() {
     setShowReveal(false)
     setWrongChoice(null)
     setTimer(10)
+    setImgLoaded(false)
     setScreen('game')
   }
 
@@ -219,6 +226,7 @@ export default function KokkiQuiz() {
         setShowReveal(false)
         setWrongChoice(null)
         setTimer(10)
+        setImgLoaded(false)
       }
     }, 1500)
   }
@@ -347,7 +355,18 @@ export default function KokkiQuiz() {
 
       {/* Flag */}
       <div className={`kokki-flag-wrap${feedback === 'wrong' ? ' kokki-shake' : ''}`}>
-        <div className="kokki-flag">{currentCountry?.flag}</div>
+        <div className="kokki-flag">
+          {!imgLoaded && <div className="kokki-flag-skeleton" />}
+          <img
+            key={currentCountry?.code}
+            src={flagUrl(currentCountry?.code)}
+            alt={getCountryName(currentCountry, 'en')}
+            className="kokki-flag-img"
+            style={{ display: imgLoaded ? 'block' : 'none' }}
+            onLoad={() => setImgLoaded(true)}
+            onError={() => setImgLoaded(true)}
+          />
+        </div>
         {showReveal && (
           <div className={`kokki-reveal${feedback === 'correct' ? ' kokki-reveal--correct' : ' kokki-reveal--wrong'}`}>
             <span>{feedback === 'correct' ? '✅' : '❌'} {getCountryName(currentCountry, lang)}</span>
