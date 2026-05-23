@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { transitionBack } from '../utils/transition';
 import { playSushiBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
 import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
@@ -221,7 +222,7 @@ export default function SushiGame() {
         </div>
         {hiScore > 0 && <div className="sushi-hi-badge">🏆 {t(lang,'best')}: {hiScore}</div>}
         <button className="sushi-start-btn" onClick={startGame}>▶ {t(lang,'start')}！</button>
-        <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang,'back')}</button>
+        <button className="ww-back-btn" onClick={() => transitionBack(navigate)}>{t(lang,'back')}</button>
       </div>
     </div>
   );
@@ -252,7 +253,7 @@ export default function SushiGame() {
         <div className="sushi-result-hi">{t(lang,'best')}: {resultData?.hi ?? hiScore}</div>
         <div className="sushi-result-btns">
           <button className="sushi-start-btn" onClick={startGame}>{t(lang,'retry')}</button>
-          <button className="sushi-back-btn"  onClick={() => navigate('/')}>{t(lang,'backToTitle')}</button>
+          <button className="sushi-back-btn"  onClick={() => transitionBack(navigate)}>{t(lang,'backToTitle')}</button>
         </div>
       </div>
     </div>
@@ -281,7 +282,7 @@ export default function SushiGame() {
       {/* ── HUD（3カラム：左🏠 ／ 中タイトル+スコア ／ 右ライフ） ── */}
       <div style={{ flexShrink:0, height:HUD_H, background:'rgba(220,60,60,0.85)', display:'flex', alignItems:'center', padding:'0 12px', gap:8, zIndex:10 }}>
         {/* LEFT */}
-        <button onClick={() => { stopAll(); navigate('/'); }}
+        <button onClick={() => { stopAll(); transitionBack(navigate); }}
           style={{ fontSize:22, background:'rgba(255,255,255,0.9)', border:'none', borderRadius:10, padding:'4px 8px', cursor:'pointer', flexShrink:0 }}>🏠</button>
         {/* CENTER */}
         <div style={{ flex:1, textAlign:'center' }}>

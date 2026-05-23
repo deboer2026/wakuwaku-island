@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { transitionBack } from '../utils/transition';
 import { playKudamonoCatchBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
 import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
@@ -593,7 +594,7 @@ export default function KudamonoCatch() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
             <button className="kdc-big-btn" onClick={startGame}>▶ {t(lang, 'start')}！</button>
-            <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang, 'back')}</button>
+            <button className="ww-back-btn" onClick={() => transitionBack(navigate)}>{t(lang, 'back')}</button>
           </div>
         </div>
       )}
@@ -607,7 +608,7 @@ export default function KudamonoCatch() {
             if(timerIntRef.current) clearInterval(timerIntRef.current);
             if(animIdRef.current) cancelAnimationFrame(animIdRef.current);
             if(spawnTimeoutRef.current) clearTimeout(spawnTimeoutRef.current);
-            navigate('/');
+            transitionBack(navigate);
           }}>🏠</button>
           {/* CENTER */}
           <div className="kdc-hud-center">

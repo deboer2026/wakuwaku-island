@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { transitionBack } from '../utils/transition'
 import {
   ensureAudioStarted, playCrossingBgm, stopBgm,
   toggleMute, playSoundCorrect, playSoundWrong,
@@ -535,7 +536,7 @@ export default function DoubutsuCrossing() {
       </div>
       {hiVal > 0 && <div className="crossing-hi">🏆 {t(lang, 'hiScore')}: {hiVal}</div>}
       <button className="crossing-start-btn" onClick={startGame}>{t(lang, 'start')} ▶</button>
-      <button className="ww-back-btn" onClick={() => { stopBgm(); navigate('/') }}>
+      <button className="ww-back-btn" onClick={() => { stopBgm(); transitionBack(navigate) }}>
         {t(lang, 'back')}
       </button>
     </div>
@@ -549,7 +550,7 @@ export default function DoubutsuCrossing() {
       <div className="crossing-result-score">{t(lang, 'score')}: {resultData?.score}</div>
       <div className="crossing-result-hi">🏆 {t(lang, 'hiScore')}: {resultData?.hi}</div>
       <button className="crossing-start-btn" onClick={startGame}>{t(lang, 'retry')}</button>
-      <button className="ww-back-btn" onClick={() => { stopBgm(); navigate('/') }}>
+      <button className="ww-back-btn" onClick={() => { stopBgm(); transitionBack(navigate) }}>
         {t(lang, 'back')}
       </button>
     </div>
@@ -559,7 +560,7 @@ export default function DoubutsuCrossing() {
   return (
     <div className="crossing-wrap">
       <div className="crossing-hud">
-        <button className="crossing-hud-btn" onClick={() => { stopBgm(); navigate('/') }}>🏠</button>
+        <button className="crossing-hud-btn" onClick={() => { stopBgm(); transitionBack(navigate) }}>🏠</button>
         <span className="crossing-hud-title">クロッシング</span>
         <span className="crossing-hud-stat">⭐ {uiScore}</span>
         <span className="crossing-hud-stat">🏆 {hiVal}</span>

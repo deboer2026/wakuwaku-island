@@ -1,6 +1,7 @@
 // どうぶつランナー — 横スクロールゲーム
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { transitionBack } from '../utils/transition';
 import {
   playRunnerBgm, stopBgm, playSoundCorrect, playSoundClear,
   ensureAudioStarted, toggleMute, getMuteState,
@@ -254,14 +255,14 @@ export default function DoubutsuRunner() {
         ))}
       </div>
       <button className="dr-start-btn" onClick={startGame}>▶ {t(lang, 'start')}！</button>
-      <button className="ww-back-btn" onClick={()=>navigate('/')}>{t(lang, 'back')}</button>
+      <button className="ww-back-btn" onClick={()=>transitionBack(navigate)}>{t(lang, 'back')}</button>
     </div>
   );
 
   return (
     <div className="dr-wrap">
       <div className="dr-hud">
-        <button className="dr-hud-btn" onClick={()=>{ stopBgm(); navigate('/'); }}>🏠</button>
+        <button className="dr-hud-btn" onClick={()=>{ stopBgm(); transitionBack(navigate); }}>🏠</button>
         <span className="dr-hud-score">🏃 <b>{score}m</b></span>
         <span className="dr-hud-best">🏆 {best}m</span>
         <button className="dr-hud-btn" onClick={()=>{ const m=toggleMute(); setMuted(m); if(!m) playRunnerBgm(); }}>
@@ -288,7 +289,7 @@ export default function DoubutsuRunner() {
             <div className="dr-go-score">スコア: <b>{score}</b>m</div>
             {score >= best && score>0 && <div className="dr-go-new">🏆 ニューレコード！</div>}
             <button className="dr-start-btn" onClick={startGame}>{t(lang, 'retry')}</button>
-            <button className="ww-back-btn" style={{marginTop:8}} onClick={()=>{ stopBgm(); navigate('/'); }}>🏠 もどる</button>
+            <button className="ww-back-btn" style={{marginTop:8}} onClick={()=>{ stopBgm(); transitionBack(navigate); }}>🏠 もどる</button>
           </div>
         </div>
       )}

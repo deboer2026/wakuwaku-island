@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { transitionBack } from '../utils/transition';
 import { playIchigoBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
 import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
@@ -297,7 +298,7 @@ export default function IchigoGame() {
         </div>
         {hiScore > 0 && <div className="ichigo-hi-badge">🏆 {t(lang,'best')}: {hiScore}</div>}
         <button className="ichigo-start-btn" onClick={startGame}>▶ {t(lang,'start')}！</button>
-        <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang,'back')}</button>
+        <button className="ww-back-btn" onClick={() => transitionBack(navigate)}>{t(lang,'back')}</button>
       </div>
     </div>
   );
@@ -314,7 +315,7 @@ export default function IchigoGame() {
         <div className="ichigo-result-hi">{t(lang,'best')}: {resultData?.hi ?? hiScore}</div>
         <div className="ichigo-result-btns">
           <button className="ichigo-start-btn" onClick={startGame}>{t(lang,'retry')}</button>
-          <button className="ichigo-back-btn"  onClick={() => navigate('/')}>{t(lang,'backToTitle')}</button>
+          <button className="ichigo-back-btn"  onClick={() => transitionBack(navigate)}>{t(lang,'backToTitle')}</button>
         </div>
       </div>
     </div>
@@ -341,7 +342,7 @@ export default function IchigoGame() {
       {/* ── HUD（3カラム：左🏠 ／ 中タイトル+スコア ／ 右のこり時間） ── */}
       <div style={{ position:'fixed', top:0, left:0, right:0, height:HUD_H, background:'rgba(233,30,99,0.82)', display:'flex', alignItems:'center', padding:'0 12px', gap:8, zIndex:10 }}>
         {/* LEFT */}
-        <button onClick={() => { stopAll(); navigate('/'); }}
+        <button onClick={() => { stopAll(); transitionBack(navigate); }}
           style={{ fontSize:22, background:'rgba(255,255,255,0.9)', border:'none', borderRadius:10, padding:'4px 8px', cursor:'pointer', flexShrink:0 }}>🏠</button>
         {/* CENTER */}
         <div style={{ flex:1, textAlign:'center' }}>

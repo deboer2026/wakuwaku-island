@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playTopPageBgm, stopBgm, toggleMute, getMuteState, ensureAudioStarted } from '../utils/audio';
+import { transitionTo } from '../utils/transition';
 import { getPlayCount } from '../utils/playCounter';
 import { KisekaeCharacters, KisekaePanel, DEFAULT_KISEKAE } from '../components/Kisekae';
 import LoginBonus from '../components/LoginBonus';
@@ -181,6 +182,20 @@ const CLOUDS = [
 ];
 
 /* ════════════════════════════════════════════════════
+   ドリフト雲・魚データ
+════════════════════════════════════════════════════ */
+const DRIFT_CLOUDS = [
+  { id:'dc0', top:'6%',  size:48, dur:'24s', delay:'0s'   },
+  { id:'dc1', top:'14%', size:62, dur:'32s', delay:'-11s' },
+  { id:'dc2', top:'3%',  size:38, dur:'20s', delay:'-6s'  },
+];
+const FISH_LIST = [
+  { id:'f0', emoji:'🐠', dur:'15s', delay:'0s',   rtl:false },
+  { id:'f1', emoji:'🐟', dur:'20s', delay:'-8s',  rtl:true  },
+  { id:'f2', emoji:'🐬', dur:'17s', delay:'-4s',  rtl:false },
+];
+
+/* ════════════════════════════════════════════════════
    ⑤ プレイカウンター
 ════════════════════════════════════════════════════ */
 function PlayCounter({ target, lang }) {
@@ -224,14 +239,14 @@ function PlayCounter({ target, lang }) {
 /* ════════════════════════════════════════════════════
    ゲームカード（グラスモーフィズム）
 ════════════════════════════════════════════════════ */
-function GameCard({ game, lang, isRecommended, onClick }) {
+function GameCard({ game, lang, isRecommended, onClick, animIndex }) {
   const t = game[lang] || game.ja;
   const stars = '⭐'.repeat(game.stars) + '☆'.repeat(5 - game.stars);
 
   return (
     <button
       className={`tp-card${isRecommended ? ' tp-card--recommend' : ''}`}
-      style={{ '--card-color': game.color }}
+      style={{ '--card-color': game.color, '--card-delay': `${(animIndex ?? 0) * 0.08}s` }}
       onClick={onClick}
     >
       {isRecommended && (
@@ -369,6 +384,7 @@ export default function TopPage() {
 
       {/* ── 空の雲 ── */}
       <div className="tp-clouds" aria-hidden="true">
+        {/* 既存：上下ボブ雲 */}
         {CLOUDS.map(c => (
           <div
             key={c.id}
@@ -384,6 +400,20 @@ export default function TopPage() {
             ☁️
           </div>
         ))}
+        {/* ☀️ 太陽 */}
+        <div className="tp-sun-wrap" aria-hidden="true">
+          <span className="tp-sun-body">☀️</span>
+        </div>
+        {/* ☁️ 流れる雲（左→右） */}
+        {DRIFT_CLOUDS.map(c => (
+          <div
+            key={c.id}
+            className="tp-cloud-drift"
+            style={{ top: c.top, fontSize: c.size, '--dur': c.dur, '--delay': c.delay }}
+          >
+            ☁️
+          </div>
+        ))}
       </div>
 
       {/* ── フローティングデコキャラ ── */}
@@ -392,6 +422,16 @@ export default function TopPage() {
         <span style={{ right:'4%', top:'24%', '--dur':'3.5s', '--rot':'8deg',  fontSize:26 }}>🌟</span>
         <span style={{ left:'3%',  top:'48%', '--dur':'4s',   '--rot':'-8deg', fontSize:24 }}>🦋</span>
         <span style={{ right:'3%', top:'46%', '--dur':'3.3s', '--rot':'5deg',  fontSize:22 }}>🌈</span>
+        {/* 🐠 魚 */}
+        {FISH_LIST.map(f => (
+          <span
+            key={f.id}
+            className={f.rtl ? 'tp-fish-rtl' : 'tp-fish'}
+            style={{ fontSize: 26, '--dur': f.dur, '--delay': f.delay }}
+          >
+            {f.emoji}
+          </span>
+        ))}
       </div>
 
       {/* ── コイン残高（左上） ── */}
@@ -427,11 +467,13 @@ export default function TopPage() {
         <div className="tp-park-badge">🏝️ GAME PARK ✦</div>
 
         <div className="ksk-title-zone">
-          <KisekaeCharacters
-            kisekaeState={kisekaeState}
-            onOpen={openPanel}
-            lang={lang}
-          />
+          <div onClick={(e) => spawnParticles(e.clientX, e.clientY)} style={{ display:'contents' }}>
+            <KisekaeCharacters
+              kisekaeState={kisekaeState}
+              onOpen={openPanel}
+              lang={lang}
+            />
+          </div>
 
           <div className="tp-title-wrap">
             <h1 className="tp-title">
@@ -502,7 +544,8 @@ export default function TopPage() {
                 game={game}
                 lang={lang}
                 isRecommended={i === todayIdx}
-                onClick={(e) => { spawnParticles(e.clientX, e.clientY); navigate(game.route); }}
+                animIndex={i}
+                onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY); }}
               />
             ))}
           </div>
@@ -510,13 +553,14 @@ export default function TopPage() {
 
         <div className={`tp-tab-panel${activeTab === 'school' ? ' tp-tab-panel--active' : ''}`}>
           <div className="tp-grid">
-            {SCHOOL_GAMES.map((game) => (
+            {SCHOOL_GAMES.map((game, i) => (
               <GameCard
                 key={game.id}
                 game={game}
                 lang={lang}
                 isRecommended={false}
-                onClick={(e) => { spawnParticles(e.clientX, e.clientY); navigate(game.route); }}
+                animIndex={i}
+                onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY); }}
               />
             ))}
           </div>

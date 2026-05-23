@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { transitionBack } from '../utils/transition';
 import {
   playIroAwaseBgm, stopBgm,
   playSoundCorrect, playSoundWrong, playSoundClear,
@@ -176,7 +177,7 @@ export default function IroAwase() {
         <button className="iro-start-btn" onClick={startGame}>
           ▶ {t(lang,'start')}！
         </button>
-        <button className="ww-back-btn" onClick={() => navigate('/')}>
+        <button className="ww-back-btn" onClick={() => transitionBack(navigate)}>
           {t(lang,'back')}
         </button>
       </div>
@@ -199,7 +200,7 @@ export default function IroAwase() {
           <button className="iro-result-btn" onClick={startGame}>
             {t(lang,'retry')}
           </button>
-          <button className="iro-result-btn secondary" onClick={() => navigate('/')}>
+          <button className="iro-result-btn secondary" onClick={() => transitionBack(navigate)}>
             {t(lang,'back')}
           </button>
         </div>
@@ -214,7 +215,7 @@ export default function IroAwase() {
     <div className="iro-wrap">
       {/* HUD */}
       <div className="iro-hud">
-        <button className="iro-hud-back" onClick={() => { stopBgm(); navigate('/'); }}>🏠</button>
+        <button className="iro-hud-back" onClick={() => { stopBgm(); transitionBack(navigate); }}>🏠</button>
         <div className="iro-hud-center">
           <div className="iro-hud-title">🎨 {{ja:'いろあわせ', en:'Color Match', zh:'颜色配对', ko:'색깔 맞추기', es:'Colores'}[lang] || 'いろあわせ'}</div>
           <div className="iro-hud-sub">{{ja:`もんだい ${qIdx + 1}/${TOTAL}`, en:`Q${qIdx + 1}/${TOTAL}`, zh:`第${qIdx + 1}/${TOTAL}题`, ko:`문제 ${qIdx + 1}/${TOTAL}`, es:`P${qIdx + 1}/${TOTAL}`}[lang] || `もんだい ${qIdx + 1}/${TOTAL}`}</div>

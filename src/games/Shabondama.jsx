@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { transitionBack } from '../utils/transition';
 import { playShabondamaBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
 import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
@@ -505,7 +506,7 @@ export default function Shabondama() {
           <div className="sdm-hi-badge">🏆 {t(lang,'best')}: {currentHi}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
             <button className="sdm-big-btn" onClick={startGame}>▶ {t(lang, 'start')}！</button>
-            <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang, 'back')}</button>
+            <button className="ww-back-btn" onClick={() => transitionBack(navigate)}>{t(lang, 'back')}</button>
           </div>
         </div>
       )}
@@ -519,7 +520,7 @@ export default function Shabondama() {
             if(timerIntRef.current) clearInterval(timerIntRef.current);
             if(animIdRef.current) cancelAnimationFrame(animIdRef.current);
             if(spawnTimeoutRef.current) clearTimeout(spawnTimeoutRef.current);
-            navigate('/');
+            transitionBack(navigate);
           }}>🏠</button>
           {/* CENTER */}
           <div className="sdm-hud-center">

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { transitionBack } from '../utils/transition';
 import {
   playTashizanBgm, stopBgm,
   playSoundCorrect, playSoundWrong, playSoundClear,
@@ -152,7 +153,7 @@ export default function TashizanGame() {
         <button className="tashi-start-btn" onClick={startGame}>
           ▶ {t(lang,'start')}！
         </button>
-        <button className="ww-back-btn" onClick={() => navigate('/')}>
+        <button className="ww-back-btn" onClick={() => transitionBack(navigate)}>
           {t(lang,'back')}
         </button>
       </div>
@@ -175,7 +176,7 @@ export default function TashizanGame() {
           <button className="tashi-result-btn" onClick={startGame}>
             {t(lang,'retry')}
           </button>
-          <button className="tashi-result-btn secondary" onClick={() => navigate('/')}>
+          <button className="tashi-result-btn secondary" onClick={() => transitionBack(navigate)}>
             {t(lang,'back')}
           </button>
         </div>
@@ -188,7 +189,7 @@ export default function TashizanGame() {
     <div className="tashi-wrap">
       {/* HUD */}
       <div className="tashi-hud">
-        <button className="tashi-hud-back" onClick={() => { stopBgm(); navigate('/'); }}>🏠</button>
+        <button className="tashi-hud-back" onClick={() => { stopBgm(); transitionBack(navigate); }}>🏠</button>
         <div className="tashi-hud-center">
           <div className="tashi-hud-title">➕ {{ja:'たしざん', en:'Math Quiz', zh:'算数', ko:'숫자 놀이', es:'Mates'}[lang] || 'たしざん'}</div>
           <div className="tashi-hud-sub">{{ja:`もんだい ${qIdx + 1}/${TOTAL}`, en:`Q${qIdx + 1}/${TOTAL}`, zh:`第${qIdx + 1}/${TOTAL}题`, ko:`문제 ${qIdx + 1}/${TOTAL}`, es:`P${qIdx + 1}/${TOTAL}`}[lang] || `もんだい ${qIdx + 1}/${TOTAL}`}</div>

@@ -1,6 +1,7 @@
 // どうぶつシューティング — 縦スクロールシューター
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { transitionBack } from '../utils/transition';
 import {
   playShootingBgm, stopBgm, playSoundCorrect, playSoundClear,
   ensureAudioStarted, toggleMute, getMuteState,
@@ -331,14 +332,14 @@ export default function DoubutsuShoot() {
       <p className="ds-title-desc">{'タップした場所に うごくよ！\n自動でたまをうつ！\nてきをやっつけよう！'}</p>
       <div className="ds-hi-badge">🏆 {t(lang, 'hiScore')}: {best}</div>
       <button className="ds-start-btn" onClick={startGame}>▶ {t(lang, 'start')}！</button>
-      <button className="ww-back-btn" onClick={()=>navigate('/')}>{t(lang, 'back')}</button>
+      <button className="ww-back-btn" onClick={()=>transitionBack(navigate)}>{t(lang, 'back')}</button>
     </div>
   );
 
   return (
     <div className="ds-wrap">
       <div className="ds-hud">
-        <button className="ds-hud-btn" onClick={()=>{ stopBgm(); navigate('/'); }}>🏠</button>
+        <button className="ds-hud-btn" onClick={()=>{ stopBgm(); transitionBack(navigate); }}>🏠</button>
         <span className="ds-hud-hp">{'❤️'.repeat(Math.max(0,hp))}</span>
         <span className="ds-hud-score"><b>{score}</b>てん</span>
         <button className="ds-hud-btn" onClick={()=>{ const m=toggleMute(); setMuted(m); if(!m) playShootingBgm(); }}>
@@ -364,7 +365,7 @@ export default function DoubutsuShoot() {
             <div className="ds-go-score">スコア: <b>{score}</b>てん</div>
             {score>=best && score>0 && <div className="ds-go-new">🏆 ニューレコード！</div>}
             <button className="ds-start-btn" onClick={startGame}>{t(lang, 'retry')}</button>
-            <button className="ww-back-btn" style={{marginTop:8}} onClick={()=>{ stopBgm(); navigate('/'); }}>🏠 もどる</button>
+            <button className="ww-back-btn" style={{marginTop:8}} onClick={()=>{ stopBgm(); transitionBack(navigate); }}>🏠 もどる</button>
           </div>
         </div>
       )}

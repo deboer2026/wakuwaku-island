@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { transitionBack } from '../utils/transition';
 import { playJewelryShopBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
 import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
@@ -292,7 +293,7 @@ export default function JewelryShop() {
           </p>
           <div className="js-hi-badge">🏆 {t(lang,'best')}: {hiScore}</div>
           <button className="js-big-btn" onClick={startGame}>▶ {t(lang,'start')}！</button>
-          <button className="ww-back-btn" style={{ marginTop: 6 }} onClick={() => navigate('/')}>{t(lang,'back')}</button>
+          <button className="ww-back-btn" style={{ marginTop: 6 }} onClick={() => transitionBack(navigate)}>{t(lang,'back')}</button>
         </div>
       )}
 
@@ -300,7 +301,7 @@ export default function JewelryShop() {
       {(screen === 'game' || screen === 'stageClear') && (
         <div className="js-hud">
           {/* LEFT */}
-          <button className="js-hud-back" onClick={() => { servingRef.current = false; if (rafRef.current) cancelAnimationFrame(rafRef.current); navigate('/'); }}>🏠</button>
+          <button className="js-hud-back" onClick={() => { servingRef.current = false; if (rafRef.current) cancelAnimationFrame(rafRef.current); transitionBack(navigate); }}>🏠</button>
           {/* CENTER */}
           <div className="js-hud-center">
             <div className="js-hud-title">{{ja:'💎 ほうせきやさん', en:'💎 Jewelry Shop', zh:'💎 珠宝店', ko:'💎 보석 가게', es:'💎 Joyería'}[lang] || '💎 ほうせきやさん'}</div>
@@ -390,7 +391,7 @@ export default function JewelryShop() {
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             <button className="js-big-btn" onClick={startGame}>{t(lang,'retry')}</button>
-            <button className="js-big-btn js-blue-btn" onClick={() => navigate('/')}>{t(lang,'backToTitle')}</button>
+            <button className="js-big-btn js-blue-btn" onClick={() => transitionBack(navigate)}>{t(lang,'backToTitle')}</button>
           </div>
         </div>
       )}

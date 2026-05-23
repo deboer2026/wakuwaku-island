@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { transitionBack } from '../utils/transition';
 import {
   playKakurenboBgm, stopBgm,
   playSoundCorrect, playSoundWrong, playSoundClear,
@@ -370,7 +371,7 @@ export default function DoubutsuKakurenbo() {
         <button className="kk-start-btn" onClick={startGame}>
           ▶ {t(lang,'start')}！
         </button>
-        <button className="ww-back-btn" onClick={() => navigate('/')}>
+        <button className="ww-back-btn" onClick={() => transitionBack(navigate)}>
           {t(lang,'back')}
         </button>
       </div>
@@ -419,7 +420,7 @@ export default function DoubutsuKakurenbo() {
           <button className="kk-start-btn" onClick={startGame}>
             {t(lang,'retry')}
           </button>
-          <button className="kk-back-btn" onClick={() => navigate('/')}>
+          <button className="kk-back-btn" onClick={() => transitionBack(navigate)}>
             {t(lang,'backToTitle')}
           </button>
         </div>
@@ -435,7 +436,7 @@ export default function DoubutsuKakurenbo() {
     <div className="kk-wrap kk-game-bg">
       {/* HUD */}
       <div className="kk-hud">
-        <button className="kk-hud-btn" onClick={() => { runRef.current = false; if (timerRef.current) clearInterval(timerRef.current); stopBgm(); navigate('/'); }}>
+        <button className="kk-hud-btn" onClick={() => { runRef.current = false; if (timerRef.current) clearInterval(timerRef.current); stopBgm(); transitionBack(navigate); }}>
           🏠
         </button>
         <div className="kk-hud-center">

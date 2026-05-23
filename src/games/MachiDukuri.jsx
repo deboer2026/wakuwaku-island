@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { transitionBack } from '../utils/transition';
 import {
   playMachiBgm, stopBgm, ensureAudioStarted, toggleMute, getMuteState,
 } from '../utils/audio';
@@ -612,7 +613,7 @@ export default function MachiDukuri() {
         {'アイテムをおいて\nじぶんだけの まちをつくろう！\n🪙コインをためて まちをひろげてね'}
       </p>
       <button className="machi-start-btn" onClick={startGame}>▶ はじめる！</button>
-      <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang, 'back')}</button>
+      <button className="ww-back-btn" onClick={() => transitionBack(navigate)}>{t(lang, 'back')}</button>
     </div>
   );
 
@@ -624,7 +625,7 @@ export default function MachiDukuri() {
 
       {/* HUD */}
       <div className="machi-hud">
-        <button className="machi-hud-btn" onClick={() => { handleSave(); stopBgm(); navigate('/'); }}>🏠</button>
+        <button className="machi-hud-btn" onClick={() => { handleSave(); stopBgm(); transitionBack(navigate); }}>🏠</button>
         <span className="machi-hud-title">🏙️ まち</span>
         <span className="machi-hud-stat">🪙<b>{coins}</b></span>
         <span className="machi-hud-stat">🏠<b>{placed.length}</b></span>

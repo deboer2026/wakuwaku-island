@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { transitionBack } from '../utils/transition';
 import { playKazuAsobiBgm, stopBgm, playSoundCorrect, playSoundWrong, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
 import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
@@ -279,7 +280,7 @@ export default function KazuAsobi() {
           </div>
           <button className="kazu-start-btn" onClick={startGame}>🎮 {t(lang,'start')}！</button>
           {hiScore > 0 && <div className="kazu-hi">{t(lang,'best')}: {hiScore}</div>}
-          <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang,'back')}</button>
+          <button className="ww-back-btn" onClick={() => transitionBack(navigate)}>{t(lang,'back')}</button>
         </div>
       </div>
     );
@@ -297,7 +298,7 @@ export default function KazuAsobi() {
           <div className="kazu-result-hi">{resultData.hiText}</div>
           <div className="kazu-result-btns">
             <button className="kazu-start-btn" onClick={startGame}>{t(lang,'retry')}</button>
-            <button className="kazu-back-btn2" onClick={() => navigate('/')}>{t(lang,'back')}</button>
+            <button className="kazu-back-btn2" onClick={() => transitionBack(navigate)}>{t(lang,'back')}</button>
           </div>
         </div>
       </div>
@@ -312,7 +313,7 @@ export default function KazuAsobi() {
         {/* HUD */}
         <div className="kazu-hud">
           {/* LEFT */}
-          <button className="kazu-hud-back" onClick={() => { runningRef.current=false; if(timerRef.current) clearInterval(timerRef.current); if(animIdRef.current) cancelAnimationFrame(animIdRef.current); navigate('/'); }}>🏠</button>
+          <button className="kazu-hud-back" onClick={() => { runningRef.current=false; if(timerRef.current) clearInterval(timerRef.current); if(animIdRef.current) cancelAnimationFrame(animIdRef.current); transitionBack(navigate); }}>🏠</button>
           {/* CENTER */}
           <div className="kazu-hud-center">
             <div className="kazu-hud-title">{{ja:'🔢 かずあそび', en:'🔢 Number Fun', zh:'🔢 数字游戏', ko:'🔢 숫자 놀이', es:'🔢 Juego de Números'}[lang] || '🔢 かずあそび'}</div>

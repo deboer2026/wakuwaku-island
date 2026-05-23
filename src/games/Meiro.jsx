@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { transitionBack } from '../utils/transition';
 import { playMeiroBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
 import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
@@ -537,7 +538,7 @@ export default function Meiro() {
           </div>
           <button className="meiro-start-btn" onClick={() => startGame(selectedChar)}>🗺️ {t(lang,'start')}！</button>
           {hiScore > 0 && <div className="meiro-hi">{t(lang,'best')}: {fmtTime(hiScore)}</div>}
-          <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang,'back')}</button>
+          <button className="ww-back-btn" onClick={() => transitionBack(navigate)}>{t(lang,'back')}</button>
         </div>
       </div>
     );
@@ -555,7 +556,7 @@ export default function Meiro() {
           <div className="meiro-result-btns">
             <button className="meiro-start-btn" onClick={() => startGame(charRef.current)}>{t(lang,'retry')}</button>
             <button className="meiro-back-btn2" onClick={() => setScreen('title')}>{{ja:'キャラ選択', en:'Characters', zh:'角色选择', ko:'캐릭터 선택', es:'Personajes'}[lang] || 'キャラ選択'}</button>
-            <button className="meiro-back-btn2" onClick={() => navigate('/')}>{t(lang,'back')}</button>
+            <button className="meiro-back-btn2" onClick={() => transitionBack(navigate)}>{t(lang,'back')}</button>
           </div>
         </div>
       </div>
@@ -577,7 +578,7 @@ export default function Meiro() {
           if (timerIntRef.current) clearInterval(timerIntRef.current);
           if (mazeAnimRef.current) cancelAnimationFrame(mazeAnimRef.current);
           if (bgAnimRef.current) cancelAnimationFrame(bgAnimRef.current);
-          navigate('/');
+          transitionBack(navigate);
         }}>🏠</button>
         {/* CENTER */}
         <div className="meiro-hud-center">

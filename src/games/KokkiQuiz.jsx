@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { transitionBack } from '../utils/transition'
 import {
   ensureAudioStarted, playKokkiBgm, stopBgm,
   playSoundCorrect, playSoundWrong,
@@ -274,7 +275,7 @@ export default function KokkiQuiz() {
           </button>
         ))}
       </div>
-      <button className="ww-back-btn" onClick={() => { stopBgm(); navigate('/') }}>
+      <button className="ww-back-btn" onClick={() => { stopBgm(); transitionBack(navigate) }}>
         {t(lang, 'back')}
       </button>
     </div>
@@ -293,7 +294,7 @@ export default function KokkiQuiz() {
          lang === 'es' ? 'Siguiente nivel ▶' :
          'Next Stage ▶'}
       </button>
-      <button className="ww-back-btn" onClick={() => { stopBgm(); navigate('/') }}>
+      <button className="ww-back-btn" onClick={() => { stopBgm(); transitionBack(navigate) }}>
         {t(lang, 'back')}
       </button>
     </div>
@@ -315,7 +316,7 @@ export default function KokkiQuiz() {
       <button className="kokki-stage-btn" onClick={() => { stopBgm(); setScreen('title') }}>
         {t(lang, 'retry')}
       </button>
-      <button className="ww-back-btn" onClick={() => { stopBgm(); navigate('/') }}>
+      <button className="ww-back-btn" onClick={() => { stopBgm(); transitionBack(navigate) }}>
         {t(lang, 'back')}
       </button>
     </div>

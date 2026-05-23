@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { transitionBack } from '../utils/transition';
 import {
   playMojiAsobiBgm, stopBgm,
   playSoundCorrect, playSoundWrong, playSoundClear,
@@ -169,7 +170,7 @@ export default function MojiAsobi() {
         <button className="moji-start-btn" onClick={startGame}>
           ▶ {t(lang,'start')}！
         </button>
-        <button className="ww-back-btn" onClick={() => navigate('/')}>
+        <button className="ww-back-btn" onClick={() => transitionBack(navigate)}>
           {t(lang,'back')}
         </button>
       </div>
@@ -192,7 +193,7 @@ export default function MojiAsobi() {
           <button className="moji-result-btn" onClick={startGame}>
             {t(lang,'retry')}
           </button>
-          <button className="moji-result-btn secondary" onClick={() => navigate('/')}>
+          <button className="moji-result-btn secondary" onClick={() => transitionBack(navigate)}>
             {t(lang,'back')}
           </button>
         </div>
@@ -205,7 +206,7 @@ export default function MojiAsobi() {
     <div className="moji-wrap">
       {/* HUD */}
       <div className="moji-hud">
-        <button className="moji-hud-back" onClick={() => { stopBgm(); navigate('/'); }}>🏠</button>
+        <button className="moji-hud-back" onClick={() => { stopBgm(); transitionBack(navigate); }}>🏠</button>
         <div className="moji-hud-center">
           <div className="moji-hud-title">🔤 {{ja:'もじあそび', en:'Letter Fun', zh:'文字游戏', ko:'글자 놀이', es:'Letras'}[lang] || 'もじあそび'}</div>
           <div className="moji-hud-sub">{{ja:`もんだい ${qIdx + 1}/${TOTAL}`, en:`Q${qIdx + 1}/${TOTAL}`, zh:`第${qIdx + 1}/${TOTAL}题`, ko:`문제 ${qIdx + 1}/${TOTAL}`, es:`P${qIdx + 1}/${TOTAL}`}[lang] || `もんだい ${qIdx + 1}/${TOTAL}`}</div>

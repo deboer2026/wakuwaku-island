@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { transitionBack } from '../utils/transition'
 import {
   ensureAudioStarted, playSniperBgm, stopBgm,
   toggleMute, playSoundCorrect, playSoundWrong,
@@ -319,7 +320,7 @@ export default function DoubutsuSniper() {
       </div>
       {hiVal > 0 && <div className="sniper-hi">🏆 {t(lang, 'hiScore')}: {hiVal}</div>}
       <button className="sniper-start-btn" onClick={startGame}>{t(lang, 'start')} 🎯</button>
-      <button className="ww-back-btn" onClick={() => { stopBgm(); navigate('/') }}>
+      <button className="ww-back-btn" onClick={() => { stopBgm(); transitionBack(navigate) }}>
         {t(lang, 'back')}
       </button>
     </div>
@@ -338,7 +339,7 @@ export default function DoubutsuSniper() {
       <button className="sniper-start-btn" onClick={nextStage}>
         {lang === 'ja' ? 'つぎのステージへ ▶' : lang === 'zh' ? '下一关 ▶' : lang === 'ko' ? '다음 스테이지 ▶' : lang === 'es' ? 'Siguiente ▶' : 'Next Stage ▶'}
       </button>
-      <button className="ww-back-btn" onClick={() => { stopBgm(); navigate('/') }}>
+      <button className="ww-back-btn" onClick={() => { stopBgm(); transitionBack(navigate) }}>
         {t(lang, 'back')}
       </button>
     </div>
@@ -351,7 +352,7 @@ export default function DoubutsuSniper() {
       <div className="sniper-result-score">{t(lang, 'score')}: {resultData?.score}</div>
       <div className="sniper-result-hi">🏆 {t(lang, 'hiScore')}: {resultData?.hi}</div>
       <button className="sniper-start-btn" onClick={startGame}>{t(lang, 'retry')}</button>
-      <button className="ww-back-btn" onClick={() => { stopBgm(); navigate('/') }}>
+      <button className="ww-back-btn" onClick={() => { stopBgm(); transitionBack(navigate) }}>
         {t(lang, 'back')}
       </button>
     </div>
@@ -360,7 +361,7 @@ export default function DoubutsuSniper() {
   return (
     <div className="sniper-wrap">
       <div className="sniper-hud">
-        <button className="sniper-hud-btn" onClick={() => { stopBgm(); navigate('/') }}>🏠</button>
+        <button className="sniper-hud-btn" onClick={() => { stopBgm(); transitionBack(navigate) }}>🏠</button>
         <span className="sniper-hud-stat">ST {uiStage}/3</span>
         <span className="sniper-hud-stat sniper-hud-hp">{'❤️'.repeat(uiHp)}</span>
         <span className="sniper-hud-stat sniper-hud-score">⭐ {uiScore}</span>

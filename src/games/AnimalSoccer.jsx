@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { transitionBack } from '../utils/transition';
 import { playAnimalSoccerBgm, stopBgm, playSoundCorrect, playSoundClear, ensureAudioStarted, toggleMute, getMuteState } from '../utils/audio';
 import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
@@ -433,7 +434,7 @@ export default function AnimalSoccer() {
             {{ja:'⚽ はじめる！', en:'⚽ Start!', zh:'⚽ 开始！', ko:'⚽ 시작!', es:'⚽ ¡Empezar!'}[lang] || '⚽ はじめる！'}
           </button>
           {hiScore > 0 && <div className="soccer-hi">{t(lang,'best')}: {hiScore}</div>}
-          <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang,'back')}</button>
+          <button className="ww-back-btn" onClick={() => transitionBack(navigate)}>{t(lang,'back')}</button>
         </div>
       </div>
     );
@@ -452,7 +453,7 @@ export default function AnimalSoccer() {
           <div className="soccer-result-btns">
             <button className="soccer-start-btn" onClick={() => startGame(kickerRef.current)}>{t(lang,'retry')}</button>
             <button className="soccer-back-btn2" onClick={() => setScreen('title')}>{{ja:'キャラ選択', en:'Characters', zh:'角色选择', ko:'캐릭터 선택', es:'Personajes'}[lang] || 'キャラ選択'}</button>
-            <button className="soccer-back-btn2" onClick={() => navigate('/')}>{t(lang,'back')}</button>
+            <button className="soccer-back-btn2" onClick={() => transitionBack(navigate)}>{t(lang,'back')}</button>
           </div>
         </div>
       </div>
@@ -464,7 +465,7 @@ export default function AnimalSoccer() {
     <div className="soccer-wrap" ref={wrapRef}>
       <div className="soccer-hud">
         {/* LEFT */}
-        <button className="soccer-hud-back" onClick={() => { if(animIdRef.current) cancelAnimationFrame(animIdRef.current); navigate('/'); }}>🏠</button>
+        <button className="soccer-hud-back" onClick={() => { if(animIdRef.current) cancelAnimationFrame(animIdRef.current); transitionBack(navigate); }}>🏠</button>
         {/* CENTER */}
         <div className="soccer-hud-center">
           <div className="soccer-hud-title">{{ja:'⚽ どうぶつサッカー', en:'⚽ Animal Soccer', zh:'⚽ 动物足球', ko:'⚽ 동물 축구', es:'⚽ Fútbol Animal'}[lang] || '⚽ どうぶつサッカー'}</div>

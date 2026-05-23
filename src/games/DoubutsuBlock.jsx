@@ -1,6 +1,7 @@
 // どうぶつブロック — テトリス風ゲーム
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { transitionBack } from '../utils/transition';
 import {
   playTetrisBgm, stopBgm, playSoundCorrect, playSoundClear,
   ensureAudioStarted, toggleMute, getMuteState,
@@ -274,7 +275,7 @@ export default function DoubutsuBlock() {
       <p className="db-title-desc">{'どうぶつブロックをつんで\nれつをそろえよう！\nスワイプで うごかすよ'}</p>
       <div className="db-hi-badge">🏆 {t(lang, 'hiScore')}: {hiScore}</div>
       <button className="db-start-btn" onClick={startGame}>▶ {t(lang, 'start')}！</button>
-      <button className="ww-back-btn" onClick={() => navigate('/')}>{t(lang, 'back')}</button>
+      <button className="ww-back-btn" onClick={() => transitionBack(navigate)}>{t(lang, 'back')}</button>
     </div>
   );
 
@@ -282,7 +283,7 @@ export default function DoubutsuBlock() {
   return (
     <div className="db-wrap">
       <div className="db-hud">
-        <button className="db-hud-btn" onClick={() => { stopBgm(); navigate('/'); }}>🏠</button>
+        <button className="db-hud-btn" onClick={() => { stopBgm(); transitionBack(navigate); }}>🏠</button>
         <div className="db-hud-center">
           <span className="db-hud-stat">スコア <b>{score}</b></span>
           <span className="db-hud-stat">Lv <b>{level}</b></span>
@@ -335,7 +336,7 @@ export default function DoubutsuBlock() {
             <div className="db-go-score">スコア: <b>{score}</b>てん</div>
             {score >= hiScore && score > 0 && <div className="db-go-new">🏆 ニューレコード！</div>}
             <button className="db-start-btn" onClick={startGame}>{t(lang, 'retry')}</button>
-            <button className="ww-back-btn" style={{marginTop:8}} onClick={() => { stopBgm(); navigate('/'); }}>🏠 もどる</button>
+            <button className="ww-back-btn" style={{marginTop:8}} onClick={() => { stopBgm(); transitionBack(navigate); }}>🏠 もどる</button>
           </div>
         </div>
       )}
