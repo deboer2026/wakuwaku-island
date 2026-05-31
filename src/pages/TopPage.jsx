@@ -131,6 +131,12 @@ const GAMES = [
     zh:{ name:'国旗问答',          desc:'识别世界各国国旗！\n30多个国家！'                          },
     ko:{ name:'국기 퀴즈',         desc:'세계 국기를 맞혀봐!\n30개국 이상!'                       },
     es:{ name:'Quiz de Banderas', desc:'¡Identifica banderas!\n¡Más de 30 países!'                  } },
+  { id:'g16', route:'/jewelry-master', icon:'💎', num:16, color:'#7b1fa2', stars:4, isNew:true,
+    ja:{ name:'ジュエリーマスター', desc:'おきゃくさんのリクエストに\nこたえて ほうせきを\nえらぼう！'      },
+    en:{ name:'Jewelry Master',    desc:'Pick the right gem\n& accessory for\nyour customers!'        },
+    zh:{ name:'珠宝大师',           desc:'根据客人的要求\n选择正确的宝石\n和饰品！'                      },
+    ko:{ name:'주얼리 마스터',       desc:'손님의 요청에 맞는\n보석과 액세서리를\n골라요！'               },
+    es:{ name:'Maestro Joyero',    desc:'¡Elige la joya\ny accesorio que\npide el cliente!'           } },
 ];
 
 /* ════════════════════════════════════════════════════
@@ -594,34 +600,4 @@ export default function TopPage() {
         </div>
       </div>
 
-      {/* ── 着せ替えパネル ── */}
-      <KisekaePanel
-        isOpen={panelOpen}
-        initialChara={panelChara}
-        onClose={() => setPanelOpen(false)}
-        kisekaeState={kisekaeState}
-        onStateChange={handleKisekaeChange}
-        lang={lang}
-      />
-
-      {/* ── ショップ ── */}
-      <Shop
-        isOpen={shopOpen}
-        onClose={() => setShopOpen(false)}
-        lang={lang}
-        onCoinsChange={setCoins}
-      />
-
-      {/* ── ログインボーナス ── */}
-      {loginBonus && (
-        <LoginBonus
-          bonus={loginBonus.bonus}
-          streak={loginBonus.streak}
-          onClaim={handleLoginBonusClaim}
-          lang={lang}
-        />
-      )}
-
-    </div>
-  );
-}
+      {/* ── �
