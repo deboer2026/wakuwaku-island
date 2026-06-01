@@ -431,89 +431,97 @@ export default function JewelryMaster() {
       {/* ── Game ── */}
       {screen === 'game' && currentRound && !feedback && (
         <div className="jm-game-area">
-          {/* SVG shop background overlay */}
-          <img src="/assets/jewelry/shop_bg.svg" className="jm-shop-bg-img" alt="" aria-hidden="true" />
 
-          {/* Customer zone - top center, large */}
-          <div className="jm-customer-zone">
-            <div className="jm-speech">
-              <span className="jm-speech-gem">{currentRound.targetGem.emoji}</span>
-              <span className="jm-speech-acc">{currentRound.targetAcc.emoji} {currentRound.targetAcc.ja}</span>
-              <span className="jm-speech-req">
-                {{ ja:`${currentRound.targetGem.ja}の${currentRound.targetAcc.ja}がほしい！`,
-                   en:`I want a ${currentRound.targetGem.en} ${currentRound.targetAcc.en}!`,
-                   zh:`我想要${currentRound.targetGem.ja}的${currentRound.targetAcc.ja}！`,
-                   ko:`${currentRound.targetGem.ja}의 ${currentRound.targetAcc.ja}를 원해요!`,
-                   es:`¡Quiero ${currentRound.targetGem.en} ${currentRound.targetAcc.en}!` }[lang]
-                  || `${currentRound.targetGem.ja}の${currentRound.targetAcc.ja}がほしい！`}
-              </span>
+          {/* ═══ 上エリア (40%): shop_bg.svg + お客さん ═══ */}
+          <div className="jm-top-area">
+            {/* shop_bg.svg — 背景 opacity 0.85 */}
+            <img src="/assets/jewelry/shop_bg.svg" className="jm-shop-bg-img" alt="" aria-hidden="true" />
+
+            {/* お客さん + 吹き出し */}
+            <div className="jm-top-content">
+              {/* お客さんキャラクター（大きく中央） */}
+              <div className={`jm-char-display ${custAnim}`}>
+                <span className="jm-char-emoji-overlay">{currentRound.customer.emoji}</span>
+              </div>
+
+              {/* リクエスト吹き出し */}
+              <div className="jm-speech">
+                <span className="jm-speech-gem">{currentRound.targetGem.emoji}</span>
+                <span className="jm-speech-acc">{currentRound.targetAcc.emoji} {currentRound.targetAcc.ja}</span>
+                <span className="jm-speech-req">
+                  {{ ja:`${currentRound.targetGem.ja}の${currentRound.targetAcc.ja}がほしい！`,
+                     en:`I want a ${currentRound.targetGem.en} ${currentRound.targetAcc.en}!`,
+                     zh:`我想要${currentRound.targetGem.ja}的${currentRound.targetAcc.ja}！`,
+                     ko:`${currentRound.targetGem.ja} ${currentRound.targetAcc.ja} 주세요!`,
+                     es:`¡Quiero ${currentRound.targetGem.en} ${currentRound.targetAcc.en}!` }[lang]
+                    || `${currentRound.targetGem.ja}の${currentRound.targetAcc.ja}がほしい！`}
+                </span>
+              </div>
             </div>
-            {/* Character display with SVG backdrop */}
-            <div className={`jm-char-display ${custAnim}`}>
-              <img src="/assets/jewelry/characters.svg" className="jm-char-svg" alt="" aria-hidden="true" />
-              <span className="jm-char-emoji-overlay">{currentRound.customer.emoji}</span>
+
+            {/* タイマーバー（ハードモード）— 上エリア最下部 */}
+            {diff === 'hard' && (
+              <div className="jm-timer-bar-wrap">
+                <div className="jm-timer-bar" style={{ width: `${timerRatio * 100}%`, background: timerColor }} />
+              </div>
+            )}
+          </div>
+
+          {/* ═══ 中エリア (20%): アクセサリー選択 ═══ */}
+          <div className="jm-mid-area">
+            <div className="jm-section-label">
+              👑 {{ ja:'アクセサリをえらんでね', en:'Choose accessory', zh:'选择饰品', ko:'액세서리 선택', es:'Elige accesorio' }[lang] || 'アクセサリをえらんでね'}
+            </div>
+            <div className="jm-acc-row">
+              {ACCESSORIES.map(acc => (
+                <button
+                  key={acc.id}
+                  className={`jm-acc-btn${selAcc === acc.id ? ' selected' : ''}`}
+                  onClick={() => setSelAcc(acc.id)}
+                >
+                  <span className="jm-acc-emoji">{acc.emoji}</span>
+                  <span className="jm-acc-name">{acc.ja}</span>
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Timer bar (hard mode) */}
-          {diff === 'hard' && (
-            <div className="jm-timer-bar-wrap">
-              <div className="jm-timer-bar" style={{ width: `${timerRatio * 100}%`, background: timerColor }} />
-            </div>
-          )}
+          {/* ═══ 下エリア (40%): gem_showcase.svg + 宝石選択 + かんせいボタン ═══ */}
+          <div className="jm-bot-area">
+            {/* gem_showcase.svg — 宝石エリア背景 */}
+            <img src="/assets/jewelry/gem_showcase.svg" className="jm-gem-showcase-svg" alt="" aria-hidden="true" />
 
-          {/* Panels */}
-          <div className="jm-panels">
-            {/* Accessory selection — above gems */}
-            <div className="jm-acc-section">
+            {/* 宝石選択コンテンツ */}
+            <div className="jm-bot-content">
               <div className="jm-section-label">
-                👑 {{ ja:'アクセサリをえらんでね', en:'Choose accessory', zh:'选择饰品', ko:'액세서리를 선택하세요', es:'Elige accesorio' }[lang] || 'アクセサリをえらんでね'}
+                💎 {{ ja:'ほうせきをえらんでね', en:'Choose a gem', zh:'选择宝石', ko:'보석 선택', es:'Elige una gema' }[lang] || 'ほうせきをえらんでね'}
               </div>
-              <div className="jm-acc-row">
-                {ACCESSORIES.map(acc => (
+
+              {/* 宝石ボタン — 横並び・中央寄せ */}
+              <div className="jm-gem-row">
+                {currentRound.panelGems.map(gem => (
                   <button
-                    key={acc.id}
-                    className={`jm-acc-btn${selAcc === acc.id ? ' selected' : ''}`}
-                    onClick={() => setSelAcc(acc.id)}
+                    key={gem.id}
+                    className={`jm-gem-btn${selGem === gem.id ? ' selected' : ''}`}
+                    onClick={() => setSelGem(gem.id)}
                   >
-                    <span className="jm-acc-emoji">{acc.emoji}</span>
-                    <span className="jm-acc-name">{acc.ja}</span>
+                    <span className="jm-gem-emoji">{gem.emoji}</span>
+                    <span className="jm-gem-name">{gem.ja}</span>
                   </button>
                 ))}
               </div>
-            </div>
 
-            {/* Gem selection — bottom, centered, with SVG showcase backdrop */}
-            <div className="jm-gem-section">
-              <div className="jm-section-label">
-                💎 {{ ja:'ほうせきをえらんでね', en:'Choose a gem', zh:'选择宝石', ko:'보석을 선택하세요', es:'Elige una gema' }[lang] || 'ほうせきをえらんでね'}
-              </div>
-              <div className="jm-gem-showcase">
-                <img src="/assets/jewelry/gem_showcase.svg" className="jm-gem-showcase-svg" alt="" aria-hidden="true" />
-                <div className="jm-gem-row">
-                  {currentRound.panelGems.map(gem => (
-                    <button
-                      key={gem.id}
-                      className={`jm-gem-btn${selGem === gem.id ? ' selected' : ''}`}
-                      onClick={() => setSelGem(gem.id)}
-                    >
-                      <span className="jm-gem-emoji">{gem.emoji}</span>
-                      <span className="jm-gem-name">{gem.ja}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* かんせいボタン */}
+              <button
+                className="jm-complete-btn"
+                disabled={!selGem || !selAcc}
+                onClick={() => handleComplete(false)}
+              >
+                ✨ {{ ja:'かんせい！', en:'Done!', zh:'完成！', ko:'완성！', es:'¡Listo!' }[lang] || 'かんせい！'}
+              </button>
             </div>
-
-            {/* Complete button */}
-            <button
-              className="jm-complete-btn"
-              disabled={!selGem || !selAcc}
-              onClick={() => handleComplete(false)}
-            >
-              ✨ {{ ja:'かんせい！', en:'Done!', zh:'完成！', ko:'완성！', es:'¡Listo!' }[lang] || 'かんせい！'}
-            </button>
           </div>
+
         </div>
       )}
 

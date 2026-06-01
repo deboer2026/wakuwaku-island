@@ -3,7 +3,7 @@
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: #1a0533;
+  background: #1a0a3e;  /* 宝石屋らしい深みのある紺紫 */
   font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
   touch-action: manipulation;
   user-select: none;
@@ -171,18 +171,32 @@
   color: #fff;
 }
 
-/* ── Game Area ──────────────────────────────── */
+/* ══════════════════════════════════════════════════
+   GAME AREA — 3エリア分割レイアウト
+   上40% : ショップ背景 + お客さん
+   中20% : アクセサリー選択
+   下40% : 宝石選択 + かんせいボタン
+══════════════════════════════════════════════════ */
 .jm-game-area {
   position: absolute;
   top: calc(52px + env(safe-area-inset-top, 0px));
   left: 0; right: 0; bottom: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  display: grid;
+  grid-template-rows: 40% 20% 40%;
   overflow: hidden;
 }
 
-/* SVG shop background */
+/* ── 上エリア: shop_bg.svg + お客さん ──────────── */
+.jm-top-area {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* shop_bg.svg — 背景として大きく表示 */
 .jm-shop-bg-img {
   position: absolute;
   inset: 0;
@@ -190,153 +204,125 @@
   height: 100%;
   object-fit: cover;
   pointer-events: none;
-  opacity: 0.12;
+  opacity: 0.85;
   z-index: 0;
 }
 
-/* Customer zone — top center, large */
-.jm-customer-zone {
-  position: relative;
+/* テキスト可読性のためのグラデーションオーバーレイ */
+.jm-top-area::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(26,10,62,0.25) 0%,
+    rgba(26,10,62,0.55) 100%
+  );
   z-index: 1;
-  flex: 0 0 auto;
+  pointer-events: none;
+}
+
+/* タイマーバー（上エリア最下部に固定） */
+.jm-timer-bar-wrap {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 3;
+  height: 6px;
+  background: rgba(255,255,255,0.12);
+  overflow: hidden;
+}
+.jm-timer-bar {
+  height: 100%;
+  transition: width 0.3s linear, background-color 0.3s;
+}
+
+/* お客さん + 吹き出し コンテナ */
+.jm-top-content {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 14px;
-  padding: 10px 16px 6px;
-  min-height: 110px;
+  padding: 8px 16px;
+  width: 100%;
 }
 
-/* Character display with SVG backdrop */
+/* お客さんキャラクター（大きく60px+） */
 .jm-char-display {
-  position: relative;
-  width: clamp(72px, 18vw, 110px);
-  height: clamp(72px, 18vw, 110px);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  filter: drop-shadow(0 4px 16px rgba(255,200,100,0.6));
 }
 .jm-char-display.happy { animation: jm-bounce 0.4s ease; }
 .jm-char-display.sad   { animation: jm-shake 0.3s ease; }
-.jm-char-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  opacity: 0.7;
-  pointer-events: none;
-}
 .jm-char-emoji-overlay {
-  position: relative;
-  z-index: 1;
-  font-size: clamp(40px, 11vw, 64px);
+  font-size: clamp(56px, 14vw, 76px);
   line-height: 1;
-  filter: drop-shadow(0 0 12px rgba(255,200,100,0.55));
 }
 
 @keyframes jm-bounce {
-  0%,100%{transform:translateY(0)} 40%{transform:translateY(-16px)} 70%{transform:translateY(-6px)}
+  0%,100%{transform:translateY(0)} 40%{transform:translateY(-14px)} 70%{transform:translateY(-5px)}
 }
 @keyframes jm-shake {
   0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)}
 }
 
+/* 吹き出し */
 .jm-speech {
-  background: rgba(255,255,255,0.95);
+  background: rgba(255,255,255,0.97);
   color: #333;
   border-radius: 16px;
   padding: 10px 14px;
   font-size: clamp(11px,3vw,14px);
   font-weight: 700;
   line-height: 1.5;
-  max-width: 180px;
+  max-width: 190px;
   position: relative;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
   flex-shrink: 0;
 }
-.jm-speech::after {
+/* 吹き出しの左向き三角（キャラの右横に配置） */
+.jm-speech::before {
   content: '';
   position: absolute;
-  right: -10px;
+  left: -10px;
   top: 50%;
   transform: translateY(-50%);
   border: 8px solid transparent;
-  border-left-color: rgba(255,255,255,0.95);
-  border-right: 0;
+  border-right-color: rgba(255,255,255,0.97);
+  border-left: 0;
 }
-.jm-speech-gem  { font-size: 22px; display: block; text-align: center; }
-.jm-speech-acc  { font-size: 12px; color: #666; text-align: center; display: block; margin-top: 2px; }
-.jm-speech-req  { font-size: clamp(10px,2.5vw,13px); text-align: center; display: block; margin-top: 4px; color: #e91e63; font-weight: 800; }
+.jm-speech-gem { font-size: 24px; display: block; text-align: center; margin-bottom: 2px; }
+.jm-speech-acc { font-size: 12px; color: #666; text-align: center; display: block; }
+.jm-speech-req { font-size: clamp(10px,2.5vw,13px); text-align: center; display: block; margin-top: 4px; color: #c62828; font-weight: 900; }
 
-/* Timer bar */
-.jm-timer-bar-wrap {
-  position: relative;
-  z-index: 1;
-  height: 6px;
-  background: rgba(255,255,255,0.1);
-  margin: 0 16px;
-  border-radius: 3px;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-.jm-timer-bar {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.3s linear, background-color 0.3s;
-}
-
-/* Selection panels */
-.jm-panels {
-  position: relative;
-  z-index: 1;
-  flex: 1;
+/* ── 中エリア: アクセサリー選択 ──────────────── */
+.jm-mid-area {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  padding: 4px 10px 6px;
-  gap: 4px;
-}
-
-.jm-section-label {
-  font-size: 11px;
-  color: #ccc;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-align: center;
-  margin-bottom: 3px;
-}
-
-/* Accessory section */
-.jm-acc-section {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* Gem section */
-.jm-gem-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 0;
-}
-
-/* Gem showcase with SVG backdrop */
-.jm-gem-showcase {
-  position: relative;
-  width: 100%;
-  flex: 1;
-  display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 0;
-  border-radius: 14px;
+  background: rgba(20,5,55,0.88);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding: 4px 10px;
+  gap: 4px;
   overflow: hidden;
 }
+
+/* ── 下エリア: 宝石選択 + かんせいボタン ────── */
+.jm-bot-area {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* gem_showcase.svg — 宝石エリアの背景 */
 .jm-gem-showcase-svg {
   position: absolute;
   inset: 0;
@@ -344,46 +330,116 @@
   height: 100%;
   object-fit: cover;
   pointer-events: none;
-  opacity: 0.22;
+  opacity: 0.55;
+  z-index: 0;
 }
-/* Gem row — horizontal, centered, wraps */
-.jm-gem-row {
-  position: relative;
+/* 宝石エリアのオーバーレイ */
+.jm-bot-area::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(26,10,62,0.55);
   z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-content: center;
-  gap: 6px;
-  padding: 8px;
-  width: 100%;
+  pointer-events: none;
 }
 
-/* (Legacy .jm-gem-grid kept for compatibility) */
-.jm-gem-grid {
+/* 宝石エリアのコンテンツ（z-index 2でSVG+オーバーレイの上） */
+.jm-bot-content {
+  position: relative;
+  z-index: 2;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 10px 8px;
   gap: 5px;
+  overflow: hidden;
+  height: 100%;
 }
-.jm-gem-btn {
+
+/* ── ラベル ──────────────────────────────────── */
+.jm-section-label {
+  font-size: 11px;
+  color: rgba(200,200,255,0.9);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  flex-shrink: 0;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+/* ── アクセサリーボタン行（横一列・中央）────── */
+.jm-acc-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+.jm-acc-btn {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
   background: rgba(255,255,255,0.10);
-  border: 2px solid rgba(255,255,255,0.15);
+  border: 2px solid rgba(255,255,255,0.18);
   border-radius: 12px;
   padding: 6px 4px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
   transition: transform 0.1s, background 0.15s, border-color 0.15s;
   color: #fff;
+  -webkit-tap-highlight-color: transparent;
+}
+.jm-acc-btn:active { transform: scale(0.93); }
+.jm-acc-btn.selected {
+  background: rgba(186,104,200,0.4);
+  border-color: #ce93d8;
+  box-shadow: 0 0 12px rgba(206,147,216,0.6);
+}
+.jm-acc-emoji { font-size: clamp(20px,5vw,26px); line-height: 1; }
+.jm-acc-name  { font-size: clamp(8px,2vw,10px); line-height: 1.2; text-align: center; }
+
+/* ── 宝石ボタン行（横並び・中央・折り返し）── */
+.jm-gem-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: flex-start;
+  gap: 6px;
+  width: 100%;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.jm-gem-row::-webkit-scrollbar { display: none; }
+
+.jm-gem-btn {
+  min-height: 48px;
+  min-width: 52px;
+  background: rgba(255,255,255,0.10);
+  border: 2px solid rgba(255,255,255,0.18);
+  border-radius: 12px;
+  padding: 6px 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  transition: transform 0.1s, background 0.15s, border-color 0.15s;
+  color: #fff;
+  -webkit-tap-highlight-color: transparent;
 }
 .jm-gem-btn:active { transform: scale(0.92); }
 .jm-gem-btn.selected {
-  background: rgba(255,224,130,0.25);
+  background: rgba(255,224,130,0.28);
   border-color: #ffe082;
-  box-shadow: 0 0 10px rgba(255,224,130,0.5);
+  box-shadow: 0 0 12px rgba(255,224,130,0.55);
 }
 .jm-gem-btn.correct-flash {
   background: rgba(102,187,106,0.35);
@@ -393,44 +449,15 @@
   background: rgba(239,83,80,0.35);
   border-color: #ef5350;
 }
-.jm-gem-emoji { font-size: clamp(18px,5vw,26px); line-height: 1; }
+.jm-gem-emoji { font-size: clamp(20px,5vw,28px); line-height: 1; }
 .jm-gem-name  { font-size: clamp(8px,2vw,10px); line-height: 1.2; text-align: center; }
 
-/* Accessory row */
-.jm-acc-row {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-.jm-acc-btn {
-  background: rgba(255,255,255,0.10);
-  border: 2px solid rgba(255,255,255,0.15);
-  border-radius: 12px;
-  padding: 6px 10px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  transition: transform 0.1s, background 0.15s, border-color 0.15s;
-  color: #fff;
-  min-width: 54px;
-}
-.jm-acc-btn:active { transform: scale(0.92); }
-.jm-acc-btn.selected {
-  background: rgba(186,104,200,0.35);
-  border-color: #ce93d8;
-  box-shadow: 0 0 10px rgba(206,147,216,0.5);
-}
-.jm-acc-emoji { font-size: clamp(18px,5vw,24px); line-height: 1; }
-.jm-acc-name  { font-size: clamp(8px,2vw,10px); line-height: 1.2; text-align: center; }
-
-/* Complete button */
+/* ── かんせいボタン ──────────────────────────── */
 .jm-complete-btn {
   display: block;
   width: 100%;
-  padding: 12px;
+  min-height: 48px;
+  padding: 0 12px;
   border: none;
   border-radius: 20px;
   font-size: clamp(15px,4vw,18px);
@@ -441,8 +468,8 @@
   text-shadow: 0 1px 3px rgba(0,0,0,0.4);
   box-shadow: 0 4px 16px rgba(224,64,251,0.4);
   transition: transform 0.1s, opacity 0.15s;
-  margin-top: 2px;
   flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 .jm-complete-btn:active { transform: scale(0.97); }
 .jm-complete-btn:disabled { opacity: 0.4; cursor: not-allowed; }
