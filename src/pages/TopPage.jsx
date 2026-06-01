@@ -600,4 +600,34 @@ export default function TopPage() {
         </div>
       </div>
 
-      {/* ── �
+      {/* ── 着せ替えパネル ── */}
+      <KisekaePanel
+        isOpen={panelOpen}
+        initialChara={panelChara}
+        onClose={() => setPanelOpen(false)}
+        kisekaeState={kisekaeState}
+        onStateChange={handleKisekaeChange}
+        lang={lang}
+      />
+
+      {/* ── ショップ ── */}
+      <Shop
+        isOpen={shopOpen}
+        onClose={() => setShopOpen(false)}
+        lang={lang}
+        onCoinsChange={setCoins}
+      />
+
+      {/* ── ログインボーナス ── */}
+      {loginBonus && (
+        <LoginBonus
+          bonus={loginBonus.bonus}
+          streak={loginBonus.streak}
+          onClaim={handleLoginBonusClaim}
+          lang={lang}
+        />
+      )}
+
+    </div>
+  );
+}
