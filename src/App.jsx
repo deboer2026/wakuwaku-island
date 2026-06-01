@@ -55,4 +55,8 @@ export default function App() {
       <Route path="/crossing" element={<DoubutsuCrossing />} />
       <Route path="/kokki" element={<KokkiQuiz />} />
       <Route path="/jewelry-master" element={<JewelryMaster />} />
-      <Route pa
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+    </Routes>
+  )
+}

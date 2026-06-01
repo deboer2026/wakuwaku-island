@@ -611,3 +611,16 @@ export function playCrossingBgm() {
     {note:'G4',dur:'8n',t:6.00},{note:'C5',dur:'2n',t:6.25},
   ], 6.75, 'triangle');
 }
+
+export function playJewelryMasterBgm() {
+  _bgm([
+    {note:'E5',dur:'16n',t:0.00},{note:'G#5',dur:'16n',t:0.15},{note:'B5',dur:'8n',t:0.30},
+    {note:'E6',dur:'16n',t:0.65},{note:'B5',dur:'16n',t:0.80},{note:'G#5',dur:'8n',t:0.95},
+    {note:'F#5',dur:'16n',t:1.30},{note:'A5',dur:'16n',t:1.45},{note:'C#6',dur:'8n',t:1.60},
+    {note:'F#6',dur:'16n',t:1.95},{note:'C#6',dur:'16n',t:2.10},{note:'A5',dur:'8n',t:2.25},
+    {note:'G#5',dur:'16n',t:2.60},{note:'B5',dur:'16n',t:2.75},{note:'E6',dur:'8n',t:2.90},
+    {note:'B5',dur:'16n',t:3.25},{note:'G#5',dur:'16n',t:3.40},{note:'E5',dur:'8n',t:3.55},
+    {note:'F#5',dur:'16n',t:3.90},{note:'A5',dur:'16n',t:4.05},{note:'D6',dur:'8n',t:4.20},
+    {note:'A5',dur:'16n',t:4.55},{note:'F#5',dur:'16n',t:4.70},{note:'E5',dur:'4n',t:4.85},
+  ], 5.5, 'sine');
+}
