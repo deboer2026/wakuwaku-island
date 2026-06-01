@@ -292,22 +292,23 @@ export default function Meiro() {
     if (mazeAnimRef.current) { cancelAnimationFrame(mazeAnimRef.current); mazeAnimRef.current = null; }
     stopBgm();
     playSoundCorrect();
-    const t = timeRef.current;
+    // NOTE: variable renamed to 'elapsed' to avoid shadowing the imported t() translation function
+    const elapsed = timeRef.current;
     const hi = getHi();
-    const isNew = hi === 0 || t < hi;
+    const isNew = hi === 0 || elapsed < hi;
     if (isNew) {
-      saveHi(t);
-      trackNewHighScore('Meiro', t);
+      saveHi(elapsed);
+      trackNewHighScore('Meiro', elapsed);
       addCoins(10);
     }
-    trackGameClear('Meiro', t, 1);
+    trackGameClear('Meiro', elapsed, 1);
     addCoins(5);
-    setHiScore(isNew ? t : hi);
+    setHiScore(isNew ? elapsed : hi);
     const title = isNew
       ? ({ja:'🏆 ベストタイム こうしん！', en:'🏆 Best Time!', zh:'🏆 最佳时间！', ko:'🏆 베스트 타임!', es:'🏆 ¡Mejor tiempo!'}[lang] || '🏆 ベストタイム こうしん！')
-      : ({ja:'クリア！🏁', en:'Clear! 🏁', zh:'通关！🏁', ko:'클리어！🏁', es:'¡Completado！🏁'}[lang] || 'クリア！🏁');
-    const hiText = `${t(lang,'best')}: ${fmtTime(isNew ? t : hi)}`;
-    const msg    = `${t(lang,'time')}: ${fmtTime(t)}`;
+      : ({ja:'クリア！🏁', en:'Clear! 🏁', zh:'通関！🏁', ko:'클리어！🏁', es:'¡Completado！🏁'}[lang] || 'クリア！🏁');
+    const hiText = `${t(lang,'best')}: ${fmtTime(isNew ? elapsed : hi)}`;
+    const msg    = `${t(lang,'time')}: ${fmtTime(elapsed)}`;
     setResultData({ title, msg, hiText, isNew });
     setScreen('result');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -349,6 +350,7 @@ export default function Meiro() {
     playerRef.current = { r: nr, c: nc };
     // check goal
     if (nr === ROWS-2 && nc === COLS-2) {
+      runningRef.current = false; // immediately stop further moves / enemy collision
       if (triggerClearRef.current) triggerClearRef.current();
     }
   }, []);

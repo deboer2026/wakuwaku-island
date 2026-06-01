@@ -431,17 +431,27 @@ export default function JewelryMaster() {
       {/* ── Game ── */}
       {screen === 'game' && currentRound && !feedback && (
         <div className="jm-game-area">
-          {/* Customer zone */}
+          {/* SVG shop background overlay */}
+          <img src="/assets/jewelry/shop_bg.svg" className="jm-shop-bg-img" alt="" aria-hidden="true" />
+
+          {/* Customer zone - top center, large */}
           <div className="jm-customer-zone">
             <div className="jm-speech">
               <span className="jm-speech-gem">{currentRound.targetGem.emoji}</span>
               <span className="jm-speech-acc">{currentRound.targetAcc.emoji} {currentRound.targetAcc.ja}</span>
               <span className="jm-speech-req">
-                {currentRound.targetGem.ja}の{currentRound.targetAcc.ja}がほしい！
+                {{ ja:`${currentRound.targetGem.ja}の${currentRound.targetAcc.ja}がほしい！`,
+                   en:`I want a ${currentRound.targetGem.en} ${currentRound.targetAcc.en}!`,
+                   zh:`我想要${currentRound.targetGem.ja}的${currentRound.targetAcc.ja}！`,
+                   ko:`${currentRound.targetGem.ja}의 ${currentRound.targetAcc.ja}를 원해요!`,
+                   es:`¡Quiero ${currentRound.targetGem.en} ${currentRound.targetAcc.en}!` }[lang]
+                  || `${currentRound.targetGem.ja}の${currentRound.targetAcc.ja}がほしい！`}
               </span>
             </div>
-            <div className={`jm-customer-char ${custAnim}`}>
-              {currentRound.customer.emoji}
+            {/* Character display with SVG backdrop */}
+            <div className={`jm-char-display ${custAnim}`}>
+              <img src="/assets/jewelry/characters.svg" className="jm-char-svg" alt="" aria-hidden="true" />
+              <span className="jm-char-emoji-overlay">{currentRound.customer.emoji}</span>
             </div>
           </div>
 
@@ -454,27 +464,8 @@ export default function JewelryMaster() {
 
           {/* Panels */}
           <div className="jm-panels">
-            {/* Gem selection */}
-            <div>
-              <div className="jm-section-label">
-                💎 {{ ja:'ほうせきをえらんでね', en:'Choose a gem', zh:'选择宝石', ko:'보석을 선택하세요', es:'Elige una gema' }[lang] || 'ほうせきをえらんでね'}
-              </div>
-              <div className="jm-gem-grid">
-                {currentRound.panelGems.map(gem => (
-                  <button
-                    key={gem.id}
-                    className={`jm-gem-btn${selGem === gem.id ? ' selected' : ''}`}
-                    onClick={() => setSelGem(gem.id)}
-                  >
-                    <span className="jm-gem-emoji">{gem.emoji}</span>
-                    <span className="jm-gem-name">{gem.ja}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Accessory selection */}
-            <div>
+            {/* Accessory selection — above gems */}
+            <div className="jm-acc-section">
               <div className="jm-section-label">
                 👑 {{ ja:'アクセサリをえらんでね', en:'Choose accessory', zh:'选择饰品', ko:'액세서리를 선택하세요', es:'Elige accesorio' }[lang] || 'アクセサリをえらんでね'}
               </div>
@@ -489,6 +480,28 @@ export default function JewelryMaster() {
                     <span className="jm-acc-name">{acc.ja}</span>
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Gem selection — bottom, centered, with SVG showcase backdrop */}
+            <div className="jm-gem-section">
+              <div className="jm-section-label">
+                💎 {{ ja:'ほうせきをえらんでね', en:'Choose a gem', zh:'选择宝石', ko:'보석을 선택하세요', es:'Elige una gema' }[lang] || 'ほうせきをえらんでね'}
+              </div>
+              <div className="jm-gem-showcase">
+                <img src="/assets/jewelry/gem_showcase.svg" className="jm-gem-showcase-svg" alt="" aria-hidden="true" />
+                <div className="jm-gem-row">
+                  {currentRound.panelGems.map(gem => (
+                    <button
+                      key={gem.id}
+                      className={`jm-gem-btn${selGem === gem.id ? ' selected' : ''}`}
+                      onClick={() => setSelGem(gem.id)}
+                    >
+                      <span className="jm-gem-emoji">{gem.emoji}</span>
+                      <span className="jm-gem-name">{gem.ja}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
