@@ -58,6 +58,39 @@ function saveHi(v)  { localStorage.setItem(LS_HI, String(v)); }
 
 function rnd(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+// ── キラキラパーティクル定義（CSS アニメーション） ───────
+const PARTICLES = [
+  { id:0, left:'4%',   dur:'5.2s', delay:'0s',   size:5 },
+  { id:1, left:'12%',  dur:'4.1s', delay:'0.9s', size:7 },
+  { id:2, left:'21%',  dur:'6.0s', delay:'2.3s', size:4 },
+  { id:3, left:'33%',  dur:'4.8s', delay:'1.5s', size:6 },
+  { id:4, left:'44%',  dur:'5.5s', delay:'3.4s', size:5 },
+  { id:5, left:'56%',  dur:'4.3s', delay:'0.6s', size:8 },
+  { id:6, left:'67%',  dur:'5.8s', delay:'2.0s', size:4 },
+  { id:7, left:'76%',  dur:'4.6s', delay:'2.8s', size:6 },
+  { id:8, left:'85%',  dur:'5.1s', delay:'0.4s', size:5 },
+  { id:9, left:'94%',  dur:'4.4s', delay:'1.7s', size:7 },
+];
+
+// ── 宝石 SVG ダイヤモンド形状コンポーネント ─────────────
+function GemShape({ color }) {
+  return (
+    <svg className="jm-gem-svg" viewBox="0 0 50 50" aria-hidden="true">
+      {/* メイン面 */}
+      <polygon points="25,3 47,17 25,47 3,17" fill={color} opacity="0.92"/>
+      {/* 上部ハイライト（明るい面） */}
+      <polygon points="25,3 47,17 25,21 3,17" fill="rgba(255,255,255,0.42)"/>
+      {/* 右下の暗い面 */}
+      <polygon points="25,21 47,17 25,47" fill="rgba(0,0,0,0.16)"/>
+      {/* 左下の暗い面（少し明るめ） */}
+      <polygon points="25,21 3,17 25,47" fill="rgba(0,0,0,0.08)"/>
+      {/* 輝きスパーク */}
+      <circle cx="18" cy="12" r="2.2" fill="white" opacity="0.6"/>
+      <circle cx="23" cy="8"  r="1.2" fill="white" opacity="0.4"/>
+    </svg>
+  );
+}
+
 function makeRound(diff, usedGems) {
   const count = DIFFICULTY[diff].gemCount;
   const pool = diff === 'easy'   ? GEMS.slice(0, 3)
@@ -301,6 +334,22 @@ export default function JewelryMaster() {
 
   return (
     <div ref={wrapRef} className="jm-wrap">
+      {/* ── キラキラパーティクル（全画面 CSS アニメ） ── */}
+      <div className="jm-particles" aria-hidden="true">
+        {PARTICLES.map(p => (
+          <div
+            key={p.id}
+            className="jm-particle"
+            style={{
+              left: p.left,
+              width:  p.size + 'px',
+              height: p.size + 'px',
+              animationDuration:  p.dur,
+              animationDelay:     p.delay,
+            }}
+          />
+        ))}
+      </div>
 
       {/* ── Title ── */}
       {screen === 'title' && (
@@ -370,8 +419,8 @@ export default function JewelryMaster() {
 
             {/* お客さん + 吹き出し */}
             <div className="jm-top-content">
-              {/* お客さんキャラクター（大きく中央） */}
-              <div className={`jm-char-display ${custAnim}`}>
+              {/* お客さんキャラクター（大きく中央・入場アニメーション） */}
+              <div key={currentRound.customer.id} className={`jm-char-display ${custAnim}`}>
                 <span className="jm-char-emoji-overlay">{currentRound.customer.emoji}</span>
               </div>
 
@@ -428,15 +477,16 @@ export default function JewelryMaster() {
                 💎 {{ ja:'ほうせきをえらんでね', en:'Choose a gem', zh:'选择宝石', ko:'보석 선택', es:'Elige una gema' }[lang] || 'ほうせきをえらんでね'}
               </div>
 
-              {/* 宝石ボタン — 横並び・中央寄せ */}
+              {/* 宝石ボタン — 横並び・中央寄せ（SVG ダイヤ形状） */}
               <div className="jm-gem-row">
                 {currentRound.panelGems.map(gem => (
                   <button
                     key={gem.id}
                     className={`jm-gem-btn${selGem === gem.id ? ' selected' : ''}`}
+                    style={{'--gem-c': gem.color}}
                     onClick={() => setSelGem(gem.id)}
                   >
-                    <span className="jm-gem-emoji">{gem.emoji}</span>
+                    <GemShape color={gem.color}/>
                     <span className="jm-gem-name">{gem.ja}</span>
                   </button>
                 ))}
