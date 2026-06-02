@@ -85,10 +85,8 @@ function makeRound(diff, usedGems) {
 export default function JewelryMaster() {
   const navigate = useNavigate();
   const lang = getLang();
-  const wrapRef = useRef(null);
-  const bgRef   = useRef(null);
-  const rafRef  = useRef(null);
-  const timerRef = useRef(null);
+  const wrapRef   = useRef(null);
+  const timerRef  = useRef(null);
 
   // screen: title | game | feedback | result
   const [screen,    setScreen]    = useState('title');
@@ -121,75 +119,9 @@ export default function JewelryMaster() {
     return () => { document.title = 'わくわくアイランド | 無料の子供向けブラウザゲーム'; };
   }, []);
 
-  // Canvas starfield background
+  // BGM cleanup on unmount
   useEffect(() => {
-    const canvas = bgRef.current;
-    const wrap   = wrapRef.current;
-    if (!canvas || !wrap) return;
-    const ctx = canvas.getContext('2d');
-
-    const stars = Array.from({ length: 80 }, () => ({
-      x: Math.random(), y: Math.random(),
-      r: 0.5 + Math.random() * 1.5,
-      phase: Math.random() * Math.PI * 2,
-      speed: 0.5 + Math.random(),
-    }));
-
-    const sparkles = Array.from({ length: 14 }, (_, i) => ({
-      emoji: ['💎','✨','⭐','🌟','💫'][i % 5],
-      x: Math.random(), y: Math.random(),
-      phase: Math.random() * Math.PI * 2,
-      speed: 0.4 + Math.random() * 0.8,
-    }));
-
-    function resize() {
-      canvas.width  = wrap.clientWidth;
-      canvas.height = wrap.clientHeight;
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    function loop() {
-      const W = canvas.width, H = canvas.height;
-      const now = performance.now() / 1000;
-      ctx.clearRect(0, 0, W, H);
-
-      // gradient bg
-      const grd = ctx.createLinearGradient(0, 0, 0, H);
-      grd.addColorStop(0, '#0d001a');
-      grd.addColorStop(1, '#1a0533');
-      ctx.fillStyle = grd;
-      ctx.fillRect(0, 0, W, H);
-
-      // stars
-      for (const s of stars) {
-        const alpha = 0.4 + 0.5 * Math.sin(now * s.speed + s.phase);
-        ctx.beginPath();
-        ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-        ctx.fill();
-      }
-
-      // floating sparkles
-      for (const sp of sparkles) {
-        const y = sp.y * H + Math.sin(now * sp.speed + sp.phase) * 12;
-        ctx.font = `${Math.round(W * 0.028 + 4)}px serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.globalAlpha = 0.25 + 0.2 * Math.sin(now * 1.2 + sp.phase);
-        ctx.fillText(sp.emoji, sp.x * W, y);
-      }
-      ctx.globalAlpha = 1;
-
-      rafRef.current = requestAnimationFrame(loop);
-    }
-    loop();
-
-    return () => {
-      cancelAnimationFrame(rafRef.current);
-      window.removeEventListener('resize', resize);
-      stopBgm();
-    };
+    return () => { stopBgm(); };
   }, []);
 
   // Timer (hard mode)
@@ -369,7 +301,6 @@ export default function JewelryMaster() {
 
   return (
     <div ref={wrapRef} className="jm-wrap">
-      <canvas ref={bgRef} className="jm-bg" />
 
       {/* ── Title ── */}
       {screen === 'title' && (
