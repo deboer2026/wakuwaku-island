@@ -6,6 +6,7 @@ import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './SushiGame.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 const SALMON = '🍣';
 const TRAPS = ['🐱','🐶','🐸','🐼','🦊','🐰','🐧','🐻','🍊','🍎','🎀','⭐','🐙','🦐','🥚','🐟'];
@@ -251,6 +252,7 @@ export default function SushiGame() {
         <p className="sushi-result-msg" dangerouslySetInnerHTML={{ __html: resultData?.msg ?? '' }} />
         {resultData?.isNew && <div className="sushi-result-new">🏆 {t(lang,'newRecord')}</div>}
         <div className="sushi-result-hi">{t(lang,'best')}: {resultData?.hi ?? hiScore}</div>
+        <RecommendedGames currentRoute="/sushi" />
         <div className="sushi-result-btns">
           <button className="sushi-start-btn" onClick={startGame}>{t(lang,'retry')}</button>
           <button className="sushi-back-btn"  onClick={() => transitionBack(navigate)}>{t(lang,'backToTitle')}</button>

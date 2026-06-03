@@ -8,6 +8,7 @@ import { trackGameStart } from '../utils/analytics';
 import { addCoins, getCoins } from '../utils/coins';
 import { getLang, t } from '../utils/i18n';
 import './MachiDukuri.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 /* ── Isometric constants ─────────────────────────────────── */
 const ISO_TW    = 64;   // tile width at scale=1
@@ -613,6 +614,7 @@ export default function MachiDukuri() {
         {'アイテムをおいて\nじぶんだけの まちをつくろう！\n🪙コインをためて まちをひろげてね'}
       </p>
       <button className="machi-start-btn" onClick={startGame}>▶ はじめる！</button>
+      <RecommendedGames currentRoute="/machi" />
       <button className="ww-back-btn" onClick={() => transitionBack(navigate)}>{t(lang, 'back')}</button>
     </div>
   );

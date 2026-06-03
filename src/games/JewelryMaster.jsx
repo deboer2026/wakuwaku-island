@@ -11,6 +11,7 @@ import { addCoins } from '../utils/coins';
 import { trackGameStart, trackGameClear, trackNewHighScore } from '../utils/analytics';
 import { t, getLang } from '../utils/i18n';
 import './JewelryMaster.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 // ── データ定義 ──────────────────────────────────────────
 
@@ -573,6 +574,7 @@ export default function JewelryMaster() {
               ? `🏆 ${t(lang, 'newRecord')}`
               : `${t(lang, 'best')}: ${hiScore}`}
           </div>
+          <RecommendedGames currentRoute="/jewelry-master" />
           <div className="jm-result-btns">
             <button className="jm-big-btn" onClick={() => { setScreen('title'); stopBgm(); }}>
               {t(lang, 'retry')}

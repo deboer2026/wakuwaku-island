@@ -6,6 +6,7 @@ import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './DoubutsuPuzzle.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 // ─── constants ────────────────────────────────────────────────────────────────
 const ANIMALS = [
@@ -467,6 +468,7 @@ export default function DoubutsuPuzzle() {
               {t(lang,'best')}: {fmtTime(resultData.bestTime)}
             </div>
           )}
+          <RecommendedGames currentRoute="/doubutsu-puzzle" />
           <div style={{ display: 'flex', gap: '10px' }}>
             <button className="dbp-big-btn" onClick={startGame}>{t(lang,'retry')}</button>
             <button className="dbp-big-btn blue" onClick={goTitle}>{t(lang,'backToTitle')}</button>

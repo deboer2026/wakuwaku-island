@@ -6,6 +6,7 @@ import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './KazuAsobi.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 const ANIMALS = ['🐱','🐶','🐸','🐼','🦊','🐰','🐧','🐻','🐮','🐷','🦁','🐨','🦝','🦄','🐯','🐺'];
 const GALLERY_CHARS = ['👸','🤴','👑','🦁','🐨','🦝','🐮','🐷','🐔','🐦','🦄','🐯','🐺','🦋','🐝','🦀','🐙','🐭','🐹','🦕','🐳','🦭'];
@@ -296,6 +297,7 @@ export default function KazuAsobi() {
           <div className="kazu-result-msg">{resultData.msg}</div>
           {resultData.isNew && <div className="kazu-result-new">🌟 {t(lang,'newRecord')}</div>}
           <div className="kazu-result-hi">{resultData.hiText}</div>
+          <RecommendedGames currentRoute="/kazu-asobi" />
           <div className="kazu-result-btns">
             <button className="kazu-start-btn" onClick={startGame}>{t(lang,'retry')}</button>
             <button className="kazu-back-btn2" onClick={() => transitionBack(navigate)}>{t(lang,'back')}</button>

@@ -10,6 +10,7 @@ import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './MojiAsobi.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 /* ── 問題データ ─────────────────────────────────────────── */
 const QUESTIONS = [
@@ -189,6 +190,7 @@ export default function MojiAsobi() {
         <div className={`moji-result-hi ${resultData.isNew ? 'moji-result-new' : ''}`} style={{ color: resultData.isNew ? '#FFD700' : 'rgba(255,255,255,0.7)' }}>
           {resultData.hiText}
         </div>
+        <RecommendedGames currentRoute="/moji" />
         <div className="moji-result-btns">
           <button className="moji-result-btn" onClick={startGame}>
             {t(lang,'retry')}

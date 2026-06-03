@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>わくわくアイランド - ヒーローアニメーション</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sky1: #87CEEB; --sky2: #b3e5fc; --sky3: #e1f5fe;
+  --sea1: #29b6f6; --sea2: #0288d1;
+  --sand: #F4D03F; --sand2: #E6B800;
+  --green: #66BB6A; --green2: #388E3C;
+  --cloud: rgba(255,255,255,0.92);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'M PLUS Rounded 1c', sans-serif; overflow-x: hidden; background: var(--sky1); }
+
+/* ===== ヒーローセクション ===== */
+#hero {
+  position: relative; width: 100%; min-height: 100vh;
+  overflow: hidden; display: flex; flex-direction: column;
+  align-items: center;
+}
+
+/* 空グラデ */
+#sky {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, #87CEEB 0%, #b3e5fc 45%, #e1f5fe 75%, #fff8f0 100%);
+}
+
+/* 太陽 */
+#sun {
+  position: absolute; top: 6%; right: 12%;
+  width: 80px; height: 80px;
+  animation: sunFloat 6s ease-in-out infinite;
+}
+#sun .sun-body {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #FFF9C4, #FFD700 40%, #FF8F00);
+  box-shadow: 0 0 40px rgba(255,215,0,0.6), 0 0 80px rgba(255,215,0,0.3);
+}
+#sun .sun-ray {
+  position: absolute; top: 50%; left: 50%;
+  width: 6px; height: 20px; background: #FFD700;
+  border-radius: 3px; transform-origin: 3px -45px;
+  opacity: 0.7;
+}
+@keyframes sunFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+@keyframes sunSpin  { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+#sun-rays { animation: sunSpin 20s linear infinite; }
+
+/* 雲 */
+.cloud {
+  position: absolute;
+  animation: cloudDrift linear infinite;
+}
+.cloud-body {
+  background: var(--cloud);
+  border-radius: 50px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.08));
+  position: relative;
+}
+.cloud-body::before, .cloud-body::after {
+  content: ''; position: absolute; background: var(--cloud); border-radius: 50%;
+}
+@keyframes cloudDrift { 0%{transform:translateX(-200px)} 100%{transform:translateX(calc(100vw + 200px))} }
+
+/* 海 */
+#sea {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 28%;
+  background: linear-gradient(180deg, var(--sea1) 0%, var(--sea2) 100%);
+}
+.wave {
+  position: absolute; left: 0; right: 0;
+  height: 60px;
+  animation: wavePush linear infinite;
+}
+@keyframes wavePush {
+  0%   { transform: translateX(0) scaleY(1); }
+  50%  { transform: translateX(-30px) scaleY(0.9); }
+  100% { transform: translateX(0) scaleY(1); }
+}
+
+/* 島 */
+#island-wrap {
+  position: absolute;
+  bottom: 22%;
+  left: 50%; transform: translateX(-50%);
+  animation: islandFloat 4s ease-in-out infinite;
+  z-index: 10;
+}
+@keyframes islandFloat { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(-12px)} }
+
+#island {
+  position: relative; width: 280px;
+}
+.island-shadow {
+  position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+  width: 220px; height: 18px;
+  background: rgba(0,0,0,0.15);
+  border-radius: 50%;
+  filter: blur(6px);
+}
+.island-body {
+  width: 280px; height: 70px;
+  background: linear-gradient(180deg, var(--sand) 0%, var(--sand2) 100%);
+  border-radius: 50% 50% 40% 40%;
+  position: relative; overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+.island-body::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 20%, rgba(255,255,255,0.15) 50%, transparent 80%);
+}
+.island-grass {
+  position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+  width: 260px; height: 30px;
+  background: linear-gradient(180deg, var(--green) 0%, var(--green2) 100%);
+  border-radius: 50% 50% 30% 30%;
+}
+
+/* 島の木 */
+.tree {
+  position: absolute; bottom: 60px;
+  animation: treeSway 3s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+@keyframes treeSway { 0%,100%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} }
+.tree-trunk { width: 10px; height: 30px; background: #795548; border-radius: 3px; margin: 0 auto; }
+.tree-top   { width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #81C784, #2E7D32); margin: 0 auto; margin-bottom: -8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+
+/* キャラクター */
+.char {
+  position: absolute; bottom: 55px;
+  font-size: 36px;
+  filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));
+  animation: charBob var(--bob) ease-in-out infinite;
+  animation-delay: var(--delay);
+  cursor: pointer;
+  transition: transform 0.2s;
+  z-index: 5;
+}
+.char:hover { transform: scale(1.3) rotate(-10deg) !important; }
+@keyframes charBob { 0%,100%{transform:translateY(0) rotate(var(--rot,0deg))} 50%{transform:translateY(-8px) rotate(calc(var(--rot,0deg) + 5deg))} }
+
+/* ===== タイトルエリア ===== */
+#title-area {
+  position: relative; z-index: 20;
+  text-align: center;
+  padding: 40px 20px 0;
+  animation: titleDrop 1s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes titleDrop { 0%{opacity:0;transform:translateY(-60px) scale(0.8)} 100%{opacity:1;transform:translateY(0) scale(1)} }
+
+.badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #FF6B35, #FF4500);
+  color: #fff; font-size: 12px; font-weight: 900;
+  padding: 5px 18px; border-radius: 30px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  box-shadow: 0 4px 0 rgba(200,50,0,0.3), 0 0 20px rgba(255,107,53,0.4);
+  margin-bottom: 12px;
+  animation: badgePulse 2s ease-in-out infinite;
+}
+@keyframes badgePulse { 0%,100%{box-shadow:0 4px 0 rgba(200,50,0,0.3),0 0 20px rgba(255,107,53,0.4)} 50%{box-shadow:0 4px 0 rgba(200,50,0,0.3),0 0 40px rgba(255,107,53,0.7)} }
+
+.main-title {
+  font-size: clamp(48px,13vw,80px);
+  font-weight: 900;
+  line-height: 0.95;
+  position: relative;
+}
+.title-line1 {
+  display: block; color: #FF6B35;
+  text-shadow: 4px 4px 0 #fff, 6px 6px 0 rgba(255,107,53,0.3);
+  animation: titleWobble 5s ease-in-out infinite;
+}
+.title-line2 {
+  display: block; color: #fff;
+  text-shadow: 4px 4px 0 #5ba3d9, 6px 6px 0 rgba(91,163,217,0.4);
+  font-size: clamp(36px,10vw,58px);
+  animation: titleWobble 5s ease-in-out infinite 0.3s;
+}
+@keyframes titleWobble { 0%,100%{transform:rotate(-1deg)} 50%{transform:rotate(1deg)} }
+
+.season-banner {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, rgba(255,182,193,0.9), rgba(255,105,135,0.9));
+  color: #fff; font-size: 14px; font-weight: 800;
+  padding: 8px 20px; border-radius: 30px;
+  box-shadow: 0 4px 0 rgba(200,50,80,0.3);
+  margin-top: 10px;
+  animation: seasonPop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.5s both;
+}
+@keyframes seasonPop { 0%{opacity:0;transform:scale(0)} 100%{opacity:1;transform:scale(1)} }
+
+/* ===== プリンセス・プリンス ===== */
+#princess-area {
+  position: absolute; bottom: 24%; z-index: 15;
+  width: 100%; display: flex; justify-content: space-between;
+  padding: 0 8px; pointer-events: none;
+}
+.royal-char {
+  display: flex; flex-direction: column; align-items: center;
+  pointer-events: auto; cursor: pointer;
+  animation: royalFloat var(--rf) ease-in-out infinite;
+}
+@keyframes royalFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+.royal-svg { width: 64px; height: 96px; filter: drop-shadow(2px 4px 8px rgba(0,0,0,0.15)); }
+.royal-badge {
+  background: rgba(255,255,255,0.9); border-radius: 10px;
+  font-size: 9px; font-weight: 700; color: #888;
+  padding: 2px 7px; margin-top: 2px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* ===== ゲームカード ===== */
+#cards-area {
+  position: relative; z-index: 20;
+  width: 100%; max-width: 480px;
+  padding: 20px 12px 0;
+}
+.cards-label {
+  text-align: center; font-size: 14px; font-weight: 900;
+  color: #5ba3d9; margin-bottom: 12px;
+  text-shadow: 1px 1px 0 #fff;
+}
+.cards-grid {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
+}
+.game-card {
+  background: #fff; border-radius: 18px; overflow: hidden;
+  box-shadow: 0 6px 0 var(--card-shadow), 0 10px 20px rgba(0,0,0,0.1);
+  cursor: pointer;
+  animation: cardIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+  transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+.game-card:hover {
+  transform: translateY(-6px) scale(1.04);
+  box-shadow: 0 12px 0 var(--card-shadow), 0 16px 30px rgba(0,0,0,0.15);
+}
+.game-card:active { transform: translateY(2px) scale(0.97); box-shadow: 0 2px 0 var(--card-shadow); }
+@keyframes cardIn { 0%{opacity:0;transform:translateY(40px) rotate(-5deg)} 100%{opacity:1;transform:translateY(0) rotate(0)} }
+.card-top { padding: 14px 8px 8px; text-align: center; }
+.card-icon { font-size: 38px; display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+.card-name { font-size: 11px; font-weight: 800; color: #333; padding: 6px 6px 8px; text-align: center; }
+.card-stars { font-size: 10px; color: #FFD700; padding-bottom: 8px; text-align: center; }
+.new-badge {
+  position: absolute; top: 6px; right: 6px;
+  background: #FF3B5C; color: #fff; font-size: 8px; font-weight: 900;
+  padding: 2px 6px; border-radius: 8px;
+  animation: newBlink 1.5s ease-in-out infinite;
+}
+@keyframes newBlink { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+
+/* キラキラパーティクル */
+.sparkle {
+  position: fixed; pointer-events: none; z-index: 100;
+  font-size: 20px;
+  animation: sparkleOut 0.8s forwards;
+}
+@keyframes sparkleOut {
+  0%  { opacity:1; transform: translate(0,0) scale(1) rotate(0deg); }
+  100%{ opacity:0; transform: translate(var(--dx),var(--dy)) scale(0) rotate(360deg); }
+}
+
+/* コインカウンター */
+#counter-area {
+  position: relative; z-index: 20;
+  margin: 14px auto 0;
+  background: rgba(255,255,255,0.9);
+  border-radius: 20px; padding: 10px 24px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.08);
+  animation: counterIn 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.8s both;
+}
+@keyframes counterIn { 0%{opacity:0;transform:scale(0.5)} 100%{opacity:1;transform:scale(1)} }
+.counter-icon { font-size: 26px; }
+.counter-label { font-size: 11px; color: #888; font-weight: 700; }
+.counter-num { font-size: 28px; font-weight: 900; color: #FF6B35; }
+</style>
+</head>
+<body>
+<div id="hero">
+  <!-- 空 -->
+  <div id="sky"></div>
+
+  <!-- 太陽 -->
+  <div id="sun">
+    <div id="sun-rays" style="position:absolute;inset:0">
+      <div class="sun-ray" style="transform:rotate(0deg) translateX(-3px)"></div>
+      <div class="sun-ray" style="transform:rotate(45deg) translateX(-3px)"></div>
+      <div class="sun-ray" style="transform:rotate(90deg) translateX(-3px)"></div>
+      <div class="sun-ray" style="transform:rotate(135deg) translateX(-3px)"></div>
+      <div class="sun-ray" style="transform:rotate(180deg) translateX(-3px)"></div>
+      <div class="sun-ray" style="transform:rotate(225deg) translateX(-3px)"></div>
+      <div class="sun-ray" style="transform:rotate(270deg) translateX(-3px)"></div>
+      <div class="sun-ray" style="transform:rotate(315deg) translateX(-3px)"></div>
+    </div>
+    <div class="sun-body"></div>
+  </div>
+
+  <!-- 雲3つ -->
+  <div class="cloud" style="top:8%;animation-duration:28s;animation-delay:-5s">
+    <div class="cloud-body" style="width:100px;height:32px">
+      <div style="position:absolute;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,0.92);top:-22px;left:14px"></div>
+      <div style="position:absolute;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.92);top:-14px;left:46px"></div>
+    </div>
+  </div>
+  <div class="cloud" style="top:16%;animation-duration:38s;animation-delay:-15s">
+    <div class="cloud-body" style="width:72px;height:24px">
+      <div style="position:absolute;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.92);top:-16px;left:8px"></div>
+      <div style="position:absolute;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.92);top:-10px;left:34px"></div>
+    </div>
+  </div>
+  <div class="cloud" style="top:6%;right:0;animation-duration:45s;animation-delay:-30s">
+    <div class="cloud-body" style="width:86px;height:28px">
+      <div style="position:absolute;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.92);top:-20px;left:10px"></div>
+      <div style="position:absolute;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.92);top:-12px;left:42px"></div>
+    </div>
+  </div>
+
+  <!-- タイトル -->
+  <div id="title-area">
+    <div class="badge">🏝️ GAME PARK ✦</div>
+    <h1 class="main-title">
+      <span class="title-line1">わくわく</span>
+      <span class="title-line2">アイランド</span>
+    </h1>
+    <div class="season-banner">🌸 はるのゲームパーク！</div>
+  </div>
+
+  <!-- カウンター -->
+  <div id="counter-area">
+    <span class="counter-icon">🎮</span>
+    <div>
+      <div class="counter-label">みんなであそんだかず</div>
+      <div class="counter-num" id="cnt">1,312</div>
+    </div>
+    <span style="font-size:13px;color:#bbb">かい</span>
+  </div>
+
+  <!-- プリンセス・プリンス -->
+  <div id="princess-area">
+    <!-- プリンセス（左） -->
+    <div class="royal-char" style="--rf:3.2s" onclick="spawnSparkles(event)">
+      <svg class="royal-svg" viewBox="0 0 64 96" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="32" cy="78" rx="22" ry="17" fill="#ff80ab"/>
+        <polygon points="32,52 12,88 52,88" fill="#f06292"/>
+        <rect x="25" y="47" width="14" height="12" rx="4" fill="#FFCCBC"/>
+        <rect x="29" y="41" width="6" height="9" rx="3" fill="#FFCCBC"/>
+        <circle cx="32" cy="30" r="14" fill="#FFCCBC"/>
+        <ellipse cx="32" cy="21" rx="14" ry="11" fill="#F9A825"/>
+        <ellipse cx="20" cy="31" rx="5" ry="9" fill="#F9A825"/>
+        <ellipse cx="44" cy="31" rx="5" ry="9" fill="#F9A825"/>
+        <polygon points="19,18 23,12 27,17 32,11 37,17 41,12 45,18" fill="#FFD700" stroke="#FFA000" stroke-width="1"/>
+        <circle cx="32" cy="11" r="3" fill="#FF1744"/>
+        <circle cx="26" cy="29" r="3" fill="#5D4037"/>
+        <circle cx="38" cy="29" r="3" fill="#5D4037"/>
+        <circle cx="27" cy="28" r="1" fill="#fff"/>
+        <circle cx="39" cy="28" r="1" fill="#fff"/>
+        <path d="M27,37 Q32,41 37,37" stroke="#E91E63" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <ellipse cx="21" cy="33" rx="4" ry="2.5" fill="#FFB3C1" opacity=".5"/>
+        <ellipse cx="43" cy="33" rx="4" ry="2.5" fill="#FFB3C1" opacity=".5"/>
+      </svg>
+      <div class="royal-badge">👗 きがえ</div>
+    </div>
+
+    <!-- プリンス（右） -->
+    <div class="royal-char" style="--rf:2.8s" onclick="spawnSparkles(event)">
+      <svg class="royal-svg" viewBox="0 0 64 96" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="64" width="9" height="20" rx="3" fill="#1565C0"/>
+        <rect x="35" y="64" width="9" height="20" rx="3" fill="#1565C0"/>
+        <rect x="16" y="45" width="32" height="22" rx="6" fill="#1976D2"/>
+        <rect x="25" y="43" width="14" height="8" rx="3" fill="#FFCCBC"/>
+        <rect x="29" y="37" width="6" height="9" rx="3" fill="#FFCCBC"/>
+        <circle cx="32" cy="27" r="14" fill="#FFCCBC"/>
+        <ellipse cx="32" cy="18" rx="14" ry="10" fill="#5D4037"/>
+        <polygon points="19,14 23,8 27,13 32,7 37,13 41,8 45,14" fill="#FFD700" stroke="#FFA000" stroke-width="1"/>
+        <circle cx="32" cy="7" r="3" fill="#2196F3"/>
+        <circle cx="26" cy="25" r="3" fill="#333"/>
+        <circle cx="38" cy="25" r="3" fill="#333"/>
+        <circle cx="27" cy="24" r="1" fill="#fff"/>
+        <circle cx="39" cy="24" r="1" fill="#fff"/>
+        <path d="M27,33 Q32,37 37,33" stroke="#BF8A7A" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <rect x="50" y="45" width="3" height="18" rx="1" fill="#CFD8DC"/>
+        <rect x="46" y="52" width="11" height="3" rx="1" fill="#FFA000"/>
+      </svg>
+      <div class="royal-badge">👗 きがえ</div>
+    </div>
+  </div>
+
+  <!-- 島 -->
+  <div id="island-wrap">
+    <div id="island">
+      <div class="island-shadow"></div>
+      <!-- キャラ -->
+      <div class="char" style="left:20px;--bob:2.8s;--delay:0s;--rot:-5deg">🐱</div>
+      <div class="char" style="left:80px;--bob:3.2s;--delay:0.3s;--rot:3deg">🌸</div>
+      <div class="char" style="right:60px;--bob:2.5s;--delay:0.6s;--rot:-3deg">🐰</div>
+      <div class="char" style="right:10px;--bob:3.6s;--delay:0.9s;--rot:6deg">⭐</div>
+      <!-- 木 -->
+      <div class="tree" style="left:40px;animation-delay:0.2s">
+        <div class="tree-top"></div><div class="tree-trunk"></div>
+      </div>
+      <div class="tree" style="right:30px;animation-delay:0.8s">
+        <div class="tree-top" style="width:36px;height:36px"></div>
+        <div class="tree-trunk" style="height:22px"></div>
+      </div>
+      <!-- 島本体 -->
+      <div class="island-grass"></div>
+      <div class="island-body"></div>
+    </div>
+  </div>
+
+  <!-- 海 -->
+  <div id="sea">
+    <svg viewBox="0 0 480 60" preserveAspectRatio="none" style="position:absolute;top:-30px;left:0;right:0;width:100%;height:60px;">
+      <path d="M0,30 C60,50 120,10 180,30 C240,50 300,10 360,30 C420,50 460,20 480,30 L480,60 L0,60 Z" fill="#29b6f6" opacity="0.6" class="wave"/>
+      <path d="M0,20 C80,40 160,5 240,25 C320,45 400,10 480,25 L480,60 L0,60 Z" fill="#29b6f6"/>
+    </svg>
+    <!-- 魚 -->
+    <div style="position:absolute;top:40%;font-size:22px;animation:fishSwim 8s linear infinite;opacity:0.7">🐠</div>
+    <div style="position:absolute;top:60%;font-size:18px;animation:fishSwim 12s linear infinite 3s;opacity:0.6">🐟</div>
+    <div style="position:absolute;top:30%;right:0;font-size:20px;animation:fishSwimR 10s linear infinite 1s;opacity:0.7">🐬</div>
+  </div>
+
+  <!-- ゲームカード -->
+  <div id="cards-area">
+    <div class="cards-label">🎮 ゲームをえらんでね</div>
+    <div class="cards-grid" id="grid"></div>
+  </div>
+</div>
+
+<style>
+@keyframes fishSwim  { 0%{transform:translateX(-80px)} 100%{transform:translateX(calc(100vw + 80px))} }
+@keyframes fishSwimR { 0%{transform:translateX(80px) scaleX(-1)} 100%{transform:translateX(calc(-100vw - 80px)) scaleX(-1)} }
+</style>
+
+<script>
+// ゲームカード
+const GAMES=[
+  {icon:'🫧',name:'シャボンだまポン',color:'#E3F2FD',shadow:'#90CAF9',stars:5,badge:''},
+  {icon:'🍎',name:'くだものキャッチ',color:'#FFF8E1',shadow:'#FFD54F',stars:4,badge:''},
+  {icon:'🌀',name:'めいろあそび',color:'#F3E5F5',shadow:'#CE93D8',stars:3,badge:''},
+  {icon:'🐾',name:'どうぶつパズル',color:'#E8F5E9',shadow:'#A5D6A7',stars:4,badge:''},
+  {icon:'🔢',name:'かずあそび',color:'#FFF3E0',shadow:'#FFCC80',stars:4,badge:''},
+  {icon:'⚽',name:'どうぶつサッカー',color:'#E1F5FE',shadow:'#81D4FA',stars:5,badge:'NEW'},
+];
+
+const grid=document.getElementById('grid');
+GAMES.forEach((g,i)=>{
+  const card=document.createElement('div');
+  card.className='game-card';
+  card.style.setProperty('--card-shadow',g.shadow);
+  card.style.animationDelay=(0.1+i*0.08)+'s';
+  card.innerHTML=`
+    ${g.badge?`<div class="new-badge">${g.badge}</div>`:''}
+    <div class="card-top" style="background:${g.color}">
+      <span class="card-icon">${g.icon}</span>
+    </div>
+    <div class="card-name">${g.name}</div>
+    <div class="card-stars">${'⭐'.repeat(g.stars)}${'☆'.repeat(5-g.stars)}</div>`;
+  card.addEventListener('click',spawnSparkles);
+  grid.appendChild(card);
+});
+
+// カウンターアニメ
+let n=1312;
+const el=document.getElementById('cnt');
+const target=1319;
+const tick=setInterval(()=>{
+  n++; el.textContent=n.toLocaleString();
+  if(n>=target) clearInterval(tick);
+},350);
+
+// キラキラ
+function spawnSparkles(e){
+  const x=e.clientX, y=e.clientY;
+  ['✨','⭐','💫','🌟','💖','🎉'].forEach((em,i)=>{
+    const el=document.createElement('div');
+    el.className='sparkle'; el.textContent=em;
+    const angle=(i/6)*Math.PI*2;
+    const dist=50+Math.random()*60;
+    el.style.left=x+'px'; el.style.top=y+'px';
+    el.style.setProperty('--dx',Math.cos(angle)*dist+'px');
+    el.style.setProperty('--dy',Math.sin(angle)*dist+'px');
+    el.style.animationDelay=(i*0.05)+'s';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),900);
+  });
+}
+</script>
+</body>
+</html>

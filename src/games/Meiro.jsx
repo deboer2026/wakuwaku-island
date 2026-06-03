@@ -6,6 +6,7 @@ import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './Meiro.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 const COLS = 11, ROWS = 11;
 const GALLERY_CHARS = ['👸','🤴','👑','🦁','🐨','🦝','🐮','🐷','🐔','🐦','🦄','🐯','🐺','🦋','🐝','🦀','🐙','🐭','🐹','🦕','🐳','🦭'];
@@ -555,6 +556,7 @@ export default function Meiro() {
           <div className="meiro-result-msg">{resultData.msg}</div>
           {resultData.isNew && <div className="meiro-result-new">🌟 {t(lang,'newRecord')}</div>}
           {resultData.hiText && <div className="meiro-result-hi">{resultData.hiText}</div>}
+          <RecommendedGames currentRoute="/meiro" />
           <div className="meiro-result-btns">
             <button className="meiro-start-btn" onClick={() => startGame(charRef.current)}>{t(lang,'retry')}</button>
             <button className="meiro-back-btn2" onClick={() => setScreen('title')}>{{ja:'キャラ選択', en:'Characters', zh:'角色选择', ko:'캐릭터 선택', es:'Personajes'}[lang] || 'キャラ選択'}</button>

@@ -6,6 +6,7 @@ import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './Shabondama.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 const GALLERY_CHARS = ['👸','🤴','👑','🦁','🐨','🦝','🐮','🐷','🐔','🐦','🦄','🐯','🐺','🦋','🐝','🦀','🐙','🐭','🐹'];
 const TRAP_ANIMALS = ['🐱','🐶','🐸','🐼','🦊','🐰','🐧','🐻'];
@@ -550,6 +551,7 @@ export default function Shabondama() {
           >
             {resultData.hiText}
           </div>
+          <RecommendedGames currentRoute="/shabondama" />
           <div style={{ display: 'flex', gap: '10px' }}>
             <button className="sdm-big-btn" onClick={startGame}>{t(lang, 'retry')}</button>
             <button className="sdm-big-btn sdm-blue" onClick={goTitle}>{t(lang,'backToTitle')}</button>

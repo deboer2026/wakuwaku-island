@@ -11,6 +11,7 @@ import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './DoubutsuKakurenbo.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 // ─── 定数 ─────────────────────────────────────────────────────────────────────
 
@@ -416,6 +417,7 @@ export default function DoubutsuKakurenbo() {
         <div className="kk-hi-badge">
           🏆 {t(lang,'best')}: {resultData?.hi ?? hiScore}
         </div>
+        <RecommendedGames currentRoute="/kakurenbo" />
         <div className="kk-result-btns">
           <button className="kk-start-btn" onClick={startGame}>
             {t(lang,'retry')}

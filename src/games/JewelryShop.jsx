@@ -6,6 +6,7 @@ import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './JewelryShop.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 const ACCESSORIES = [
   { e: '💍', n: 'ゆびわ' }, { e: '📿', n: 'ネックレス' }, { e: '👑', n: 'おうかん' },
@@ -389,6 +390,7 @@ export default function JewelryShop() {
           <div className="js-new-hi" style={{ color: isNewHi ? '#FFD700' : 'rgba(255,255,255,0.6)' }}>
             {isNewHi ? `🏆 ${t(lang,'newRecord')}` : `${t(lang,'best')}: ${hiScore}`}
           </div>
+          <RecommendedGames currentRoute="/jewelry-shop" />
           <div style={{ display: 'flex', gap: 10 }}>
             <button className="js-big-btn" onClick={startGame}>{t(lang,'retry')}</button>
             <button className="js-big-btn js-blue-btn" onClick={() => transitionBack(navigate)}>{t(lang,'backToTitle')}</button>

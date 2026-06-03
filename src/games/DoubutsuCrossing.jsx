@@ -7,6 +7,7 @@ import {
 } from '../utils/audio'
 import { getLang, t } from '../utils/i18n'
 import './DoubutsuCrossing.css'
+import RecommendedGames from '../components/RecommendedGames'
 
 const W      = 360
 const H      = 480
@@ -549,6 +550,7 @@ export default function DoubutsuCrossing() {
       <div className="crossing-result-text">{t(lang, 'gameOver')}</div>
       <div className="crossing-result-score">{t(lang, 'score')}: {resultData?.score}</div>
       <div className="crossing-result-hi">🏆 {t(lang, 'hiScore')}: {resultData?.hi}</div>
+      <RecommendedGames currentRoute="/crossing" />
       <button className="crossing-start-btn" onClick={startGame}>{t(lang, 'retry')}</button>
       <button className="ww-back-btn" onClick={() => { stopBgm(); transitionBack(navigate) }}>
         {t(lang, 'back')}

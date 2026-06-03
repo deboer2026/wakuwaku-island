@@ -7,6 +7,7 @@ import {
 } from '../utils/audio'
 import { getLang, t } from '../utils/i18n'
 import './KokkiQuiz.css'
+import RecommendedGames from '../components/RecommendedGames'
 
 // ===== Country data (30 countries, 5 langs) =====
 // code: flagcdn.com 2-letter country code
@@ -321,6 +322,7 @@ export default function KokkiQuiz() {
       </div>
       <div className="kokki-result-score">{t(lang, 'score')}: {finalData?.score}</div>
       <div className="kokki-result-hi">🏆 {t(lang, 'hiScore')}: {finalData?.hi}</div>
+      <RecommendedGames currentRoute="/kokki" />
       <button className="kokki-stage-btn" onClick={() => { stopBgm(); setScreen('title') }}>
         {t(lang, 'retry')}
       </button>

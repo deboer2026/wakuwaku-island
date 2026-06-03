@@ -10,6 +10,7 @@ import { addCoins } from '../utils/coins';
 import { trackGameStart } from '../utils/analytics';
 import { getLang, t } from '../utils/i18n';
 import './DoubutsuBlock.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 /* ── Board constants ─────────────────────────────────────── */
 const BW = 10, BH = 20, CELL = 28;
@@ -335,6 +336,7 @@ export default function DoubutsuBlock() {
             <h2>{t(lang, 'gameOver')}</h2>
             <div className="db-go-score">スコア: <b>{score}</b>てん</div>
             {score >= hiScore && score > 0 && <div className="db-go-new">🏆 ニューレコード！</div>}
+            <RecommendedGames currentRoute="/tetris" />
             <button className="db-start-btn" onClick={startGame}>{t(lang, 'retry')}</button>
             <button className="ww-back-btn" style={{marginTop:8}} onClick={() => { stopBgm(); transitionBack(navigate); }}>🏠 もどる</button>
           </div>

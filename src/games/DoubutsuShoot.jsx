@@ -10,6 +10,7 @@ import { addCoins } from '../utils/coins';
 import { trackGameStart } from '../utils/analytics';
 import { getLang, t } from '../utils/i18n';
 import './DoubutsuShoot.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 const W = 360, H = 480;
 const ENEMIES_EM = ['🐙','🦂','🐛','🦑','👾','🦇','🐜'];
@@ -364,6 +365,7 @@ export default function DoubutsuShoot() {
             <h2>{t(lang, 'gameOver')}！</h2>
             <div className="ds-go-score">スコア: <b>{score}</b>てん</div>
             {score>=best && score>0 && <div className="ds-go-new">🏆 ニューレコード！</div>}
+            <RecommendedGames currentRoute="/shooting" />
             <button className="ds-start-btn" onClick={startGame}>{t(lang, 'retry')}</button>
             <button className="ww-back-btn" style={{marginTop:8}} onClick={()=>{ stopBgm(); transitionBack(navigate); }}>🏠 もどる</button>
           </div>

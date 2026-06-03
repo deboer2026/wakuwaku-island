@@ -6,6 +6,7 @@ import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './AnimalSoccer.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 const FRUITS = ['🍎','🍊','🍋','🍇','🍓','🍑','🍒','🍌'];
 const GALLERY_CHARS = ['👸','🤴','👑','🦁','🐨','🦝','🐮','🐷','🐔','🐦','🦄','🐯','🐺','🦋','🐝','🦀','🐙','🐭','🐹'];
@@ -450,6 +451,7 @@ export default function AnimalSoccer() {
           <div className="soccer-result-msg">{resultData.msg}</div>
           {resultData.isNew && <div className="soccer-result-new">🌟 {t(lang,'newRecord')}</div>}
           <div className="soccer-result-hi">{resultData.hiText}</div>
+          <RecommendedGames currentRoute="/animal-soccer" />
           <div className="soccer-result-btns">
             <button className="soccer-start-btn" onClick={() => startGame(kickerRef.current)}>{t(lang,'retry')}</button>
             <button className="soccer-back-btn2" onClick={() => setScreen('title')}>{{ja:'キャラ選択', en:'Characters', zh:'角色选择', ko:'캐릭터 선택', es:'Personajes'}[lang] || 'キャラ選択'}</button>

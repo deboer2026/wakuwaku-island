@@ -10,6 +10,7 @@ import { trackGameStart, trackGameClear, trackNewHighScore } from '../utils/anal
 import { addCoins } from '../utils/coins';
 import { t } from '../utils/i18n';
 import './TashizanGame.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 const ANIMALS = ['🐱','🐶','🐰','🐸','🐼','🦊','🐧','🐻','🐮','🐷','🦁','🐨'];
 const TOTAL = 10;
@@ -172,6 +173,7 @@ export default function TashizanGame() {
         <div className="tashi-result-hi" style={{ color: resultData.isNew ? '#FFD700' : 'rgba(255,255,255,0.7)' }}>
           {resultData.hiText}
         </div>
+        <RecommendedGames currentRoute="/tashizan" />
         <div className="tashi-result-btns">
           <button className="tashi-result-btn" onClick={startGame}>
             {t(lang,'retry')}

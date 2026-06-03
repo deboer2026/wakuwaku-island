@@ -10,6 +10,7 @@ import { addCoins } from '../utils/coins';
 import { trackGameStart } from '../utils/analytics';
 import { getLang, t } from '../utils/i18n';
 import './DoubutsuRunner.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 const W = 400, H = 240;
 const GROUND_Y = 185;
@@ -288,6 +289,7 @@ export default function DoubutsuRunner() {
             <h2>{t(lang, 'gameOver')}！</h2>
             <div className="dr-go-score">スコア: <b>{score}</b>m</div>
             {score >= best && score>0 && <div className="dr-go-new">🏆 ニューレコード！</div>}
+            <RecommendedGames currentRoute="/runner" />
             <button className="dr-start-btn" onClick={startGame}>{t(lang, 'retry')}</button>
             <button className="ww-back-btn" style={{marginTop:8}} onClick={()=>{ stopBgm(); transitionBack(navigate); }}>🏠 もどる</button>
           </div>

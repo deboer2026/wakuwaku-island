@@ -6,6 +6,7 @@ import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './IchigoGame.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 const TRAPS = ['🐱','🐶','🐸','🐼','🦊','🐰','🐧','🐻','🐮','🐷'];
 const STRAWBERRY_TYPES = [
@@ -313,6 +314,7 @@ export default function IchigoGame() {
         <p className="ichigo-result-msg" dangerouslySetInnerHTML={{ __html: resultData?.msg ?? '' }} />
         {resultData?.isNew && <div className="ichigo-result-new">🏆 {t(lang,'newRecord')}</div>}
         <div className="ichigo-result-hi">{t(lang,'best')}: {resultData?.hi ?? hiScore}</div>
+        <RecommendedGames currentRoute="/ichigo" />
         <div className="ichigo-result-btns">
           <button className="ichigo-start-btn" onClick={startGame}>{t(lang,'retry')}</button>
           <button className="ichigo-back-btn"  onClick={() => transitionBack(navigate)}>{t(lang,'backToTitle')}</button>

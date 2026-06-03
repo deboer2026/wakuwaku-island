@@ -6,6 +6,7 @@ import { t } from '../utils/i18n';
 import { trackGameStart, trackGameClear, trackGameOver, trackNewHighScore } from '../utils/analytics';
 import { addCoins } from '../utils/coins';
 import './KudamonoCatch.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 // ─── constants ───────────────────────────────────────────────────────────────
 const FRUITS = ['🍎','🍊','🍋','🍇','🍓','🍑','🍒','🍌','🍉','🍈','🥝','🫐'];
@@ -638,6 +639,7 @@ export default function KudamonoCatch() {
           >
             {resultData.hiText}
           </div>
+          <RecommendedGames currentRoute="/kudamono-catch" />
           <div style={{ display: 'flex', gap: '10px' }}>
             <button className="kdc-big-btn" onClick={startGame}>{t(lang, 'retry')}</button>
             <button className="kdc-big-btn blue" onClick={goTitle}>{t(lang,'backToTitle')}</button>

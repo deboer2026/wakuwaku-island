@@ -10,6 +10,7 @@ import { trackGameStart, trackGameClear, trackNewHighScore } from '../utils/anal
 import { addCoins } from '../utils/coins';
 import { t } from '../utils/i18n';
 import './IroAwase.css';
+import RecommendedGames from '../components/RecommendedGames';
 
 /* ── 色データ ──────────────────────────────────────────── */
 const COLORS = {
@@ -196,6 +197,7 @@ export default function IroAwase() {
         <div className="iro-result-hi" style={{ color: resultData.isNew ? '#FFD700' : 'rgba(255,255,255,0.7)' }}>
           {resultData.hiText}
         </div>
+        <RecommendedGames currentRoute="/iro" />
         <div className="iro-result-btns">
           <button className="iro-result-btn" onClick={startGame}>
             {t(lang,'retry')}

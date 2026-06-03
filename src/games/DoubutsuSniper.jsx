@@ -7,6 +7,7 @@ import {
 } from '../utils/audio'
 import { getLang, t } from '../utils/i18n'
 import './DoubutsuSniper.css'
+import RecommendedGames from '../components/RecommendedGames'
 
 const W = 360, H = 480
 
@@ -351,6 +352,7 @@ export default function DoubutsuSniper() {
       <div className="sniper-result-text">{t(lang, 'gameOver')}</div>
       <div className="sniper-result-score">{t(lang, 'score')}: {resultData?.score}</div>
       <div className="sniper-result-hi">🏆 {t(lang, 'hiScore')}: {resultData?.hi}</div>
+      <RecommendedGames currentRoute="/sniper" />
       <button className="sniper-start-btn" onClick={startGame}>{t(lang, 'retry')}</button>
       <button className="ww-back-btn" onClick={() => { stopBgm(); transitionBack(navigate) }}>
         {t(lang, 'back')}
