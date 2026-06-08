@@ -6,14 +6,12 @@
 <title>ジュエリーマスター</title>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&family=Cinzel:wght@700&display=swap" rel="stylesheet">
 <style>
-:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);}
-
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'M PLUS Rounded 1c',sans-serif;background:#080015;min-height:100vh;overflow:hidden;color:#fff;user-select:none;display:flex;flex-direction:column;align-items:center;}
 .bg{position:fixed;inset:0;z-index:0;background:linear-gradient(180deg,#0d0025 0%,#1a0040 40%,#0d001a 100%);}
 .bg-glow{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 15% 20%,rgba(150,0,255,0.12) 0%,transparent 55%),radial-gradient(ellipse at 85% 80%,rgba(255,100,0,0.1) 0%,transparent 55%);}
 /* HUD */
-#hud{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:max(6px, env(safe-area-inset-top, 0px)) 12px;background:linear-gradient(180deg,rgba(4,0,18,0.97),rgba(4,0,18,0.75));border-bottom:1px solid rgba(255,215,0,0.3);}
+#hud{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:linear-gradient(180deg,rgba(4,0,18,0.97),rgba(4,0,18,0.75));border-bottom:1px solid rgba(255,215,0,0.3);}
 #hud-score{font-family:'Cinzel',serif;font-size:14px;color:#FFD700;text-shadow:0 0 10px rgba(255,215,0,0.5);}
 #hud-combo{font-size:11px;color:#E040FB;font-weight:800;min-width:70px;text-align:center;}
 #hud-lives{font-size:14px;}
@@ -126,9 +124,38 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;background:#080015;min-height:10
 @keyframes effPop{0%{transform:translate(-50%,-50%) scale(0.4);opacity:1;}55%{transform:translate(-50%,-90px) scale(1.12);opacity:1;}100%{transform:translate(-50%,-160px) scale(0.9);opacity:0;}}
 .ptcl{position:fixed;pointer-events:none;z-index:0;animation:ptfall linear infinite;opacity:0;}
 @keyframes ptfall{0%{transform:translateY(-10px) rotate(0deg);opacity:0.45;}100%{transform:translateY(105vh) rotate(720deg);opacity:0;}}
+
+/* ===== 共通UI ===== */
+:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);}
+#common-home-btn{
+  position:fixed;
+  top:max(10px,env(safe-area-inset-top,10px));
+  left:10px;z-index:1000;
+  background:rgba(0,0,0,0.45);
+  border:1.5px solid rgba(255,255,255,0.35);
+  border-radius:50%;width:40px;height:40px;
+  font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:white;
+}
+#common-bgm-btn{
+  position:fixed;
+  top:max(10px,env(safe-area-inset-top,10px));
+  right:10px;z-index:1000;
+  background:rgba(0,0,0,0.45);
+  border:1.5px solid rgba(255,255,255,0.35);
+  border-radius:50%;width:40px;height:40px;
+  font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:white;
+}
 </style>
 </head>
 <body>
+
+  <button id="common-home-btn" onclick="goHome()" aria-label="ホームへもどる">🏠</button>
+  <button id="common-bgm-btn" onclick="toggleBGM()" id="bgm-btn" aria-label="BGM">🔊</button>
+
 <div class="bg"></div><div class="bg-glow"></div>
 <div id="ptcl-wrap"></div>
 
@@ -1114,16 +1141,29 @@ function restartGame(){
   $('customer').className='';updateHUD();startRound();
 }
 
+
+// ===== 共通UI関数 =====
+function goHome(){
+  if(window.parent!==window)window.parent.postMessage({type:'goHome'},'*');
+  else window.location.href='/';
+}
+var _bgmOn=true;
+function toggleBGM(){
+  _bgmOn=!_bgmOn;
+  document.getElementById('common-bgm-btn').textContent=_bgmOn?'🔊':'🔇';
+  // Web Audio停止試行
+  try{
+    if(_bgmOn){if(window._bgmNode)window._bgmNode.connect(window._bgmCtx.destination);}
+    else{if(window._bgmNode)window._bgmNode.disconnect();}
+  }catch(e){}
+}
+
 function goBack(){
   if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');
   else history.back();
 }
 
 init();
-function goHome(){
-  if(window.parent!==window)window.parent.postMessage({type:'goHome'},'*');
-  else window.location.href='/';
-}
 </script>
 </body>
 </html>

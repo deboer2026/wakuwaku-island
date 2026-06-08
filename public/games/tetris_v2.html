@@ -6,8 +6,6 @@
 <title>どうぶつブロック</title>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&family=Cinzel:wght@700&display=swap" rel="stylesheet">
 <style>
-:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);}
-
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{height:100%;overflow:hidden;font-family:'M PLUS Rounded 1c',sans-serif;user-select:none;-webkit-tap-highlight-color:transparent;}
 body{background:#080018;display:flex;flex-direction:column;align-items:center;}
@@ -23,7 +21,7 @@ body{background:#080018;display:flex;flex-direction:column;align-items:center;}
 /* ===== HUD ===== */
 #hud{
   position:relative;z-index:10;
-  flex-shrink:0;padding:max(6px, env(safe-area-inset-top, 0px)) 10px 4px;
+  flex-shrink:0;padding:6px 10px 4px;
   display:flex;align-items:center;gap:6px;flex-wrap:wrap;
   background:linear-gradient(180deg,rgba(5,0,20,0.95),rgba(5,0,20,0.7));
   border-bottom:1px solid rgba(255,215,0,0.15);
@@ -174,9 +172,38 @@ body{background:#080018;display:flex;flex-direction:column;align-items:center;}
 }
 @keyframes shimmer{0%{background-position:0%}100%{background-position:200%}}
 @keyframes blockFall{0%{transform:translateY(-20px);opacity:0;}100%{transform:translateY(0);opacity:1;}}
+
+/* ===== 共通UI ===== */
+:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);}
+#common-home-btn{
+  position:fixed;
+  top:max(10px,env(safe-area-inset-top,10px));
+  left:10px;z-index:1000;
+  background:rgba(0,0,0,0.45);
+  border:1.5px solid rgba(255,255,255,0.35);
+  border-radius:50%;width:40px;height:40px;
+  font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:white;
+}
+#common-bgm-btn{
+  position:fixed;
+  top:max(10px,env(safe-area-inset-top,10px));
+  right:10px;z-index:1000;
+  background:rgba(0,0,0,0.45);
+  border:1.5px solid rgba(255,255,255,0.35);
+  border-radius:50%;width:40px;height:40px;
+  font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:white;
+}
 </style>
 </head>
 <body>
+
+  <button id="common-home-btn" onclick="goHome()" aria-label="ホームへもどる">🏠</button>
+  <button id="common-bgm-btn" onclick="toggleBGM()" id="bgm-btn" aria-label="BGM">🔊</button>
+
 <div id="app">
   <canvas id="bg-canvas"></canvas>
 
@@ -932,6 +959,23 @@ function doRotate(){
   }
 }
 
+
+// ===== 共通UI関数 =====
+function goHome(){
+  if(window.parent!==window)window.parent.postMessage({type:'goHome'},'*');
+  else window.location.href='/';
+}
+var _bgmOn=true;
+function toggleBGM(){
+  _bgmOn=!_bgmOn;
+  document.getElementById('common-bgm-btn').textContent=_bgmOn?'🔊':'🔇';
+  // Web Audio停止試行
+  try{
+    if(_bgmOn){if(window._bgmNode)window._bgmNode.connect(window._bgmCtx.destination);}
+    else{if(window._bgmNode)window._bgmNode.disconnect();}
+  }catch(e){}
+}
+
 function goBack(){
   cancelAnimationFrame(raf);gameRunning=false;
   if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');
@@ -939,10 +983,6 @@ function goBack(){
 }
 
 init();
-function goHome(){
-  if(window.parent!==window)window.parent.postMessage({type:'goHome'},'*');
-  else window.location.href='/';
-}
 </script>
 </body>
 </html>

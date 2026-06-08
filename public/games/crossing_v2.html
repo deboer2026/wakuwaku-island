@@ -6,8 +6,6 @@
 <title>どうぶつクロッシング</title>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
-:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);}
-
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{width:100%;height:100%;overflow:hidden;font-family:'M PLUS Rounded 1c',sans-serif;user-select:none;}
 body{background:#2d7a2d;}
@@ -16,7 +14,7 @@ canvas{position:absolute;top:0;left:0;display:block;}
 
 /* HUD */
 #hud{position:absolute;top:0;left:0;right:0;z-index:20;
-  padding:max(8px, env(safe-area-inset-top, 0px)) 14px 6px;
+  padding: max(8px, env(safe-area-inset-top, 0px)) 14px 6px;
   background:linear-gradient(180deg,rgba(0,0,0,0.45),transparent);
   display:flex;justify-content:space-between;align-items:center;
   pointer-events:none;}
@@ -30,7 +28,7 @@ canvas{position:absolute;top:0;left:0;display:block;}
   white-space:nowrap;text-align:center;}
 
 /* もどる */
-#back-btn{position:absolute;bottom:max(16px, env(safe-area-inset-bottom, 16px));left:12px;z-index:20;
+#back-btn{position:absolute;bottom: max(16px, env(safe-area-inset-bottom, 16px));left:12px;z-index:20;
   background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.3);
   border-radius:18px;padding:7px 16px;color:rgba(255,255,255,0.8);
   font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
@@ -69,9 +67,38 @@ canvas{position:absolute;top:0;left:0;display:block;}
 @keyframes deathFlash{0%,100%{opacity:0;}30%{opacity:1;}}
 .death-flash{position:fixed;inset:0;background:rgba(255,50,50,0.35);
   pointer-events:none;z-index:50;animation:deathFlash 0.5s ease-out forwards;}
+
+/* ===== 共通UI ===== */
+:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);}
+#common-home-btn{
+  position:fixed;
+  top:max(10px,env(safe-area-inset-top,10px));
+  left:10px;z-index:1000;
+  background:rgba(0,0,0,0.45);
+  border:1.5px solid rgba(255,255,255,0.35);
+  border-radius:50%;width:40px;height:40px;
+  font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:white;
+}
+#common-bgm-btn{
+  position:fixed;
+  top:max(10px,env(safe-area-inset-top,10px));
+  right:10px;z-index:1000;
+  background:rgba(0,0,0,0.45);
+  border:1.5px solid rgba(255,255,255,0.35);
+  border-radius:50%;width:40px;height:40px;
+  font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:white;
+}
 </style>
 </head>
 <body>
+
+  <button id="common-home-btn" onclick="goHome()" aria-label="ホームへもどる">🏠</button>
+  <button id="common-bgm-btn" onclick="toggleBGM()" id="bgm-btn" aria-label="BGM">🔊</button>
+
 <div id="wrap">
   <canvas id="cv"></canvas>
   <div id="hud">
@@ -859,6 +886,23 @@ function updateHsDisp(){
   document.getElementById('ths').textContent=hs>0?`ベストきろく：🐾${hs}マス`:'';
 }
 
+
+// ===== 共通UI関数 =====
+function goHome(){
+  if(window.parent!==window)window.parent.postMessage({type:'goHome'},'*');
+  else window.location.href='/';
+}
+var _bgmOn=true;
+function toggleBGM(){
+  _bgmOn=!_bgmOn;
+  document.getElementById('common-bgm-btn').textContent=_bgmOn?'🔊':'🔇';
+  // Web Audio停止試行
+  try{
+    if(_bgmOn){if(window._bgmNode)window._bgmNode.connect(window._bgmCtx.destination);}
+    else{if(window._bgmNode)window._bgmNode.disconnect();}
+  }catch(e){}
+}
+
 function goBack(){
   cancelAnimationFrame(raf);gameRunning=false;
   if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');
@@ -866,10 +910,6 @@ function goBack(){
 }
 
 setTimeout(init,80);
-function goHome(){
-  if(window.parent!==window)window.parent.postMessage({type:'goHome'},'*');
-  else window.location.href='/';
-}
 </script>
 </body>
 </html>
