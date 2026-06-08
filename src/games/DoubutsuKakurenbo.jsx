@@ -1,20 +1,41 @@
-﻿import { useEffect } from 'react';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function DoubutsuKakurenbo() {
+  const navigate = useNavigate();
+
   useEffect(() => {
     const handler = (e) => {
-      if (e.data?.type === 'goBack') window.history.back();
-    if (e.data?.type === 'goHome') window.location.href = '/';
+      if (e.data?.type === 'goBack') navigate(-1);
+      if (e.data?.type === 'goHome') navigate('/');
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, []);
+  }, [navigate]);
 
   return (
-    <iframe
-      src="/games/meiro_v4.html"
-      style={{ width: '100%', height: '100dvh', border: 'none', display: 'block' }}
-      title="どうぶつかくれんぼ"
-    />
+    <div style={{
+      position: 'fixed',
+      top: 0, left: 0, right: 0, bottom: 0,
+      zIndex: 0,
+      overflow: 'hidden'
+    }}>
+      <iframe
+        src="/games/meiro_v4.html"
+        style={{
+          width: '100%',
+          height: '100%',
+          border: 'none',
+          display: 'block',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+        }}
+        title="どうぶつかくれんぼ"
+        allow="autoplay; fullscreen"
+        allowFullScreen
+        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+      />
+    </div>
   );
 }
