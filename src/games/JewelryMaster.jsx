@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 
 export default function JewelryMaster() {
   useEffect(() => {
@@ -12,7 +12,7 @@ export default function JewelryMaster() {
   return (
     <iframe
       src="/games/jewelry_master_v6.html"
-      style={{ width: '100%', height: '100vh', border: 'none', display: 'block' }}
+      style={{ width: '100%', height: '100dvh', border: 'none', display: 'block' }}
       title="ジュエリーマスター"
     />
   );

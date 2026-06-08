@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 
 export default function DoubutsuSniper() {
   useEffect(() => {
@@ -12,7 +12,7 @@ export default function DoubutsuSniper() {
   return (
     <iframe
       src="/games/sniper_v2.html"
-      style={{ width: '100%', height: '100vh', border: 'none', display: 'block' }}
+      style={{ width: '100%', height: '100dvh', border: 'none', display: 'block' }}
       title="どうぶつスナイパー"
     />
   );
