@@ -7,7 +7,6 @@ import Meiro from './games/Meiro'
 import DoubutsuPuzzle from './games/DoubutsuPuzzle'
 import KazuAsobi from './games/KazuAsobi'
 import AnimalSoccer from './games/AnimalSoccer'
-import JewelryShop from './games/JewelryShop'
 import SushiGame from './games/SushiGame'
 import IchigoGame from './games/IchigoGame'
 import DoubutsuKakurenbo from './games/DoubutsuKakurenbo'
@@ -29,12 +28,12 @@ import { recordRecentGame } from './utils/recentGames'
 // ゲームルートの一覧（トップ・プライバシー等は除外）
 const GAME_ROUTES = new Set([
   '/shabondama', '/kudamono-catch', '/meiro', '/doubutsu-puzzle',
-  '/kazu-asobi', '/animal-soccer', '/jewelry-shop', '/sushi',
+  '/kazu-asobi', '/animal-soccer', '/sushi',
   '/ichigo', '/kakurenbo', '/moji', '/tashizan', '/iro', '/machi',
   '/kokki', '/jewelry-master', '/tetris', '/runner', '/shooting',
   '/sniper', '/crossing',
   // 短縮URLエイリアスも記録
-  '/kudamono', '/puzzle', '/kazu', '/soccer', '/jewelry',
+  '/kudamono', '/puzzle', '/kazu', '/soccer',
 ]);
 
 // ルート変更を監視して localStorage に記録するコンポーネント
@@ -60,7 +59,6 @@ export default function App() {
         <Route path="/doubutsu-puzzle" element={<DoubutsuPuzzle />} />
         <Route path="/kazu-asobi" element={<KazuAsobi />} />
         <Route path="/animal-soccer" element={<AnimalSoccer />} />
-        <Route path="/jewelry-shop" element={<JewelryShop />} />
         <Route path="/sushi" element={<SushiGame />} />
         <Route path="/ichigo" element={<IchigoGame />} />
         <Route path="/kakurenbo" element={<DoubutsuKakurenbo />} />
@@ -73,7 +71,6 @@ export default function App() {
         <Route path="/puzzle"    element={<DoubutsuPuzzle />} />
         <Route path="/kazu"      element={<KazuAsobi />} />
         <Route path="/soccer"    element={<AnimalSoccer />} />
-        <Route path="/jewelry"   element={<JewelryShop />} />
         <Route path="/tetris" element={<DoubutsuBlock />} />
         <Route path="/runner" element={<DoubutsuRunner />} />
         <Route path="/shooting" element={<DoubutsuShoot />} />

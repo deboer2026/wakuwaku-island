@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ジュエリーマスター</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'M PLUS Rounded 1c',sans-serif;background:#080015;min-height:100vh;overflow:hidden;color:#fff;user-select:none;display:flex;flex-direction:column;align-items:center;}
+.bg{position:fixed;inset:0;z-index:0;background:linear-gradient(180deg,#0d0025 0%,#1a0040 40%,#0d001a 100%);}
+.bg-glow{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 15% 20%,rgba(150,0,255,0.12) 0%,transparent 55%),radial-gradient(ellipse at 85% 80%,rgba(255,100,0,0.1) 0%,transparent 55%);}
+/* HUD */
+#hud{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:linear-gradient(180deg,rgba(4,0,18,0.97),rgba(4,0,18,0.75));border-bottom:1px solid rgba(255,215,0,0.3);}
+#hud-score{font-family:'Cinzel',serif;font-size:14px;color:#FFD700;text-shadow:0 0 10px rgba(255,215,0,0.5);}
+#hud-combo{font-size:11px;color:#E040FB;font-weight:800;min-width:70px;text-align:center;}
+#hud-lives{font-size:14px;}
+#back-btn{font-size:10px;color:#FFD700;background:none;border:1px solid rgba(255,215,0,0.3);border-radius:20px;padding:3px 9px;cursor:pointer;font-family:inherit;}
+/* ゲーム画面 */
+#game{position:relative;z-index:1;width:100%;max-width:480px;height:100vh;display:flex;flex-direction:column;padding-top:44px;overflow:hidden;}
+/* ショップシーン */
+#shop-scene{position:relative;width:100%;flex:0 0 42%;overflow:hidden;}
+#shop-bg-svg{position:absolute;inset:0;width:100%;height:100%;}
+/* ガラスカウンター */
+#glass-counter{
+  position:absolute;bottom:0;left:0;right:0;height:36%;
+  z-index:5;pointer-events:none;
+}
+/* ドア */
+#door{position:absolute;top:8%;right:10%;width:48px;height:74px;z-index:6;
+  background:linear-gradient(135deg,#2d1060,#1a0840);
+  border:2px solid rgba(255,215,0,0.35);border-radius:4px 4px 0 0;
+  box-shadow:inset -2px 0 8px rgba(0,0,0,0.5);
+  transition:transform 0.5s ease;transform-origin:left center;}
+#door.open{transform:perspective(200px) rotateY(-50deg);}
+.door-knob{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:6px;height:6px;background:#FFD700;border-radius:50%;box-shadow:0 0 4px rgba(255,215,0,0.8);}
+.door-panel{position:absolute;inset:4px;border:1px solid rgba(255,215,0,0.15);border-radius:2px;}
+.door-window{position:absolute;top:6px;left:6px;right:6px;height:22px;background:rgba(180,220,255,0.08);border:1px solid rgba(255,215,0,0.1);border-radius:2px;}
+@keyframes gemFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+/* キャラクター */
+#customer{position:absolute;bottom:38%;left:-160px;transition:left 0.65s cubic-bezier(0.34,1.56,0.64,1);display:flex;flex-direction:column;align-items:center;z-index:10;}
+#customer.arrive{left:10%;}
+#customer.leave{left:-180px;transition:left 0.5s ease-in;}
+#cust-svg-wrap{transition:all 0.3s;transform:scale(0.68);transform-origin:bottom center;}
+/* キャラアニメーション */
+@keyframes charIdle{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+@keyframes charHappy{0%,100%{transform:scale(1) rotate(0);}25%{transform:scale(1.18) rotate(-6deg);}75%{transform:scale(1.15) rotate(6deg);}}
+@keyframes charAngry{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+@keyframes charWalk{from{transform:translateY(0) rotate(-4deg);}to{transform:translateY(-8px) rotate(4deg);}}
+.anim-idle{animation:charIdle 2.8s ease-in-out infinite;}
+.anim-happy{animation:charHappy 0.65s ease-in-out infinite;}
+.anim-angry{animation:charAngry 0.45s ease-in-out infinite;}
+.anim-walk{animation:charWalk 0.5s ease-in-out infinite alternate;}
+/* 吹き出し */
+#bubble-wrap{position:absolute;bottom:calc(38% + 50px);left:0;right:0;display:flex;justify-content:center;z-index:20;padding:0 10px;pointer-events:none;opacity:0;transition:opacity 0.3s;}
+#bubble-wrap.show{opacity:1;}
+#bubble{background:linear-gradient(135deg,rgba(255,255,255,0.97),rgba(240,230,255,0.97));color:#150030;border-radius:14px;padding:8px 14px;font-size:12px;font-weight:700;max-width:80%;text-align:center;line-height:1.6;box-shadow:0 4px 20px rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.2);position:relative;}
+#bubble::after{content:'▼';position:absolute;bottom:-13px;left:28%;color:rgba(255,255,255,0.97);font-size:13px;}
+#bubble-text::after{content:'|';animation:blink 0.7s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+#bubble-text.done::after{display:none;}
+#handoff-area{position:absolute;bottom:calc(34% - 8px);left:50%;transform:translateX(-50%);z-index:30;pointer-events:none;opacity:0;transition:opacity 0.4s;}
+#handoff-area.show{opacity:1;}
+#handoff-gem{animation:handoffFloat 1s ease-in-out infinite;}
+@keyframes handoffFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+/* 制作エフェクト */
+#craft-effect{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:40;pointer-events:none;opacity:0;transition:opacity 0.3s;background:rgba(8,0,21,0.75);}
+#craft-effect.show{opacity:1;}
+#craft-emoji{font-size:60px;animation:craftSpin 0.3s ease-in-out infinite alternate;}
+@keyframes craftSpin{from{transform:rotate(-18deg);}to{transform:rotate(18deg);}}
+#craft-bar-wrap{width:60%;margin-top:12px;}
+#craft-bar-bg{height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;}
+#craft-bar{height:100%;width:0%;background:linear-gradient(90deg,#9C27B0,#FFD700);border-radius:4px;}
+#bottom-panel{flex:1;background:linear-gradient(180deg,#0a0020,#06000f);border-top:2px solid rgba(255,215,0,0.15);display:flex;flex-direction:column;padding:5px 8px 6px;gap:4px;overflow:hidden;}
+.panel-title{font-size:9px;font-weight:800;color:rgba(255,215,0,0.5);letter-spacing:2px;flex-shrink:0;}
+#acc-row{display:flex;gap:4px;overflow-x:auto;flex-shrink:0;padding-bottom:1px;scrollbar-width:none;}
+#acc-row::-webkit-scrollbar{display:none;}
+.acc-btn{display:flex;flex-direction:column;align-items:center;gap:1px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:4px 6px;cursor:pointer;transition:all 0.15s;min-width:52px;flex-shrink:0;font-family:inherit;color:white;}
+.acc-btn:hover{background:rgba(255,215,0,0.1);border-color:rgba(255,215,0,0.25);transform:translateY(-2px);}
+.acc-btn.sel{background:rgba(255,215,0,0.18);border-color:#FFD700;box-shadow:0 0 12px rgba(255,215,0,0.25);transform:translateY(-2px);}
+.acc-btn.hint{border-color:#66BB6A;background:rgba(76,175,80,0.1);}
+.acc-em{font-size:16px;line-height:1;}
+.acc-nm{font-size:8px;font-weight:700;white-space:nowrap;}
+#gem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;flex:1;overflow-y:auto;scrollbar-width:none;}
+#gem-grid::-webkit-scrollbar{display:none;}
+.gem-btn{display:flex;flex-direction:column;align-items:center;gap:1px;border-radius:9px;padding:4px 2px 3px;cursor:pointer;transition:all 0.15s;border:1.5px solid transparent;font-family:inherit;color:white;}
+.gem-btn:hover{transform:scale(1.05);filter:brightness(1.2);}
+.gem-btn.sel{border-color:#FFD700;box-shadow:0 0 12px rgba(255,215,0,0.5);transform:scale(1.05);}
+.gem-btn.hint{border-color:#66BB6A;box-shadow:0 0 9px rgba(76,175,80,0.4);}
+.gem-nm{font-size:7px;font-weight:700;text-align:center;line-height:1.2;opacity:0.9;}
+#complete-btn{flex-shrink:0;background:linear-gradient(135deg,#FF8F00,#FFD700,#FF8F00);background-size:200%;color:#0d0025;border:none;border-radius:11px;padding:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:2px;box-shadow:0 3px 14px rgba(255,215,0,0.35);animation:shimmer 2.5s infinite linear;transition:all 0.2s;}
+@keyframes shimmer{0%{background-position:0%}100%{background-position:200%}}
+#complete-btn:hover{transform:scale(1.02);}
+#complete-btn:disabled{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.2);box-shadow:none;animation:none;cursor:not-allowed;transform:none;}
+/* リアクション */
+#reaction-ov{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity 0.4s;}
+#reaction-ov.show{opacity:1;pointer-events:all;background:rgba(8,0,21,0.78);backdrop-filter:blur(4px);}
+#reaction-box{background:linear-gradient(160deg,#1c0840,#080015);border:1px solid rgba(255,215,0,0.35);border-radius:24px;padding:20px 24px;text-align:center;max-width:300px;width:88%;box-shadow:0 20px 60px rgba(0,0,0,0.6);position:relative;}
+#rx-char{display:flex;justify-content:center;margin-bottom:8px;}
+#rx-title{font-family:'Cinzel',serif;font-size:20px;font-weight:700;margin-bottom:4px;}
+#rx-score{font-family:'Cinzel',serif;font-size:34px;font-weight:700;color:#FFD700;margin:4px 0;text-shadow:0 0 16px rgba(255,215,0,0.5);}
+#rx-msg{font-size:12px;color:rgba(255,255,255,0.65);margin-bottom:4px;line-height:1.7;}
+#rx-gem-info{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:8px 12px;margin:8px 0 14px;font-size:11px;color:rgba(255,255,255,0.7);line-height:1.6;text-align:left;}
+#rx-next{background:linear-gradient(135deg,#6A1B9A,#9C27B0);color:white;border:none;border-radius:12px;padding:10px 26px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s;}
+#rx-next:hover{transform:scale(1.04);}
+/* GO */
+#go-ov{position:fixed;inset:0;background:rgba(4,0,15,0.96);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:300;opacity:0;pointer-events:none;transition:opacity 0.4s;backdrop-filter:blur(8px);}
+#go-ov.show{opacity:1;pointer-events:all;}
+#go-box{text-align:center;padding:28px;max-width:300px;width:90%;}
+#final-score{font-family:'Cinzel',serif;font-size:52px;font-weight:700;color:#FFD700;text-shadow:0 0 28px rgba(255,215,0,0.5);margin:8px 0;}
+#hs-lbl{font-size:12px;color:#E040FB;font-weight:700;margin-bottom:4px;}
+#replay-btn{background:linear-gradient(135deg,#FF8F00,#FFD700);color:#0d0025;border:none;border-radius:14px;padding:13px 34px;font-size:17px;font-weight:800;cursor:pointer;font-family:'Cinzel',serif;margin-top:14px;box-shadow:0 6px 22px rgba(255,215,0,0.38);transition:all 0.2s;}
+#replay-btn:hover{transform:scale(1.04);}
+/* スタート */
+#start-scr{position:fixed;inset:0;background:linear-gradient(160deg,#060010,#130028,#060010);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:400;text-align:center;padding:24px;}
+.start-chars{display:flex;gap:8px;align-items:flex-end;justify-content:center;margin-bottom:16px;}
+#start-title{font-family:'Cinzel',serif;font-size:28px;font-weight:700;color:#FFD700;text-shadow:0 0 36px rgba(255,215,0,0.5);margin-bottom:5px;letter-spacing:3px;}
+#start-sub{font-size:12px;color:rgba(255,255,255,0.42);margin-bottom:24px;}
+#start-btn{background:linear-gradient(135deg,#FF6F00,#FFD700,#FF6F00);background-size:200%;color:#0d0025;border:none;border-radius:16px;padding:15px 42px;font-size:19px;font-weight:800;cursor:pointer;font-family:'Cinzel',serif;box-shadow:0 8px 32px rgba(255,215,0,0.42);animation:shimmer 2.5s infinite linear;transition:transform 0.2s;letter-spacing:2px;}
+#start-btn:hover{transform:scale(1.05);}
+#howto{margin-top:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:12px 16px;font-size:12px;line-height:1.9;color:rgba(255,255,255,0.52);max-width:270px;text-align:left;}
+#howto strong{color:#FFD700;}
+.eff{position:fixed;font-size:22px;font-weight:800;pointer-events:none;z-index:500;font-family:'Cinzel',serif;animation:effPop 1s ease-out forwards;text-shadow:0 0 16px currentColor;}
+@keyframes effPop{0%{transform:translate(-50%,-50%) scale(0.4);opacity:1;}55%{transform:translate(-50%,-90px) scale(1.12);opacity:1;}100%{transform:translate(-50%,-160px) scale(0.9);opacity:0;}}
+.ptcl{position:fixed;pointer-events:none;z-index:0;animation:ptfall linear infinite;opacity:0;}
+@keyframes ptfall{0%{transform:translateY(-10px) rotate(0deg);opacity:0.45;}100%{transform:translateY(105vh) rotate(720deg);opacity:0;}}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="bg-glow"></div>
+<div id="ptcl-wrap"></div>
+
+<!-- スタート -->
+<div id="start-scr">
+  <div class="start-chars" id="start-chars"></div>
+  <div id="start-title">ジュエリーマスター</div>
+  <div id="start-sub">ほうせきやさんの てんいんに なろう！</div>
+  <button id="start-btn" onclick="startGame()">✨ はじめる</button>
+  <div id="howto">
+    <strong>あそびかた</strong><br>
+    1️⃣ おきゃくさんが やってくるよ！<br>
+    2️⃣ リクエストを きいてあげよう<br>
+    3️⃣ ほうせきと アクセサリーを えらぼう<br>
+    4️⃣「かんせい！」を おそう<br>
+    ⚡ はやいほど ボーナスてんが もらえるよ！
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <button id="back-btn" onclick="goBack()">← もどる</button>
+  <div id="hud-score">⭐ 0</div>
+  <div id="hud-combo"></div>
+  <div id="hud-lives">❤️❤️❤️</div>
+</div>
+
+<div id="game">
+  <div id="shop-scene">
+
+    <!-- ショップ背景SVG（壁・棚・宝石ディスプレイ） -->
+    <svg id="shop-bg-svg" viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <!-- 壁グラデ -->
+        <linearGradient id="wallGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#12003a"/>
+          <stop offset="55%" stop-color="#220868"/>
+          <stop offset="100%" stop-color="#130040"/>
+        </linearGradient>
+        <!-- 床グラデ -->
+        <linearGradient id="floorGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0e0030"/>
+          <stop offset="100%" stop-color="#080018"/>
+        </linearGradient>
+        <!-- ガラス反射グラデ -->
+        <linearGradient id="glassTop" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(255,255,255,0.18)"/>
+          <stop offset="40%" stop-color="rgba(200,220,255,0.06)"/>
+          <stop offset="100%" stop-color="rgba(180,200,255,0.02)"/>
+        </linearGradient>
+        <linearGradient id="glassSide" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="rgba(255,215,0,0.15)"/>
+          <stop offset="50%" stop-color="rgba(255,255,255,0.08)"/>
+          <stop offset="100%" stop-color="rgba(255,215,0,0.15)"/>
+        </linearGradient>
+        <!-- 棚グラデ -->
+        <linearGradient id="shelfGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2a0a60"/>
+          <stop offset="100%" stop-color="#160440"/>
+        </linearGradient>
+        <!-- ゴールド棚板 -->
+        <linearGradient id="shelfBoard" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#FFD700"/>
+          <stop offset="50%" stop-color="#FFA000"/>
+          <stop offset="100%" stop-color="#FF6F00"/>
+        </linearGradient>
+        <!-- スポットライト -->
+        <radialGradient id="spotlight1" cx="25%" cy="0%" r="60%">
+          <stop offset="0%" stop-color="rgba(255,220,120,0.18)"/>
+          <stop offset="100%" stop-color="rgba(255,200,80,0)"/>
+        </radialGradient>
+        <radialGradient id="spotlight2" cx="75%" cy="0%" r="60%">
+          <stop offset="0%" stop-color="rgba(180,150,255,0.14)"/>
+          <stop offset="100%" stop-color="rgba(150,100,255,0)"/>
+        </radialGradient>
+        <!-- ガラス内部グロー -->
+        <radialGradient id="caseGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(200,220,255,0.12)"/>
+          <stop offset="100%" stop-color="rgba(100,150,255,0)"/>
+        </radialGradient>
+        <!-- 宝石グラデ各種 -->
+        <linearGradient id="gDia" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#90CAF9"/><stop offset="100%" stop-color="#1565C0"/></linearGradient>
+        <linearGradient id="gRub" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#EF9A9A"/><stop offset="100%" stop-color="#B71C1C"/></linearGradient>
+        <linearGradient id="gEme" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#A5D6A7"/><stop offset="100%" stop-color="#1B5E20"/></linearGradient>
+        <linearGradient id="gAme" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#CE93D8"/><stop offset="100%" stop-color="#4A148C"/></linearGradient>
+        <linearGradient id="gSap" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#82B1FF"/><stop offset="100%" stop-color="#0D47A1"/></linearGradient>
+        <linearGradient id="gCit" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FFE082"/><stop offset="100%" stop-color="#E65100"/></linearGradient>
+        <linearGradient id="gRos" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#F48FB1"/><stop offset="100%" stop-color="#880E4F"/></linearGradient>
+        <linearGradient id="gTop" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FFCC80"/><stop offset="100%" stop-color="#BF360C"/></linearGradient>
+        <!-- キラキラフィルタ -->
+        <filter id="gemGlow"><feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/><feOffset dx="0" dy="1" result="offset"/><feMerge><feMergeNode in="offset"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="softGlow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+
+      <!-- 壁 -->
+      <rect width="480" height="280" fill="url(#wallGrad)"/>
+      <!-- スポットライト -->
+      <ellipse cx="120" cy="0" rx="160" ry="140" fill="url(#spotlight1)"/>
+      <ellipse cx="360" cy="0" rx="160" ry="140" fill="url(#spotlight2)"/>
+
+      <!-- 壁モールディング（装飾枠） -->
+      <rect x="12" y="10" width="456" height="160" rx="3" fill="none" stroke="rgba(255,215,0,0.12)" stroke-width="1.5"/>
+      <rect x="20" y="18" width="440" height="144" rx="2" fill="none" stroke="rgba(255,215,0,0.07)" stroke-width="1"/>
+
+      <!-- 壁アーチ中央 -->
+      <path d="M180,18 Q240,0 300,18" fill="none" stroke="rgba(255,215,0,0.18)" stroke-width="1.5"/>
+      <!-- アーチ端飾り -->
+      <polygon points="180,18 174,12 186,12" fill="rgba(255,215,0,0.2)"/>
+      <polygon points="300,18 294,12 306,12" fill="rgba(255,215,0,0.2)"/>
+
+      <!-- 壁ダイヤ装飾 -->
+      <rect x="28" y="28" width="8" height="8" fill="rgba(255,215,0,0.25)" transform="rotate(45,32,32)"/>
+      <rect x="444" y="28" width="8" height="8" fill="rgba(255,215,0,0.25)" transform="rotate(45,448,32)"/>
+      <rect x="50" y="52" width="5" height="5" fill="rgba(255,215,0,0.15)" transform="rotate(45,52.5,54.5)"/>
+      <rect x="424" y="52" width="5" height="5" fill="rgba(255,215,0,0.15)" transform="rotate(45,426.5,54.5)"/>
+
+      <!-- ======= 左の宝石棚 ======= -->
+      <!-- 棚本体 -->
+      <rect x="0" y="40" width="82" height="120" rx="2" fill="url(#shelfGrad)" stroke="rgba(255,215,0,0.2)" stroke-width="1"/>
+      <!-- 棚板（3段） -->
+      <rect x="0" y="60" width="82" height="5" fill="url(#shelfBoard)" opacity="0.7"/>
+      <rect x="0" y="96" width="82" height="5" fill="url(#shelfBoard)" opacity="0.7"/>
+      <rect x="0" y="132" width="82" height="5" fill="url(#shelfBoard)" opacity="0.7"/>
+      <!-- 棚内ライト -->
+      <ellipse cx="41" cy="62" rx="30" ry="8" fill="rgba(255,215,0,0.08)"/>
+      <ellipse cx="41" cy="98" rx="30" ry="8" fill="rgba(180,150,255,0.08)"/>
+      <ellipse cx="41" cy="134" rx="30" ry="8" fill="rgba(100,200,255,0.08)"/>
+
+      <!-- 棚宝石1段目：ダイヤ・ルビー -->
+      <g filter="url(#gemGlow)" transform="translate(10,38)">
+        <polygon points="10,2 18,8 15,18 5,18 2,8" fill="url(#gDia)" stroke="#90CAF9" stroke-width="0.5"/>
+        <polygon points="10,2 18,8 10,11" fill="rgba(255,255,255,0.3)"/>
+        <circle cx="7" cy="6" r="2" fill="rgba(255,255,255,0.7)"/>
+      </g>
+      <g filter="url(#gemGlow)" transform="translate(36,38)">
+        <polygon points="10,2 18,8 15,18 5,18 2,8" fill="url(#gRub)" stroke="#EF9A9A" stroke-width="0.5"/>
+        <polygon points="10,2 18,8 10,11" fill="rgba(255,255,255,0.25)"/>
+        <circle cx="7" cy="6" r="2" fill="rgba(255,255,255,0.7)"/>
+      </g>
+      <g filter="url(#gemGlow)" transform="translate(56,40)">
+        <polygon points="8,2 15,7 12,15 4,15 1,7" fill="url(#gAme)" stroke="#CE93D8" stroke-width="0.5"/>
+        <circle cx="5" cy="5" r="1.5" fill="rgba(255,255,255,0.7)"/>
+      </g>
+
+      <!-- 棚宝石2段目：エメラルド・サファイア -->
+      <g filter="url(#gemGlow)" transform="translate(8,74)">
+        <polygon points="10,2 18,8 15,18 5,18 2,8" fill="url(#gEme)" stroke="#A5D6A7" stroke-width="0.5"/>
+        <polygon points="10,2 18,8 10,11" fill="rgba(255,255,255,0.25)"/>
+        <circle cx="7" cy="6" r="2" fill="rgba(255,255,255,0.7)"/>
+      </g>
+      <g filter="url(#gemGlow)" transform="translate(34,74)">
+        <polygon points="10,2 18,8 15,18 5,18 2,8" fill="url(#gSap)" stroke="#82B1FF" stroke-width="0.5"/>
+        <polygon points="10,2 18,8 10,11" fill="rgba(255,255,255,0.22)"/>
+        <circle cx="7" cy="6" r="2" fill="rgba(255,255,255,0.7)"/>
+      </g>
+      <g filter="url(#gemGlow)" transform="translate(56,76)">
+        <polygon points="8,2 15,7 12,15 4,15 1,7" fill="url(#gCit)" stroke="#FFE082" stroke-width="0.5"/>
+        <circle cx="5" cy="5" r="1.5" fill="rgba(255,255,255,0.7)"/>
+      </g>
+
+      <!-- 棚宝石3段目：ネックレス表示 -->
+      <g transform="translate(14,110)">
+        <path d="M10,2 Q20,10 30,2" stroke="#FFD700" stroke-width="1.5" fill="none"/>
+        <circle cx="20" cy="12" r="5" fill="url(#gRub)" stroke="#EF9A9A" stroke-width="0.5"/>
+        <circle cx="17" cy="11" r="1.5" fill="rgba(255,255,255,0.7)"/>
+        <!-- 小宝石 -->
+        <circle cx="10" cy="3" r="2" fill="url(#gDia)"/>
+        <circle cx="30" cy="3" r="2" fill="url(#gDia)"/>
+      </g>
+
+      <!-- ======= 右の宝石棚 ======= -->
+      <rect x="398" y="40" width="82" height="120" rx="2" fill="url(#shelfGrad)" stroke="rgba(255,215,0,0.2)" stroke-width="1"/>
+      <rect x="398" y="60" width="82" height="5" fill="url(#shelfBoard)" opacity="0.7"/>
+      <rect x="398" y="96" width="82" height="5" fill="url(#shelfBoard)" opacity="0.7"/>
+      <rect x="398" y="132" width="82" height="5" fill="url(#shelfBoard)" opacity="0.7"/>
+      <ellipse cx="439" cy="62" rx="30" ry="8" fill="rgba(255,215,0,0.08)"/>
+      <ellipse cx="439" cy="98" rx="30" ry="8" fill="rgba(180,150,255,0.08)"/>
+      <ellipse cx="439" cy="134" rx="30" ry="8" fill="rgba(100,200,255,0.08)"/>
+
+      <!-- 右棚宝石 -->
+      <g filter="url(#gemGlow)" transform="translate(406,38)">
+        <polygon points="10,2 18,8 15,18 5,18 2,8" fill="url(#gAme)" stroke="#CE93D8" stroke-width="0.5"/>
+        <polygon points="10,2 18,8 10,11" fill="rgba(255,255,255,0.25)"/>
+        <circle cx="7" cy="6" r="2" fill="rgba(255,255,255,0.7)"/>
+      </g>
+      <g filter="url(#gemGlow)" transform="translate(432,40)">
+        <polygon points="10,2 18,8 15,18 5,18 2,8" fill="url(#gDia)" stroke="#90CAF9" stroke-width="0.5"/>
+        <polygon points="10,2 18,8 10,11" fill="rgba(255,255,255,0.3)"/>
+        <circle cx="7" cy="6" r="2" fill="rgba(255,255,255,0.7)"/>
+      </g>
+      <g filter="url(#gemGlow)" transform="translate(456,38)">
+        <polygon points="8,2 15,7 12,15 4,15 1,7" fill="url(#gRos)" stroke="#F48FB1" stroke-width="0.5"/>
+        <circle cx="5" cy="5" r="1.5" fill="rgba(255,255,255,0.7)"/>
+      </g>
+      <g filter="url(#gemGlow)" transform="translate(406,74)">
+        <polygon points="10,2 18,8 15,18 5,18 2,8" fill="url(#gCit)" stroke="#FFE082" stroke-width="0.5"/>
+        <polygon points="10,2 18,8 10,11" fill="rgba(255,255,255,0.22)"/>
+        <circle cx="7" cy="6" r="2" fill="rgba(255,255,255,0.7)"/>
+      </g>
+      <g filter="url(#gemGlow)" transform="translate(432,74)">
+        <polygon points="10,2 18,8 15,18 5,18 2,8" fill="url(#gEme)" stroke="#A5D6A7" stroke-width="0.5"/>
+        <polygon points="10,2 18,8 10,11" fill="rgba(255,255,255,0.25)"/>
+        <circle cx="7" cy="6" r="2" fill="rgba(255,255,255,0.7)"/>
+      </g>
+      <g filter="url(#gemGlow)" transform="translate(456,76)">
+        <polygon points="8,2 15,7 12,15 4,15 1,7" fill="url(#gTop)" stroke="#FFCC80" stroke-width="0.5"/>
+        <circle cx="5" cy="5" r="1.5" fill="rgba(255,255,255,0.7)"/>
+      </g>
+      <!-- 右棚3段目：ティアラ -->
+      <g transform="translate(408,110)">
+        <path d="M5,12 L10,4 L20,8 L30,4 L35,12" stroke="#FFD700" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="10" cy="5" r="3" fill="url(#gRub)"/>
+        <circle cx="20" cy="9" r="4" fill="url(#gDia)"/>
+        <circle cx="30" cy="5" r="3" fill="url(#gAme)"/>
+        <circle cx="9" cy="4" r="1" fill="rgba(255,255,255,0.8)"/>
+        <circle cx="19" cy="8" r="1.2" fill="rgba(255,255,255,0.9)"/>
+      </g>
+
+      <!-- ======= 床 ======= -->
+      <rect x="0" y="175" width="480" height="105" fill="url(#floorGrad)"/>
+      <!-- 床ライン（パース感） -->
+      <line x1="0" y1="175" x2="480" y2="175" stroke="rgba(255,215,0,0.25)" stroke-width="1.5"/>
+      <line x1="0" y1="200" x2="480" y2="200" stroke="rgba(255,215,0,0.06)" stroke-width="1"/>
+      <line x1="0" y1="225" x2="480" y2="225" stroke="rgba(255,215,0,0.04)" stroke-width="1"/>
+      <!-- 床タイル（縦ライン） -->
+      <line x1="80" y1="175" x2="60" y2="280" stroke="rgba(255,215,0,0.04)" stroke-width="1"/>
+      <line x1="160" y1="175" x2="140" y2="280" stroke="rgba(255,215,0,0.04)" stroke-width="1"/>
+      <line x1="240" y1="175" x2="240" y2="280" stroke="rgba(255,215,0,0.04)" stroke-width="1"/>
+      <line x1="320" y1="175" x2="340" y2="280" stroke="rgba(255,215,0,0.04)" stroke-width="1"/>
+      <line x1="400" y1="175" x2="420" y2="280" stroke="rgba(255,215,0,0.04)" stroke-width="1"/>
+      <!-- 床反射 -->
+      <ellipse cx="240" cy="175" rx="200" ry="20" fill="rgba(255,215,0,0.04)"/>
+
+      <!-- ======= ガラスショーケース（カウンター） ======= -->
+      <!-- カウンター土台 -->
+      <rect x="0" y="196" width="480" height="84" fill="#0e0028"/>
+      <rect x="0" y="196" width="480" height="4" fill="url(#shelfBoard)" opacity="0.5"/>
+
+      <!-- ガラスケース本体 -->
+      <!-- 背面板 -->
+      <rect x="4" y="160" width="472" height="36" rx="2" fill="#1a0840" stroke="rgba(255,215,0,0.3)" stroke-width="1"/>
+      <!-- ガラス前面（透明感） -->
+      <rect x="4" y="160" width="472" height="36" rx="2" fill="url(#glassTop)" opacity="0.8"/>
+      <!-- ガラス上面 -->
+      <rect x="4" y="158" width="472" height="6" rx="2" fill="url(#glassSide)"/>
+      <!-- ゴールドフレーム -->
+      <rect x="4" y="158" width="472" height="38" rx="2" fill="none" stroke="rgba(255,215,0,0.6)" stroke-width="1.5"/>
+      <!-- フレーム内側ライン -->
+      <rect x="8" y="162" width="464" height="30" rx="1" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+      <!-- ガラス反射ハイライト（上部） -->
+      <rect x="10" y="160" width="460" height="3" rx="1" fill="rgba(255,255,255,0.25)"/>
+      <!-- 内部グロー -->
+      <rect x="6" y="162" width="468" height="32" rx="1" fill="url(#caseGlow)"/>
+
+      <!-- ショーケース内宝石ディスプレイ -->
+      <!-- 小さな台座 -->
+      <ellipse cx="80" cy="192" rx="16" ry="4" fill="rgba(255,215,0,0.15)"/>
+      <ellipse cx="160" cy="192" rx="16" ry="4" fill="rgba(255,215,0,0.15)"/>
+      <ellipse cx="240" cy="192" rx="16" ry="4" fill="rgba(255,215,0,0.15)"/>
+      <ellipse cx="320" cy="192" rx="16" ry="4" fill="rgba(255,215,0,0.15)"/>
+      <ellipse cx="400" cy="192" rx="16" ry="4" fill="rgba(255,215,0,0.15)"/>
+
+      <!-- ケース内宝石（光るSVG多面体） -->
+      <g filter="url(#gemGlow)" transform="translate(70,168)">
+        <polygon points="10,1 19,8 16,20 4,20 1,8" fill="url(#gDia)" stroke="#90CAF9" stroke-width="0.6"/>
+        <polygon points="10,1 19,8 10,12" fill="rgba(255,255,255,0.3)"/>
+        <polygon points="4,20 10,12 16,20" fill="rgba(0,0,0,0.2)"/>
+        <circle cx="7" cy="6" r="2.5" fill="rgba(255,255,255,0.8)"/>
+        <circle cx="7" cy="6" r="1" fill="white"/>
+      </g>
+      <g filter="url(#gemGlow)" transform="translate(150,170)">
+        <polygon points="10,1 19,8 16,20 4,20 1,8" fill="url(#gRub)" stroke="#EF9A9A" stroke-width="0.6"/>
+        <polygon points="10,1 19,8 10,12" fill="rgba(255,255,255,0.25)"/>
+        <polygon points="4,20 10,12 16,20" fill="rgba(0,0,0,0.22)"/>
+        <circle cx="7" cy="6" r="2.5" fill="rgba(255,255,255,0.75)"/>
+      </g>
+      <g filter="url(#gemGlow)" transform="translate(230,168)">
+        <polygon points="10,1 19,8 16,20 4,20 1,8" fill="url(#gAme)" stroke="#CE93D8" stroke-width="0.6"/>
+        <polygon points="10,1 19,8 10,12" fill="rgba(255,255,255,0.25)"/>
+        <polygon points="4,20 10,12 16,20" fill="rgba(0,0,0,0.2)"/>
+        <circle cx="7" cy="6" r="2.5" fill="rgba(255,255,255,0.78)"/>
+        <circle cx="7" cy="6" r="1" fill="white"/>
+      </g>
+      <g filter="url(#gemGlow)" transform="translate(310,170)">
+        <polygon points="10,1 19,8 16,20 4,20 1,8" fill="url(#gEme)" stroke="#A5D6A7" stroke-width="0.6"/>
+        <polygon points="10,1 19,8 10,12" fill="rgba(255,255,255,0.22)"/>
+        <polygon points="4,20 10,12 16,20" fill="rgba(0,0,0,0.2)"/>
+        <circle cx="7" cy="6" r="2.5" fill="rgba(255,255,255,0.75)"/>
+      </g>
+      <g filter="url(#gemGlow)" transform="translate(390,168)">
+        <polygon points="10,1 19,8 16,20 4,20 1,8" fill="url(#gSap)" stroke="#82B1FF" stroke-width="0.6"/>
+        <polygon points="10,1 19,8 10,12" fill="rgba(255,255,255,0.28)"/>
+        <polygon points="4,20 10,12 16,20" fill="rgba(0,0,0,0.2)"/>
+        <circle cx="7" cy="6" r="2.5" fill="rgba(255,255,255,0.8)"/>
+        <circle cx="7" cy="6" r="1" fill="white"/>
+      </g>
+
+      <!-- ケース仕切りライン -->
+      <line x1="120" y1="162" x2="120" y2="196" stroke="rgba(255,215,0,0.2)" stroke-width="0.8"/>
+      <line x1="200" y1="162" x2="200" y2="196" stroke="rgba(255,215,0,0.2)" stroke-width="0.8"/>
+      <line x1="280" y1="162" x2="280" y2="196" stroke="rgba(255,215,0,0.2)" stroke-width="0.8"/>
+      <line x1="360" y1="162" x2="360" y2="196" stroke="rgba(255,215,0,0.2)" stroke-width="0.8"/>
+
+      <!-- カウンター前面パネル（木目・金属） -->
+      <rect x="0" y="200" width="480" height="80" fill="#0a0020"/>
+      <!-- 前面装飾ライン -->
+      <rect x="0" y="200" width="480" height="2" fill="rgba(255,215,0,0.5)"/>
+      <rect x="0" y="210" width="480" height="1" fill="rgba(255,215,0,0.15)"/>
+      <rect x="0" y="220" width="480" height="1" fill="rgba(255,215,0,0.08)"/>
+      <!-- パネルのモールディング -->
+      <rect x="12" y="204" width="100" height="52" rx="2" fill="rgba(255,215,0,0.04)" stroke="rgba(255,215,0,0.12)" stroke-width="0.8"/>
+      <rect x="130" y="204" width="100" height="52" rx="2" fill="rgba(255,215,0,0.04)" stroke="rgba(255,215,0,0.12)" stroke-width="0.8"/>
+      <rect x="250" y="204" width="100" height="52" rx="2" fill="rgba(255,215,0,0.04)" stroke="rgba(255,215,0,0.12)" stroke-width="0.8"/>
+      <rect x="368" y="204" width="100" height="52" rx="2" fill="rgba(255,215,0,0.04)" stroke="rgba(255,215,0,0.12)" stroke-width="0.8"/>
+      <!-- ゴールドハンドル -->
+      <rect x="55" y="226" width="22" height="5" rx="2.5" fill="rgba(255,215,0,0.5)"/>
+      <rect x="173" y="226" width="22" height="5" rx="2.5" fill="rgba(255,215,0,0.5)"/>
+      <rect x="293" y="226" width="22" height="5" rx="2.5" fill="rgba(255,215,0,0.5)"/>
+      <rect x="411" y="226" width="22" height="5" rx="2.5" fill="rgba(255,215,0,0.5)"/>
+    </svg>
+
+    <!-- ドア（HTML要素、アニメーション用） -->
+    <div id="door">
+      <div class="door-window"></div>
+      <div class="door-panel"></div>
+      <div class="door-knob"></div>
+    </div>
+
+    <div id="bubble-wrap"><div id="bubble"><span id="bubble-text"></span></div></div>
+    <div id="customer"><div id="cust-svg-wrap"></div></div>
+    <div id="craft-effect">
+      <div id="craft-emoji">🔨</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:6px;">せいさくちゅう...</div>
+      <div id="craft-bar-wrap"><div id="craft-bar-bg"><div id="craft-bar"></div></div></div>
+    </div>
+    <div id="handoff-area"><div id="handoff-gem"></div></div>
+  </div>
+  <div id="bottom-panel">
+    <div class="panel-title">💍 アクセサリーをえらぼう</div>
+    <div id="acc-row"></div>
+    <div class="panel-title">💎 ほうせきをえらぼう</div>
+    <div id="gem-grid"></div>
+    <button id="complete-btn" onclick="onComplete()" disabled>✨ カウンターに おく</button>
+  </div>
+</div>
+
+<div id="reaction-ov">
+  <div id="reaction-box">
+    <div id="rx-char"></div>
+    <div id="rx-title"></div>
+    <div id="rx-score"></div>
+    <div id="rx-msg"></div>
+    <div id="rx-gem-info"></div>
+    <button id="rx-next" onclick="nextRound()">つぎの おきゃくさん →</button>
+  </div>
+</div>
+
+<div id="go-ov">
+  <div id="go-box">
+    <div style="font-size:46px;margin-bottom:6px;">🔒</div>
+    <div style="font-family:'Cinzel',serif;font-size:22px;font-weight:700;margin-bottom:4px;">へいてん...</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.38);margin-bottom:4px;">さいごの てん</div>
+    <div id="final-score">0</div>
+    <div id="hs-lbl"></div>
+    <button id="replay-btn" onclick="restartGame()">もういっかい</button>
+  </div>
+</div>
+
+<script>
+// ===== SVG宝石 =====
+function mkGem(g,s=36){
+  return `<svg width="${s}" height="${s}" viewBox="0 0 40 40">
+  <defs>
+    <linearGradient id="gg${g.id}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${g.c1}"/><stop offset="50%" stop-color="${g.c2}"/><stop offset="100%" stop-color="${g.c3}"/>
+    </linearGradient>
+    <filter id="gf${g.id}"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="${g.c2}" flood-opacity="0.7"/></filter>
+  </defs>
+  <ellipse cx="20" cy="37" rx="12" ry="2.5" fill="rgba(0,0,0,0.35)"/>
+  <polygon points="20,2 37,13 31,36 9,36 3,13" fill="${g.c3}" opacity="0.18"/>
+  <polygon points="20,2 37,13 31,36 9,36 3,13" fill="url(#gg${g.id})" stroke="${g.stroke}" stroke-width="0.7" filter="url(#gf${g.id})"/>
+  <polygon points="20,2 37,13 20,21" fill="rgba(255,255,255,0.22)"/>
+  <polygon points="20,2 3,13 20,21" fill="rgba(255,255,255,0.09)"/>
+  <polygon points="9,36 20,21 31,36" fill="rgba(0,0,0,0.22)"/>
+  <polygon points="9,36 3,13 20,21" fill="rgba(0,0,0,0.12)"/>
+  <polygon points="31,36 37,13 20,21" fill="rgba(0,0,0,0.14)"/>
+  <circle cx="13" cy="10" r="4" fill="rgba(255,255,255,0.68)"/>
+  <circle cx="13" cy="10" r="2" fill="rgba(255,255,255,0.95)"/>
+  <circle cx="28" cy="16" r="1.5" fill="rgba(255,255,255,0.35)"/>
+  <line x1="16" y1="6" x2="27" y2="10" stroke="rgba(255,255,255,0.25)" stroke-width="0.8" stroke-linecap="round"/>
+</svg>`;
+}
+
+// ===== SVGキャラクター =====
+const CHAR_SVGS = {
+  princess: {
+    idle: `<svg width="72" height="112" viewBox="0 0 70 110">
+      <polygon points="22,18 26,8 30,14 35,6 40,14 44,8 48,18" fill="#FFD700" stroke="#FF8F00" stroke-width="1"/>
+      <circle cx="35" cy="7" r="3" fill="#E91E63"/><circle cx="26" cy="9" r="2" fill="#9C27B0"/><circle cx="44" cy="9" r="2" fill="#2196F3"/>
+      <ellipse cx="35" cy="26" rx="16" ry="14" fill="#FFE082"/>
+      <rect x="19" y="24" width="7" height="22" rx="3" fill="#FFE082"/><rect x="44" y="24" width="7" height="22" rx="3" fill="#FFE082"/>
+      <ellipse cx="35" cy="28" rx="13" ry="14" fill="#FFCCBC"/>
+      <ellipse cx="29" cy="26" rx="3.5" ry="4" fill="white"/><ellipse cx="41" cy="26" rx="3.5" ry="4" fill="white"/>
+      <circle cx="30" cy="27" r="2.5" fill="#5D4037"/><circle cx="42" cy="27" r="2.5" fill="#5D4037"/>
+      <circle cx="31" cy="26" r="1" fill="white"/><circle cx="43" cy="26" r="1" fill="white"/>
+      <line x1="26" y1="22" x2="24" y2="20" stroke="#5D4037" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="29" y1="21" x2="28" y2="19" stroke="#5D4037" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="44" y1="22" x2="46" y2="20" stroke="#5D4037" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="41" y1="21" x2="42" y2="19" stroke="#5D4037" stroke-width="1.2" stroke-linecap="round"/>
+      <ellipse cx="24" cy="31" rx="4" ry="2.5" fill="#FF8A65" opacity="0.5"/>
+      <ellipse cx="46" cy="31" rx="4" ry="2.5" fill="#FF8A65" opacity="0.5"/>
+      <path d="M31,34 Q35,38 39,34" stroke="#E91E63" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <rect x="30" y="40" width="10" height="8" rx="2" fill="#FFCCBC"/>
+      <path d="M18,46 Q10,70 8,105 L62,105 Q60,70 52,46 Q44,52 35,52 Q26,52 18,46Z" fill="#F48FB1"/>
+      <path d="M35,52 Q30,70 28,105" stroke="#F06292" stroke-width="1" fill="none" opacity="0.5"/>
+      <path d="M35,52 Q40,70 42,105" stroke="#F06292" stroke-width="1" fill="none" opacity="0.5"/>
+      <path d="M28,60 Q35,56 42,60 Q35,64 28,60Z" fill="#E91E63" opacity="0.7"/>
+      <path d="M8,90 Q15,85 22,90 Q29,95 36,90 Q43,85 50,90 Q57,95 62,90 L62,105 L8,105Z" fill="#FCE4EC"/>
+      <rect x="8" y="46" width="8" height="20" rx="4" fill="#FFCCBC"/><rect x="54" y="46" width="8" height="20" rx="4" fill="#FFCCBC"/>
+      <circle cx="12" cy="67" r="4" fill="#FFCCBC"/><circle cx="58" cy="67" r="4" fill="#FFCCBC"/>
+      <path d="M26,44 Q35,50 44,44" stroke="#FFD700" stroke-width="2" fill="none"/>
+      <circle cx="35" cy="48" r="3" fill="#E91E63"/>
+    </svg>`,
+    happy: `<svg width="72" height="112" viewBox="0 0 70 110">
+      <polygon points="22,18 26,8 30,14 35,6 40,14 44,8 48,18" fill="#FFD700" stroke="#FF8F00" stroke-width="1"/>
+      <circle cx="35" cy="7" r="3" fill="#E91E63"/>
+      <ellipse cx="35" cy="26" rx="16" ry="14" fill="#FFE082"/>
+      <rect x="19" y="24" width="7" height="22" rx="3" fill="#FFE082"/><rect x="44" y="24" width="7" height="22" rx="3" fill="#FFE082"/>
+      <ellipse cx="35" cy="28" rx="13" ry="14" fill="#FFCCBC"/>
+      <path d="M26,26 Q29,23 33,26" stroke="#5D4037" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M37,26 Q41,23 44,26" stroke="#5D4037" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <ellipse cx="24" cy="31" rx="5" ry="3" fill="#FF8A65" opacity="0.6"/>
+      <ellipse cx="46" cy="31" rx="5" ry="3" fill="#FF8A65" opacity="0.6"/>
+      <path d="M29,34 Q35,40 41,34" stroke="#E91E63" stroke-width="2" fill="#FFB3C1" stroke-linecap="round"/>
+      <rect x="30" y="40" width="10" height="8" rx="2" fill="#FFCCBC"/>
+      <path d="M18,46 Q10,70 8,105 L62,105 Q60,70 52,46 Q44,52 35,52 Q26,52 18,46Z" fill="#F48FB1"/>
+      <path d="M8,90 Q15,85 22,90 Q29,95 36,90 Q43,85 50,90 Q57,95 62,90 L62,105 L8,105Z" fill="#FCE4EC"/>
+      <rect x="5" y="38" width="8" height="18" rx="4" fill="#FFCCBC" transform="rotate(-25,9,47)"/>
+      <rect x="57" y="38" width="8" height="18" rx="4" fill="#FFCCBC" transform="rotate(25,61,47)"/>
+      <circle cx="7" cy="38" r="4" fill="#FFCCBC"/><circle cx="63" cy="38" r="4" fill="#FFCCBC"/>
+      <text x="1" y="30" font-size="11">✨</text><text x="54" y="26" font-size="11">⭐</text>
+    </svg>`,
+    angry: `<svg width="72" height="112" viewBox="0 0 70 110">
+      <polygon points="22,18 26,8 30,14 35,6 40,14 44,8 48,18" fill="#FFD700" stroke="#FF8F00" stroke-width="1"/>
+      <ellipse cx="35" cy="26" rx="16" ry="14" fill="#FFE082"/>
+      <rect x="19" y="24" width="7" height="22" rx="3" fill="#FFE082"/><rect x="44" y="24" width="7" height="22" rx="3" fill="#FFE082"/>
+      <ellipse cx="35" cy="28" rx="13" ry="14" fill="#FFCCBC"/>
+      <line x1="25" y1="21" x2="32" y2="24" stroke="#5D4037" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="45" y1="21" x2="38" y2="24" stroke="#5D4037" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="29" cy="27" rx="3" ry="3.5" fill="#5D4037"/><ellipse cx="41" cy="27" rx="3" ry="3.5" fill="#5D4037"/>
+      <path d="M30,35 Q35,31 40,35" stroke="#C62828" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <rect x="30" y="40" width="10" height="8" rx="2" fill="#FFCCBC"/>
+      <path d="M18,46 Q10,70 8,105 L62,105 Q60,70 52,46 Q44,52 35,52 Q26,52 18,46Z" fill="#F48FB1"/>
+      <path d="M8,90 Q15,85 22,90 Q29,95 36,90 Q43,85 50,90 Q57,95 62,90 L62,105 L8,105Z" fill="#FCE4EC"/>
+      <rect x="8" y="46" width="8" height="20" rx="4" fill="#FFCCBC"/><rect x="54" y="46" width="8" height="20" rx="4" fill="#FFCCBC"/>
+      <circle cx="12" cy="67" r="4" fill="#FFCCBC"/><circle cx="58" cy="67" r="4" fill="#FFCCBC"/>
+      <text x="48" y="20" font-size="13">💢</text>
+    </svg>`
+  },
+  prince: {
+    idle: `<svg width="72" height="112" viewBox="0 0 70 110">
+      <polygon points="18,20 22,10 28,16 35,8 42,16 48,10 52,20" fill="#FFD700" stroke="#FF8F00" stroke-width="1"/>
+      <circle cx="35" cy="9" r="3" fill="#2196F3"/><circle cx="22" cy="11" r="2" fill="#E91E63"/><circle cx="48" cy="11" r="2" fill="#4CAF50"/>
+      <ellipse cx="35" cy="27" rx="15" ry="12" fill="#5D4037"/>
+      <rect x="20" y="25" width="6" height="12" rx="3" fill="#5D4037"/><rect x="44" y="25" width="6" height="12" rx="3" fill="#5D4037"/>
+      <ellipse cx="35" cy="30" rx="12" ry="13" fill="#FFCCBC"/>
+      <ellipse cx="29" cy="28" rx="3" ry="3.5" fill="white"/><ellipse cx="41" cy="28" rx="3" ry="3.5" fill="white"/>
+      <circle cx="30" cy="29" r="2" fill="#1565C0"/><circle cx="42" cy="29" r="2" fill="#1565C0"/>
+      <circle cx="31" cy="28" r="0.8" fill="white"/><circle cx="43" cy="28" r="0.8" fill="white"/>
+      <path d="M26,24 Q29,22 32,24" stroke="#5D4037" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M38,24 Q41,22 44,24" stroke="#5D4037" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="24" cy="33" rx="3.5" ry="2" fill="#FF8A65" opacity="0.4"/>
+      <ellipse cx="46" cy="33" rx="3.5" ry="2" fill="#FF8A65" opacity="0.4"/>
+      <path d="M31,36 Q35,39 39,36" stroke="#BF360C" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <rect x="30" y="42" width="10" height="7" rx="2" fill="#FFCCBC"/>
+      <path d="M20,48 Q12,72 10,105 L60,105 Q58,72 50,48 Q43,54 35,54 Q27,54 20,48Z" fill="#1565C0"/>
+      <line x1="35" y1="54" x2="35" y2="105" stroke="#FFD700" stroke-width="1.5" opacity="0.4"/>
+      <circle cx="28" cy="62" r="4" fill="#FFD700"/><circle cx="28" cy="62" r="2" fill="#FF6F00"/>
+      <rect x="18" y="76" width="34" height="5" rx="2" fill="#FFD700" opacity="0.8"/>
+      <path d="M10,88 Q17,83 24,88 Q31,93 38,88 Q45,83 52,88 Q57,93 60,88 L60,105 L10,105Z" fill="#1976D2"/>
+      <rect x="10" y="48" width="8" height="22" rx="4" fill="#1565C0"/><rect x="52" y="48" width="8" height="22" rx="4" fill="#1565C0"/>
+      <circle cx="14" cy="71" r="4" fill="#FFCCBC"/><circle cx="56" cy="71" r="4" fill="#FFCCBC"/>
+    </svg>`,
+    happy: `<svg width="72" height="112" viewBox="0 0 70 110">
+      <polygon points="18,20 22,10 28,16 35,8 42,16 48,10 52,20" fill="#FFD700" stroke="#FF8F00" stroke-width="1"/>
+      <ellipse cx="35" cy="27" rx="15" ry="12" fill="#5D4037"/>
+      <ellipse cx="35" cy="30" rx="12" ry="13" fill="#FFCCBC"/>
+      <path d="M26,27 Q29,24 32,27" stroke="#5D4037" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M38,27 Q41,24 44,27" stroke="#5D4037" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <ellipse cx="24" cy="33" rx="4" ry="2.5" fill="#FF8A65" opacity="0.5"/>
+      <ellipse cx="46" cy="33" rx="4" ry="2.5" fill="#FF8A65" opacity="0.5"/>
+      <path d="M29,36 Q35,42 41,36" stroke="#BF360C" stroke-width="2" fill="#FFCCBC" stroke-linecap="round"/>
+      <rect x="30" y="42" width="10" height="7" rx="2" fill="#FFCCBC"/>
+      <path d="M20,48 Q12,72 10,105 L60,105 Q58,72 50,48 Q43,54 35,54 Q27,54 20,48Z" fill="#1565C0"/>
+      <path d="M10,88 Q17,83 24,88 Q31,93 38,88 Q45,83 52,88 Q57,93 60,88 L60,105 L10,105Z" fill="#1976D2"/>
+      <rect x="6" y="38" width="8" height="18" rx="4" fill="#1565C0" transform="rotate(-28,10,47)"/>
+      <rect x="56" y="38" width="8" height="18" rx="4" fill="#1565C0" transform="rotate(28,60,47)"/>
+      <circle cx="8" cy="38" r="4" fill="#FFCCBC"/><circle cx="62" cy="38" r="4" fill="#FFCCBC"/>
+      <text x="1" y="32" font-size="12">⚡</text><text x="53" y="26" font-size="11">✨</text>
+    </svg>`,
+    angry: `<svg width="72" height="112" viewBox="0 0 70 110">
+      <polygon points="18,20 22,10 28,16 35,8 42,16 48,10 52,20" fill="#FFD700" stroke="#FF8F00" stroke-width="1"/>
+      <ellipse cx="35" cy="27" rx="15" ry="12" fill="#5D4037"/>
+      <ellipse cx="35" cy="30" rx="12" ry="13" fill="#FFCCBC"/>
+      <line x1="25" y1="22" x2="33" y2="26" stroke="#5D4037" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="45" y1="22" x2="37" y2="26" stroke="#5D4037" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="29" cy="28" rx="3" ry="3.5" fill="#1565C0"/><ellipse cx="41" cy="28" rx="3" ry="3.5" fill="#1565C0"/>
+      <path d="M30,37 Q35,33 40,37" stroke="#BF360C" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <rect x="30" y="42" width="10" height="7" rx="2" fill="#FFCCBC"/>
+      <path d="M20,48 Q12,72 10,105 L60,105 Q58,72 50,48 Q43,54 35,54 Q27,54 20,48Z" fill="#1565C0"/>
+      <path d="M10,88 Q17,83 24,88 Q31,93 38,88 Q45,83 52,88 Q57,93 60,88 L60,105 L10,105Z" fill="#1976D2"/>
+      <rect x="10" y="48" width="8" height="22" rx="4" fill="#1565C0"/><rect x="52" y="48" width="8" height="22" rx="4" fill="#1565C0"/>
+      <circle cx="14" cy="71" r="4" fill="#FFCCBC"/><circle cx="56" cy="71" r="4" fill="#FFCCBC"/>
+      <text x="47" y="20" font-size="13">💢</text>
+    </svg>`
+  },
+  wizard: {
+    idle: `<svg width="72" height="112" viewBox="0 0 70 110">
+      <polygon points="35,2 18,28 52,28" fill="#4A148C"/>
+      <ellipse cx="35" cy="28" rx="18" ry="5" fill="#6A1B9A"/>
+      <circle cx="35" cy="14" r="4" fill="#FFD700"/>
+      <ellipse cx="35" cy="36" rx="13" ry="12" fill="#DCEDC8"/>
+      <path d="M24,42 Q35,52 46,42" fill="white" stroke="white" stroke-width="1"/>
+      <path d="M22,46 Q27,54 32,48" fill="white"/><path d="M48,46 Q43,54 38,48" fill="white"/>
+      <ellipse cx="29" cy="34" rx="3" ry="3.5" fill="white"/><ellipse cx="41" cy="34" rx="3" ry="3.5" fill="white"/>
+      <circle cx="30" cy="35" r="2" fill="#4A148C"/><circle cx="42" cy="35" r="2" fill="#4A148C"/>
+      <circle cx="31" cy="34" r="0.8" fill="white"/><circle cx="43" cy="34" r="0.8" fill="white"/>
+      <path d="M25,29 Q29,27 33,29" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M37,29 Q41,27 45,29" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M31,44 Q35,47 39,44" stroke="#558B2F" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <rect x="30" y="47" width="10" height="7" rx="2" fill="#DCEDC8"/>
+      <path d="M16,52 Q8,75 6,105 L64,105 Q62,75 54,52 Q45,58 35,58 Q25,58 16,52Z" fill="#4A148C"/>
+      <text x="18" y="72" font-size="8" fill="rgba(255,215,0,0.6)">★</text>
+      <text x="44" y="80" font-size="8" fill="rgba(255,215,0,0.6)">✦</text>
+      <text x="28" y="92" font-size="7" fill="rgba(255,215,0,0.4)">✦</text>
+      <line x1="58" y1="105" x2="62" y2="48" stroke="#795548" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="62" cy="46" r="6" fill="#FFD700"/><circle cx="62" cy="46" r="3" fill="#E040FB"/>
+      <rect x="6" y="52" width="8" height="20" rx="4" fill="#4A148C"/>
+      <circle cx="10" cy="73" r="4" fill="#DCEDC8"/>
+    </svg>`,
+    happy: `<svg width="72" height="112" viewBox="0 0 70 110">
+      <polygon points="35,2 18,28 52,28" fill="#4A148C"/>
+      <ellipse cx="35" cy="28" rx="18" ry="5" fill="#6A1B9A"/>
+      <circle cx="35" cy="14" r="4" fill="#FFD700"/>
+      <ellipse cx="35" cy="36" rx="13" ry="12" fill="#DCEDC8"/>
+      <path d="M24,42 Q35,52 46,42" fill="white" stroke="white" stroke-width="1"/>
+      <path d="M25,28 Q29,26 33,28" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M37,28 Q41,26 45,28" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M26,33 Q29,30 33,33" stroke="#4A148C" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M37,33 Q41,30 44,33" stroke="#4A148C" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M29,45 Q35,51 41,45" stroke="#558B2F" stroke-width="2" fill="#C8E6C9" stroke-linecap="round"/>
+      <rect x="30" y="47" width="10" height="7" rx="2" fill="#DCEDC8"/>
+      <path d="M16,52 Q8,75 6,105 L64,105 Q62,75 54,52 Q45,58 35,58 Q25,58 16,52Z" fill="#4A148C"/>
+      <text x="18" y="72" font-size="8" fill="rgba(255,215,0,0.9)">★</text>
+      <text x="44" y="80" font-size="8" fill="rgba(255,215,0,0.9)">✦</text>
+      <line x1="60" y1="105" x2="62" y2="40" stroke="#795548" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="62" cy="38" r="9" fill="#FFD700" opacity="0.9"/><circle cx="62" cy="38" r="5" fill="#E040FB"/>
+      <text x="1" y="28" font-size="12">✨</text><text x="52" y="22" font-size="12">🌟</text>
+      <rect x="6" y="52" width="8" height="20" rx="4" fill="#4A148C"/>
+      <circle cx="10" cy="73" r="4" fill="#DCEDC8"/>
+    </svg>`,
+    angry: `<svg width="72" height="112" viewBox="0 0 70 110">
+      <polygon points="35,2 18,28 52,28" fill="#4A148C"/>
+      <ellipse cx="35" cy="28" rx="18" ry="5" fill="#6A1B9A"/>
+      <ellipse cx="35" cy="36" rx="13" ry="12" fill="#DCEDC8"/>
+      <path d="M24,42 Q35,52 46,42" fill="white" stroke="white" stroke-width="1"/>
+      <line x1="25" y1="27" x2="33" y2="30" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="45" y1="27" x2="37" y2="30" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="29" cy="34" rx="3" ry="3.5" fill="#4A148C"/><ellipse cx="41" cy="34" rx="3" ry="3.5" fill="#4A148C"/>
+      <path d="M30,46 Q35,42 40,46" stroke="#558B2F" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <rect x="30" y="47" width="10" height="7" rx="2" fill="#DCEDC8"/>
+      <path d="M16,52 Q8,75 6,105 L64,105 Q62,75 54,52 Q45,58 35,58 Q25,58 16,52Z" fill="#4A148C"/>
+      <line x1="58" y1="105" x2="62" y2="48" stroke="#795548" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="62" cy="46" r="6" fill="#FFD700"/>
+      <rect x="6" y="52" width="8" height="20" rx="4" fill="#4A148C"/>
+      <circle cx="10" cy="73" r="4" fill="#DCEDC8"/>
+      <text x="2" y="25" font-size="13">💢</text>
+    </svg>`
+  },
+  fairy: {
+    idle: `<svg width="82" height="102" viewBox="0 0 80 100">
+      <ellipse cx="14" cy="40" rx="14" ry="22" fill="#B2EBF2" opacity="0.7" transform="rotate(-20,14,40)"/>
+      <ellipse cx="14" cy="58" rx="10" ry="14" fill="#80DEEA" opacity="0.5" transform="rotate(-10,14,58)"/>
+      <ellipse cx="66" cy="40" rx="14" ry="22" fill="#B2EBF2" opacity="0.7" transform="rotate(20,66,40)"/>
+      <ellipse cx="66" cy="58" rx="10" ry="14" fill="#80DEEA" opacity="0.5" transform="rotate(10,66,58)"/>
+      <circle cx="28" cy="18" r="4" fill="#F06292"/><circle cx="35" cy="14" r="4" fill="#FFD700"/>
+      <circle cx="42" cy="16" r="4" fill="#AB47BC"/><circle cx="48" cy="20" r="3" fill="#4CAF50"/>
+      <circle cx="22" cy="22" r="3" fill="#FF7043"/>
+      <ellipse cx="40" cy="32" rx="13" ry="13" fill="#FFCCBC"/>
+      <polygon points="27,26 22,16 30,24" fill="#FFCCBC"/><polygon points="53,26 58,16 50,24" fill="#FFCCBC"/>
+      <ellipse cx="34" cy="30" rx="4" ry="4.5" fill="white"/><ellipse cx="46" cy="30" rx="4" ry="4.5" fill="white"/>
+      <circle cx="35" cy="31" r="3" fill="#00897B"/><circle cx="47" cy="31" r="3" fill="#00897B"/>
+      <circle cx="36" cy="30" r="1.2" fill="white"/><circle cx="48" cy="30" r="1.2" fill="white"/>
+      <line x1="30" y1="26" x2="28" y2="23" stroke="#5D4037" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="50" y1="26" x2="52" y2="23" stroke="#5D4037" stroke-width="1.2" stroke-linecap="round"/>
+      <ellipse cx="28" cy="35" rx="4" ry="2.5" fill="#FF8A65" opacity="0.5"/>
+      <ellipse cx="52" cy="35" rx="4" ry="2.5" fill="#FF8A65" opacity="0.5"/>
+      <path d="M36,38 Q40,42 44,38" stroke="#E91E63" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <rect x="35" y="44" width="10" height="7" rx="2" fill="#FFCCBC"/>
+      <path d="M26,50 Q20,68 22,95 L58,95 Q60,68 54,50 Q47,56 40,56 Q33,56 26,50Z" fill="#E040FB"/>
+      <path d="M22,78 Q28,72 34,78 Q40,84 46,78 Q52,72 58,78 L58,95 L22,95Z" fill="#F8BBD0" opacity="0.8"/>
+      <rect x="20" y="50" width="7" height="18" rx="3.5" fill="#FFCCBC"/>
+      <circle cx="23" cy="69" r="3.5" fill="#FFCCBC"/>
+      <line x1="23" y1="72" x2="18" y2="95" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="18" cy="93" r="5" fill="#FFD700" opacity="0.9"/>
+      <rect x="53" y="50" width="7" height="18" rx="3.5" fill="#FFCCBC"/>
+      <circle cx="57" cy="69" r="3.5" fill="#FFCCBC"/>
+    </svg>`,
+    happy: `<svg width="82" height="102" viewBox="0 0 80 100">
+      <ellipse cx="14" cy="40" rx="16" ry="24" fill="#B2EBF2" opacity="0.85" transform="rotate(-25,14,40)"/>
+      <ellipse cx="66" cy="40" rx="16" ry="24" fill="#B2EBF2" opacity="0.85" transform="rotate(25,66,40)"/>
+      <circle cx="28" cy="18" r="4" fill="#F06292"/><circle cx="35" cy="14" r="4" fill="#FFD700"/>
+      <circle cx="42" cy="16" r="4" fill="#AB47BC"/>
+      <ellipse cx="40" cy="32" rx="13" ry="13" fill="#FFCCBC"/>
+      <polygon points="27,26 22,16 30,24" fill="#FFCCBC"/><polygon points="53,26 58,16 50,24" fill="#FFCCBC"/>
+      <path d="M30,30 Q34,26 38,30" stroke="#00897B" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M42,30 Q46,26 50,30" stroke="#00897B" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="28" cy="36" rx="5" ry="3" fill="#FF8A65" opacity="0.6"/>
+      <ellipse cx="52" cy="36" rx="5" ry="3" fill="#FF8A65" opacity="0.6"/>
+      <path d="M34,39 Q40,45 46,39" stroke="#E91E63" stroke-width="2" fill="#FFB3C1" stroke-linecap="round"/>
+      <rect x="35" y="44" width="10" height="7" rx="2" fill="#FFCCBC"/>
+      <path d="M26,50 Q20,68 22,95 L58,95 Q60,68 54,50 Q47,56 40,56 Q33,56 26,50Z" fill="#E040FB"/>
+      <path d="M22,78 Q28,72 34,78 Q40,84 46,78 Q52,72 58,78 L58,95 L22,95Z" fill="#F8BBD0" opacity="0.8"/>
+      <rect x="16" y="42" width="7" height="16" rx="3.5" fill="#FFCCBC" transform="rotate(-30,20,50)"/>
+      <rect x="57" y="42" width="7" height="16" rx="3.5" fill="#FFCCBC" transform="rotate(30,60,50)"/>
+      <circle cx="14" cy="42" r="3.5" fill="#FFCCBC"/><circle cx="66" cy="42" r="3.5" fill="#FFCCBC"/>
+      <text x="2" y="26" font-size="11">✨</text><text x="60" y="22" font-size="11">💫</text>
+      <text x="35" y="10" font-size="10">⭐</text>
+    </svg>`,
+    angry: `<svg width="82" height="102" viewBox="0 0 80 100">
+      <ellipse cx="14" cy="40" rx="14" ry="22" fill="#B2EBF2" opacity="0.45" transform="rotate(-15,14,40)"/>
+      <ellipse cx="66" cy="40" rx="14" ry="22" fill="#B2EBF2" opacity="0.45" transform="rotate(15,66,40)"/>
+      <circle cx="28" cy="18" r="4" fill="#F06292"/><circle cx="35" cy="14" r="4" fill="#FFD700"/>
+      <ellipse cx="40" cy="32" rx="13" ry="13" fill="#FFCCBC"/>
+      <polygon points="27,26 22,16 30,24" fill="#FFCCBC"/><polygon points="53,26 58,16 50,24" fill="#FFCCBC"/>
+      <line x1="29" y1="25" x2="37" y2="29" stroke="#5D4037" stroke-width="2" stroke-linecap="round"/>
+      <line x1="51" y1="25" x2="43" y2="29" stroke="#5D4037" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="34" cy="31" rx="3.5" ry="4" fill="#00897B"/><ellipse cx="46" cy="31" rx="3.5" ry="4" fill="#00897B"/>
+      <path d="M36,40 Q40,36 44,40" stroke="#E91E63" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <rect x="35" y="44" width="10" height="7" rx="2" fill="#FFCCBC"/>
+      <path d="M26,50 Q20,68 22,95 L58,95 Q60,68 54,50 Q47,56 40,56 Q33,56 26,50Z" fill="#E040FB"/>
+      <rect x="20" y="50" width="7" height="18" rx="3.5" fill="#FFCCBC"/>
+      <circle cx="23" cy="69" r="3.5" fill="#FFCCBC"/>
+      <rect x="53" y="50" width="7" height="18" rx="3.5" fill="#FFCCBC"/>
+      <circle cx="57" cy="69" r="3.5" fill="#FFCCBC"/>
+      <text x="52" y="18" font-size="13">💢</text>
+    </svg>`
+  }
+};
+
+// ===== データ =====
+const GEMS=[
+  {id:'dia',name:'ダイヤ',    c1:'#90CAF9',c2:'#E3F2FD',c3:'#0D47A1',stroke:'#90CAF9',rare:5,info:'かたさ10！せかいで いちばん かたい ほうせき。'},
+  {id:'rub',name:'ルビー',    c1:'#EF9A9A',c2:'#EF5350',c3:'#B71C1C',stroke:'#EF9A9A',rare:4,info:'あかいほうせき。コランダムというこうぶつのなかま。'},
+  {id:'sap',name:'サファイア',c1:'#82B1FF',c2:'#448AFF',c3:'#0D47A1',stroke:'#82B1FF',rare:4,info:'あおいほうせき。ルビーとおなじコランダムのなかまだよ！'},
+  {id:'eme',name:'エメラルド',c1:'#A5D6A7',c2:'#4CAF50',c3:'#1B5E20',stroke:'#A5D6A7',rare:4,info:'みどりのほうせき。ベリルというこうぶつのなかま。'},
+  {id:'ame',name:'アメジスト',c1:'#CE93D8',c2:'#AB47BC',c3:'#4A148C',stroke:'#CE93D8',rare:3,info:'むらさきのほうせき。ねむりをよくするといわれてるよ。'},
+  {id:'cit',name:'シトリン',  c1:'#FFE082',c2:'#FFB300',c3:'#E65100',stroke:'#FFE082',rare:2,info:'きいろいほうせき。たいようのようにあかるいいろ！'},
+  {id:'ros',name:'ローズQZ',  c1:'#F48FB1',c2:'#E91E63',c3:'#880E4F',stroke:'#F48FB1',rare:2,info:'ももいろのほうせき。あいとやさしさのいし。'},
+  {id:'aqu',name:'アクアマリン',c1:'#84FFFF',c2:'#00BCD4',c3:'#006064',stroke:'#80DEEA',rare:3,info:'みずいろのほうせき。うみのいろみたい！'},
+  {id:'opa',name:'オパール',  c1:'#F8BBD0',c2:'#CE93D8',c3:'#311B92',stroke:'#E040FB',rare:3,info:'にじのいろにひかるふしぎなほうせき！'},
+  {id:'gar',name:'ガーネット',c1:'#EF9A9A',c2:'#D32F2F',c3:'#37474F',stroke:'#EF9A9A',rare:2,info:'ざくろのたねみたいな、くらいあかのほうせき。'},
+  {id:'prl',name:'パール',    c1:'#FFF9C4',c2:'#FFF8E1',c3:'#795548',stroke:'#FFE082',rare:2,info:'かいのなかでそだつほうせき。しろくてなめらか。'},
+  {id:'top',name:'トパーズ',  c1:'#FFCC80',c2:'#FF9800',c3:'#BF360C',stroke:'#FFCC80',rare:2,info:'だいだいいろのほうせき。ゆうじょうのしるし。'},
+];
+const ACCS=[
+  {id:'ring',  name:'リング',    emoji:'💍'},
+  {id:'neck',  name:'ネックレス',emoji:'📿'},
+  {id:'tiara', name:'ティアラ',  emoji:'👑'},
+  {id:'brooch',name:'ブローチ',  emoji:'🔮'},
+  {id:'brace', name:'ブレスレット',emoji:'⌚'},
+];
+const CUSTOMERS=[
+  {key:'princess',name:'プリンセス',color:'#F48FB1',
+    greet:['わたくし、アクセサリーが\nほしいのですわ✨','とっても すてきな おみせね！\nよろしく おねがいしますわ'],
+    happy:['まあ！ステキ！💕\nとっても きにいったわ！','わーい！ありがとう！\nまた くるわね✨'],
+    angry:['あら…これは ちがいますわよ？😤','うーん、これじゃ ないの…']},
+  {key:'prince',name:'プリンス',color:'#90CAF9',
+    greet:['いいものを つくってくれよな！\nたのんだぞ','うでの いい しょくにんと\nきいてきたぞ！'],
+    happy:['おお！みごとだ！⚡\nさすがだな！','かんぺきだ！ありがとうな！✨'],
+    angry:['むっ…これでは ない…','ちがう、もう いちどだ！']},
+  {key:'wizard',name:'まほうつかい',color:'#CE93D8',
+    greet:['ふむ…まほうの けんきゅうに\nひつようでな…','おぬしの ところに きたのは\nせいかいじゃ✨'],
+    happy:['ほっほっほ！かんぺきじゃ！✨\nまほうが やどっておるぞ！','これは すばらしい！\nさすがじゃのう！'],
+    angry:['むむむ…ちがうぞ…','ちとちがうな…']},
+  {key:'fairy',name:'ようせい',color:'#80DEEA',
+    greet:['きゃー！かわいい おみせ〜！💫\nアクセサリー つくって！','ねえねえ！\nおねがいが あるの✨'],
+    happy:['やったー！キラキラだー！💫✨','わーい！さいこー！\nありがとー！'],
+    angry:['あれれ…ちがう…','えーん、ちがうよ〜😢']},
+];
+
+// ===== 状態 =====
+const PHASE={ARRIVE:'arrive',TALK:'talk',SELECT:'select',CRAFT:'craft',HANDOFF:'handoff'};
+let phase=PHASE.ARRIVE;
+let score=0,lives=3,combo=0,currentQ=null,selGem=null,selAcc=null;
+let timerIv=null,timerLeft=100,running=false;
+const $=id=>document.getElementById(id);
+
+// ===== 初期化 =====
+function init(){
+  buildGems(); buildAccs(); buildParticles(); buildStartChars();
+}
+
+function buildStartChars(){
+  const row=$('start-chars');
+  ['princess','prince','fairy'].forEach((k,i)=>{
+    const d=document.createElement('div');
+    const scale=i===1?1.1:0.75;
+    d.style.cssText=`transform:scale(${scale});transform-origin:bottom center;animation:charIdle 2.8s ease-in-out ${i*0.4}s infinite;`;
+    d.innerHTML=CHAR_SVGS[k].idle;
+    row.appendChild(d);
+  });
+}
+
+function buildGems(){
+  const p=$('gem-grid');p.innerHTML='';
+  GEMS.forEach(g=>{
+    const btn=document.createElement('button');
+    btn.className='gem-btn';btn.id='gem-'+g.id;
+    btn.style.background=`linear-gradient(160deg,${g.c3}99,${g.c3}44)`;
+    btn.innerHTML=`<div style="width:24px;height:24px;">${mkGem(g,24)}</div><div class="gem-nm">${g.name}</div>`;
+    btn.onclick=()=>onSelGem(g.id);
+    p.appendChild(btn);
+  });
+}
+
+function buildAccs(){
+  const p=$('acc-row');p.innerHTML='';
+  ACCS.forEach(a=>{
+    const btn=document.createElement('button');
+    btn.className='acc-btn';btn.id='acc-'+a.id;
+    btn.innerHTML=`<div class="acc-em">${a.emoji}</div><div class="acc-nm">${a.name}</div>`;
+    btn.onclick=()=>onSelAcc(a.id);
+    p.appendChild(btn);
+  });
+}
+
+function buildParticles(){
+  const c=$('ptcl-wrap');
+  ['💎','✨','⭐','💫','🌟','💍'].forEach((em,i)=>{
+    const p=document.createElement('div');p.className='ptcl';p.textContent=em;
+    p.style.cssText=`left:${i*18+5}%;font-size:${9+Math.random()*7}px;animation-duration:${9+Math.random()*9}s;animation-delay:${-Math.random()*14}s;`;
+    c.appendChild(p);
+  });
+}
+
+// ===== ゲーム開始 =====
+function startGame(){
+  $('start-scr').style.display='none';
+  score=0;lives=3;combo=0;running=true;
+  updateHUD();startRound();
+}
+
+function startRound(){
+  const cust=CUSTOMERS[Math.floor(Math.random()*CUSTOMERS.length)];
+  const gem=GEMS[Math.floor(Math.random()*GEMS.length)];
+  const acc=ACCS[Math.floor(Math.random()*ACCS.length)];
+  currentQ={cust,gem,acc};
+  selGem=null;selAcc=null;
+  document.querySelectorAll('.gem-btn,.acc-btn').forEach(b=>b.classList.remove('sel','hint'));
+  $('complete-btn').disabled=true;
+  hideAllOverlays();
+  doArrive();
+}
+
+// ===== フェーズ =====
+function setCharAnim(anim){
+  const wrap=$('cust-svg-wrap');
+  wrap.className='';
+  void wrap.offsetWidth;
+  wrap.classList.add('anim-'+anim);
+}
+
+function setCharSVG(state){
+  const {key}=currentQ.cust;
+  $('cust-svg-wrap').innerHTML=CHAR_SVGS[key][state]||CHAR_SVGS[key].idle;
+}
+
+function doArrive(){
+  phase=PHASE.ARRIVE;
+  hideBubble();
+  setCharSVG('idle');
+  setCharAnim('walk');
+  const custEl=$('customer');
+  custEl.className='';
+  $('door').classList.add('open');
+  setTimeout(()=>{
+    custEl.classList.add('arrive');
+    setTimeout(()=>{
+      setCharAnim('idle');
+      $('door').classList.remove('open');
+      setTimeout(()=>doTalk(),400);
+    },650);
+  },300);
+}
+
+function doTalk(){
+  phase=PHASE.TALK;
+  const {cust,gem,acc}=currentQ;
+  const greet=cust.greet[Math.floor(Math.random()*cust.greet.length)];
+  typeText(greet,()=>{
+    setTimeout(()=>{
+      $('bubble-text').innerHTML=
+        `<span style="font-size:10px;opacity:0.65;">リクエスト</span><br>
+         <span style="display:inline-block;background:linear-gradient(135deg,#4A148C,#7B1FA2);color:white;border-radius:7px;padding:3px 9px;margin:2px 1px 0;font-size:12px;">💎 ${gem.name}</span>を つけた<br>
+         <span style="display:inline-block;background:linear-gradient(135deg,#E65100,#FF8F00);color:white;border-radius:7px;padding:3px 9px;margin:2px;font-size:12px;">${acc.emoji} ${acc.name}</span>が ほしい！`;
+      $('bubble-text').classList.add('done');
+      setTimeout(()=>doSelect(),1000);
+    },700);
+  });
+}
+
+function doSelect(){
+  phase=PHASE.SELECT;
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(timerIv);timerLeft=100;
+  const s=Date.now();
+  timerIv=setInterval(()=>{
+    timerLeft=Math.max(0,100-((Date.now()-s)/20000*100));
+    if(timerLeft<=0){clearInterval(timerIv);combo=0;loseLife(true);}
+  },100);
+}
+
+function onSelGem(id){
+  if(phase!==PHASE.SELECT&&phase!==PHASE.TALK)return;
+  selGem=id;
+  document.querySelectorAll('.gem-btn').forEach(b=>b.classList.remove('sel'));
+  $('gem-'+id).classList.add('sel');
+  $('complete-btn').disabled=!(selGem&&selAcc);
+}
+function onSelAcc(id){
+  if(phase!==PHASE.SELECT&&phase!==PHASE.TALK)return;
+  selAcc=id;
+  document.querySelectorAll('.acc-btn').forEach(b=>b.classList.remove('sel'));
+  $('acc-'+id).classList.add('sel');
+  $('complete-btn').disabled=!(selGem&&selAcc);
+}
+
+function onComplete(){
+  if(!running||phase!==PHASE.SELECT)return;
+  clearInterval(timerIv);
+  doCraft();
+}
+
+function doCraft(){
+  phase=PHASE.CRAFT;
+  hideBubble();
+  $('craft-effect').classList.add('show');
+  $('craft-bar').style.width='0%';
+  let w=0;
+  const iv=setInterval(()=>{
+    w+=3.5;$('craft-bar').style.width=Math.min(w,100)+'%';
+    if(w>=100){clearInterval(iv);$('craft-effect').classList.remove('show');setTimeout(()=>doHandoff(),200);}
+  },40);
+}
+
+function doHandoff(){
+  phase=PHASE.HANDOFF;
+  const {gem,acc}=currentQ;
+  $('handoff-gem').innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+    <div style="font-size:34px;">${acc.emoji}</div>
+    <div style="width:30px;height:30px;">${mkGem(gem,30)}</div>
+  </div>`;
+  $('handoff-area').classList.add('show');
+  setTimeout(()=>{
+    $('handoff-area').classList.remove('show');
+    const gOK=selGem===currentQ.gem.id, aOK=selAcc===currentQ.acc.id;
+    doReact(gOK&&aOK);
+  },1300);
+}
+
+function doReact(ok){
+  const {cust,gem,acc}=currentQ;
+  if(ok){
+    combo++;
+    const tb=Math.floor(timerLeft/10)*10;
+    const cb=combo>1?(combo-1)*50:0;
+    const pts=100+tb+cb;
+    score+=pts;
+    setCharSVG('happy');setCharAnim('happy');
+    showEff('⭐ +'+pts,true);
+    const msg=cust.happy[Math.floor(Math.random()*cust.happy.length)];
+    typeText(msg,()=>setTimeout(()=>showReaction(true,pts,tb,cb),700));
+  } else {
+    combo=0;
+    if(selGem!==gem.id)$('gem-'+gem.id).classList.add('hint');
+    if(selAcc!==acc.id)$('acc-'+acc.id).classList.add('hint');
+    setCharSVG('angry');setCharAnim('angry');
+    showEff('💔',false);
+    const msg=cust.angry[Math.floor(Math.random()*cust.angry.length)];
+    typeText(msg,()=>setTimeout(()=>{showReaction(false,0,0,0);loseLife(false);},600));
+  }
+  updateHUD();
+}
+
+function showReaction(ok,pts,tb,cb){
+  const {cust,gem}=currentQ;
+  $('rx-char').innerHTML=`<div style="animation:${ok?'charHappy':'charAngry'} 0.65s ease-in-out infinite;">${CHAR_SVGS[cust.key][ok?'happy':'angry']}</div>`;
+  $('rx-title').textContent=ok?(combo>=3?'スーパーコンボ！✨':'せいかい！✨'):'ざんねん...';
+  $('rx-title').style.color=ok?'#FFD700':'#FF5252';
+  const rs=$('rx-score');rs.textContent=ok?'+'+pts:'';rs.style.display=ok?'block':'none';
+  let msg='';
+  if(ok){if(tb>0)msg+=`⚡ タイムボーナス +${tb}<br>`;if(cb>0)msg+=`🔥 ${combo}コンボ +${cb}<br>`;}
+  else msg=`こたえ：${gem.name}の${acc_name()}`;
+  $('rx-msg').innerHTML=msg;
+  $('rx-gem-info').innerHTML=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;">
+    <div style="width:26px;height:26px;">${mkGem(gem,26)}</div>
+    <strong>${gem.name} ${'★'.repeat(gem.rare)}</strong></div>${gem.info}`;
+  $('reaction-ov').classList.add('show');
+}
+
+function acc_name(){return currentQ?currentQ.acc.name:'';}
+
+function nextRound(){
+  if(lives<=0){gameOver();return;}
+  $('reaction-ov').classList.remove('show');
+  hideBubble();
+  const custEl=$('customer');
+  setCharAnim('walk');
+  custEl.classList.add('leave');
+  setTimeout(()=>{custEl.className='';setTimeout(()=>startRound(),200);},500);
+}
+
+function loseLife(timeout){
+  lives=Math.max(0,lives-1);updateHUD();
+  if(lives<=0)setTimeout(gameOver,1600);
+  else if(timeout)setTimeout(startRound,700);
+}
+
+function hideAllOverlays(){
+  $('reaction-ov').classList.remove('show');
+  $('craft-effect').classList.remove('show');
+  $('handoff-area').classList.remove('show');
+  hideBubble();
+}
+
+function showBubble(){$('bubble-wrap').classList.add('show');}
+function hideBubble(){$('bubble-wrap').classList.remove('show');}
+
+function typeText(text,cb){
+  showBubble();
+  $('bubble-text').innerHTML='';$('bubble-text').classList.remove('done');
+  const lines=text.split('\n');let li=0,ci=0;
+  function next(){
+    if(li>=lines.length){if(cb)cb();return;}
+    if(ci<lines[li].length){
+      $('bubble-text').innerHTML=lines.slice(0,li).join('<br>')+(li>0?'<br>':'')+lines[li].slice(0,ci+1);
+      ci++;setTimeout(next,38);
+    } else {li++;ci=0;setTimeout(next,li<lines.length?100:200);}
+  }
+  next();
+}
+
+function showEff(text,ok){
+  const el=document.createElement('div');el.className='eff';
+  el.textContent=text;el.style.color=ok?'#FFD700':'#FF5252';
+  el.style.cssText+=';left:50%;top:40%;';
+  document.body.appendChild(el);setTimeout(()=>el.remove(),1100);
+}
+
+function updateHUD(){
+  $('hud-score').textContent='⭐ '+score.toLocaleString();
+  $('hud-combo').textContent=combo>=2?`🔥 ${combo}コンボ！`:'';
+  $('hud-lives').textContent='❤️'.repeat(lives)+'🖤'.repeat(3-lives);
+}
+
+function gameOver(){
+  running=false;clearInterval(timerIv);
+  $('final-score').textContent=score.toLocaleString();
+  const hs=parseInt(localStorage.getItem('jm_hs')||'0');
+  const lbl=$('hs-lbl');
+  if(score>hs){localStorage.setItem('jm_hs',score);lbl.textContent='🏆 ハイスコア こうしん！';lbl.style.color='#FFD700';}
+  else{lbl.textContent='ハイスコア：'+hs.toLocaleString();lbl.style.color='rgba(255,255,255,0.35)';}
+  $('go-ov').classList.add('show');
+}
+
+function restartGame(){
+  $('go-ov').classList.remove('show');
+  score=0;lives=3;combo=0;running=true;
+  $('customer').className='';updateHUD();startRound();
+}
+
+function goBack(){
+  if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');
+  else history.back();
+}
+
+init();
+</script>
+</body>
+</html>
