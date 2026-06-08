@@ -4,6 +4,7 @@ export default function DoubutsuShoot() {
   useEffect(() => {
     const handler = (e) => {
       if (e.data?.type === 'goBack') window.history.back();
+    if (e.data?.type === 'goHome') window.location.href = '/';
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);

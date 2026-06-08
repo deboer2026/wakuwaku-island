@@ -336,6 +336,16 @@ export default function Meiro() {
     return () => { document.title = 'わくわくアイランド | 無料の子供向けブラウザゲーム'; };
   }, []);
 
+  // message handler
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.data?.type === 'goBack') window.history.back();
+      if (e.data?.type === 'goHome') window.location.href = '/';
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
   // Keep refs in sync so closures defined before these functions can call them
   useEffect(() => { triggerClearRef.current = triggerClear; }, [triggerClear]);
   useEffect(() => { triggerGameOverRef.current = triggerGameOver; }, [triggerGameOver]);

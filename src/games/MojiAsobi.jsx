@@ -70,6 +70,16 @@ export default function MojiAsobi() {
     return () => { document.title = 'わくわくアイランド | 無料の子供向けブラウザゲーム'; };
   }, []);
 
+  // message handler
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.data?.type === 'goBack') window.history.back();
+      if (e.data?.type === 'goHome') window.location.href = '/';
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
   // cleanup on unmount
   useEffect(() => {
     return () => {

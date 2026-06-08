@@ -498,7 +498,7 @@ export default function TopPage() {
       </div>
 
       {/* ── ヘッダー ── */}
-      <div className="tp-header">
+      <div className="tp-header" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="tp-park-badge">🏝️ GAME PARK ✦</div>
 
         <div className="ksk-title-zone">
