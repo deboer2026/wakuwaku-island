@@ -415,7 +415,7 @@ export default function TopPage() {
     (daysSince === 0 ? 'きょう！' : `${daysSince}にちまえ`);
 
   return (
-    <div className="tp-wrap" style={{ paddingTop: 'env(safe-area-inset-top, 44px)' }}>
+    <div className="tp-wrap" style={{ paddingTop: 'max(44px, env(safe-area-inset-top, 44px))' }}>
 
       {/* ── 空の雲 ── */}
       <div className="tp-clouds" aria-hidden="true">
