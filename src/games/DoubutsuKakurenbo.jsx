@@ -21,7 +21,7 @@ export default function DoubutsuKakurenbo() {
       overflow: 'hidden'
     }}>
       <iframe
-        src="/games/meiro_v4.html"
+        src="/games/kakurenbo_v1.html"
         style={{
           width: '100%',
           height: '100%',
