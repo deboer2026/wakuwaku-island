@@ -159,6 +159,22 @@ body{font-family:'M PLUS Rounded 1c',sans-serif;background:#080015;min-height:10
 }
 #ui-home-btn { left: 12px; }
 #ui-bgm-btn  { right: 12px; }
+
+/* === 横向き対応 === */
+@media (orientation: landscape) {
+  body { overflow-y: auto; }
+  #hud, #ui-home-btn, #ui-bgm-btn {
+    top: max(6px, env(safe-area-inset-top, 6px));
+  }
+  #back-btn {
+    bottom: max(8px, env(safe-area-inset-bottom, 8px));
+  }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  /* 横向き時にゲームエリアを縮小・スクロール対応 */
+  canvas { max-height: 100vh; }
+  #game-area { overflow-y: auto; }
+}
 </style>
 </head>
 <body>
@@ -912,7 +928,7 @@ function buildParticles(){
 // ===== ゲーム開始 =====
 function startGame(){
   $('start-scr').style.display='none';
-  score=0;lives=3;combo=0;running=true;
+  score=0;lives=3;combo=0;running=true;roundNum=0;
   updateHUD();startRound();
 }
 
@@ -967,8 +983,8 @@ function doTalk(){
     setTimeout(()=>{
       $('bubble-text').innerHTML=
         `<span style="font-size:10px;opacity:0.65;">リクエスト</span><br>
-         <span style="display:inline-block;background:linear-gradient(135deg,#4A148C,#7B1FA2);color:white;border-radius:7px;padding:3px 9px;margin:2px 1px 0;font-size:12px;">💎 ${gem.name}</span>を つけた<br>
-         <span style="display:inline-block;background:linear-gradient(135deg,#E65100,#FF8F00);color:white;border-radius:7px;padding:3px 9px;margin:2px;font-size:12px;">${acc.emoji} ${acc.name}</span>が ほしい！`;
+         <span style="display:inline-block;background:linear-gradient(135deg,${gem.c3},${gem.c2});color:white;border-radius:7px;padding:4px 12px;margin:2px 1px 0;font-size:14px;font-weight:900;">💎 ${gem.name}</span>を つけた<br>
+         <span style="display:inline-block;background:linear-gradient(135deg,#E65100,#FF8F00);color:white;border-radius:7px;padding:4px 12px;margin:2px;font-size:14px;font-weight:900;">${acc.emoji} ${acc.name}</span>が ほしい！`;
       $('bubble-text').classList.add('done');
       setTimeout(()=>doSelect(),1000);
     },700);
@@ -1081,6 +1097,8 @@ function acc_name(){return currentQ?currentQ.acc.name:'';}
 
 function nextRound(){
   if(lives<=0){gameOver();return;}
+  roundNum++;
+  if(roundNum>=10){allClear();return;}
   $('reaction-ov').classList.remove('show');
   hideBubble();
   const custEl=$('customer');
@@ -1142,9 +1160,30 @@ function gameOver(){
   $('go-ov').classList.add('show');
 }
 
+function allClear(){
+  running=false;clearInterval(timerIv);
+  $('reaction-ov').classList.remove('show');
+  const hs=parseInt(localStorage.getItem('jm_hs')||'0');
+  if(score>hs)localStorage.setItem('jm_hs',score);
+  // all-clear-ovを表示
+  const ov=document.getElementById('all-clear-ov');
+  if(ov){
+    document.getElementById('ac-score').textContent=score.toLocaleString();
+    document.getElementById('ac-hs').textContent=score>hs?'🏆 ハイスコア こうしん！':'ハイスコア：'+hs.toLocaleString();
+    ov.classList.add('show');
+  } else {
+    // フォールバック：gameOver画面使用
+    $('final-score').textContent=score.toLocaleString();
+    const lbl=$('hs-lbl');
+    lbl.textContent=score>hs?'🏆 ハイスコア こうしん！':'ハイスコア：'+hs.toLocaleString();
+    lbl.style.color=score>hs?'#FFD700':'rgba(255,255,255,0.35)';
+    $('go-ov').classList.add('show');
+  }
+}
+
 function restartGame(){
   $('go-ov').classList.remove('show');
-  score=0;lives=3;combo=0;running=true;
+  score=0;lives=3;combo=0;running=true;roundNum=0;
   $('customer').className='';updateHUD();startRound();
 }
 
@@ -1264,5 +1303,29 @@ function toggleCommonBGM(){
   <!-- 共通UIボタン -->
   <button id="ui-home-btn" onclick="goHome()">🏠</button>
   <button id="ui-bgm-btn" onclick="toggleCommonBGM()">🔊</button>
+
+<!-- 全クリアオーバーレイ -->
+<div id="all-clear-ov" class="ov" style="display:none;position:fixed;inset:0;z-index:9000;
+  background:rgba(8,0,21,0.92);backdrop-filter:blur(12px);
+  flex-direction:column;align-items:center;justify-content:center;">
+  <div style="background:linear-gradient(160deg,#1c0840,#080015);border:1.5px solid rgba(255,215,0,0.5);
+    border-radius:24px;padding:28px;text-align:center;max-width:300px;width:88%;">
+    <div style="font-size:48px;margin-bottom:8px;">🏆</div>
+    <div style="font-size:22px;font-weight:900;color:#FFD700;margin-bottom:6px;">ぜんもん クリア！！</div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:12px;">10にん の おきゃくさんを まんぞくさせた！</div>
+    <div style="font-size:32px;font-weight:900;color:#FFD700;margin-bottom:4px;" id="ac-score">0</div>
+    <div style="font-size:12px;color:rgba(255,215,0,0.6);margin-bottom:16px;" id="ac-hs"></div>
+    <button onclick="document.getElementById('all-clear-ov').classList.remove('show');document.getElementById('all-clear-ov').style.display='none';restartGame();"
+      style="background:linear-gradient(135deg,#FF8F00,#FFD700);color:#0d0025;border:none;border-radius:12px;
+      padding:12px 28px;font-size:15px;font-weight:900;cursor:pointer;margin:4px;font-family:inherit;">
+      もういちど
+    </button>
+    <button onclick="goHome();"
+      style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:12px;
+      padding:10px 20px;font-size:13px;font-weight:700;color:rgba(255,255,255,0.7);cursor:pointer;margin:4px;font-family:inherit;">
+      タイトルへ
+    </button>
+  </div>
+</div>
 </body>
 </html>

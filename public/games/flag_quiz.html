@@ -95,10 +95,11 @@ body{background:#0a1628;display:flex;flex-direction:column;align-items:center;}
 }
 /* 国旗 */
 #flag-display{
-  font-size:96px;line-height:1;
-  filter:drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+  line-height:1;
   margin-bottom:12px;
   transition:transform 0.3s;
+  display:flex;justify-content:center;align-items:center;
+  min-height:100px;
 }
 /* 国を表すもの（建造物・動物・景色） */
 #country-hints{
@@ -212,6 +213,22 @@ body{background:#0a1628;display:flex;flex-direction:column;align-items:center;}
 }
 #ui-home-btn { left: 12px; }
 #ui-bgm-btn  { right: 12px; }
+
+/* === 横向き対応 === */
+@media (orientation: landscape) {
+  body { overflow-y: auto; }
+  #hud, #ui-home-btn, #ui-bgm-btn {
+    top: max(6px, env(safe-area-inset-top, 6px));
+  }
+  #back-btn {
+    bottom: max(8px, env(safe-area-inset-bottom, 8px));
+  }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  /* 横向き時にゲームエリアを縮小・スクロール対応 */
+  canvas { max-height: 100vh; }
+  #game-area { overflow-y: auto; }
+}
 </style>
 </head>
 <body>
@@ -265,6 +282,7 @@ body{background:#0a1628;display:flex;flex-direction:column;align-items:center;}
     <div id="flag-card">
       <div id="question-label">ステージ1 - 1もんめ</div>
       <div id="flag-display">🇯🇵</div>
+      <div id="flag-code" style="font-size:13px;font-weight:800;color:rgba(255,255,255,0.5);letter-spacing:3px;margin-bottom:8px;"></div>
       <div id="country-hints"></div>
       <div id="answer-badge"></div>
     </div>
@@ -309,6 +327,28 @@ body{background:#0a1628;display:flex;flex-direction:column;align-items:center;}
 </div>
 
 <script>
+
+// 国旗絵文字→ISOコードマッピング
+const FLAG_COLORS = {"JP": ["#BC002D", "#FFFFFF"], "US": ["#B22234", "#FFFFFF"], "FR": ["#002395", "#FFFFFF"], "GB": ["#012169", "#C8102E"], "DE": ["#000000", "#DD0000"], "IT": ["#009246", "#CE2B37"], "CN": ["#DE2910", "#FFDE00"], "BR": ["#009C3B", "#FFDF00"], "AU": ["#00008B", "#CC0000"], "EG": ["#CE1126", "#000000"], "ES": ["#AA151B", "#F1BF00"], "KR": ["#003478", "#CD2E3A"], "IN": ["#FF9933", "#138808"], "RU": ["#FFFFFF", "#0039A6"], "MX": ["#006847", "#CE1126"], "CA": ["#FF0000", "#FFFFFF"], "TR": ["#E30A17", "#FFFFFF"], "SA": ["#006C35", "#FFFFFF"], "GR": ["#0D5EAF", "#FFFFFF"], "PT": ["#006600", "#FF0000"], "CH": ["#FF0000", "#FFFFFF"], "NL": ["#AE1C28", "#21468B"], "SE": ["#006AA7", "#FECC02"], "NO": ["#EF2B2D", "#002868"], "AR": ["#74ACDF", "#FFFFFF"], "ZA": ["#007A4D", "#FFB612"], "KE": ["#006600", "#CC0001"], "TH": ["#A51931", "#2D2A4A"], "ID": ["#CE1126", "#FFFFFF"], "VN": ["#DA251D", "#FFCD00"], "PL": ["#FFFFFF", "#DC143C"], "AT": ["#ED2939", "#FFFFFF"], "NZ": ["#00247D", "#CC142B"], "PE": ["#D91023", "#FFFFFF"], "MA": ["#C1272D", "#006233"], "KZ": ["#00AFCA", "#FFCC00"], "PH": ["#0038A8", "#CE1126"], "IL": ["#0038B8", "#FFFFFF"], "CO": ["#FCD116", "#003087"], "UA": ["#005BBB", "#FFD500"], "IS": ["#003897", "#D72828"], "NP": ["#003893", "#DC143C"], "MN": ["#C4272F", "#015197"], "KH": ["#032EA1", "#E00025"], "MM": ["#FECB00", "#34B233"], "MV": ["#D21034", "#007E3A"], "RW": ["#20603D", "#FAD201"], "ET": ["#078930", "#FCDD09"], "TZ": ["#1EB53A", "#00A3DD"], "GH": ["#006B3F", "#FCD116"], "NG": ["#008751", "#FFFFFF"], "SN": ["#00853F", "#FDEF42"], "CL": ["#D52B1E", "#003087"], "BO": ["#D52B1E", "#F4E400"], "EC": ["#FFD100", "#003893"], "VE": ["#CF142B", "#00247D"], "PA": ["#FFFFFF", "#DA121A"], "CU": ["#CC0001", "#002A8F"], "JM": ["#000000", "#007748"], "PG": ["#000000", "#CE1126"], "FJ": ["#68BFE5", "#003087"], "MG": ["#FC3D32", "#007E3A"], "MZ": ["#009A44", "#FCE100"], "AZ": ["#0092BC", "#E8192C"], "GE": ["#FFFFFF", "#FF0000"], "AM": ["#D90012", "#0033A0"], "BD": ["#006A4E", "#F42A41"], "LK": ["#8D153A", "#F5820C"], "UZ": ["#1EB53A", "#CE1126"], "TM": ["#1C7A3D", "#D22630"], "MW": ["#000000", "#339E35"]};
+
+const FLAG_ISO = {
+  '🇯🇵':'JP','🇺🇸':'US','🇫🇷':'FR','🇬🇧':'GB','🇩🇪':'DE',
+  '🇮🇹':'IT','🇨🇳':'CN','🇧🇷':'BR','🇦🇺':'AU','🇪🇬':'EG',
+  '🇪🇸':'ES','🇰🇷':'KR','🇮🇳':'IN','🇷🇺':'RU','🇲🇽':'MX',
+  '🇨🇦':'CA','🇹🇷':'TR','🇸🇦':'SA','🇬🇷':'GR','🇵🇹':'PT',
+  '🇨🇭':'CH','🇳🇱':'NL','🇸🇪':'SE','🇳🇴':'NO','🇦🇷':'AR',
+  '🇿🇦':'ZA','🇰🇪':'KE','🇹🇭':'TH','🇮🇩':'ID','🇻🇳':'VN',
+  '🇵🇱':'PL','🇦🇹':'AT','🇳🇿':'NZ','🇵🇪':'PE','🇲🇦':'MA',
+  '🇰🇿':'KZ','🇵🇭':'PH','🇮🇱':'IL','🇨🇴':'CO','🇺🇦':'UA',
+  '🇮🇸':'IS','🇳🇵':'NP','🇲🇳':'MN','🇰🇭':'KH','🇲🇲':'MM',
+  '🇲🇻':'MV','🇷🇼':'RW','🇪🇹':'ET','🇹🇿':'TZ','🇬🇭':'GH',
+  '🇳🇬':'NG','🇸🇳':'SN','🇨🇱':'CL','🇧🇴':'BO','🇪🇨':'EC',
+  '🇻🇪':'VE','🇵🇦':'PA','🇨🇺':'CU','🇯🇲':'JM','🇵🇬':'PG',
+  '🇫🇯':'FJ','🇲🇬':'MG','🇲🇿':'MZ','🇦🇿':'AZ','🇬🇪':'GE',
+  '🇦🇲':'AM','🇧🇩':'BD','🇱🇰':'LK','🇺🇿':'UZ','🇹🇲':'TM',
+  '🇲🇼':'MW'
+};
+
 // ===== 国データ =====
 // flag: 国旗絵文字, name: 国名, hints: [{emoji, label}]
 // category: easy/mid/hard
@@ -471,9 +511,23 @@ function showQuestion(){
   document.getElementById('progress-fill').style.width=`${(currentQ/total)*100}%`;
   document.getElementById('question-label').textContent=`ステージ${currentStage+1} - ${currentQ+1}もんめ／${total}もん`;
 
-  // 国旗
+  // 国旗（画像で表示）
   const flagEl=document.getElementById('flag-display');
-  flagEl.textContent=q.flag;
+  const iso=FLAG_ISO[q.flag]||'';
+  if(iso){
+    // 複数CDNをフォールバックで試す
+    flagEl.innerHTML=`<img 
+      src="https://flagicons.lipis.dev/flags/4x3/${iso.toLowerCase()}.svg"
+      style="width:160px;height:auto;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.4);display:block;"
+      alt="${iso}"
+      onerror="this.onerror=null;this.src='https://purecatamphetamine.github.io/country-flag-icons/3x2/${iso}.svg'"
+    />`;
+  } else {
+    flagEl.textContent=q.flag;
+  }
+  // flag-code非表示
+  const codeEl=document.getElementById('flag-code');
+  if(codeEl) codeEl.textContent='';
   flagEl.style.transform='scale(0.5)';
   setTimeout(()=>flagEl.style.transition='transform 0.3s', 0);
   setTimeout(()=>flagEl.style.transform='scale(1)', 10);

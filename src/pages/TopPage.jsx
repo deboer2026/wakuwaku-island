@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { playTopPageBgm, stopBgm, toggleMute, getMuteState, ensureAudioStarted } from '../utils/audio';
+import { startBGM, stopBGM, toggleBGM } from '../utils/audio';
 import { transitionTo } from '../utils/transition';
 import { getPlayCount } from '../utils/playCounter';
 import { KisekaeCharacters, KisekaePanel, DEFAULT_KISEKAE } from '../components/Kisekae';
@@ -315,7 +315,7 @@ function GameCard({ game, lang, isRecommended, onClick, animIndex }) {
 export default function TopPage() {
   const navigate   = useNavigate();
   const [lang,        setLang]        = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
-  const [isMuted,     setIsMuted]     = useState(getMuteState());
+  const [isMuted,     setIsMuted]     = useState(false);
   const [playCount,   setPlayCount]   = useState(0);
   const [kisekaeState,setKisekaeState]= useState(() => {
     try {
@@ -348,21 +348,17 @@ export default function TopPage() {
     .filter(Boolean);
 
   useEffect(() => {
-    ensureAudioStarted().then(() => playTopPageBgm());
+    startBGM();
     setPlayCount(getPlayCount() + 1312);
     // Check login bonus
     const bonus = checkLoginBonus();
     if (bonus) setLoginBonus(bonus);
-    return () => stopBgm();
+    return () => stopBGM();
   }, []);
 
-  async function handleMuteToggle() {
-    toggleMute();
-    setIsMuted(getMuteState());
-    if (!getMuteState()) {
-      await ensureAudioStarted();
-      playTopPageBgm();
-    }
+  function handleMuteToggle() {
+    toggleBGM();
+    setIsMuted(prev => !prev);
   }
 
   function spawnParticles(x, y) {

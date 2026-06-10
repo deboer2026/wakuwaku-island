@@ -187,6 +187,38 @@ if (typeof document !== 'undefined') {
   });
 }
 
+// ===== MP3 BGM (top page) =====
+let _bgmAudio = null;
+
+export function startBGM() {
+  if (_bgmAudio) return;
+  _bgmAudio = new Audio('/games/Sandcastle_Parade.mp3');
+  _bgmAudio.loop = true;
+  _bgmAudio.volume = 0.35;
+  _bgmAudio.play().catch(() => {});
+}
+
+export function stopBGM() {
+  if (_bgmAudio) {
+    _bgmAudio.pause();
+    _bgmAudio.currentTime = 0;
+    _bgmAudio = null;
+  }
+}
+
+export function toggleBGM() {
+  if (!_bgmAudio || _bgmAudio.paused) {
+    if (!_bgmAudio) startBGM();
+    else _bgmAudio.play().catch(() => {});
+  } else {
+    _bgmAudio.pause();
+  }
+}
+
+export function setMuted(muted) {
+  if (_bgmAudio) _bgmAudio.muted = muted;
+}
+
 // ===== Public API =====
 
 export async function ensureAudioStarted() {
@@ -230,7 +262,7 @@ export function toggleMute() {
 }
 
 export function getMuteState() { return isMuted; }
-export function stopBgm() { _cancelLoop(); _bgmPaused = false; }
+export function stopBgm() { _cancelLoop(); _bgmPaused = false; stopBGM(); }
 
 // ===== Visual feedback =====
 
@@ -252,18 +284,6 @@ export function triggerShake() {
 
 // ===== BGM functions =====
 
-export function playTopPageBgm() {
-  console.log('[Audio] playTopPageBgm');
-  _bgm([
-    { note:'E4', dur:'8n', t:0.00 }, { note:'G4', dur:'8n', t:0.30 },
-    { note:'C5', dur:'4n', t:0.60 }, { note:'G4', dur:'8n', t:1.20 },
-    { note:'E4', dur:'8n', t:1.50 }, { note:'A4', dur:'8n', t:1.80 },
-    { note:'C5', dur:'4n', t:2.10 }, { note:'F4', dur:'8n', t:2.70 },
-    { note:'A4', dur:'8n', t:3.00 }, { note:'C5', dur:'4n', t:3.30 },
-    { note:'G4', dur:'8n', t:3.90 }, { note:'B4', dur:'8n', t:4.20 },
-    { note:'D5', dur:'8n', t:4.50 }, { note:'G4', dur:'4n', t:4.80 },
-  ], 5.4, 'triangle');
-}
 
 export function playShabondamaBgm() {
   console.log('[Audio] playShabondamaBgm');

@@ -89,11 +89,10 @@ canvas{position:absolute;top:0;left:0;display:block;}
   color:#2d6a2d;cursor:pointer;font-family:inherit;margin:4px;}
 
 /* タイトル */
-#ts{position:absolute;inset:0;z-index:200;overflow:hidden;
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;}
+#ts{position:absolute;inset:0;z-index:200;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;-webkit-overflow-scrolling:touch;}
 #tsvg{position:absolute;inset:0;z-index:0;width:100%;height:100%;pointer-events:none;}
 #tc{position:relative;z-index:10;width:100%;
-  display:flex;flex-direction:column;align-items:center;padding-bottom:26px;}
+  display:flex;flex-direction:column;align-items:center;padding-bottom:env(safe-area-inset-bottom, 16px);}
 @keyframes sh{0%{background-position:0%}100%{background-position:200%}}
 @keyframes fruitFall{0%{transform:translateY(-30px);opacity:0;}100%{transform:translateY(0);opacity:1;}}
 
@@ -131,6 +130,22 @@ canvas{position:absolute;top:0;left:0;display:block;}
 }
 #ui-home-btn { left: 12px; }
 #ui-bgm-btn  { right: 12px; }
+
+/* === 横向き対応 === */
+@media (orientation: landscape) {
+  body { overflow-y: auto; }
+  #hud, #ui-home-btn, #ui-bgm-btn {
+    top: max(6px, env(safe-area-inset-top, 6px));
+  }
+  #back-btn {
+    bottom: max(8px, env(safe-area-inset-bottom, 8px));
+  }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  /* 横向き時にゲームエリアを縮小・スクロール対応 */
+  canvas { max-height: 100vh; }
+  #game-area { overflow-y: auto; }
+}
 </style>
 </head>
 <body>
@@ -507,9 +522,10 @@ function onMiss(f,isBomb=false){
     lives--;
     showScorePop('💣 ミス！',f.x,basketY-20,'#FF4444');
   } else {
-    lives--;
     combo=0; updateComboDisp();
-    showScorePop('💦 おとした！',f.x,H*0.7,'#FF8888');
+    showScorePop('💦',f.x,H*0.7,'#FF8888');
+    // 落としてもライフは減らない
+    return;
   }
   addParticles(f.x,isBomb?basketY:H*0.85,'#FF6666');
   cv.style.animation='none'; cv.offsetHeight;
@@ -811,7 +827,15 @@ function goBack(){
   else history.back();
 }
 
-setTimeout(init,80);
+// 確実な初期化
+function _safeInit(){
+  if(document.readyState==='complete'){
+    setTimeout(init,100);
+  } else {
+    window.addEventListener('load',()=>setTimeout(init,100),{once:true});
+  }
+}
+_safeInit();
 
 
 
