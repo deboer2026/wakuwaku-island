@@ -21,6 +21,7 @@ import DoubutsuSniper from './games/DoubutsuSniper'
 import DoubutsuCrossing from './games/DoubutsuCrossing'
 import KokkiQuiz from './games/KokkiQuiz'
 import JewelryMaster from './games/JewelryMaster'
+import DressUp from './games/DressUp'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 import { recordRecentGame } from './utils/recentGames'
@@ -31,7 +32,7 @@ const GAME_ROUTES = new Set([
   '/kazu-asobi', '/animal-soccer', '/sushi',
   '/ichigo', '/kakurenbo', '/moji', '/tashizan', '/iro', '/machi',
   '/kokki', '/jewelry-master', '/tetris', '/runner', '/shooting',
-  '/sniper', '/crossing',
+  '/sniper', '/crossing', '/dressup',
   // 短縮URLエイリアスも記録
   '/kudamono', '/puzzle', '/kazu', '/soccer',
 ]);
@@ -78,6 +79,7 @@ export default function App() {
         <Route path="/crossing" element={<DoubutsuCrossing />} />
         <Route path="/kokki" element={<KokkiQuiz />} />
         <Route path="/jewelry-master" element={<JewelryMaster />} />
+        <Route path="/dressup" element={<DressUp />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
       </Routes>
