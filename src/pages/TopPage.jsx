@@ -12,16 +12,487 @@ import { ALL_GAMES } from '../utils/recommend';
 import './TopPage.css';
 
 /* ── カテゴリ別グラデーション ──────────────────────────── */
-const CAT_GRADIENT = {
-  'かずあそび': 'linear-gradient(145deg, #1565c0 0%, #42a5f5 100%)',
-  'もじあそび': 'linear-gradient(145deg, #1b5e20 0%, #43a047 100%)',
-  'パズル':     'linear-gradient(145deg, #4a148c 0%, #ab47bc 100%)',
-  'アクション': 'linear-gradient(145deg, #bf360c 0%, #ff7043 100%)',
-  'クイズ':     'linear-gradient(145deg, #880e4f 0%, #e91e63 100%)',
-  'そうぞう':   'linear-gradient(145deg, #7b1fa2 0%, #f06292 100%)',
+const CARD_GRADIENTS = {
+  'アクション': 'linear-gradient(145deg, #FF9F5A, #E8471E)',
+  'パズル':     'linear-gradient(145deg, #9B7FE8, #3D2B8C)',
+  'かずあそび': 'linear-gradient(145deg, #4DB8E8, #1A5A9E)',
+  'もじあそび': 'linear-gradient(145deg, #5BC99A, #1A7A56)',
+  'クイズ':     'linear-gradient(145deg, #4FC3A1, #1A5C3A)',
+  'そうぞう':   'linear-gradient(145deg, #C97FE0, #3D0D6B)',
 };
+const DEFAULT_GRADIENT = 'linear-gradient(145deg, #7B8FA1, #3D4A5C)';
 
 const CATEGORIES = ['すべて', 'かずあそび', 'もじあそび', 'パズル', 'アクション', 'クイズ', 'そうぞう'];
+
+/* ════════════════════════════════════════════════════
+   ゲームSVGイラスト（SNES風）
+════════════════════════════════════════════════════ */
+const GAME_SVGS = {
+  g1: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="2" fill="white" opacity=".4"/>
+      <circle cx="88" cy="16" r="1.5" fill="white" opacity=".3"/>
+      <circle cx="22" cy="65" r="12" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.6)" strokeWidth="1.5"/>
+      <circle cx="22" cy="65" r="10" fill="none" stroke="#FF6B6B" strokeWidth="1.5" strokeDasharray="8 55" opacity=".75"/>
+      <circle cx="22" cy="65" r="10" fill="none" stroke="#7DF9FF" strokeWidth="1.5" strokeDasharray="8 55" strokeDashoffset="-8" opacity=".75"/>
+      <ellipse cx="17" cy="59" rx="3" ry="2" fill="white" opacity=".65" transform="rotate(-30 17 59)"/>
+      <circle cx="78" cy="60" r="10" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.6)" strokeWidth="1.5"/>
+      <ellipse cx="73" cy="54" rx="2.5" ry="1.8" fill="white" opacity=".65" transform="rotate(-30 73 54)"/>
+      <circle cx="50" cy="40" r="30" fill="rgba(255,255,255,.07)" stroke="white" strokeWidth="2"/>
+      <circle cx="50" cy="40" r="28" fill="none" stroke="#FF6B6B" strokeWidth="2.5" strokeDasharray="16 158" opacity=".85"/>
+      <circle cx="50" cy="40" r="28" fill="none" stroke="#FFD93D" strokeWidth="2.5" strokeDasharray="16 158" strokeDashoffset="-16" opacity=".85"/>
+      <circle cx="50" cy="40" r="28" fill="none" stroke="#7DF9FF" strokeWidth="2.5" strokeDasharray="16 158" strokeDashoffset="-32" opacity=".85"/>
+      <circle cx="50" cy="40" r="28" fill="none" stroke="#B8F7A8" strokeWidth="2.5" strokeDasharray="16 158" strokeDashoffset="-48" opacity=".85"/>
+      <ellipse cx="37" cy="26" rx="9" ry="5" fill="white" opacity=".55" transform="rotate(-35 37 26)"/>
+      <ellipse cx="61" cy="50" rx="4" ry="2" fill="white" opacity=".22" transform="rotate(-35 61 50)"/>
+    </svg>
+  ),
+  g2: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="10" cy="10" r="2" fill="#FFD700" opacity=".6"/>
+      <circle cx="88" cy="15" r="1.5" fill="white" opacity=".5"/>
+      <rect x="28" y="58" width="44" height="24" rx="4" fill="#8B4513" stroke="#5D2E0C" strokeWidth="2"/>
+      <line x1="28" y1="65" x2="72" y2="65" stroke="#5D2E0C" strokeWidth="1.5"/>
+      <line x1="28" y1="72" x2="72" y2="72" stroke="#5D2E0C" strokeWidth="1.5"/>
+      <rect x="32" y="54" width="36" height="6" rx="3" fill="#A0522D" stroke="#5D2E0C" strokeWidth="1.5"/>
+      <circle cx="30" cy="22" r="10" fill="#E53935" stroke="#B71C1C" strokeWidth="1.5"/>
+      <ellipse cx="26" cy="17" rx="3" ry="2" fill="#EF9A9A" opacity=".6" transform="rotate(-20 26 17)"/>
+      <rect x="29" y="11" width="2" height="5" rx="1" fill="#4CAF50"/>
+      <path d="M55 30Q58 10 72 15Q78 18 72 28Q65 38 55 30" fill="#FFD700" stroke="#F57F17" strokeWidth="1.5"/>
+      <ellipse cx="62" cy="17" rx="4" ry="2" fill="#FFF176" opacity=".5" transform="rotate(-25 62 17)"/>
+      <path d="M40 44Q36 34 44 32Q52 30 52 42Q48 50 40 44" fill="#E53935" stroke="#B71C1C" strokeWidth="1.5"/>
+      <ellipse cx="47" cy="32" rx="6" ry="3" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1.2"/>
+      <ellipse cx="43" cy="38" rx="1.2" ry="1.8" fill="#FFCDD2" stroke="#B71C1C" strokeWidth=".6"/>
+      <ellipse cx="48" cy="36" rx="1.2" ry="1.8" fill="#FFCDD2" stroke="#B71C1C" strokeWidth=".6"/>
+    </svg>
+  ),
+  g3: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect x="8" y="6" width="84" height="76" rx="3" fill="rgba(0,0,0,.2)"/>
+      <path d="M15 22L55 22L55 38L35 38L35 54L75 54L75 38L88 38" stroke="rgba(255,255,255,.25)" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="88" cy="38" r="8" fill="#FFD700" stroke="#B8860B" strokeWidth="1.5"/>
+      <text x="88" y="43" textAnchor="middle" fontSize="10" fill="white" fontWeight="bold">★</text>
+      <ellipse cx="24" cy="68" rx="9" ry="10" fill="#F8C8D4" stroke="#C2185B" strokeWidth="1.5"/>
+      <circle cx="24" cy="54" r="11" fill="#F8C8D4" stroke="#C2185B" strokeWidth="1.5"/>
+      <ellipse cx="18" cy="42" rx="3.5" ry="7.5" fill="#F8C8D4" stroke="#C2185B" strokeWidth="1.5"/>
+      <ellipse cx="18" cy="42" rx="2" ry="5" fill="#FFB6C1"/>
+      <ellipse cx="30" cy="42" rx="3.5" ry="7.5" fill="#F8C8D4" stroke="#C2185B" strokeWidth="1.5"/>
+      <ellipse cx="30" cy="42" rx="2" ry="5" fill="#FFB6C1"/>
+      <circle cx="20" cy="53" r="2.8" fill="#1a1a2e"/>
+      <circle cx="28" cy="53" r="2.8" fill="#1a1a2e"/>
+      <circle cx="20.7" cy="52" r="1.1" fill="white"/>
+      <circle cx="28.7" cy="52" r="1.1" fill="white"/>
+      <ellipse cx="17" cy="57" rx="3" ry="2" fill="#FFB6C1" opacity=".7"/>
+      <ellipse cx="31" cy="57" rx="3" ry="2" fill="#FFB6C1" opacity=".7"/>
+      <path d="M21 59Q24 62 27 59" stroke="#C2185B" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+      <ellipse cx="18" cy="78" rx="5.5" ry="3.5" fill="#F8C8D4" stroke="#C2185B" strokeWidth="1.5"/>
+      <ellipse cx="30" cy="78" rx="5.5" ry="3.5" fill="#F8C8D4" stroke="#C2185B" strokeWidth="1.5"/>
+    </svg>
+  ),
+  g4: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="88" cy="10" r="2" fill="white" opacity=".4"/>
+      <rect x="10" y="15" width="35" height="35" rx="4" fill="#66BB6A" stroke="#2E7D32" strokeWidth="2"/>
+      <circle cx="27.5" cy="49.5" r="5" fill="#66BB6A" stroke="#2E7D32" strokeWidth="2"/>
+      <rect x="55" y="15" width="35" height="35" rx="4" fill="#42A5F5" stroke="#1565C0" strokeWidth="2"/>
+      <circle cx="55" cy="32.5" r="5" fill="#42A5F5" stroke="#1565C0" strokeWidth="2"/>
+      <circle cx="72.5" cy="49.5" r="5" fill="#42A5F5" stroke="#1565C0" strokeWidth="2"/>
+      <rect x="32" y="50" width="36" height="28" rx="4" fill="#FFA726" stroke="#E65100" strokeWidth="2"/>
+      <circle cx="50" cy="49.5" r="5" fill="rgba(255,255,255,.15)"/>
+      <circle cx="23" cy="29" r="3" fill="white" stroke="#2E7D32" strokeWidth="1"/>
+      <circle cx="23" cy="29" r="1.8" fill="#1a1a2e"/>
+      <circle cx="32" cy="29" r="3" fill="white" stroke="#2E7D32" strokeWidth="1"/>
+      <circle cx="32" cy="29" r="1.8" fill="#1a1a2e"/>
+      <circle cx="68" cy="29" r="3" fill="white" stroke="#1565C0" strokeWidth="1"/>
+      <circle cx="68" cy="29" r="1.8" fill="#1a1a2e"/>
+      <circle cx="77" cy="29" r="3" fill="white" stroke="#1565C0" strokeWidth="1"/>
+      <circle cx="77" cy="29" r="1.8" fill="#1a1a2e"/>
+      <circle cx="46" cy="63" r="3" fill="white" stroke="#E65100" strokeWidth="1"/>
+      <circle cx="46" cy="63" r="1.8" fill="#1a1a2e"/>
+      <circle cx="55" cy="63" r="3" fill="white" stroke="#E65100" strokeWidth="1"/>
+      <circle cx="55" cy="63" r="1.8" fill="#1a1a2e"/>
+    </svg>
+  ),
+  g5: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="10" cy="10" r="1.8" fill="#FFD700" opacity=".6"/>
+      <circle cx="88" cy="15" r="1.5" fill="white" opacity=".5"/>
+      <rect x="60" y="38" width="32" height="34" rx="5" fill="#FF9800" stroke="#E65100" strokeWidth="2"/>
+      <rect x="62" y="40" width="14" height="7" rx="2" fill="#FFCC02" opacity=".4"/>
+      <text x="76" y="64" textAnchor="middle" fontSize="21" fontWeight="bold" fill="white">3</text>
+      <rect x="8" y="38" width="32" height="34" rx="5" fill="#66BB6A" stroke="#2E7D32" strokeWidth="2"/>
+      <rect x="10" y="40" width="14" height="7" rx="2" fill="#A5D6A7" opacity=".4"/>
+      <text x="24" y="64" textAnchor="middle" fontSize="21" fontWeight="bold" fill="white">2</text>
+      <rect x="26" y="22" width="48" height="50" rx="6" fill="#FF5252" stroke="#B71C1C" strokeWidth="2.5"/>
+      <rect x="29" y="25" width="22" height="10" rx="3" fill="#FF8A80" opacity=".5"/>
+      <text x="50" y="58" textAnchor="middle" fontSize="34" fontWeight="bold" fill="white">1</text>
+      <circle cx="50" cy="12" r="10" fill="#FFD700" stroke="#B8860B" strokeWidth="2"/>
+      <text x="50" y="17" textAnchor="middle" fontSize="12" fill="white" fontWeight="bold">★</text>
+    </svg>
+  ),
+  g6: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="85" cy="12" r="2" fill="#FFD700" opacity=".6"/>
+      <rect x="5" y="25" width="30" height="22" rx="2" fill="none" stroke="white" strokeWidth="2" opacity=".5"/>
+      <rect x="5" y="25" width="30" height="3" rx="1" fill="white" opacity=".4"/>
+      <line x1="12" y1="28" x2="12" y2="47" stroke="white" strokeWidth="1" opacity=".3"/>
+      <line x1="19" y1="28" x2="19" y2="47" stroke="white" strokeWidth="1" opacity=".3"/>
+      <line x1="26" y1="28" x2="26" y2="47" stroke="white" strokeWidth="1" opacity=".3"/>
+      <line x1="5" y1="33" x2="35" y2="33" stroke="white" strokeWidth="1" opacity=".3"/>
+      <line x1="5" y1="40" x2="35" y2="40" stroke="white" strokeWidth="1" opacity=".3"/>
+      <circle cx="62" cy="52" r="22" fill="white" stroke="#333" strokeWidth="2"/>
+      <polygon points="62,30 70,36 67,46 57,46 54,36" fill="#333" stroke="#333" strokeWidth=".5"/>
+      <polygon points="83,42 84,52 75,58 68,52 70,42" fill="#333" stroke="#333" strokeWidth=".5"/>
+      <polygon points="70,70 62,74 54,70 54,60 70,60" fill="#333" stroke="#333" strokeWidth=".5"/>
+      <polygon points="40,42 43,52 52,58 52,46 46,38" fill="#333" stroke="#333" strokeWidth=".5"/>
+      <ellipse cx="55" cy="36" rx="5" ry="3" fill="white" opacity=".5" transform="rotate(-20 55 36)"/>
+    </svg>
+  ),
+  g8: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="2" fill="#FFD700" opacity=".6"/>
+      <rect x="4" y="56" width="92" height="16" rx="8" fill="#795548" stroke="#4E342E" strokeWidth="2"/>
+      <rect x="8" y="59" width="84" height="10" rx="5" fill="#5D4037"/>
+      <line x1="22" y1="57" x2="22" y2="71" stroke="#3E2723" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="40" y1="57" x2="40" y2="71" stroke="#3E2723" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="58" y1="57" x2="58" y2="71" stroke="#3E2723" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="76" y1="57" x2="76" y2="71" stroke="#3E2723" strokeWidth="2" strokeLinecap="round"/>
+      <rect x="32" y="42" width="36" height="16" rx="5" fill="#FFF8DC" stroke="#C8A855" strokeWidth="1.5"/>
+      <rect x="34" y="42" width="32" height="8" rx="4" fill="#FF7043" stroke="#BF360C" strokeWidth="1.5"/>
+      <ellipse cx="42" cy="44" rx="5" ry="2" fill="#FF8A65" opacity=".6" transform="rotate(-15 42 44)"/>
+      <ellipse cx="65" cy="26" rx="20" ry="12" fill="#FF7043" stroke="#BF360C" strokeWidth="1.5"/>
+      <path d="M84 26L94 18L94 34Z" fill="#FF7043" stroke="#BF360C" strokeWidth="1.5"/>
+      <circle cx="58" cy="23" r="4" fill="white" stroke="#BF360C" strokeWidth="1"/>
+      <circle cx="59" cy="23" r="2.2" fill="#1a1a2e"/>
+      <circle cx="59.5" cy="22.2" r=".8" fill="white"/>
+      <ellipse cx="55" cy="27" rx="3.5" ry="2" fill="#FF8A65" opacity=".6"/>
+      <path d="M60 29Q65 32 70 29" stroke="#BF360C" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+    </svg>
+  ),
+  g9: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="76" width="100" height="9" fill="rgba(0,0,0,.2)"/>
+      <circle cx="14" cy="20" r="2" fill="#FFD700" opacity=".7"/>
+      <circle cx="86" cy="25" r="1.5" fill="white" opacity=".6"/>
+      <line x1="30" y1="51" x2="16" y2="39" stroke="#B71C1C" strokeWidth="4" strokeLinecap="round"/>
+      <circle cx="13" cy="37" r="5" fill="#FFCDD2" stroke="#B71C1C" strokeWidth="1.5"/>
+      <line x1="70" y1="51" x2="84" y2="39" stroke="#B71C1C" strokeWidth="4" strokeLinecap="round"/>
+      <circle cx="86" cy="37" r="5" fill="#FFCDD2" stroke="#B71C1C" strokeWidth="1.5"/>
+      <ellipse cx="50" cy="16" rx="22" ry="7" fill="#4CAF50" stroke="#2E7D32" strokeWidth="2"/>
+      <path d="M30 16Q35 3 50 9Q65 3 70 16" fill="#4CAF50" stroke="#2E7D32" strokeWidth="2"/>
+      <path d="M36 14Q40 5 50 9" fill="#66BB6A"/>
+      <path d="M25 30Q20 55 50 73Q80 55 75 30Q62 18 50 20Q38 18 25 30" fill="#E53935" stroke="#B71C1C" strokeWidth="2.5"/>
+      <path d="M30 33Q26 51 36 63" stroke="rgba(255,255,255,.35)" strokeWidth="6" fill="none" strokeLinecap="round"/>
+      <ellipse cx="42" cy="46" rx="2" ry="3" fill="#FFCDD2" stroke="#B71C1C" strokeWidth=".8" transform="rotate(-10 42 46)"/>
+      <ellipse cx="52" cy="42" rx="2" ry="3" fill="#FFCDD2" stroke="#B71C1C" strokeWidth=".8" transform="rotate(8 52 42)"/>
+      <ellipse cx="60" cy="49" rx="2" ry="3" fill="#FFCDD2" stroke="#B71C1C" strokeWidth=".8" transform="rotate(15 60 49)"/>
+      <ellipse cx="46" cy="58" rx="2" ry="3" fill="#FFCDD2" stroke="#B71C1C" strokeWidth=".8"/>
+      <ellipse cx="57" cy="61" rx="2" ry="3" fill="#FFCDD2" stroke="#B71C1C" strokeWidth=".8" transform="rotate(12 57 61)"/>
+      <circle cx="42" cy="41" r="5" fill="white" stroke="#B71C1C" strokeWidth="1.2"/>
+      <circle cx="58" cy="41" r="5" fill="white" stroke="#B71C1C" strokeWidth="1.2"/>
+      <circle cx="43" cy="41" r="3" fill="#1a1a2e"/>
+      <circle cx="59" cy="41" r="3" fill="#1a1a2e"/>
+      <circle cx="43.8" cy="39.8" r="1.2" fill="white"/>
+      <circle cx="59.8" cy="39.8" r="1.2" fill="white"/>
+      <ellipse cx="37" cy="46" rx="4" ry="3" fill="#FF8A80" opacity=".65"/>
+      <ellipse cx="63" cy="46" rx="4" ry="3" fill="#FF8A80" opacity=".65"/>
+      <path d="M43 50Q50 56 57 50" stroke="#B71C1C" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+      <line x1="40" y1="74" x2="36" y2="84" stroke="#B71C1C" strokeWidth="4" strokeLinecap="round"/>
+      <line x1="60" y1="74" x2="64" y2="84" stroke="#B71C1C" strokeWidth="4" strokeLinecap="round"/>
+    </svg>
+  ),
+  g10: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="75" cy="12" r="10" fill="#FFD700" stroke="#F57F17" strokeWidth="1.5" opacity=".85"/>
+      <rect x="8" y="54" width="10" height="31" rx="2" fill="#5D4037" stroke="#3E2723" strokeWidth="1.5"/>
+      <ellipse cx="13" cy="52" rx="17" ry="25" fill="#2E7D32" stroke="#1B5E20" strokeWidth="2"/>
+      <ellipse cx="13" cy="45" rx="12" ry="18" fill="#388E3C"/>
+      <circle cx="9" cy="48" r="4" fill="#8D6E63" stroke="#4E342E" strokeWidth="1.5"/>
+      <circle cx="17" cy="48" r="4" fill="#8D6E63" stroke="#4E342E" strokeWidth="1.5"/>
+      <circle cx="9.8" cy="47.5" r="2" fill="#1a1a2e"/>
+      <circle cx="17.8" cy="47.5" r="2" fill="#1a1a2e"/>
+      <circle cx="10.3" cy="46.7" r=".8" fill="white"/>
+      <circle cx="18.3" cy="46.7" r=".8" fill="white"/>
+      <rect x="43" y="50" width="12" height="35" rx="2" fill="#5D4037" stroke="#3E2723" strokeWidth="1.5"/>
+      <ellipse cx="49" cy="45" rx="21" ry="30" fill="#388E3C" stroke="#1B5E20" strokeWidth="2"/>
+      <ellipse cx="49" cy="36" rx="15" ry="22" fill="#43A047"/>
+      <circle cx="44" cy="46" r="4.5" fill="#FF8F00" stroke="#E65100" strokeWidth="1.5"/>
+      <circle cx="54" cy="46" r="4.5" fill="#FF8F00" stroke="#E65100" strokeWidth="1.5"/>
+      <circle cx="44.8" cy="45.5" r="2.2" fill="#1a1a2e"/>
+      <circle cx="54.8" cy="45.5" r="2.2" fill="#1a1a2e"/>
+      <circle cx="45.3" cy="44.7" r=".9" fill="white"/>
+      <circle cx="55.3" cy="44.7" r=".9" fill="white"/>
+      <rect x="78" y="56" width="10" height="29" rx="2" fill="#5D4037" stroke="#3E2723" strokeWidth="1.5"/>
+      <ellipse cx="83" cy="54" rx="17" ry="25" fill="#2E7D32" stroke="#1B5E20" strokeWidth="2"/>
+      <ellipse cx="83" cy="47" rx="12" ry="18" fill="#388E3C"/>
+      <ellipse cx="79" cy="39" rx="3" ry="7" fill="#F8C8D4" stroke="#C2185B" strokeWidth="1.2"/>
+      <ellipse cx="87" cy="39" rx="3" ry="7" fill="#F8C8D4" stroke="#C2185B" strokeWidth="1.2"/>
+      <ellipse cx="79" cy="39" rx="1.5" ry="4" fill="#FFB6C1"/>
+      <ellipse cx="87" cy="39" rx="1.5" ry="4" fill="#FFB6C1"/>
+      <text x="34" y="27" textAnchor="middle" fontSize="14" fill="#FFD700" fontWeight="bold" opacity=".85">?</text>
+      <text x="64" y="20" textAnchor="middle" fontSize="10" fill="white" fontWeight="bold" opacity=".65">?</text>
+    </svg>
+  ),
+  g11: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="88" cy="12" r="2" fill="white" opacity=".4"/>
+      <rect x="12" y="20" width="32" height="32" rx="6" fill="#66BB6A" stroke="#2E7D32" strokeWidth="2"/>
+      <rect x="14" y="22" width="14" height="7" rx="2" fill="#A5D6A7" opacity=".5"/>
+      <text x="28" y="44" textAnchor="middle" fontSize="22" fontWeight="bold" fill="white">あ</text>
+      <rect x="56" y="14" width="32" height="32" rx="6" fill="#42A5F5" stroke="#1565C0" strokeWidth="2"/>
+      <rect x="58" y="16" width="14" height="7" rx="2" fill="#90CAF9" opacity=".5"/>
+      <text x="72" y="38" textAnchor="middle" fontSize="22" fontWeight="bold" fill="white">い</text>
+      <rect x="30" y="52" width="40" height="28" rx="6" fill="#FFA726" stroke="#E65100" strokeWidth="2"/>
+      <rect x="32" y="54" width="18" height="6" rx="2" fill="#FFCC80" opacity=".5"/>
+      <text x="50" y="72" textAnchor="middle" fontSize="20" fontWeight="bold" fill="white">う</text>
+      <circle cx="8" cy="52" r="3" fill="#FFD700" opacity=".7"/>
+      <circle cx="94" cy="48" r="2.5" fill="#FF6B6B" opacity=".6"/>
+    </svg>
+  ),
+  g12: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="90" cy="12" r="2" fill="#FFD700" opacity=".6"/>
+      <rect x="8" y="38" width="24" height="30" rx="4" fill="#FF5252" stroke="#B71C1C" strokeWidth="2"/>
+      <rect x="10" y="40" width="10" height="7" rx="2" fill="#FF8A80" opacity=".5"/>
+      <text x="20" y="62" textAnchor="middle" fontSize="20" fontWeight="bold" fill="white">1</text>
+      <text x="38" y="59" textAnchor="middle" fontSize="20" fontWeight="bold" fill="white">+</text>
+      <rect x="52" y="38" width="24" height="30" rx="4" fill="#66BB6A" stroke="#2E7D32" strokeWidth="2"/>
+      <rect x="54" y="40" width="10" height="7" rx="2" fill="#A5D6A7" opacity=".5"/>
+      <text x="64" y="62" textAnchor="middle" fontSize="20" fontWeight="bold" fill="white">2</text>
+      <text x="83" y="59" textAnchor="middle" fontSize="20" fontWeight="bold" fill="white">=</text>
+      <rect x="18" y="12" width="64" height="20" rx="5" fill="rgba(255,255,255,.2)" stroke="rgba(255,255,255,.5)" strokeWidth="1.5"/>
+      <text x="50" y="26" textAnchor="middle" fontSize="14" fontWeight="bold" fill="white">？</text>
+      <circle cx="20" cy="72" r="4" fill="#FF8F00" stroke="#E65100" strokeWidth="1"/>
+      <circle cx="30" cy="72" r="4" fill="#FF8F00" stroke="#E65100" strokeWidth="1"/>
+      <circle cx="56" cy="72" r="4" fill="#388E3C" stroke="#1B5E20" strokeWidth="1"/>
+      <circle cx="66" cy="72" r="4" fill="#388E3C" stroke="#1B5E20" strokeWidth="1"/>
+      <circle cx="76" cy="72" r="4" fill="#388E3C" stroke="#1B5E20" strokeWidth="1"/>
+    </svg>
+  ),
+  g13: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="88" cy="12" r="2" fill="white" opacity=".4"/>
+      <ellipse cx="50" cy="45" rx="36" ry="32" fill="#FFF3E0" stroke="#E65100" strokeWidth="2"/>
+      <ellipse cx="56" cy="50" rx="12" ry="10" fill="#FFF3E0" opacity=".9"/>
+      <circle cx="24" cy="38" r="8" fill="#E53935"/>
+      <circle cx="50" cy="20" r="8" fill="#FFD700"/>
+      <circle cx="76" cy="38" r="8" fill="#1565C0"/>
+      <circle cx="62" cy="58" r="7" fill="#66BB6A"/>
+      <circle cx="38" cy="58" r="7" fill="#9C27B0"/>
+      <ellipse cx="38" cy="30" rx="8" ry="5" fill="white" opacity=".3" transform="rotate(-30 38 30)"/>
+      <rect x="70" y="62" width="8" height="20" rx="3" fill="#E53935" stroke="#B71C1C" strokeWidth="1.2"/>
+      <rect x="71" y="60" width="6" height="5" rx="1" fill="#8D6E63"/>
+      <circle cx="50" cy="52" r="5" fill="#FF6B6B" opacity=".7"/>
+    </svg>
+  ),
+  g14: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="80" cy="14" r="11" fill="#FFD700" stroke="#F57F17" strokeWidth="1.5"/>
+      <line x1="80" y1="0" x2="80" y2="4" stroke="#F57F17" strokeWidth="1.5" opacity=".7"/>
+      <line x1="93" y1="4" x2="90" y2="7" stroke="#F57F17" strokeWidth="1.5" opacity=".7"/>
+      <line x1="95" y1="14" x2="91" y2="14" stroke="#F57F17" strokeWidth="1.5" opacity=".7"/>
+      <rect x="0" y="70" width="100" height="15" fill="#757575"/>
+      <rect x="20" y="77" width="12" height="4" rx="1" fill="white" opacity=".8"/>
+      <rect x="46" y="77" width="12" height="4" rx="1" fill="white" opacity=".8"/>
+      <rect x="72" y="77" width="12" height="4" rx="1" fill="white" opacity=".8"/>
+      <rect x="8" y="32" width="22" height="40" rx="2" fill="#F48FB1" stroke="#C2185B" strokeWidth="1.5"/>
+      <rect x="10" y="34" width="18" height="6" rx="1" fill="#FCE4EC" opacity=".5"/>
+      <rect x="12" y="44" width="5" height="6" rx="1" fill="#80DEEA" stroke="#0097A7" strokeWidth=".8"/>
+      <rect x="20" y="44" width="5" height="6" rx="1" fill="#80DEEA" stroke="#0097A7" strokeWidth=".8"/>
+      <rect x="12" y="54" width="5" height="6" rx="1" fill="#FFE082" stroke="#F57F17" strokeWidth=".8"/>
+      <rect x="20" y="54" width="5" height="6" rx="1" fill="#80DEEA" stroke="#0097A7" strokeWidth=".8"/>
+      <rect x="36" y="18" width="28" height="54" rx="2" fill="#FF9800" stroke="#E65100" strokeWidth="2"/>
+      <rect x="38" y="20" width="24" height="8" rx="1" fill="#FFE0B2" opacity=".5"/>
+      <rect x="40" y="32" width="7" height="7" rx="1" fill="#80DEEA" stroke="#0097A7" strokeWidth=".8"/>
+      <rect x="51" y="32" width="7" height="7" rx="1" fill="#FFE082" stroke="#F57F17" strokeWidth=".8"/>
+      <rect x="40" y="44" width="7" height="7" rx="1" fill="#FFE082" stroke="#F57F17" strokeWidth=".8"/>
+      <rect x="51" y="44" width="7" height="7" rx="1" fill="#80DEEA" stroke="#0097A7" strokeWidth=".8"/>
+      <rect x="40" y="56" width="7" height="7" rx="1" fill="#80DEEA" stroke="#0097A7" strokeWidth=".8"/>
+      <rect x="51" y="56" width="7" height="7" rx="1" fill="#FFE082" stroke="#F57F17" strokeWidth=".8"/>
+      <line x1="50" y1="18" x2="50" y2="6" stroke="#9E9E9E" strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx="50" cy="4" r="3" fill="#FF5252"/>
+      <rect x="70" y="38" width="24" height="34" rx="2" fill="#66BB6A" stroke="#2E7D32" strokeWidth="1.5"/>
+      <rect x="72" y="40" width="20" height="6" rx="1" fill="#C8E6C9" opacity=".5"/>
+      <rect x="74" y="50" width="5" height="6" rx="1" fill="#80DEEA" stroke="#0097A7" strokeWidth=".8"/>
+      <rect x="82" y="50" width="5" height="6" rx="1" fill="#FFE082" stroke="#F57F17" strokeWidth=".8"/>
+      <rect x="74" y="60" width="5" height="6" rx="1" fill="#FFE082" stroke="#F57F17" strokeWidth=".8"/>
+      <rect x="82" y="60" width="5" height="6" rx="1" fill="#80DEEA" stroke="#0097A7" strokeWidth=".8"/>
+      <rect x="26" y="62" width="5" height="8" rx="1" fill="#5D4037" stroke="#3E2723" strokeWidth="1"/>
+      <circle cx="28.5" cy="60" r="7" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1.2"/>
+    </svg>
+  ),
+  g15: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect x="6" y="8" width="16" height="11" rx="1" fill="#E53935" stroke="#B71C1C" strokeWidth="1"/>
+      <rect x="6" y="8" width="16" height="3.5" fill="#E53935"/>
+      <rect x="6" y="11.5" width="16" height="3.5" fill="white"/>
+      <rect x="6" y="15" width="16" height="4" fill="#1565C0"/>
+      <line x1="5" y1="7" x2="5" y2="25" stroke="#795548" strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx="52" cy="46" r="33" fill="#1565C0" stroke="#0D47A1" strokeWidth="2.5"/>
+      <path d="M30 34Q40 28 48 34Q52 40 45 46Q38 50 33 44Z" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1"/>
+      <path d="M55 32Q65 26 72 34Q76 42 68 48Q60 52 55 44Z" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1"/>
+      <path d="M38 54Q50 51 56 59Q54 68 44 69Q36 66 36 58Z" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1"/>
+      <path d="M60 56Q70 54 74 62Q72 70 64 70Q58 66 60 58Z" fill="#66BB6A" stroke="#2E7D32" strokeWidth="1"/>
+      <ellipse cx="38" cy="34" rx="10" ry="7" fill="white" opacity=".2" transform="rotate(-30 38 34)"/>
+      <circle cx="46" cy="46" r="4" fill="white" stroke="#0D47A1" strokeWidth="1"/>
+      <circle cx="58" cy="46" r="4" fill="white" stroke="#0D47A1" strokeWidth="1"/>
+      <circle cx="47" cy="46" r="2.5" fill="#1a1a2e"/>
+      <circle cx="59" cy="46" r="2.5" fill="#1a1a2e"/>
+      <circle cx="47.8" cy="45" r="1" fill="white"/>
+      <circle cx="59.8" cy="45" r="1" fill="white"/>
+      <path d="M47 52Q52 56 57 52" stroke="#0D47A1" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+      <circle cx="78" cy="22" r="12" fill="rgba(255,255,255,.12)" stroke="white" strokeWidth="2"/>
+      <circle cx="78" cy="22" r="8" fill="rgba(135,206,250,.25)" stroke="rgba(255,255,255,.4)" strokeWidth="1"/>
+      <line x1="87" y1="31" x2="94" y2="39" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+    </svg>
+  ),
+  g16: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <line x1="50" y1="3" x2="50" y2="14" stroke="#FFD700" strokeWidth="1.5" opacity=".5"/>
+      <line x1="20" y1="12" x2="28" y2="20" stroke="#FFD700" strokeWidth="1.5" opacity=".4"/>
+      <line x1="80" y1="12" x2="72" y2="20" stroke="#FFD700" strokeWidth="1.5" opacity=".4"/>
+      <line x1="4" y1="38" x2="16" y2="38" stroke="#FFD700" strokeWidth="1.5" opacity=".4"/>
+      <line x1="96" y1="38" x2="84" y2="38" stroke="#FFD700" strokeWidth="1.5" opacity=".4"/>
+      <polygon points="50,12 68,34 50,56 32,34" fill="#B5EEFF" stroke="#0288D1" strokeWidth="2"/>
+      <polygon points="50,12 68,34 50,34" fill="#E8FAFF"/>
+      <polygon points="50,12 32,34 50,34" fill="#81D4FA"/>
+      <polygon points="50,34 68,34 50,56" fill="#29B6F6"/>
+      <polygon points="50,34 32,34 50,56" fill="#0288D1"/>
+      <ellipse cx="43" cy="21" rx="5" ry="3" fill="white" opacity=".72" transform="rotate(-20 43 21)"/>
+      <polygon points="22,52 34,66 22,80 10,66" fill="#FF5252" stroke="#B71C1C" strokeWidth="1.8"/>
+      <polygon points="22,52 34,66 22,66" fill="#FF8A80"/>
+      <polygon points="22,52 10,66 22,66" fill="#E53935"/>
+      <polygon points="22,66 34,66 22,80" fill="#C62828"/>
+      <polygon points="22,66 10,66 22,80" fill="#B71C1C"/>
+      <ellipse cx="17" cy="59" rx="3" ry="2" fill="white" opacity=".6" transform="rotate(-20 17 59)"/>
+      <polygon points="78,52 90,66 78,80 66,66" fill="#536DFE" stroke="#1A237E" strokeWidth="1.8"/>
+      <polygon points="78,52 90,66 78,66" fill="#8C9EFF"/>
+      <polygon points="78,52 66,66 78,66" fill="#3D5AFE"/>
+      <polygon points="78,66 90,66 78,80" fill="#283593"/>
+      <polygon points="78,66 66,66 78,80" fill="#1A237E"/>
+      <ellipse cx="73" cy="59" rx="3" ry="2" fill="white" opacity=".6" transform="rotate(-20 73 59)"/>
+      <circle cx="9" cy="24" r="2.5" fill="#FFD700" opacity=".7"/>
+      <circle cx="90" cy="82" r="2" fill="#FFD700" opacity=".6"/>
+    </svg>
+  ),
+  s1: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="88" cy="10" r="2" fill="white" opacity=".4"/>
+      <rect x="20" y="50" width="60" height="12" rx="3" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1.5"/>
+      <rect x="22" y="52" width="20" height="4" rx="1" fill="#A5D6A7" opacity=".4"/>
+      <rect x="20" y="38" width="12" height="12" rx="3" fill="#42A5F5" stroke="#1565C0" strokeWidth="1.5"/>
+      <rect x="32" y="38" width="12" height="12" rx="3" fill="#42A5F5" stroke="#1565C0" strokeWidth="1.5"/>
+      <rect x="44" y="26" width="12" height="12" rx="3" fill="#42A5F5" stroke="#1565C0" strokeWidth="1.5"/>
+      <rect x="44" y="38" width="12" height="12" rx="3" fill="#42A5F5" stroke="#1565C0" strokeWidth="1.5"/>
+      <rect x="56" y="14" width="12" height="12" rx="3" fill="#FF5252" stroke="#B71C1C" strokeWidth="1.5"/>
+      <rect x="56" y="26" width="12" height="12" rx="3" fill="#FF5252" stroke="#B71C1C" strokeWidth="1.5"/>
+      <rect x="68" y="26" width="12" height="12" rx="3" fill="#FF5252" stroke="#B71C1C" strokeWidth="1.5"/>
+      <circle cx="26" cy="44" r="2" fill="white" stroke="#1565C0" strokeWidth=".8"/>
+      <circle cx="26.5" cy="44" r="1" fill="#1a1a2e"/>
+      <circle cx="38" cy="44" r="2" fill="white" stroke="#1565C0" strokeWidth=".8"/>
+      <circle cx="38.5" cy="44" r="1" fill="#1a1a2e"/>
+      <rect x="8" y="8" width="12" height="12" rx="3" fill="#FFD700" stroke="#F57F17" strokeWidth="1.5" opacity=".8"/>
+      <rect x="8" y="20" width="12" height="12" rx="3" fill="#FFD700" stroke="#F57F17" strokeWidth="1.5" opacity=".8"/>
+    </svg>
+  ),
+  s2: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="88" cy="12" r="2" fill="#FFD700" opacity=".6"/>
+      <rect x="0" y="68" width="100" height="17" rx="3" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1.5"/>
+      <rect x="72" y="54" width="10" height="15" rx="2" fill="#8D6E63" stroke="#5D4037" strokeWidth="1.5"/>
+      <rect x="86" y="46" width="10" height="23" rx="2" fill="#8D6E63" stroke="#5D4037" strokeWidth="1.5"/>
+      <ellipse cx="30" cy="52" rx="18" ry="12" fill="#FF8F00" stroke="#E65100" strokeWidth="2"/>
+      <ellipse cx="44" cy="46" rx="10" ry="12" fill="#FF8F00" stroke="#E65100" strokeWidth="2"/>
+      <polygon points="38,36 42,25 46,36" fill="#FF8F00" stroke="#E65100" strokeWidth="1.5"/>
+      <polygon points="39,36 42,28 45,36" fill="#FFCDD2"/>
+      <polygon points="48,34 52,23 56,34" fill="#FF8F00" stroke="#E65100" strokeWidth="1.5"/>
+      <polygon points="49,34 52,26 55,34" fill="#FFCDD2"/>
+      <circle cx="48" cy="42" r="3" fill="white" stroke="#E65100" strokeWidth="1"/>
+      <circle cx="48.6" cy="42" r="1.8" fill="#1a1a2e"/>
+      <circle cx="49" cy="41.2" r=".7" fill="white"/>
+      <ellipse cx="44" cy="47" rx="3" ry="2" fill="#FFCCBC" opacity=".7"/>
+      <path d="M13 58Q0 50 4 40Q8 36 14 46" fill="#FF8F00" stroke="#E65100" strokeWidth="1.5"/>
+      <ellipse cx="6" cy="40" rx="4" ry="6" fill="white" stroke="#E65100" strokeWidth="1"/>
+      <line x1="22" y1="63" x2="16" y2="76" stroke="#E65100" strokeWidth="3" strokeLinecap="round"/>
+      <line x1="30" y1="63" x2="38" y2="76" stroke="#E65100" strokeWidth="3" strokeLinecap="round"/>
+    </svg>
+  ),
+  s3: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="20" cy="30" r="1.5" fill="white" opacity=".5"/>
+      <circle cx="75" cy="18" r="1" fill="white" opacity=".4"/>
+      <circle cx="50" cy="8" r="1.5" fill="white" opacity=".5"/>
+      <ellipse cx="50" cy="45" rx="12" ry="22" fill="#E53935" stroke="#B71C1C" strokeWidth="2"/>
+      <polygon points="50,15 40,30 60,30" fill="#FF7043" stroke="#BF360C" strokeWidth="1.5"/>
+      <rect x="38" y="52" width="24" height="8" rx="2" fill="#C62828"/>
+      <circle cx="50" cy="38" r="7" fill="#B2EBF2" stroke="#00838F" strokeWidth="1.5"/>
+      <circle cx="50" cy="38" r="5" fill="#E0F7FA"/>
+      <circle cx="47" cy="37" r="1.5" fill="#1a1a2e"/>
+      <circle cx="53" cy="37" r="1.5" fill="#1a1a2e"/>
+      <path d="M47 41Q50 43 53 41" stroke="#00838F" strokeWidth="1" fill="none" strokeLinecap="round"/>
+      <ellipse cx="44" cy="64" rx="4" ry="8" fill="#FF9800" opacity=".9"/>
+      <ellipse cx="56" cy="64" rx="4" ry="8" fill="#FF9800" opacity=".9"/>
+      <ellipse cx="50" cy="66" rx="5" ry="10" fill="#FFD700" opacity=".8"/>
+      <polygon points="28,42 38,36 38,58" fill="#C62828" stroke="#B71C1C" strokeWidth="1.5"/>
+      <polygon points="72,42 62,36 62,58" fill="#C62828" stroke="#B71C1C" strokeWidth="1.5"/>
+      <circle cx="22" cy="22" r="8" fill="#7B1FA2" stroke="#4A148C" strokeWidth="1.5"/>
+      <circle cx="19" cy="20" r="2" fill="white" stroke="#4A148C" strokeWidth=".8"/>
+      <circle cx="25" cy="20" r="2" fill="white" stroke="#4A148C" strokeWidth=".8"/>
+      <circle cx="19.5" cy="20" r="1" fill="#1a1a2e"/>
+      <circle cx="25.5" cy="20" r="1" fill="#1a1a2e"/>
+      <circle cx="80" cy="15" r="7" fill="#1565C0" stroke="#0D47A1" strokeWidth="1.5"/>
+      <circle cx="77" cy="13" r="1.8" fill="white" stroke="#0D47A1" strokeWidth=".8"/>
+      <circle cx="83" cy="13" r="1.8" fill="white" stroke="#0D47A1" strokeWidth=".8"/>
+    </svg>
+  ),
+  s4: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="10" r="2" fill="white" opacity=".4"/>
+      <circle cx="50" cy="42" r="34" fill="none" stroke="rgba(255,255,255,.5)" strokeWidth="2"/>
+      <circle cx="50" cy="42" r="25" fill="none" stroke="rgba(255,255,255,.5)" strokeWidth="2"/>
+      <circle cx="50" cy="42" r="16" fill="none" stroke="rgba(255,255,255,.6)" strokeWidth="2"/>
+      <circle cx="50" cy="42" r="7" fill="#FF5252" stroke="white" strokeWidth="2"/>
+      <line x1="50" y1="5" x2="50" y2="78" stroke="rgba(255,255,255,.5)" strokeWidth="1.5" strokeDasharray="4 4"/>
+      <line x1="8" y1="42" x2="92" y2="42" stroke="rgba(255,255,255,.5)" strokeWidth="1.5" strokeDasharray="4 4"/>
+      <circle cx="50" cy="42" r="5" fill="#FF8F00" stroke="#E65100" strokeWidth="1.2"/>
+      <circle cx="22" cy="22" r="9" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1.5"/>
+      <circle cx="20" cy="20" r="2.5" fill="white" stroke="#2E7D32" strokeWidth=".8"/>
+      <circle cx="24" cy="20" r="2.5" fill="white" stroke="#2E7D32" strokeWidth=".8"/>
+      <circle cx="20.5" cy="20" r="1.2" fill="#1a1a2e"/>
+      <circle cx="24.5" cy="20" r="1.2" fill="#1a1a2e"/>
+      <circle cx="78" cy="65" r="9" fill="#E91E63" stroke="#880E4F" strokeWidth="1.5"/>
+      <circle cx="76" cy="63" r="2.5" fill="white" stroke="#880E4F" strokeWidth=".8"/>
+      <circle cx="80" cy="63" r="2.5" fill="white" stroke="#880E4F" strokeWidth=".8"/>
+      <circle cx="76.5" cy="63" r="1.2" fill="#1a1a2e"/>
+      <circle cx="80.5" cy="63" r="1.2" fill="#1a1a2e"/>
+    </svg>
+  ),
+  s5: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="88" cy="12" r="2" fill="#FFD700" opacity=".6"/>
+      <rect x="0" y="38" width="100" height="22" fill="#616161" stroke="#424242" strokeWidth="1"/>
+      <rect x="8" y="47" width="12" height="4" rx="1" fill="white" opacity=".8"/>
+      <rect x="30" y="47" width="12" height="4" rx="1" fill="white" opacity=".8"/>
+      <rect x="52" y="47" width="12" height="4" rx="1" fill="white" opacity=".8"/>
+      <rect x="74" y="47" width="12" height="4" rx="1" fill="white" opacity=".8"/>
+      <rect x="55" y="28" width="38" height="18" rx="4" fill="#E53935" stroke="#B71C1C" strokeWidth="1.5"/>
+      <rect x="60" y="20" width="26" height="10" rx="3" fill="#EF9A9A" stroke="#B71C1C" strokeWidth="1.2"/>
+      <rect x="62" y="22" width="10" height="7" rx="1" fill="#B2EBF2" opacity=".8"/>
+      <rect x="76" y="22" width="8" height="7" rx="1" fill="#B2EBF2" opacity=".8"/>
+      <circle cx="63" cy="46" r="5" fill="#424242" stroke="#212121" strokeWidth="1.5"/>
+      <circle cx="63" cy="46" r="2.5" fill="#9E9E9E"/>
+      <circle cx="84" cy="46" r="5" fill="#424242" stroke="#212121" strokeWidth="1.5"/>
+      <circle cx="84" cy="46" r="2.5" fill="#9E9E9E"/>
+      <ellipse cx="28" cy="32" rx="9" ry="7" fill="#FF8F00" stroke="#E65100" strokeWidth="1.5"/>
+      <circle cx="28" cy="22" r="7" fill="#FF8F00" stroke="#E65100" strokeWidth="1.5"/>
+      <polygon points="22,22 18,25 22,27" fill="#FFD700" stroke="#F57F17" strokeWidth="1"/>
+      <circle cx="25" cy="21" r="2.5" fill="white" stroke="#E65100" strokeWidth="1"/>
+      <circle cx="25.5" cy="21" r="1.3" fill="#1a1a2e"/>
+      <line x1="24" y1="38" x2="20" y2="55" stroke="#FFD700" strokeWidth="3" strokeLinecap="round"/>
+      <line x1="32" y1="38" x2="36" y2="55" stroke="#FFD700" strokeWidth="3" strokeLinecap="round"/>
+    </svg>
+  ),
+};
 
 /* ════════════════════════════════════════════════════
    ① 更新日時（手動で更新する定数）
@@ -251,24 +722,18 @@ function PlayCounter({ target, lang }) {
 }
 
 /* ════════════════════════════════════════════════════
-   ゲームカード（グラスモーフィズム）
+   ゲームカード（リッチ化）
 ════════════════════════════════════════════════════ */
 function GameCard({ game, lang, isRecommended, onClick, animIndex }) {
   const t = game[lang] || game.ja;
-  const gradient = CAT_GRADIENT[game.category] || `linear-gradient(145deg, ${game.color}, ${game.color}bb)`;
-  // 星評価（塗り / 空白）
+  const gradient = CARD_GRADIENTS[game.category] || DEFAULT_GRADIENT;
   const starsFilled = Math.round(game.stars);
-  const starsEl = Array.from({length: 5}, (_, i) => (
-    <span key={i} className={i < starsFilled ? 'tp-star tp-star--filled' : 'tp-star'}>
-      {i < starsFilled ? '★' : '☆'}
-    </span>
-  ));
+  const svg = GAME_SVGS[game.id] || null;
 
   return (
     <button
       className={`tp-card${isRecommended ? ' tp-card--recommend' : ''}`}
       style={{
-        '--card-color': game.color,
         '--card-gradient': gradient,
         '--card-delay': `${(animIndex ?? 0) * 0.08}s`,
       }}
@@ -276,21 +741,18 @@ function GameCard({ game, lang, isRecommended, onClick, animIndex }) {
     >
       {isRecommended && (
         <div className="tp-card-ribbon">
-          {{ja:'⭐ きょうのおすすめ！', en:'⭐ Today\'s Pick!', zh:'⭐ 今日推荐！', ko:'⭐ 오늘의 추천!', es:'⭐ ¡Recomendado!'}[lang] || '⭐ きょうのおすすめ！'}
+          {{ja:'⭐ きょうのおすすめ！', en:"⭐ Today's Pick!", zh:'⭐ 今日推荐！', ko:'⭐ 오늘의 추천!', es:'⭐ ¡Recomendado!'}[lang] || '⭐ きょうのおすすめ！'}
         </div>
       )}
 
-      <div className="tp-card-top">
-        {game.isNew && (
-          <span className="tp-card-new">
-            {{ja:'NEW', en:'NEW', zh:'NEW', ko:'NEW', es:'NEW'}[lang] || 'NEW'}
-          </span>
-        )}
+      <div className="tp-card-art">
         {game.category && (
           <span className="tp-card-cat">{game.category}</span>
         )}
-        <span className="tp-card-icon">{game.icon}</span>
-        <div className="tp-card-shine" />
+        {game.isNew && (
+          <span className="tp-card-new">NEW</span>
+        )}
+        {svg || <span className="tp-card-icon-fb">{game.icon}</span>}
       </div>
 
       <div className="tp-card-body">
@@ -303,7 +765,11 @@ function GameCard({ game, lang, isRecommended, onClick, animIndex }) {
             </React.Fragment>
           ))}
         </div>
-        <div className="tp-card-stars">{starsEl}</div>
+        <div className="tp-card-stars">
+          {Array.from({length: 5}, (_, i) => (
+            <span key={i} className={i < starsFilled ? 'tp-star tp-star--filled' : 'tp-star'}>★</span>
+          ))}
+        </div>
       </div>
     </button>
   );
@@ -532,14 +998,6 @@ export default function TopPage() {
 
         {/* ⑤ プレイカウンター */}
         <PlayCounter target={playCount} lang={lang} />
-      </div>
-
-      {/* ① 更新バー */}
-      <div className="tp-update-bar">
-        {lang === 'en' ? '🕐 Last Update: ' : lang === 'zh' ? '🕐 最后更新：' : lang === 'ko' ? '🕐 최근 업데이트：' : lang === 'es' ? '🕐 Última actualización: ' : '🕐 さいごのこうしん：'}
-        {lastUpdateText}
-        {'　✦　'}
-        {lang === 'en' ? 'New games coming soon!' : lang === 'zh' ? '新游戏陆续推出！' : lang === 'ko' ? '새 게임이 계속 추가돼요!' : lang === 'es' ? '¡Nuevos juegos pronto!' : 'あたらしいゲームが どんどん くるよ！'}
       </div>
 
       {/* ── ゲームセクション ── */}
