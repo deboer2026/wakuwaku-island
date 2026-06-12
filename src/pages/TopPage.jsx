@@ -1117,7 +1117,7 @@ export default function TopPage() {
         </div>
         <div style={{ marginTop: 6, fontSize: 11, color: 'rgba(0,0,0,0.28)', display:'flex', justifyContent:'center', gap:12 }}>
           <span>© 2025 Wakuwaku Island</span>
-          <span style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>v1.0.2</span>
+          <span style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>v1.0.3</span>
         </div>
       </div>
 
