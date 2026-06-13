@@ -14,17 +14,17 @@ canvas{position:absolute;top:0;left:0;display:block;}
 #dl{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden;z-index:6;}
 
 /* HUD */
-#hud{position:absolute;top:0;left:0;right:0;z-index:20;
-  padding: max(8px, env(safe-area-inset-top, 0px)) 12px 6px;
-  background:linear-gradient(180deg,rgba(0,60,0,0.3),transparent);
+#hud{position:fixed;top:0;left:0;right:0;z-index:100;
   display:flex;justify-content:space-between;align-items:center;
-  pointer-events:none;}
+  padding:max(10px,env(safe-area-inset-top)) 12px 8px;
+  background:linear-gradient(180deg,rgba(0,0,0,0.75) 0%,rgba(0,0,0,0.4) 70%,transparent 100%);
+  box-sizing:border-box;}
 #hud-stage{font-size:13px;font-weight:800;color:white;text-shadow:0 1px 4px rgba(0,60,0,0.5);}
 #hud-score{font-size:18px;font-weight:900;color:white;text-shadow:0 1px 4px rgba(0,60,0,0.5);}
 #hud-life{font-size:16px;}
 
 /* クリア条件バー */
-#goal-bar{position:absolute;top:44px;left:12px;right:12px;z-index:20;pointer-events:none;}
+#goal-bar{position:absolute;top:88px;left:12px;right:12px;z-index:20;pointer-events:none;}
 #goal-label{font-size:10px;font-weight:800;color:rgba(255,255,255,0.9);
   text-shadow:0 1px 3px rgba(0,60,0,0.4);margin-bottom:3px;}
 #goal-bg{height:8px;background:rgba(255,255,255,0.3);border-radius:4px;overflow:hidden;}
@@ -32,10 +32,10 @@ canvas{position:absolute;top:0;left:0;display:block;}
   background:linear-gradient(90deg,#FFD700,#FF8C00);}
 
 /* コンボ・パワーアップ */
-#combo-disp{position:absolute;top:70px;right:12px;z-index:20;pointer-events:none;
+#combo-disp{position:absolute;top:110px;right:12px;z-index:20;pointer-events:none;
   font-size:15px;font-weight:900;color:#FFD700;
   text-shadow:0 0 10px rgba(255,215,0,0.7);display:none;}
-#power-disp{position:absolute;top:70px;left:12px;z-index:20;pointer-events:none;
+#power-disp{position:absolute;top:110px;left:12px;z-index:20;pointer-events:none;
   font-size:11px;font-weight:800;background:rgba(0,0,0,0.3);
   border-radius:10px;padding:3px 10px;color:white;display:none;}
 
@@ -48,10 +48,9 @@ canvas{position:absolute;top:0;left:0;display:block;}
   100%{transform:translate(-50%,-50%) scale(1);opacity:1;}}
 
 /* もどる */
-#back-btn{position:absolute;bottom: max(16px, env(safe-area-inset-bottom, 16px));left:12px;z-index:20;
-  background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.4);
-  border-radius:18px;padding:7px 16px;color:white;font-size:12px;
-  font-weight:700;cursor:pointer;font-family:inherit;}
+#back-btn{background:rgba(0,0,0,0.5);color:white;border:1px solid rgba(255,255,255,0.3);
+  border-radius:20px;padding:6px 14px;font-size:13px;font-weight:700;
+  cursor:pointer;pointer-events:all;font-family:inherit;}
 
 /* スコアポップ */
 @keyframes scoreFloat{0%{transform:translateX(-50%) translateY(0);opacity:1;}
@@ -114,10 +113,7 @@ canvas{position:absolute;top:0;left:0;display:block;}
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
 }
-#ui-home-btn, #ui-bgm-btn {
-  position: fixed;
-  top: max(12px, env(safe-area-inset-top, 12px));
-  z-index: 9999;
+#ui-bgm-btn {
   width: 40px; height: 40px;
   background: rgba(0,0,0,0.5);
   border: 1.5px solid rgba(255,255,255,0.4);
@@ -127,19 +123,26 @@ canvas{position:absolute;top:0;left:0;display:block;}
   display: flex; align-items: center; justify-content: center;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
 }
-#ui-home-btn { left: 12px; }
-#ui-bgm-btn  { right: 12px; }
+#status-bar {
+  position: fixed;
+  top: calc(max(10px, env(safe-area-inset-top)) + 44px);
+  left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 12px;
+  z-index: 99;
+  pointer-events: none;
+}
 
 /* === 横向き対応 === */
 @media (orientation: landscape) {
   body { overflow-y: auto; }
-  #hud, #ui-home-btn, #ui-bgm-btn {
-    top: max(6px, env(safe-area-inset-top, 6px));
-  }
-  #back-btn {
-    bottom: max(8px, env(safe-area-inset-bottom, 8px));
-  }
+  #hud { top: max(6px, env(safe-area-inset-top, 6px)); }
+  #status-bar { top: calc(max(6px, env(safe-area-inset-top, 6px)) + 40px); }
 }
 @media (orientation: landscape) and (max-height: 500px) {
   /* 横向き時にゲームエリアを縮小・スクロール対応 */
@@ -154,6 +157,10 @@ canvas{position:absolute;top:0;left:0;display:block;}
   <canvas id="cv"></canvas>
   <div id="dl"></div>
   <div id="hud">
+    <button id="back-btn" onclick="goBack()">🏠 もどる</button>
+    <button id="ui-bgm-btn" onclick="toggleCommonBGM()">🔊</button>
+  </div>
+  <div id="status-bar">
     <div id="hud-stage">ステージ 1</div>
     <div id="hud-score">🍎 0</div>
     <div id="hud-life">❤️❤️❤️</div>
@@ -165,7 +172,7 @@ canvas{position:absolute;top:0;left:0;display:block;}
   <div id="combo-disp"></div>
   <div id="power-disp"></div>
   <div id="stage-banner"></div>
-  <button id="back-btn" onclick="goBack()">← もどる</button>
+
 
   <!-- タイトル -->
   <div id="ts">
@@ -941,7 +948,6 @@ function toggleCommonBGM(){
 </script>
 
   <!-- 共通UIボタン -->
-  <button id="ui-home-btn" onclick="goHome()">🏠</button>
-  <button id="ui-bgm-btn" onclick="toggleCommonBGM()">🔊</button>
+
 </body>
 </html>

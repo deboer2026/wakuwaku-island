@@ -9,12 +9,14 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{width:100%;height:100%;overflow:hidden;font-family:'M PLUS Rounded 1c',sans-serif;user-select:none;}
 body{background:linear-gradient(135deg,#1a0a2e,#16213e,#0f3460);}
-#wrap{position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden;}
+#wrap{position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden;padding-top:90px;box-sizing:border-box;}
 
 /* HUD */
-#hud{flex-shrink:0;padding: max(8px, env(safe-area-inset-top, 0px)) 14px 5px;
-  background:linear-gradient(180deg,rgba(0,0,0,0.5),transparent);
-  display:flex;justify-content:space-between;align-items:center;}
+#hud{position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:max(10px,env(safe-area-inset-top)) 12px 8px;
+  background:linear-gradient(180deg,rgba(0,0,0,0.75) 0%,rgba(0,0,0,0.4) 70%,transparent 100%);
+  box-sizing:border-box;}
 #hud-stage{font-size:13px;font-weight:800;color:#CE93D8;text-shadow:0 0 8px rgba(206,147,216,0.4);}
 #hud-score{font-size:18px;font-weight:900;color:#FFD700;text-shadow:0 0 10px rgba(255,215,0,0.4);}
 #hud-life{font-size:15px;}
@@ -62,10 +64,9 @@ body{background:linear-gradient(135deg,#1a0a2e,#16213e,#0f3460);}
   border-color:#EF5350;}
 
 /* もどる */
-#back-btn{position:absolute;bottom:14px;left:12px;z-index:20;
-  background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.2);
-  border-radius:16px;padding:6px 14px;color:rgba(255,255,255,0.75);
-  font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+#back-btn{background:rgba(0,0,0,0.5);color:white;border:1px solid rgba(255,255,255,0.3);
+  border-radius:20px;padding:6px 14px;font-size:13px;font-weight:700;
+  cursor:pointer;pointer-events:all;font-family:inherit;}
 
 /* コンボ */
 #combo-disp{position:absolute;top:75px;right:14px;z-index:20;
@@ -137,10 +138,7 @@ body{background:linear-gradient(135deg,#1a0a2e,#16213e,#0f3460);}
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
 }
-#ui-home-btn, #ui-bgm-btn {
-  position: fixed;
-  top: max(12px, env(safe-area-inset-top, 12px));
-  z-index: 9999;
+#ui-bgm-btn {
   width: 40px; height: 40px;
   background: rgba(0,0,0,0.5);
   border: 1.5px solid rgba(255,255,255,0.4);
@@ -150,19 +148,26 @@ body{background:linear-gradient(135deg,#1a0a2e,#16213e,#0f3460);}
   display: flex; align-items: center; justify-content: center;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
 }
-#ui-home-btn { left: 12px; }
-#ui-bgm-btn  { right: 12px; }
+#status-bar {
+  position: fixed;
+  top: calc(max(10px, env(safe-area-inset-top)) + 44px);
+  left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 12px;
+  z-index: 99;
+  pointer-events: none;
+}
 
 /* === 横向き対応 === */
 @media (orientation: landscape) {
   body { overflow-y: auto; }
-  #hud, #ui-home-btn, #ui-bgm-btn {
-    top: max(6px, env(safe-area-inset-top, 6px));
-  }
-  #back-btn {
-    bottom: max(8px, env(safe-area-inset-bottom, 8px));
-  }
+  #hud { top: max(6px, env(safe-area-inset-top, 6px)); }
+  #status-bar { top: calc(max(6px, env(safe-area-inset-top, 6px)) + 40px); }
 }
 @media (orientation: landscape) and (max-height: 500px) {
   /* 横向き時にゲームエリアを縮小・スクロール対応 */
@@ -175,6 +180,10 @@ body{background:linear-gradient(135deg,#1a0a2e,#16213e,#0f3460);}
 
 <div id="wrap">
   <div id="hud">
+    <button id="back-btn" onclick="goBack()">🏠 もどる</button>
+    <button id="ui-bgm-btn" onclick="toggleCommonBGM()">🔊</button>
+  </div>
+  <div id="status-bar">
     <div id="hud-stage">ステージ 1</div>
     <div id="hud-score">⭐ 0</div>
     <div id="hud-life">❤️❤️❤️</div>
@@ -188,7 +197,7 @@ body{background:linear-gradient(135deg,#1a0a2e,#16213e,#0f3460);}
   </div>
   <div id="combo-disp"></div>
   <div id="stage-banner"></div>
-  <button id="back-btn" onclick="goBack()">← もどる</button>
+
 
   <!-- タイトル -->
   <div id="ts">
@@ -682,7 +691,6 @@ function toggleCommonBGM(){
 </script>
 
   <!-- 共通UIボタン -->
-  <button id="ui-home-btn" onclick="goHome()">🏠</button>
-  <button id="ui-bgm-btn" onclick="toggleCommonBGM()">🔊</button>
+
 </body>
 </html>
