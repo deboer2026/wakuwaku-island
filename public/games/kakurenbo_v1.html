@@ -143,6 +143,7 @@ body{background:#2d5a1b;}
 #go-home{background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.3);border-radius:32px;padding:10px 32px;font-size:16px;font-weight:800;color:#fff;cursor:pointer;font-family:'M PLUS Rounded 1c',sans-serif;}
 
 </style>
+<script src="/games/wakuwaku_bgm.js"></script>
 </head>
 <body>
 <div id="wrap">
@@ -259,59 +260,44 @@ const PARTICLE_COLORS=['#FFD700','#FF8C00','#FF6B6B','#4CAF50','#00BCD4','#E91E6
 let currentStage=0,selectedStage=0,score=0,timeLeft=0,timerInterval=null;
 let objects=[],targets=[],foundTargets=[];
 let gameActive=false,stageStartTime=0;
-let audioCtx=null,bgmNode=null,bgmOn=(function(){var s=localStorage.getItem('wakuwaku_bgm');return s!==null?s==='on':true;})();
+let audioCtx=null;
 
-function initBGM(){
-  if(audioCtx)return;
-  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-  playBGM();
+// ── BGM (WakuwakuBGM library) ──────────────────────
+let _bgm = null;
+
+function initBGM() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  if (_bgm) return;
+  _bgm = new WakuwakuBGM('cute');
+  const on = WakuwakuBGM.loadState();
+  _bgm.setEnabled(on);
+  if (on) _bgm.start();
+  _syncBgmBtn();
 }
 
-function playBGM(){
-  if(!audioCtx||!bgmOn)return;
-  const masterGain=audioCtx.createGain();
-  masterGain.gain.value=0.18;
-  masterGain.connect(audioCtx.destination);
-  bgmNode=masterGain;
-  const notes=[261.6,293.7,329.6,349.2,392,440,493.9,523.3];
-  const melody=[0,2,4,5,4,2,0,2,4,7,5,4,2,0,2,4,5,7,9,7,5,4,2,0];
-  let t=audioCtx.currentTime;
-  const loop=()=>{
-    melody.forEach((n,i)=>{
-      const osc=audioCtx.createOscillator();
-      const g=audioCtx.createGain();
-      osc.type='sine';
-      osc.frequency.value=notes[n%notes.length];
-      g.gain.setValueAtTime(0,t+i*0.25);
-      g.gain.linearRampToValueAtTime(0.4,t+i*0.25+0.05);
-      g.gain.linearRampToValueAtTime(0,t+i*0.25+0.22);
-      osc.connect(g);g.connect(masterGain);
-      osc.start(t+i*0.25);osc.stop(t+i*0.25+0.25);
-    });
-    const chord=[261.6,329.6,392];
-    chord.forEach(f=>{
-      const osc=audioCtx.createOscillator();
-      const g=audioCtx.createGain();
-      osc.type='triangle';
-      osc.frequency.value=f/2;
-      g.gain.setValueAtTime(0.08,t);
-      g.gain.linearRampToValueAtTime(0.08,t+melody.length*0.25-0.1);
-      g.gain.linearRampToValueAtTime(0,t+melody.length*0.25);
-      osc.connect(g);g.connect(masterGain);
-      osc.start(t);osc.stop(t+melody.length*0.25);
-    });
-    t+=melody.length*0.25;
-    if(bgmOn)setTimeout(loop,melody.length*250-100);
-  };
-  loop();
+function toggleBGM() {
+  if (!_bgm) { initBGM(); return; }
+  const on = _bgm.toggle();
+  WakuwakuBGM.saveState(on);
+  _syncBgmBtn();
 }
 
-function toggleBGM(){
-  bgmOn=!bgmOn;
-  localStorage.setItem('wakuwaku_bgm',bgmOn?'on':'off');
-  document.getElementById('ui-bgm-btn').textContent=bgmOn?'🔊':'🔇';
-  if(bgmOn){initBGM();}
+function _syncBgmBtn() {
+  const on = _bgm ? _bgm.enabled : WakuwakuBGM.loadState();
+  const btns = document.querySelectorAll(
+    '#bgm-btn,#ui-bgm-btn,#bgm-toggle,#sound-btn,.bgm-btn'
+  );
+  btns.forEach(b => { b.textContent = on ? '🔊' : '🔇'; });
 }
+
+(function(){
+  function _first(){ initBGM(); }
+  document.addEventListener('click', _first, { once: true });
+  document.addEventListener('touchstart', _first, { once: true });
+})();
+// ── End BGM ────────────────────────────────────────
 
 function playSE(type){
   if(!audioCtx)return;

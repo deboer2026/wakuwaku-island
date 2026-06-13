@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -161,6 +161,7 @@ canvas#bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-eve
 .pop-word { position:fixed; font-weight:900; pointer-events:none; z-index:49; font-size:24px; animation:pWord .9s ease forwards; }
 @keyframes pWord { 0%{opacity:0;transform:translateY(10px) scale(.6)} 25%{opacity:1;transform:translateY(-8px) scale(1.2)} 100%{opacity:0;transform:translateY(-60px) scale(.9)} }
 </style>
+<script src="/games/wakuwaku_bgm.js"></script>
 </head>
 <body>
 <div id="game-wrap">
@@ -464,6 +465,42 @@ function endGame(){
 }
 function goBack(){if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');else history.back();}
 updateHiBadge();
+</script>
+
+<script>
+// ── BGM (WakuwakuBGM library) ──────────────────────
+let _bgm = null;
+
+function _startBGM() {
+  if (_bgm) return;
+  _bgm = new WakuwakuBGM('magical');
+  const on = WakuwakuBGM.loadState();
+  _bgm.setEnabled(on);
+  if (on) _bgm.start();
+  _syncBgmBtn();
+}
+
+function toggleCommonBGM() {
+  if (!_bgm) { _startBGM(); return; }
+  const on = _bgm.toggle();
+  WakuwakuBGM.saveState(on);
+  _syncBgmBtn();
+}
+
+function _syncBgmBtn() {
+  const on = _bgm ? _bgm.enabled : WakuwakuBGM.loadState();
+  const btns = document.querySelectorAll(
+    '#bgm-btn,#ui-bgm-btn,#bgm-toggle,#sound-btn,.bgm-btn'
+  );
+  btns.forEach(b => { b.textContent = on ? '🔊' : '🔇'; });
+}
+
+(function(){
+  function _first(){ _startBGM(); }
+  document.addEventListener('click', _first, { once: true });
+  document.addEventListener('touchstart', _first, { once: true });
+})();
+// ── End BGM ────────────────────────────────────────
 </script>
 </body>
 </html>

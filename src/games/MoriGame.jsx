@@ -1,16 +1,7 @@
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function MoriGame() {
   const navigate = useNavigate();
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.data?.type === 'goBack') navigate(-1);
-      if (e.data?.type === 'goHome') navigate('/');
-    };
-    window.addEventListener('message', handler);
-    return () => window.removeEventListener('message', handler);
-  }, [navigate]);
   return (
     <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:0, overflow:'hidden' }}>
       <iframe
@@ -21,6 +12,17 @@ export default function MoriGame() {
         allowFullScreen
         sandbox="allow-scripts allow-same-origin allow-popups"
       />
+      <button
+        onClick={() => navigate('/')}
+        style={{
+          position:'absolute', top:10, left:10, zIndex:10,
+          background:'rgba(0,0,0,0.55)', color:'white',
+          border:'1.5px solid rgba(255,255,255,0.3)', borderRadius:20,
+          padding:'5px 14px', fontSize:12, fontWeight:700, cursor:'pointer'
+        }}
+      >
+        🏠 もどる
+      </button>
     </div>
   );
 }

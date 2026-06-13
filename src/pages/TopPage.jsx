@@ -492,6 +492,111 @@ const GAME_SVGS = {
       <line x1="32" y1="38" x2="36" y2="55" stroke="#FFD700" strokeWidth="3" strokeLinecap="round"/>
     </svg>
   ),
+  g_mori: (
+    <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="140" fill="#87CEEB" rx="8"/>
+      <circle cx="170" cy="25" r="18" fill="#FFD700" opacity="0.9"/>
+      <polygon points="30,110 55,60 80,110" fill="#2d7a2d"/>
+      <polygon points="60,110 85,55 110,110" fill="#3a9a3a"/>
+      <polygon points="130,110 155,58 180,110" fill="#2d7a2d"/>
+      <rect y="108" width="200" height="32" fill="#5a8f3c"/>
+      <rect y="108" width="200" height="8" fill="#7ab84a"/>
+      <rect x="82" y="88" width="36" height="10" fill="#e09a55" rx="2"/>
+      <line x1="91" y1="88" x2="91" y2="98" stroke="#c8884a" strokeWidth="1"/>
+      <line x1="99" y1="88" x2="99" y2="98" stroke="#c8884a" strokeWidth="1"/>
+      <line x1="107" y1="88" x2="107" y2="98" stroke="#c8884a" strokeWidth="1"/>
+      <ellipse cx="65" cy="90" rx="10" ry="11" fill="#E8834A"/>
+      <ellipse cx="65" cy="84" rx="7" ry="7" fill="#E8834A"/>
+      <polygon points="59,79 57,71 63,76" fill="#E8834A"/>
+      <polygon points="71,79 73,71 67,76" fill="#E8834A"/>
+      <ellipse cx="65" cy="84" rx="4" ry="4" fill="#f5c499"/>
+      <circle cx="63" cy="82" r="1.2" fill="#222"/>
+      <circle cx="67" cy="82" r="1.2" fill="#222"/>
+      <line x1="20" y1="92" x2="45" y2="92" stroke="white" strokeWidth="2" opacity="0.6"/>
+      <line x1="15" y1="96" x2="40" y2="96" stroke="white" strokeWidth="1.5" opacity="0.4"/>
+      <polygon points="100,70 102,76 108,76 103,80 105,86 100,82 95,86 97,80 92,76 98,76" fill="#FFD700" opacity="0.9"/>
+    </svg>
+  ),
+  g_sora: (
+    <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="skys" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#1a237e"/>
+          <stop offset="100%" stopColor="#3F51B5"/>
+        </linearGradient>
+      </defs>
+      <rect width="200" height="140" fill="url(#skys)" rx="8"/>
+      <circle cx="20" cy="15" r="2" fill="white" opacity="0.8"/>
+      <circle cx="50" cy="8" r="1.5" fill="white" opacity="0.7"/>
+      <circle cx="170" cy="12" r="2" fill="white" opacity="0.8"/>
+      <circle cx="90" cy="10" r="1.5" fill="white" opacity="0.7"/>
+      <ellipse cx="40" cy="45" rx="20" ry="10" fill="white" opacity="0.25"/>
+      <ellipse cx="160" cy="60" rx="18" ry="9" fill="white" opacity="0.2"/>
+      <circle cx="150" cy="40" r="12" fill="#E53935"/>
+      <circle cx="148" cy="37" r="3" fill="white"/>
+      <circle cx="153" cy="37" r="3" fill="white"/>
+      <circle cx="148" cy="38" r="1.5" fill="#222"/>
+      <circle cx="153" cy="38" r="1.5" fill="#222"/>
+      <circle cx="30" cy="75" r="10" fill="#8E24AA"/>
+      <circle cx="28" cy="73" r="2.5" fill="white"/>
+      <circle cx="32" cy="73" r="2.5" fill="white"/>
+      <circle cx="28" cy="74" r="1.2" fill="#222"/>
+      <circle cx="32" cy="74" r="1.2" fill="#222"/>
+      <ellipse cx="95" cy="92" rx="11" ry="14" fill="#E91E63"/>
+      <path d="M84,97 Q95,115 106,97 Z" fill="#F48FB1"/>
+      <ellipse cx="95" cy="78" rx="9" ry="10" fill="#FFCDD2"/>
+      <ellipse cx="95" cy="72" rx="9" ry="7" fill="#FFD700"/>
+      <polygon points="88,69 90,62 93,67 95,60 97,67 100,62 102,69" fill="#FFD700"/>
+      <circle cx="95" cy="61" r="2" fill="#E91E63"/>
+      <circle cx="92" cy="76" r="1.8" fill="#222"/>
+      <circle cx="98" cy="76" r="1.8" fill="#222"/>
+      <ellipse cx="82" cy="85" rx="10" ry="5" fill="white" opacity="0.7" transform="rotate(-20,82,85)"/>
+      <ellipse cx="108" cy="85" rx="10" ry="5" fill="white" opacity="0.7" transform="rotate(20,108,85)"/>
+      <circle cx="120" cy="72" r="4" fill="#FFD700"/>
+      <circle cx="137" cy="62" r="4" fill="#FFD700"/>
+      <circle cx="154" cy="52" r="4" fill="#FFD700"/>
+    </svg>
+  ),
+  g_bike: (
+    <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FF8F00"/>
+          <stop offset="100%" stopColor="#FF6D00"/>
+        </linearGradient>
+      </defs>
+      <rect width="200" height="140" fill="url(#sky2)" rx="8"/>
+      <rect y="95" width="200" height="45" fill="#455A64"/>
+      <rect y="95" width="200" height="6" fill="#546E7A"/>
+      <rect x="10" y="115" width="30" height="4" fill="white" opacity="0.8" rx="2"/>
+      <rect x="60" y="115" width="30" height="4" fill="white" opacity="0.8" rx="2"/>
+      <rect x="110" y="115" width="30" height="4" fill="white" opacity="0.8" rx="2"/>
+      <rect x="160" y="115" width="30" height="4" fill="white" opacity="0.8" rx="2"/>
+      <line x1="0" y1="70" x2="50" y2="70" stroke="white" strokeWidth="2" opacity="0.5"/>
+      <line x1="0" y1="78" x2="40" y2="78" stroke="white" strokeWidth="1.5" opacity="0.35"/>
+      <line x1="0" y1="85" x2="55" y2="85" stroke="white" strokeWidth="2" opacity="0.45"/>
+      <circle cx="95" cy="93" r="18" fill="#212121"/>
+      <circle cx="95" cy="93" r="12" fill="#37474F"/>
+      <circle cx="95" cy="93" r="5" fill="#212121"/>
+      <circle cx="145" cy="96" r="16" fill="#212121"/>
+      <circle cx="145" cy="96" r="10" fill="#37474F"/>
+      <circle cx="145" cy="96" r="4" fill="#212121"/>
+      <path d="M100,78 L130,72 L148,80 L140,93" stroke="#FF6D00" strokeWidth="5" fill="none" strokeLinecap="round"/>
+      <path d="M100,78 L95,93" stroke="#FF6D00" strokeWidth="5" fill="none" strokeLinecap="round"/>
+      <ellipse cx="118" cy="80" rx="16" ry="8" fill="#E64A19"/>
+      <ellipse cx="118" cy="78" rx="12" ry="5" fill="#FF7043"/>
+      <ellipse cx="120" cy="62" rx="10" ry="14" fill="#1565C0"/>
+      <circle cx="120" cy="52" r="12" fill="#F44336"/>
+      <rect x="113" y="54" width="14" height="6" fill="#212121" rx="3"/>
+      <circle cx="75" cy="90" r="5" fill="white" opacity="0.3"/>
+      <circle cx="65" cy="86" r="4" fill="white" opacity="0.2"/>
+      <rect x="170" y="30" width="3" height="40" fill="white" opacity="0.8"/>
+      <rect x="173" y="30" width="8" height="8" fill="#222"/>
+      <rect x="181" y="30" width="8" height="8" fill="white"/>
+      <rect x="173" y="38" width="8" height="8" fill="white"/>
+      <rect x="181" y="38" width="8" height="8" fill="#222"/>
+    </svg>
+  ),
 };
 
 /* ════════════════════════════════════════════════════
@@ -1137,7 +1242,7 @@ export default function TopPage() {
         </div>
         <div style={{ marginTop: 6, fontSize: 11, color: 'rgba(0,0,0,0.28)', display:'flex', justifyContent:'center', gap:12 }}>
           <span>© 2025 Wakuwaku Island</span>
-          <span style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>v1.1.0</span>
+          <span style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>v1.1.1</span>
         </div>
       </div>
 

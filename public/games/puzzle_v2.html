@@ -175,6 +175,7 @@ body{background:linear-gradient(135deg,#1a0a2e,#16213e,#0f3460);}
   #game-area { overflow-y: auto; }
 }
 </style>
+<script src="/games/wakuwaku_bgm.js"></script>
 </head>
 <body>
 
@@ -594,102 +595,40 @@ function goHome(){
   if(window.parent!==window){window.parent.postMessage({type:'goHome'},'*');}
   else{window.location.href='/';}
 }
-var _bgmEnabled=(function(){var s=localStorage.getItem('wakuwaku_bgm');return s!==null?s==='on':true;})();
-function toggleCommonBGM(){
-  _bgmEnabled=!_bgmEnabled;
-  localStorage.setItem('wakuwaku_bgm',_bgmEnabled?'on':'off');
-  var btn=document.getElementById('ui-bgm-btn');
-  if(btn)btn.textContent=_bgmEnabled?'🔊':'🔇';
-  if(window.Tone)Tone.getDestination().mute=!_bgmEnabled;
-  if(window._masterGain)_masterGain.gain.value=_bgmEnabled?1:0;
+// ── BGM (WakuwakuBGM library) ──────────────────────
+let _bgm = null;
+
+function _startBGM() {
+  if (_bgm) return;
+  _bgm = new WakuwakuBGM('puzzle');
+  const on = WakuwakuBGM.loadState();
+  _bgm.setEnabled(on);
+  if (on) _bgm.start();
+  _syncBgmBtn();
 }
 
-// === BGM (Web Audio API) ===
+function toggleCommonBGM() {
+  if (!_bgm) { _startBGM(); return; }
+  const on = _bgm.toggle();
+  WakuwakuBGM.saveState(on);
+  _syncBgmBtn();
+}
+
+function _syncBgmBtn() {
+  const on = _bgm ? _bgm.enabled : WakuwakuBGM.loadState();
+  const btns = document.querySelectorAll(
+    '#bgm-btn,#ui-bgm-btn,#bgm-toggle,#sound-btn,.bgm-btn'
+  );
+  btns.forEach(b => { b.textContent = on ? '🔊' : '🔇'; });
+}
+
+// First interaction triggers BGM start
 (function(){
-  var _ctx=null, _gain=null, _playing=false, _stopped=false;
-  var _notes=[[523,0.4],[659,0.4],[784,0.4],[880,0.4],[784,0.4],[698,0.4],[659,0.4],[587,0.8],[494,0.4],[523,0.4],[587,0.4],[659,0.4],[523,0.4],[494,0.4],[440,0.8]];
-  var _ni=0;
-
-  function _initBGM(){
-    if(_ctx)return;
-    try{
-      _ctx=new(window.AudioContext||window.webkitAudioContext)();
-      _gain=_ctx.createGain();
-      _gain.gain.value=0.1;
-      _gain.connect(_ctx.destination);
-      window._masterGain=_gain;
-    }catch(e){}
-  }
-
-  function _playNote(freq,dur,time){
-    if(!_ctx||_stopped)return;
-    var o=_ctx.createOscillator();
-    var g=_ctx.createGain();
-    o.type='sine';
-    o.frequency.value=freq;
-    g.gain.setValueAtTime(0.1,time);
-    g.gain.exponentialRampToValueAtTime(0.001,time+dur*0.9);
-    o.connect(g);g.connect(_gain);
-    o.start(time);o.stop(time+dur);
-  }
-
-  function _loop(){
-    if(_stopped||!_ctx||!_gain)return;
-    var t=_ctx.currentTime+0.05;
-    _notes.forEach(function(n,i){
-      var offset=0;
-      for(var j=0;j<i;j++)offset+=_notes[j][1];
-      _playNote(n[0],n[1],t+offset);
-    });
-    var total=_notes.reduce(function(s,n){return s+n[1];},0);
-    _loopTimer=setTimeout(_loop,(total-0.1)*1000);
-  }
-  var _loopTimer=null;
-
-  function startBGM(){
-    if(_playing)return;
-    _initBGM();
-    if(!_ctx)return;
-    _stopped=false;_playing=true;
-    if(_ctx.state==='suspended')_ctx.resume();
-    _loop();
-  }
-
-  function stopBGM(){
-    _stopped=true;_playing=false;
-    if(_loopTimer){clearTimeout(_loopTimer);_loopTimer=null;}
-    if(_gain)_gain.gain.value=0;
-  }
-
-  function resumeBGM(){
-    if(_playing)return;
-    _stopped=false;_playing=true;
-    if(_gain)_gain.gain.value=0.1;
-    if(_ctx&&_ctx.state==='suspended')_ctx.resume();
-    _loop();
-  }
-
-  // ページ表示後にBGM開始（タップ後）
-  function _tryStart(){
-    startBGM();
-    document.removeEventListener('touchstart',_tryStart);
-    document.removeEventListener('click',_tryStart);
-  }
-  document.addEventListener('touchstart',_tryStart,{once:true});
-  document.addEventListener('click',_tryStart,{once:true});
-
-  // toggleCommonBGMを上書き
-  window.toggleCommonBGM=function(){
-    _bgmEnabled=!_bgmEnabled;
-  localStorage.setItem('wakuwaku_bgm',_bgmEnabled?'on':'off');
-    var btn=document.getElementById('ui-bgm-btn');
-    if(btn)btn.textContent=_bgmEnabled?'🔊':'🔇';
-    if(_bgmEnabled)resumeBGM();else stopBGM();
-  };
-
-  window._startBGM=startBGM;
-  window._stopBGM=stopBGM;
+  function _first(){ _startBGM(); }
+  document.addEventListener('click', _first, { once: true });
+  document.addEventListener('touchstart', _first, { once: true });
 })();
+// ── End BGM ────────────────────────────────────────
 </script>
 
   <!-- 共通UIボタン -->
