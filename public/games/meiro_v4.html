@@ -19,11 +19,14 @@ body{
 /* HUD */
 #hud{
   width:100%;max-width:480px;flex-shrink:0;
-  display:grid;grid-template-columns:auto 1fr 1fr;grid-template-rows:auto auto;
-  gap:4px;padding:max(10px,env(safe-area-inset-top,10px)) 10px 4px;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  grid-template-rows:auto auto;
+  gap:4px 6px;
+  padding:max(10px,env(safe-area-inset-top,10px)) 10px 6px;
+  box-sizing:border-box;
 }
 #back-btn{
-  grid-column:1;grid-row:1/3;align-self:center;
   background:none;border:1px solid rgba(255,255,255,0.2);
   border-radius:12px;padding:6px 10px;
   color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;
@@ -34,10 +37,10 @@ body{
   border-radius:10px;padding:4px 10px;font-size:12px;font-weight:800;
   display:flex;align-items:center;justify-content:center;gap:4px;
 }
-#hud-stage{color:#FFD700;grid-column:2;grid-row:1;}
-#hud-time{color:#80DEEA;grid-column:3;grid-row:1;}
-#hud-coins{color:#FFD700;grid-column:2;grid-row:2;}
-#hud-lives{grid-column:3;grid-row:2;font-size:14px;}
+#hud-stage{color:#FFD700;}
+#hud-time{color:#80DEEA;}
+#hud-coins{color:#FFD700;}
+#hud-lives{font-size:14px;}
 
 /* 迷路エリア */
 #game-wrap{
@@ -202,10 +205,7 @@ body{
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
 }
-#ui-home-btn, #ui-bgm-btn {
-  position: fixed;
-  top: max(12px, env(safe-area-inset-top, 12px));
-  z-index: 9999;
+#ui-bgm-btn {
   width: 40px; height: 40px;
   background: rgba(0,0,0,0.5);
   border: 1.5px solid rgba(255,255,255,0.4);
@@ -215,19 +215,19 @@ body{
   display: flex; align-items: center; justify-content: center;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
 }
-#ui-home-btn { left: 12px; }
-#ui-bgm-btn  { right: 12px; }
+.hud-spacer { flex: 1; }
+.hud-status-row {
+  grid-column: 1/-1;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
 
 /* === 横向き対応 === */
 @media (orientation: landscape) {
   body { overflow-y: auto; }
-  #hud, #ui-home-btn, #ui-bgm-btn {
-    top: max(6px, env(safe-area-inset-top, 6px));
-  }
-  #back-btn {
-    bottom: max(8px, env(safe-area-inset-bottom, 8px));
-  }
 }
 @media (orientation: landscape) and (max-height: 500px) {
   /* 横向き時にゲームエリアを縮小・スクロール対応 */
@@ -241,10 +241,14 @@ body{
 
 <div id="hud">
   <button id="back-btn" onclick="goBack()">← もどる</button>
-  <div class="hud-box" id="hud-stage">⚔️ ステージ 1</div>
-  <div class="hud-box" id="hud-time">⏱ 0:00</div>
-  <div class="hud-box" id="hud-coins">🪙 0</div>
-  <div class="hud-box" id="hud-lives">❤️❤️❤️</div>
+  <div class="hud-spacer"></div>
+  <div id="ui-bgm-btn" onclick="toggleCommonBGM()">🔊</div>
+  <div class="hud-status-row">
+    <div class="hud-box" id="hud-stage">⚔️ ステージ 1</div>
+    <div class="hud-box" id="hud-time">⏱ 0:00</div>
+    <div class="hud-box" id="hud-coins">🪙 0</div>
+    <div class="hud-box" id="hud-lives">❤️❤️❤️</div>
+  </div>
 </div>
 
 <div id="game-wrap"><div id="maze"></div></div>
@@ -933,7 +937,6 @@ function toggleCommonBGM(){
 </script>
 
   <!-- 共通UIボタン -->
-  <button id="ui-home-btn" onclick="goHome()">🏠</button>
-  <button id="ui-bgm-btn" onclick="toggleCommonBGM()">🔊</button>
+
 </body>
 </html>
