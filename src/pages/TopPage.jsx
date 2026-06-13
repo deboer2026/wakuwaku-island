@@ -652,6 +652,24 @@ const SCHOOL_GAMES = [
     zh:{ name:'动物过马路',       desc:'穿越马路\n走多远？'                                   },
     ko:{ name:'동물 크로싱',       desc:'길을 건너\n얼마나 멀리 갈까요?'                        },
     es:{ name:'Animal Crossing',  desc:'¡Cruza la calle\ny llega lejos!'                       } },
+  { id:'g_mori', route:'/mori', icon:'🌲', num:6, color:'#2e7d32', stars:4, isNew:false, category:'アクション',
+    ja:{ name:'もりのなかまたち', desc:'もりをとびこえて\nゴールをめざせ！' },
+    en:{ name:'Forest Friends',  desc:'Jump through the forest\nand reach the goal!' },
+    zh:{ name:'森林伙伴',         desc:'穿越森林\n冲向终点！' },
+    ko:{ name:'숲속 친구들',       desc:'숲을 뛰어넘어\n골인 지점을 향해!' },
+    es:{ name:'Amigos del Bosque',desc:'¡Salta por el bosque\ny llega a la meta!' } },
+  { id:'g_sora', route:'/sora', icon:'👸', num:7, color:'#7b1fa2', stars:4, isNew:false, category:'アクション',
+    ja:{ name:'そらとびプリンセス', desc:'そらをとんで\nてきをたおそう！' },
+    en:{ name:'Sky Princess',    desc:'Fly through the sky\nand defeat enemies!' },
+    zh:{ name:'飞天公主',         desc:'翱翔天空\n消灭敌人！' },
+    ko:{ name:'하늘나는 공주',     desc:'하늘을 날아\n적을 물리쳐요!' },
+    es:{ name:'Princesa del Cielo',desc:'¡Vuela por el cielo\ny derrota enemigos!' } },
+  { id:'g_bike', route:'/bike', icon:'🏍️', num:8, color:'#f57c00', stars:3, isNew:false, category:'アクション',
+    ja:{ name:'わくわくバイク', desc:'バイクでコースを\nはしりぬけろ！' },
+    en:{ name:'Wakuwaku Bike',  desc:'Race through the course\non your bike!' },
+    zh:{ name:'嗡嗡摩托',        desc:'骑摩托车\n冲过赛道！' },
+    ko:{ name:'두근두근 바이크',  desc:'오토바이로\n코스를 달려요!' },
+    es:{ name:'Moto Wakuwaku',  desc:'¡Corre por el circuito\nen tu moto!' } },
 ];
 
 /* ════════════════════════════════════════════════════
@@ -781,7 +799,7 @@ function GameCard({ game, lang, isRecommended, onClick, animIndex }) {
 export default function TopPage() {
   const navigate   = useNavigate();
   const [lang,        setLang]        = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
-  const [isMuted,     setIsMuted]     = useState(false);
+  const [isMuted,     setIsMuted]     = useState(() => localStorage.getItem('wakuwaku_bgm') === 'off');
   const [playCount,   setPlayCount]   = useState(0);
   const [kisekaeState,setKisekaeState]= useState(() => {
     try {
@@ -814,9 +832,8 @@ export default function TopPage() {
     .filter(Boolean);
 
   useEffect(() => {
-    startBGM();
+    if (localStorage.getItem('wakuwaku_bgm') !== 'off') startBGM();
     setPlayCount(getPlayCount() + 1312);
-    // Check login bonus
     const bonus = checkLoginBonus();
     if (bonus) setLoginBonus(bonus);
     return () => stopBGM();
@@ -824,7 +841,11 @@ export default function TopPage() {
 
   function handleMuteToggle() {
     toggleBGM();
-    setIsMuted(prev => !prev);
+    setIsMuted(prev => {
+      const next = !prev;
+      localStorage.setItem('wakuwaku_bgm', next ? 'off' : 'on');
+      return next;
+    });
   }
 
   function spawnParticles(x, y) {
@@ -1041,7 +1062,6 @@ export default function TopPage() {
             onClick={() => switchTab('school')}
           >
             🔥 {{ja:'チャレンジ', en:'Challenge', zh:'挑战', ko:'도전', es:'Desafío'}[lang] || 'チャレンジ'}
-            <span className="tp-tab-new">NEW</span>
           </button>
         </div>
 
@@ -1117,7 +1137,7 @@ export default function TopPage() {
         </div>
         <div style={{ marginTop: 6, fontSize: 11, color: 'rgba(0,0,0,0.28)', display:'flex', justifyContent:'center', gap:12 }}>
           <span>© 2025 Wakuwaku Island</span>
-          <span style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>v1.0.6</span>
+          <span style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>v1.1.0</span>
         </div>
       </div>
 

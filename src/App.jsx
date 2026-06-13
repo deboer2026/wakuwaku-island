@@ -22,6 +22,9 @@ import DoubutsuCrossing from './games/DoubutsuCrossing'
 import KokkiQuiz from './games/KokkiQuiz'
 import JewelryMaster from './games/JewelryMaster'
 import DressUp from './games/DressUp'
+import MoriGame from './games/MoriGame'
+import SoraGame from './games/SoraGame'
+import BikeGame from './games/BikeGame'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 import { recordRecentGame } from './utils/recentGames'
@@ -34,6 +37,7 @@ const GAME_ROUTES = new Set([
   '/kokki', '/jewelry-master', '/tetris', '/runner', '/shooting',
   '/sniper', '/crossing', '/dressup',
   '/moji-asobi', '/iro-awase', '/flag-quiz', '/shoot',
+  '/mori', '/sora', '/bike',
   // 短縮URLエイリアスも記録
   '/kudamono', '/puzzle', '/kazu', '/soccer',
 ]);
@@ -68,25 +72,28 @@ export default function App() {
         <Route path="/tashizan" element={<TashizanGame />} />
         <Route path="/iro" element={<IroAwase />} />
         <Route path="/machi" element={<MachiDukuri />} />
-        {/* ── URL エイリアス（短縮URL → 正規ルートと同じコンポーネント） ── */}
-        <Route path="/kudamono"  element={<KudamonoCatch />} />
-        <Route path="/puzzle"    element={<DoubutsuPuzzle />} />
-        <Route path="/kazu"      element={<KazuAsobi />} />
-        <Route path="/soccer"    element={<AnimalSoccer />} />
-        <Route path="/tetris" element={<DoubutsuBlock />} />
-        <Route path="/runner" element={<DoubutsuRunner />} />
+        {/* ── URL エイリアス ── */}
+        <Route path="/kudamono"   element={<KudamonoCatch />} />
+        <Route path="/puzzle"     element={<DoubutsuPuzzle />} />
+        <Route path="/kazu"       element={<KazuAsobi />} />
+        <Route path="/soccer"     element={<AnimalSoccer />} />
+        <Route path="/moji-asobi" element={<MojiAsobi />} />
+        <Route path="/iro-awase"  element={<IroAwase />} />
+        <Route path="/flag-quiz"  element={<KokkiQuiz />} />
+        <Route path="/shoot"      element={<DoubutsuShoot />} />
+        <Route path="/tetris"   element={<DoubutsuBlock />} />
+        <Route path="/runner"   element={<DoubutsuRunner />} />
         <Route path="/shooting" element={<DoubutsuShoot />} />
         <Route path="/sniper"   element={<DoubutsuSniper />} />
         <Route path="/crossing" element={<DoubutsuCrossing />} />
-        <Route path="/kokki" element={<KokkiQuiz />} />
+        <Route path="/kokki"          element={<KokkiQuiz />} />
         <Route path="/jewelry-master" element={<JewelryMaster />} />
-        <Route path="/dressup" element={<DressUp />} />
-        <Route path="/moji-asobi" element={<MojiAsobi />} />
-        <Route path="/iro-awase" element={<IroAwase />} />
-        <Route path="/flag-quiz" element={<KokkiQuiz />} />
-        <Route path="/shoot" element={<DoubutsuShoot />} />
+        <Route path="/dressup"        element={<DressUp />} />
+        <Route path="/mori" element={<MoriGame />} />
+        <Route path="/sora" element={<SoraGame />} />
+        <Route path="/bike" element={<BikeGame />} />
         <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/terms"   element={<TermsPage />} />
       </Routes>
     </>
   )

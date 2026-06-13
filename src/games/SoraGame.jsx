@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function SushiGame() {
+export default function SoraGame() {
   const navigate = useNavigate();
   useEffect(() => {
     const handler = (e) => {
@@ -14,9 +14,9 @@ export default function SushiGame() {
   return (
     <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:0, overflow:'hidden' }}>
       <iframe
-        src="/games/sushi_v2.html"
+        src="/games/shooting_v1.html"
         style={{ width:'100%', height:'100%', border:'none', display:'block', position:'absolute', top:0, left:0 }}
-        title="さーもんをとろう"
+        title="そらとびプリンセス"
         allow="autoplay; fullscreen"
         allowFullScreen
         sandbox="allow-scripts allow-same-origin allow-popups"

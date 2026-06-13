@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>どうぶつパズル</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'M PLUS Rounded 1c', sans-serif; overflow: hidden; background: #1a0a00; }
+#game-wrap { width: 100vw; height: 100svh; max-width: 480px; margin: 0 auto; position: relative; overflow: hidden; }
+canvas#bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+/* HUD */
+#hud {
+  position: fixed; top: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px; z-index: 100; box-sizing: border-box;
+  padding: max(10px, env(safe-area-inset-top)) 12px 8px; display: none;
+  background: linear-gradient(180deg, rgba(30,10,0,0.93) 0%, rgba(30,10,0,0.6) 70%, transparent);
+}
+.hud-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+#back-btn { background: rgba(0,0,0,0.55); color: white; border: 1.5px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+#ui-bgm-btn { background: rgba(0,0,0,0.55); color: white; border: 1.5px solid rgba(255,255,255,0.3); border-radius: 50%; width: 32px; height: 32px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+#status-bar { display: flex; justify-content: center; gap: 14px; pointer-events: none; }
+.hud-chip { background: rgba(0,0,0,0.6); border: 1.5px solid rgba(255,180,50,0.4); border-radius: 12px; padding: 3px 12px; display: flex; align-items: center; gap: 6px; }
+.hud-chip-label { font-size: 9px; color: rgba(255,255,255,0.5); font-weight: 700; }
+.hud-chip-val { font-size: 16px; font-weight: 900; color: #FFB300; }
+
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 0 20px; }
+
+/* TITLE */
+.title-frame {
+  background: linear-gradient(145deg, rgba(60,25,0,0.97), rgba(35,12,0,0.99));
+  border: 4px solid #FFB300; border-radius: 28px; padding: 22px 26px; text-align: center;
+  width: 100%; max-width: 340px;
+  box-shadow: 0 0 0 2px #7a5000, 0 0 40px rgba(255,179,0,0.15), 0 12px 40px rgba(0,0,0,0.7);
+}
+.title-animals-row { display: flex; justify-content: center; gap: 6px; margin-bottom: 10px; }
+.title-card-mini {
+  width: 46px; height: 46px; border-radius: 12px;
+  background: linear-gradient(145deg, #FF8F00, #E65100);
+  border: 2.5px solid #FFD740; display: flex; align-items: center; justify-content: center;
+  font-size: 26px; box-shadow: 0 4px 0 #BF360C, 0 0 12px rgba(255,180,0,0.3);
+  animation: cardWiggle var(--d,1.2s) ease-in-out infinite;
+}
+@keyframes cardWiggle { 0%,100%{transform:rotate(-3deg) translateY(0)} 50%{transform:rotate(3deg) translateY(-6px)} }
+.title-label { font-size: 12px; font-weight: 900; color: rgba(255,179,0,0.65); letter-spacing: 4px; margin-bottom: 4px; }
+.title-text {
+  font-size: 34px; font-weight: 900;
+  background: linear-gradient(180deg, #FFE566, #FF8F00);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(2px 3px 0 rgba(0,0,0,0.5)); margin-bottom: 6px;
+}
+.title-sub { font-size: 13px; color: rgba(255,255,255,0.72); line-height: 1.9; margin-bottom: 14px; }
+.hi-badge { background: rgba(255,179,0,0.12); border: 1.5px solid rgba(255,179,0,0.4); color: #FFB300; font-size: 13px; font-weight: 700; padding: 5px 18px; border-radius: 20px; margin-bottom: 16px; display: inline-block; }
+.big-btn {
+  background: linear-gradient(145deg, #FF8F00, #E65100);
+  color: #fff; border: none; border-radius: 50px; padding: 15px 48px; font-size: 21px; font-weight: 900;
+  cursor: pointer; position: relative; overflow: hidden;
+  box-shadow: 0 6px 0 #BF360C, 0 8px 20px rgba(0,0,0,0.35);
+  touch-action: manipulation; font-family: inherit;
+}
+.big-btn::before { content:''; position:absolute; top:0; left:0; right:0; height:50%; border-radius:50px 50px 0 0; background:rgba(255,255,255,0.18); }
+.big-btn:active { transform:translateY(5px); box-shadow:0 1px 0 #BF360C; }
+.big-btn.blue { background:linear-gradient(145deg,#42A5F5,#1565C0); box-shadow:0 6px 0 #0D47A1; }
+.big-btn.blue:active { box-shadow:0 1px 0 #0D47A1; }
+
+/* GAME */
+#game-area { position: absolute; inset: 0; z-index: 10; display: none; flex-direction: column; align-items: center; padding-top: 82px; }
+
+/* Card grid */
+#card-grid {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; z-index: 5;
+}
+
+/* Cards */
+.card { cursor: pointer; perspective: 700px; touch-action: manipulation; }
+.card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.42s cubic-bezier(0.4,0,0.2,1); border-radius: 16px; }
+.card.flipped .card-inner, .card.matched .card-inner { transform: rotateY(180deg); }
+.card-front, .card-back { position: absolute; inset: 0; border-radius: 16px; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; }
+
+/* Card back - decorative */
+.card-back {
+  background: linear-gradient(145deg, #FF8F00, #E65100);
+  border: 3px solid #FFD740;
+  box-shadow: 0 5px 0 #BF360C, inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.card-back-inner {
+  width: 70%; height: 70%; border-radius: 10px;
+  border: 2px solid rgba(255,215,0,0.4);
+  background: rgba(0,0,0,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+
+/* Card front */
+.card-front {
+  background: linear-gradient(145deg, #fff8e1, #fff3c4);
+  border: 3px solid #FFD740;
+  box-shadow: 0 5px 0 #F57F17, inset 0 1px 0 rgba(255,255,255,0.8);
+  transform: rotateY(180deg);
+  flex-direction: column; gap: 3px;
+}
+.card-front .animal { line-height: 1; }
+.card-front .aname { font-size: 10px; font-weight: 700; color: #E65100; }
+
+.card.matched .card-front {
+  background: linear-gradient(145deg, #E8F5E9, #C8E6C9);
+  border-color: #66BB6A;
+  box-shadow: 0 5px 0 #2E7D32, 0 0 16px rgba(76,175,80,0.4);
+}
+.card.wrong .card-inner { animation: wrongShake 0.4s; }
+@keyframes wrongShake { 0%,100%{transform:rotateY(180deg)} 25%{transform:rotateY(180deg) translateX(-5px)} 75%{transform:rotateY(180deg) translateX(5px)} }
+
+/* Pairs counter */
+#pairs-track { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; padding: 6px 12px; }
+.pair-dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(255,179,0,0.4); background: rgba(255,255,255,0.08); transition: all .3s; }
+.pair-dot.matched { background: #FFB300; border-color: #FF8F00; box-shadow: 0 0 8px rgba(255,179,0,0.7); animation: pairPop .3s ease; }
+@keyframes pairPop { 0%{transform:scale(0)} 60%{transform:scale(1.4)} 100%{transform:scale(1)} }
+
+/* Feedback & flash */
+#feedback-overlay { position:fixed; inset:0; pointer-events:none; z-index:50; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .15s; }
+#feedback-text { font-size:90px; filter:drop-shadow(0 4px 12px rgba(0,0,0,.3)); }
+#flash { position:fixed; inset:0; z-index:45; pointer-events:none; opacity:0; }
+
+/* Result */
+#result-overlay { position:absolute; inset:0; z-index:30; display:none; flex-direction:column; align-items:center; justify-content:center; background:rgba(15,5,0,0.93); }
+.result-frame {
+  background: linear-gradient(145deg, rgba(60,25,0,0.97), rgba(35,12,0,0.99));
+  border: 4px solid #FFB300; border-radius: 28px; padding: 26px; text-align: center;
+  box-shadow: 0 0 0 2px #7a5000, 0 0 40px rgba(255,179,0,0.2), 0 12px 40px rgba(0,0,0,0.7);
+  width: 100%; max-width: 320px;
+}
+.result-trophy { font-size: 64px; margin-bottom: 6px; animation: tBounce .6s ease; }
+@keyframes tBounce { 0%{transform:scale(0) rotate(-10deg)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
+.result-title { font-size: 30px; font-weight: 900; color: #FFB300; text-shadow: 2px 2px 0 #7a5000; margin-bottom: 6px; }
+.result-stars { font-size: 36px; margin-bottom: 8px; }
+.result-score-wrap { background: rgba(0,0,0,0.35); border-radius: 16px; padding: 10px 16px; margin-bottom: 12px; }
+.result-score-label { font-size: 12px; color: rgba(255,255,255,.55); font-weight: 700; }
+.result-score-val { font-size: 22px; font-weight: 900; color: #FFD700; }
+.result-hi { font-size: 13px; color: rgba(255,255,255,.5); margin-bottom: 18px; font-weight: 700; }
+.result-hi.new { color: #FFD700; font-size: 16px; }
+.result-btns { display: flex; gap: 10px; justify-content: center; }
+.btn-retry { background:linear-gradient(145deg,#FF8F00,#E65100); color:#fff; border:none; border-radius:50px; padding:12px 24px; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 5px 0 #BF360C; font-family:inherit; }
+.btn-title { background:linear-gradient(145deg,#42A5F5,#1565C0); color:#fff; border:none; border-radius:50px; padding:12px 24px; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 5px 0 #0D47A1; font-family:inherit; }
+.btn-retry:active,.btn-title:active { transform:translateY(4px); box-shadow:none; }
+
+.confetti { position:fixed; pointer-events:none; z-index:48; animation:confettiFall var(--dur,1.4s) ease forwards; }
+@keyframes confettiFall { 0%{opacity:1;transform:translateY(0) rotate(0) scale(1)} 100%{opacity:0;transform:translateY(130px) rotate(360deg) scale(.5)} }
+.particle { position:fixed; pointer-events:none; z-index:48; font-size:22px; animation:pFly var(--dur,.9s) ease forwards; }
+@keyframes pFly { 0%{opacity:1;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(var(--tx,0),var(--ty,-80px)) scale(.2)} }
+.pop-word { position:fixed; font-weight:900; pointer-events:none; z-index:49; font-size:24px; animation:pWord .9s ease forwards; }
+@keyframes pWord { 0%{opacity:0;transform:translateY(10px) scale(.6)} 25%{opacity:1;transform:translateY(-8px) scale(1.2)} 100%{opacity:0;transform:translateY(-60px) scale(.9)} }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+<canvas id="bg"></canvas>
+
+<!-- TITLE -->
+<div id="title-screen" class="screen">
+  <div class="title-frame">
+    <div class="title-animals-row">
+      <div class="title-card-mini" style="--d:1.0s">🐱</div>
+      <div class="title-card-mini" style="--d:1.3s;animation-delay:.18s">🐶</div>
+      <div class="title-card-mini" style="--d:1.1s;animation-delay:.06s">🐰</div>
+      <div class="title-card-mini" style="--d:1.4s;animation-delay:.25s">🐸</div>
+      <div class="title-card-mini" style="--d:1.2s;animation-delay:.12s">🐼</div>
+    </div>
+    <div class="title-label">✦ どうぶつパズル ✦</div>
+    <div class="title-text">どうぶつパズル！</div>
+    <p class="title-sub">おなじどうぶつを<br>みつけてペアにしよう！</p>
+    <div id="hi-title" class="hi-badge">🏆 ベストタイム: --</div>
+    <button class="big-btn" onclick="startGame()">▶ スタート！</button>
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-nav">
+    <button id="back-btn" onclick="goBack()">🏠 もどる</button>
+    <div id="ui-bgm-btn">🔊</div>
+  </div>
+  <div id="status-bar">
+    <div class="hud-chip"><span class="hud-chip-label">ミス</span><span class="hud-chip-val" id="miss-disp">0</span></div>
+    <div class="hud-chip"><span class="hud-chip-label">じかん</span><span class="hud-chip-val" id="time-disp">0:00</span></div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game-area">
+  <div id="pairs-track"></div>
+  <div id="card-grid"></div>
+</div>
+
+<!-- FEEDBACK -->
+<div id="feedback-overlay"><div id="feedback-text">⭕</div></div>
+<div id="flash"></div>
+
+<!-- RESULT -->
+<div id="result-overlay" style="display:none;">
+  <div class="result-frame">
+    <div class="result-trophy" id="r-trophy">🎉</div>
+    <div class="result-title">クリア！</div>
+    <div class="result-stars" id="r-stars">⭐⭐⭐</div>
+    <div class="result-score-wrap">
+      <div class="result-score-label">じかん</div>
+      <div class="result-score-val" id="r-time">0:00</div>
+      <div class="result-score-label">ミス <span id="r-miss" style="color:#FF8A65;font-size:18px">0</span> かい</div>
+    </div>
+    <div class="result-hi" id="r-hi"></div>
+    <div class="result-btns">
+      <button class="btn-retry" onclick="startGame()">もういちど</button>
+      <button class="btn-title blue" onclick="goTitle()">タイトルへ</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+/* ===== Canvas BG ===== */
+const cvs=document.getElementById('bg'),ctx=cvs.getContext('2d');
+let W,H,leaves=[],sparks=[];
+function initC(){
+  W=cvs.offsetWidth;H=cvs.offsetHeight;cvs.width=W;cvs.height=H;
+  leaves=[];
+  const items=['🍃','🌸','⭐','🌟','🍀','🌺'];
+  for(let i=0;i<14;i++)leaves.push({emoji:items[i%items.length],x:Math.random()*W,y:Math.random()*H,size:14+Math.random()*14,ph:Math.random()*Math.PI*2,sp:.2+Math.random()*.4,alpha:.12+Math.random()*.18});
+  sparks=[];
+  for(let i=0;i<40;i++)sparks.push({x:Math.random()*W,y:Math.random()*H,r:.6+Math.random()*1.8,ph:Math.random()*Math.PI*2,sp:.5+Math.random()});
+}
+function drawBg(t){
+  ctx.clearRect(0,0,W,H);
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#1a0a00');g.addColorStop(.45,'#2d1500');g.addColorStop(1,'#1a0a00');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // Subtle pattern
+  ctx.strokeStyle='rgba(255,150,0,0.04)';ctx.lineWidth=1;
+  for(let x=0;x<W;x+=28){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=28){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  const ts=t/1000;
+  // Sparks
+  sparks.forEach(s=>{const tw=(Math.sin(ts*s.sp+s.ph)+1)/2;ctx.fillStyle=`rgba(255,200,80,${tw*.5})`;ctx.beginPath();ctx.arc(s.x,s.y,s.r*(0.4+tw*.6),0,Math.PI*2);ctx.fill();});
+  // Floating items
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  leaves.forEach(l=>{
+    const bob=Math.sin(ts*l.sp+l.ph)*8;
+    ctx.globalAlpha=l.alpha;
+    ctx.font=`${Math.round(l.size)}px serif`;
+    ctx.fillText(l.emoji,l.x,l.y+bob);
+  });
+  ctx.globalAlpha=1;
+}
+let raf;function bgLoop(t){drawBg(t);raf=requestAnimationFrame(bgLoop);}
+initC();requestAnimationFrame(bgLoop);window.addEventListener('resize',initC);
+
+/* ===== Game ===== */
+const ANIMALS=[
+  {e:'🐱',n:'ねこ'},{e:'🐶',n:'いぬ'},{e:'🐸',n:'かえる'},{e:'🐼',n:'パンダ'},
+  {e:'🦊',n:'きつね'},{e:'🐧',n:'ペンギン'},{e:'🐰',n:'うさぎ'},{e:'🐻',n:'くま'},
+];
+let W2,H2,cards=[],flipped=[],matched=0,misses=0,elapsed=0,timerInt,waiting=false,animId2;
+
+function getBest(){return localStorage.getItem('puzzle_best2')||null;}
+function saveBest(v){localStorage.setItem('puzzle_best2',v);}
+function fmtTime(s){return Math.floor(s/60)+':'+(s%60<10?'0':'')+s%60;}
+function updateHiBadge(){const b=getBest();document.getElementById('hi-title').textContent=b?'🏆 ベストタイム: '+fmtTime(parseInt(b)):'🏆 ベストタイム: --';}
+
+function initPairsDots(){
+  const t=document.getElementById('pairs-track');t.innerHTML='';
+  for(let i=0;i<8;i++){const d=document.createElement('div');d.className='pair-dot';d.id='pd-'+i;t.appendChild(d);}
+}
+function markPair(n){const d=document.getElementById('pd-'+n);if(d)d.classList.add('matched');}
+
+function startGame(){
+  matched=0;misses=0;elapsed=0;flipped=[];waiting=false;
+  clearInterval(timerInt);
+  document.getElementById('title-screen').style.display='none';
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='block';
+  document.getElementById('game-area').style.display='flex';
+  document.getElementById('miss-disp').textContent='0';
+  document.getElementById('time-disp').textContent='0:00';
+  initPairsDots();
+  const grid=document.getElementById('card-grid');
+  grid.innerHTML='';cards=[];
+  const deck=[...ANIMALS,...ANIMALS].sort(()=>Math.random()-.5);
+  layoutGrid();
+  deck.forEach((a,i)=>{
+    const el=document.createElement('div');el.className='card';el.dataset.idx=i;
+    el.innerHTML=`<div class="card-inner">
+      <div class="card-back"><div class="card-back-inner">🌟</div></div>
+      <div class="card-front"><span class="animal"></span><span class="aname">${a.n}</span></div>
+    </div>`;
+    el.querySelector('.animal').style.fontSize=Math.round(cardW*.48)+'px';
+    el.querySelector('.animal').textContent=a.e;
+    el.style.width=cardW+'px';
+    el.style.height=cardH+'px';
+    el.addEventListener('click',()=>onCardClick(i));
+    el.addEventListener('touchend',e=>{e.preventDefault();onCardClick(i);},{passive:false});
+    grid.appendChild(el);
+    cards.push({el,animal:a,flipped:false,matched:false});
+  });
+  timerInt=setInterval(()=>{elapsed++;document.getElementById('time-disp').textContent=fmtTime(elapsed);},1000);
+}
+
+let cardW=0,cardH=0;
+function layoutGrid(){
+  const wrap=document.getElementById('game-wrap');
+  W2=wrap.clientWidth;H2=wrap.clientHeight;
+  const grid=document.getElementById('card-grid');
+  const gap=10,cols=4,rows=4;
+  const pad=W2*.06;
+  cardW=Math.floor((W2-pad*2-gap*(cols-1))/cols);
+  cardH=Math.floor(cardW*1.12);
+  const totalH=cardH*rows+gap*(rows-1);
+  const topY=(H2-totalH)/2+40;
+  grid.style.width=(cardW*cols+gap*(cols-1))+'px';
+  grid.style.top=topY+'px';
+  grid.style.gap=gap+'px';
+  document.querySelectorAll('.card').forEach(c=>{c.style.width=cardW+'px';c.style.height=cardH+'px';const a=c.querySelector('.animal');if(a)a.style.fontSize=Math.round(cardW*.48)+'px';});
+}
+
+function goTitle(){
+  clearInterval(timerInt);
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='none';
+  document.getElementById('game-area').style.display='none';
+  document.getElementById('title-screen').style.display='flex';
+  updateHiBadge();
+}
+
+function onCardClick(idx){
+  if(waiting)return;
+  const card=cards[idx];
+  if(card.flipped||card.matched||flipped.length>=2)return;
+  card.flipped=true;card.el.classList.add('flipped');flipped.push(idx);
+  if(flipped.length===2){
+    waiting=true;
+    const [a,b]=flipped;
+    if(cards[a].animal.e===cards[b].animal.e){
+      setTimeout(()=>{
+        cards[a].el.classList.add('matched');cards[b].el.classList.add('matched');
+        cards[a].matched=true;cards[b].matched=true;
+        markPair(matched);matched++;
+        showFeedback('✨');flash('rgba(255,180,0,0.25)');burst();pop('✨ ペア！','#FFD700');
+        hideFeedback();
+        flipped=[];waiting=false;
+        if(matched===8)setTimeout(endGame,500);
+      },350);
+    } else {
+      misses++;document.getElementById('miss-disp').textContent=misses;
+      cards[a].el.querySelector('.card-inner').style.animation='none';
+      cards[b].el.querySelector('.card-inner').style.animation='none';
+      void cards[a].el.offsetWidth;
+      cards[a].el.classList.add('wrong');cards[b].el.classList.add('wrong');
+      flash('rgba(244,67,54,0.2)');
+      setTimeout(()=>{
+        cards[a].el.classList.remove('flipped','wrong');
+        cards[b].el.classList.remove('flipped','wrong');
+        cards[a].flipped=false;cards[b].flipped=false;
+        flipped=[];waiting=false;
+      },900);
+    }
+  }
+}
+
+function showFeedback(t){document.getElementById('feedback-text').textContent=t;document.getElementById('feedback-overlay').style.opacity='1';}
+function hideFeedback(){setTimeout(()=>{document.getElementById('feedback-overlay').style.opacity='0';},300);}
+function flash(c){const f=document.getElementById('flash');f.style.transition='';f.style.background=c;f.style.opacity='1';setTimeout(()=>{f.style.transition='opacity .35s';f.style.opacity='0';},130);}
+function burst(){
+  const items=['⭐','✨','🌟','💫','🎉','🐾'];
+  const cx=window.innerWidth/2,cy=window.innerHeight*.45;
+  for(let i=0;i<10;i++){
+    const el=document.createElement('div');el.className='particle';
+    el.textContent=items[Math.floor(Math.random()*items.length)];
+    const a=(i/10)*Math.PI*2,d=65+Math.random()*55;
+    el.style.cssText=`left:${cx}px;top:${cy}px;--tx:${Math.cos(a)*d}px;--ty:${Math.sin(a)*d-50}px;--dur:${.6+Math.random()*.4}s;animation-delay:${Math.random()*.06}s`;
+    document.body.appendChild(el);setTimeout(()=>el.remove(),1100);
+  }
+}
+function pop(text,color){
+  const el=document.createElement('div');el.className='pop-word';el.textContent=text;el.style.color=color;
+  el.style.cssText+=`;left:${window.innerWidth/2-70}px;top:${window.innerHeight*.4}px;text-shadow:2px 2px 4px rgba(0,0,0,.5)`;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),1000);
+}
+
+function endGame(){
+  clearInterval(timerInt);
+  const best=getBest(),isNew=!best||elapsed<parseInt(best);
+  if(isNew)saveBest(elapsed);
+  updateHiBadge();
+  document.getElementById('hud').style.display='none';
+  document.getElementById('game-area').style.display='none';
+  document.getElementById('result-overlay').style.display='flex';
+  const stars=misses<=3?'⭐⭐⭐':misses<=7?'⭐⭐':'⭐';
+  document.getElementById('r-trophy').textContent=misses<=3?'🏆':'🎉';
+  document.getElementById('r-stars').textContent=stars;
+  document.getElementById('r-time').textContent=fmtTime(elapsed);
+  document.getElementById('r-miss').textContent=misses;
+  const hiEl=document.getElementById('r-hi');
+  hiEl.textContent=isNew?'🏆 ベストタイム こうしん！':'ベスト: '+fmtTime(parseInt(best));
+  hiEl.className='result-hi'+(isNew?' new':'');
+  for(let i=0;i<20;i++){
+    setTimeout(()=>{
+      const d=document.createElement('div');d.className='confetti';
+      d.textContent=['🎉','⭐','✨','🌟','🐾','🦊'][Math.floor(Math.random()*6)];
+      d.style.cssText=`left:${Math.random()*window.innerWidth}px;top:20px;font-size:${16+Math.random()*12}px;--dur:${1+Math.random()*.8}s;animation-delay:${Math.random()*.3}s`;
+      document.body.appendChild(d);setTimeout(()=>d.remove(),2000);
+    },i*80);
+  }
+}
+function goBack(){if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');else history.back();}
+window.addEventListener('resize',()=>{if(cards.length)layoutGrid();});
+updateHiBadge();
+</script>
+</body>
+</html>

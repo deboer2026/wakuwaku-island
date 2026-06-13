@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>いちごをあつめよう！</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'M PLUS Rounded 1c', sans-serif; overflow: hidden; background: #1a0010; }
+#game-wrap { width: 100vw; height: 100svh; max-width: 480px; margin: 0 auto; position: relative; overflow: hidden; }
+canvas#bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+canvas#cv { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; }
+
+/* HUD */
+#hud {
+  position: fixed; top: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px; z-index: 100; box-sizing: border-box;
+  padding: max(10px, env(safe-area-inset-top)) 12px 8px; display: none;
+  background: linear-gradient(180deg, rgba(40,0,20,0.93) 0%, rgba(40,0,20,0.6) 70%, transparent);
+}
+.hud-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+#back-btn { background: rgba(0,0,0,0.55); color: white; border: 1.5px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+#ui-bgm-btn { background: rgba(0,0,0,0.55); color: white; border: 1.5px solid rgba(255,255,255,0.3); border-radius: 50%; width: 32px; height: 32px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+#status-bar { display: flex; justify-content: center; gap: 10px; pointer-events: none; }
+.hud-chip { background: rgba(0,0,0,0.6); border: 1.5px solid rgba(255,100,150,0.4); border-radius: 12px; padding: 3px 12px; display: flex; align-items: center; gap: 6px; }
+.hud-chip-label { font-size: 9px; color: rgba(255,255,255,0.5); font-weight: 700; }
+.hud-chip-val { font-size: 15px; font-weight: 900; color: #F48FB1; }
+#timer-chip { border-color: rgba(255,150,100,0.5); }
+#timer-chip .hud-chip-val { color: #FFAB91; transition: color .3s; }
+#timer-chip.urgent .hud-chip-val { color: #FF1744; animation: tPulse .5s ease-in-out infinite; }
+@keyframes tPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+
+/* Combo */
+#combo-area {
+  position: fixed; top: 80px; right: 12px; z-index: 50;
+  background: rgba(0,0,0,0.7); border: 1.5px solid rgba(255,100,150,0.4);
+  border-radius: 14px; padding: 4px 12px; font-size: 13px; font-weight: 700;
+  color: #F48FB1; min-width: 80px; text-align: center; display: none;
+  transition: background .2s, color .2s;
+}
+#combo-area.hot { background: rgba(255,80,0,0.85); color: #FFD700; border-color: #FF8F00; }
+
+/* Life */
+#life-area {
+  position: fixed; top: 80px; left: 12px; z-index: 50;
+  background: rgba(0,0,0,0.7); border: 1.5px solid rgba(255,100,150,0.4);
+  border-radius: 14px; padding: 4px 10px; font-size: 16px; display: none;
+}
+
+/* Basket */
+#basket-area {
+  position: fixed; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+  z-index: 50; display: none; align-items: center; gap: 8px;
+  background: rgba(0,0,0,0.7); border: 2px solid rgba(255,100,150,0.4);
+  border-radius: 20px; padding: 7px 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+#basket-emoji { font-size: 32px; }
+#basket-count { font-size: 20px; font-weight: 900; color: #F48FB1; }
+
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; padding: 0 20px; }
+
+/* TITLE */
+.title-frame {
+  background: linear-gradient(145deg, rgba(60,5,30,0.97), rgba(35,2,18,0.99));
+  border: 4px solid #F48FB1; border-radius: 28px; padding: 22px 26px; text-align: center;
+  width: 100%; max-width: 340px;
+  box-shadow: 0 0 0 2px #880E4F, 0 0 40px rgba(244,143,177,0.15), 0 12px 40px rgba(0,0,0,0.7);
+}
+.ichigo-parade { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; }
+.ichigo-icon {
+  font-size: 28px; animation: iFloat var(--d,1.2s) ease-in-out infinite;
+  filter: drop-shadow(0 3px 6px rgba(233,30,99,0.5));
+}
+@keyframes iFloat { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-9px) scale(1.1)} }
+.title-label { font-size: 11px; font-weight: 900; color: rgba(244,143,177,0.65); letter-spacing: 4px; margin-bottom: 4px; }
+.title-text {
+  font-size: 32px; font-weight: 900;
+  background: linear-gradient(180deg, #F8BBD0, #E91E63);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(2px 3px 0 rgba(0,0,0,0.6)); margin-bottom: 6px;
+}
+.title-sub { font-size: 13px; color: rgba(255,255,255,0.72); line-height: 1.9; margin-bottom: 12px; }
+.hi-badge { background: rgba(244,143,177,0.12); border: 1.5px solid rgba(244,143,177,0.4); color: #F48FB1; font-size: 13px; font-weight: 700; padding: 5px 18px; border-radius: 20px; margin-bottom: 16px; display: inline-block; }
+.big-btn {
+  background: linear-gradient(145deg, #E91E63, #880E4F);
+  color: #fff; border: none; border-radius: 50px; padding: 14px 44px; font-size: 20px; font-weight: 900;
+  cursor: pointer; position: relative; overflow: hidden;
+  box-shadow: 0 6px 0 #560027, 0 8px 20px rgba(0,0,0,0.35);
+  touch-action: manipulation; font-family: inherit;
+}
+.big-btn::before { content:''; position:absolute; top:0; left:0; right:0; height:50%; border-radius:50px 50px 0 0; background:rgba(255,255,255,0.18); }
+.big-btn:active { transform:translateY(5px); box-shadow:0 1px 0 #560027; }
+.big-btn.blue { background:linear-gradient(145deg,#42A5F5,#1565C0); box-shadow:0 6px 0 #0D47A1; }
+.big-btn.blue:active { box-shadow:0 1px 0 #0D47A1; }
+
+/* Result */
+#result-overlay {
+  position: absolute; inset: 0; z-index: 30; display: none; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(15,0,8,0.93);
+}
+.result-frame {
+  background: linear-gradient(145deg, rgba(60,5,30,0.97), rgba(35,2,18,0.99));
+  border: 4px solid #F48FB1; border-radius: 28px; padding: 26px; text-align: center;
+  box-shadow: 0 0 0 2px #880E4F, 0 0 40px rgba(244,143,177,0.15), 0 12px 40px rgba(0,0,0,0.7);
+  width: 100%; max-width: 320px;
+}
+.result-trophy { font-size: 64px; margin-bottom: 6px; animation: tBounce .6s ease; }
+@keyframes tBounce { 0%{transform:scale(0) rotate(-10deg)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
+.result-title { font-size: 28px; font-weight: 900; color: #F48FB1; text-shadow: 2px 2px 0 #560027; margin-bottom: 10px; }
+.result-score-wrap { background: rgba(0,0,0,0.35); border-radius: 16px; padding: 12px 20px; margin-bottom: 12px; }
+.result-score-label { font-size: 13px; color: rgba(255,255,255,.6); font-weight: 700; }
+.result-score-num { font-size: 56px; font-weight: 900; color: #FFD700; line-height: 1; display: block; }
+.result-hi { font-size: 13px; color: rgba(255,255,255,.5); margin-bottom: 16px; font-weight: 700; }
+.result-hi.new { color: #FFD700; font-size: 16px; }
+.result-btns { display: flex; gap: 10px; justify-content: center; }
+.btn-retry { background:linear-gradient(145deg,#E91E63,#880E4F); color:#fff; border:none; border-radius:50px; padding:12px 24px; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 5px 0 #560027; font-family:inherit; }
+.btn-title { background:linear-gradient(145deg,#42A5F5,#1565C0); color:#fff; border:none; border-radius:50px; padding:12px 24px; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 5px 0 #0D47A1; font-family:inherit; }
+.btn-retry:active,.btn-title:active { transform:translateY(4px); box-shadow:none; }
+
+.pop-label { position:fixed; font-weight:900; pointer-events:none; animation:popUp .7s forwards; z-index:60; white-space:nowrap; }
+@keyframes popUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-65px) scale(1.5)} }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+<canvas id="bg"></canvas>
+<canvas id="cv"></canvas>
+
+<!-- TITLE -->
+<div id="title-screen" class="screen">
+  <div class="title-frame">
+    <div class="ichigo-parade">
+      <span class="ichigo-icon" style="--d:1.0s">🍓</span>
+      <span class="ichigo-icon" style="--d:1.3s;animation-delay:.2s">⭐</span>
+      <span class="ichigo-icon" style="--d:1.1s;animation-delay:.05s">🍓</span>
+      <span class="ichigo-icon" style="--d:1.4s;animation-delay:.3s">✨</span>
+      <span class="ichigo-icon" style="--d:1.2s;animation-delay:.15s">🍓</span>
+    </div>
+    <div class="title-label">✦ いちごをあつめよう ✦</div>
+    <div class="title-text">いちごをあつめよう！</div>
+    <p class="title-sub">🍓 いちごをどんどんタップ！<br>どうぶつはさわっちゃダメ！</p>
+    <div id="hi-title" class="hi-badge">🏆 ハイスコア: 0てん</div>
+    <button class="big-btn" onclick="startGame()">▶ スタート！</button>
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-nav">
+    <button id="back-btn" onclick="goBack()">🏠 もどる</button>
+    <div id="ui-bgm-btn">🔊</div>
+  </div>
+  <div id="status-bar">
+    <div class="hud-chip"><span class="hud-chip-label">スコア</span><span class="hud-chip-val" id="score-disp">0</span></div>
+    <div class="hud-chip" id="timer-chip"><span class="hud-chip-label">のこり</span><span class="hud-chip-val" id="time-disp">30</span></div>
+  </div>
+</div>
+
+<div id="life-area">❤️❤️❤️</div>
+<div id="combo-area">コンボ x1</div>
+<div id="basket-area" style="display:none;">
+  <span id="basket-emoji">🧺</span>
+  <span id="basket-count">0こ</span>
+</div>
+
+<!-- Result -->
+<div id="result-overlay" style="display:none;">
+  <div class="result-frame">
+    <div class="result-trophy" id="r-trophy">🍓</div>
+    <div class="result-title" id="r-title">ナイス！</div>
+    <div class="result-score-wrap">
+      <div class="result-score-label">スコア</div>
+      <span class="result-score-num" id="r-score">0</span>
+      <div class="result-score-label">てん</div>
+    </div>
+    <div class="result-hi" id="r-hi"></div>
+    <div class="result-btns">
+      <button class="btn-retry" onclick="startGame()">もういちど</button>
+      <button class="btn-title" onclick="goTitle()">タイトルへ</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const wrap=document.getElementById('game-wrap');
+const bgcv=document.getElementById('bg'),bgctx=bgcv.getContext('2d');
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+let W,H;
+
+const STRAWBERRY_TYPES=[
+  {type:'big',   emoji:'🍓',pts:1,size:34,prob:0.35},
+  {type:'medium',emoji:'🍓',pts:2,size:24,prob:0.35},
+  {type:'small', emoji:'🍓',pts:3,size:16,prob:0.20},
+  {type:'gold',  emoji:'⭐',pts:8,size:28,prob:0.10,special:true},
+];
+const TRAPS=['🐱','🐶','🐸','🐼','🦊','🐰','🐧','🐻'];
+
+let items=[],score=0,timeLeft=30,running=false,hp=3,collected=0,combo=1,comboTimer=null;
+let animId,timerInt,spawnTimeout;
+let bgFlowers=[];
+
+function getHi(){return parseInt(localStorage.getItem('ichigo_hi')||'0');}
+function saveHi(v){localStorage.setItem('ichigo_hi',v);}
+function updateHiBadge(){document.getElementById('hi-title').textContent='🏆 ハイスコア: '+getHi()+'てん';}
+
+function resize(){
+  W=wrap.clientWidth;H=wrap.clientHeight;
+  bgcv.width=W;bgcv.height=H;cv.width=W;cv.height=H;
+  // Build background flowers
+  bgFlowers=[];
+  const flowerEmojis=['🌸','🌺','🌼','💮','🌷'];
+  for(let i=0;i<18;i++) bgFlowers.push({
+    emoji:flowerEmojis[i%flowerEmojis.length],
+    x:Math.random()*W, y:H*.4+Math.random()*H*.6,
+    size:W*.055+Math.random()*W*.025,
+    ph:Math.random()*Math.PI*2, sp:.2+Math.random()*.4, alpha:.1+Math.random()*.15
+  });
+}
+
+function mkItem(){
+  const isTrap=Math.random()<0.18;
+  if(isTrap){
+    const sz=(20+Math.random()*14)*(W/400);
+    return{emoji:TRAPS[Math.floor(Math.random()*TRAPS.length)],isTrap:true,pts:0,size:sz,
+      x:Math.random()*(W-sz*2)+sz,y:-sz,
+      vx:(Math.random()-.5)*1.5,vy:(1.5+Math.random()*2)*(H/700),
+      wobble:Math.random()*Math.PI*2,alive:true,popping:false,popAlpha:1,popScale:1,shaking:false,shakeT:0,special:false};
+  }
+  const r=Math.random();let acc=0,chosen=STRAWBERRY_TYPES[0];
+  for(const t of STRAWBERRY_TYPES){acc+=t.prob;if(r<acc){chosen=t;break;}}
+  const sz=chosen.size*(W/400)*1.8;
+  return{emoji:chosen.emoji,isTrap:false,pts:chosen.pts,size:sz,stype:chosen.type,
+    special:chosen.special||false,
+    x:Math.random()*(W-sz*2)+sz,y:-sz,
+    vx:(Math.random()-.5)*1.2,vy:(1.2+Math.random()*1.8)*(H/700),
+    wobble:Math.random()*Math.PI*2,alive:true,popping:false,popAlpha:1,popScale:1,shaking:false,shakeT:0};
+}
+
+function spawnLoop(){
+  if(!running)return;
+  const active=items.filter(i=>i.alive&&!i.popping).length;
+  if(active<16)items.push(mkItem());
+  spawnTimeout=setTimeout(spawnLoop,350+Math.random()*500);
+}
+
+function startGame(){
+  score=0;timeLeft=30;running=true;hp=3;items=[];collected=0;combo=1;
+  document.getElementById('title-screen').style.display='none';
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='block';
+  document.getElementById('combo-area').style.display='block';
+  document.getElementById('life-area').style.display='block';
+  document.getElementById('basket-area').style.display='flex';
+  document.getElementById('score-disp').textContent='0';
+  document.getElementById('time-disp').textContent='30';
+  document.getElementById('timer-chip').classList.remove('urgent');
+  updateBasket();updateCombo();updateLife();
+  clearInterval(timerInt);clearTimeout(spawnTimeout);cancelAnimationFrame(animId);
+  for(let i=0;i<8;i++){const b=mkItem();b.y=H*.1+Math.random()*H*.6;items.push(b);}
+  loop();spawnLoop();
+  timerInt=setInterval(()=>{
+    timeLeft--;document.getElementById('time-disp').textContent=timeLeft;
+    if(timeLeft<=10)document.getElementById('timer-chip').classList.add('urgent');
+    if(timeLeft<=0)endGame();
+  },1000);
+}
+function goTitle(){
+  running=false;cancelAnimationFrame(animId);clearInterval(timerInt);clearTimeout(spawnTimeout);
+  document.getElementById('result-overlay').style.display='none';
+  document.getElementById('hud').style.display='none';
+  document.getElementById('combo-area').style.display='none';
+  document.getElementById('life-area').style.display='none';
+  document.getElementById('basket-area').style.display='none';
+  document.getElementById('title-screen').style.display='flex';
+  updateHiBadge();
+}
+function updateBasket(){
+  document.getElementById('basket-count').textContent=collected+'こ';
+  document.getElementById('basket-emoji').textContent=collected>=20?'🎁':'🧺';
+}
+function updateCombo(){
+  const el=document.getElementById('combo-area');
+  el.textContent=combo>1?`🔥 コンボ x${combo}`:'コンボ x1';
+  el.className=combo>=3?'hot':'';
+}
+function updateLife(){document.getElementById('life-area').textContent='❤️'.repeat(hp)+'🖤'.repeat(3-hp);}
+function resetCombo(){combo=1;updateCombo();}
+
+function onTap(cx,cy){
+  if(!running)return;
+  for(let i=items.length-1;i>=0;i--){
+    const item=items[i];
+    if(!item.alive||item.popping||item.shaking)continue;
+    const dx=item.x-cx,dy=item.y-cy;
+    if(Math.sqrt(dx*dx+dy*dy)<item.size*1.15){
+      if(item.isTrap){
+        item.shaking=true;item.shakeT=0;
+        hp=Math.max(0,hp-1);updateLife();
+        clearTimeout(comboTimer);resetCombo();
+        showPop(item.x,item.y,'🚫 ダメ！','#f44336',22);
+        if(hp<=0)setTimeout(endGame,600);
+      } else {
+        item.popping=true;
+        const pts=item.pts*combo;score+=pts;collected++;
+        document.getElementById('score-disp').textContent=score;
+        combo=Math.min(combo+1,10);updateCombo();updateBasket();
+        clearTimeout(comboTimer);comboTimer=setTimeout(resetCombo,2000);
+        const msg=item.special?`✨ きんいちご！+${pts}`:combo>3?`🔥 コンボ！+${pts}`:`+${pts}`;
+        const col=item.special?'#FFD700':combo>3?'#FF6B35':'#FF8A80';
+        showPop(item.x,item.y,msg,col,item.special?26:combo>3?22:18);
+        if(item.special)goldEffect(item.x,item.y);
+      }
+      break;
+    }
+  }
+}
+cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect();onTap((e.clientX-r.left)*(W/r.width),(e.clientY-r.top)*(H/r.height));});
+cv.addEventListener('touchstart',e=>{e.preventDefault();const r=cv.getBoundingClientRect();Array.from(e.changedTouches).forEach(t=>onTap((t.clientX-r.left)*(W/r.width),(t.clientY-r.top)*(H/r.height)));},{passive:false});
+
+function loop(){if(!running)return;update();draw();animId=requestAnimationFrame(loop);}
+function update(){
+  items.forEach(item=>{
+    if(!item.alive)return;
+    if(item.popping){item.popAlpha-=0.08;item.popScale+=0.07;if(item.popAlpha<=0)item.alive=false;return;}
+    if(item.shaking){item.shakeT+=0.25;if(item.shakeT>Math.PI*3){item.shaking=false;item.shakeT=0;}return;}
+    item.wobble+=0.025;
+    item.x+=item.vx+Math.sin(item.wobble)*.5;
+    item.y+=item.vy;
+    if(item.x<item.size){item.x=item.size;item.vx=Math.abs(item.vx);}
+    if(item.x>W-item.size){item.x=W-item.size;item.vx=-Math.abs(item.vx);}
+    if(item.y>H+item.size)item.alive=false;
+  });
+  items=items.filter(i=>i.alive||i.popping);
+}
+
+function drawBg(t){
+  bgctx.clearRect(0,0,W,H);
+  // Rich dark garden background
+  const g=bgctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#1a0010');g.addColorStop(.4,'#2d0018');g.addColorStop(.75,'#200030');g.addColorStop(1,'#0d001a');
+  bgctx.fillStyle=g;bgctx.fillRect(0,0,W,H);
+  // Ground
+  const groundG=bgctx.createLinearGradient(0,H*.75,0,H);
+  groundG.addColorStop(0,'rgba(20,0,10,0)');groundG.addColorStop(1,'rgba(10,30,5,0.4)');
+  bgctx.fillStyle=groundG;bgctx.fillRect(0,H*.75,W,H*.25);
+  // Flowers
+  bgctx.textAlign='center';bgctx.textBaseline='middle';
+  bgFlowers.forEach(f=>{
+    const bob=Math.sin(t*f.sp+f.ph)*6;
+    bgctx.globalAlpha=f.alpha;
+    bgctx.font=`${Math.round(f.size)}px serif`;
+    bgctx.fillText(f.emoji,f.x,f.y+bob);
+  });
+  bgctx.globalAlpha=1;
+  // Sparkles
+  for(let i=0;i<12;i++){
+    const tw=(Math.sin(t*(0.5+i*.15)+i*1.3)+1)/2;
+    bgctx.fillStyle=`rgba(255,180,220,${tw*.35})`;
+    bgctx.beginPath();bgctx.arc(W*(.05+i*.09),H*(.08+Math.sin(i*0.7)*0.06),1+tw*2,0,Math.PI*2);bgctx.fill();
+  }
+}
+
+function draw(){
+  const t=performance.now()/1000;
+  drawBg(t);
+  ctx.clearRect(0,0,W,H);
+
+  items.forEach(item=>{
+    if(!item.alive)return;
+    ctx.save();
+    let ox=0;
+    if(item.shaking)ox=Math.sin(item.shakeT*6)*8;
+    if(item.popping){
+      ctx.globalAlpha=Math.max(0,item.popAlpha);
+      ctx.translate(item.x+ox,item.y);ctx.scale(item.popScale,item.popScale);
+    } else {
+      ctx.translate(item.x+ox,item.y);
+    }
+
+    // Shadow
+    ctx.beginPath();ctx.ellipse(0,item.size*.3,item.size*.7,item.size*.2,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fill();
+
+    if(item.special&&!item.popping){
+      // Gold glow ring
+      const glow=0.4+Math.sin(t*4)*.3;
+      ctx.beginPath();ctx.arc(0,0,item.size*1.15,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(255,215,0,${glow})`;ctx.lineWidth=4;ctx.stroke();
+      ctx.shadowColor='#FFD700';ctx.shadowBlur=15*glow;
+    }
+
+    if(item.isTrap){
+      // Trap circle
+      ctx.beginPath();ctx.arc(0,0,item.size*.95,0,Math.PI*2);
+      const tG=ctx.createRadialGradient(0,-item.size*.2,0,0,0,item.size*.95);
+      tG.addColorStop(0,'rgba(100,50,0,0.7)');tG.addColorStop(1,'rgba(60,20,0,0.5)');
+      ctx.fillStyle=tG;ctx.fill();
+      ctx.strokeStyle='rgba(255,100,50,0.5)';ctx.lineWidth=2;ctx.stroke();
+    } else if(!item.special){
+      // Strawberry glow circle
+      const sG=ctx.createRadialGradient(0,-item.size*.2,0,0,0,item.size*1.1);
+      sG.addColorStop(0,'rgba(255,80,80,0.35)');sG.addColorStop(1,'rgba(255,0,60,0)');
+      ctx.beginPath();ctx.arc(0,0,item.size*1.1,0,Math.PI*2);
+      ctx.fillStyle=sG;ctx.fill();
+    }
+
+    // Emoji
+    ctx.font=`${Math.round(item.size*2)}px serif`;
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(item.emoji,0,0);
+
+    // Points badge
+    if(!item.isTrap&&!item.popping){
+      ctx.shadowBlur=0;
+      const badge='+'+item.pts;
+      const bW=ctx.measureText(badge).width+8;
+      const bH=item.size*.55;
+      ctx.fillStyle=item.special?'rgba(255,200,0,0.9)':'rgba(233,30,99,0.85)';
+      const bx=-bW/2,by=item.size*.65;
+      // Pill badge
+      ctx.beginPath();ctx.roundRect(bx,by,bW,bH,bH/2);ctx.fill();
+      ctx.font=`bold ${Math.round(item.size*.45)}px 'M PLUS Rounded 1c',sans-serif`;
+      ctx.fillStyle='white';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(badge,0,by+bH/2);
+    }
+
+    if(item.isTrap&&!item.popping){
+      ctx.shadowBlur=0;
+      ctx.strokeStyle='rgba(255,50,50,0.6)';ctx.lineWidth=2.5;
+      const s=item.size*.65;
+      ctx.beginPath();ctx.moveTo(-s,-s);ctx.lineTo(s,s);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(s,-s);ctx.lineTo(-s,s);ctx.stroke();
+    }
+    ctx.restore();
+  });
+}
+
+function goldEffect(x,y){
+  ['⭐','✨','🌟','💫'].forEach((e,i)=>{
+    setTimeout(()=>{
+      const el=document.createElement('div');el.className='pop-label';el.textContent=e;
+      el.style.fontSize='24px';el.style.left=(x-20+Math.random()*40-20)+'px';el.style.top=(y-20)+'px';
+      document.body.appendChild(el);setTimeout(()=>el.remove(),800);
+    },i*80);
+  });
+}
+function showPop(x,y,text,color,size){
+  const el=document.createElement('div');el.className='pop-label';el.textContent=text;
+  el.style.color=color;el.style.fontSize=size+'px';
+  el.style.left=(x-60)+'px';el.style.top=(y-20)+'px';
+  document.body.appendChild(el);setTimeout(()=>el.remove(),800);
+}
+
+function endGame(){
+  running=false;clearInterval(timerInt);clearTimeout(spawnTimeout);cancelAnimationFrame(animId);clearTimeout(comboTimer);
+  const hi=getHi(),isNew=score>hi;if(isNew)saveHi(score);
+  updateHiBadge();
+  document.getElementById('hud').style.display='none';
+  document.getElementById('combo-area').style.display='none';
+  document.getElementById('life-area').style.display='none';
+  document.getElementById('basket-area').style.display='none';
+  document.getElementById('result-overlay').style.display='flex';
+  document.getElementById('r-score').textContent=score;
+  const hiEl=document.getElementById('r-hi');
+  hiEl.textContent=isNew?'🏆 ニューレコード！':'ハイスコア: '+hi+'てん';
+  hiEl.className='result-hi'+(isNew?' new':'');
+  let trophy,title;
+  if(score>=60){trophy='🏆';title='いちごてんさい！';}
+  else if(score>=30){trophy='🍓';title='ナイス！';}
+  else{trophy='😊';title='もういちど！';}
+  document.getElementById('r-trophy').textContent=trophy;
+  document.getElementById('r-title').textContent=title;
+  for(let i=0;i<20;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div');el.className='pop-label';
+      el.textContent=['🍓','⭐','✨','🌟','🎉'][Math.floor(Math.random()*5)];
+      el.style.fontSize='22px';el.style.left=Math.random()*W+'px';el.style.top='60px';
+      document.body.appendChild(el);setTimeout(()=>el.remove(),900);
+    },i*80);
+  }
+}
+function goBack(){if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');else history.back();}
+resize();updateHiBadge();window.addEventListener('resize',resize);
+</script>
+</body>
+</html>
