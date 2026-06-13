@@ -949,26 +949,104 @@ function drawCenter(big,sub){
   if(sub){ ctx.font='bold 10px monospace'; ctx.fillText(sub,VW/2,142); }
 }
 function drawTitle(){
-  const grad=ctx.createLinearGradient(0,0,0,VH); grad.addColorStop(0,'#3a8fd0'); grad.addColorStop(1,'#9bd0ff');
+  // Richer sky gradient with sunset tones
+  const grad=ctx.createLinearGradient(0,0,0,VH);
+  grad.addColorStop(0,'#1a4080'); grad.addColorStop(.35,'#2a6ec0'); grad.addColorStop(.65,'#5cb0f0'); grad.addColorStop(1,'#9bd0ff');
   ctx.fillStyle=grad; ctx.fillRect(0,0,VW,VH);
-  for(let i=0;i<5;i++){ drawCloud(((i*70 + cloudT*0.5)%(VW+100))-50, 28+i*9); }
+
+  // twinkling background stars (top portion)
+  for(let i=0;i<18;i++){
+    const sx=((i*47+13)%VW), sy=5+(i*11)%55;
+    const tw=Math.abs(Math.sin(frame*.04+i*1.1));
+    ctx.fillStyle=`rgba(255,255,220,${tw*.8})`;
+    const sr=tw>.6?1.5:0.8;
+    ctx.fillRect(sx-sr/2,sy-sr/2,sr,sr);
+  }
+
+  // clouds (more)
+  for(let i=0;i<7;i++){ drawCloud(((i*55 + cloudT*0.5)%(VW+100))-50, 20+i*7); }
+
+  // distant mountain silhouettes (dark blue-purple)
+  ctx.fillStyle='rgba(20,40,100,.55)';
+  ctx.beginPath(); ctx.moveTo(0,130);
+  ctx.lineTo(30,100); ctx.lineTo(60,115); ctx.lineTo(90,85); ctx.lineTo(130,110);
+  ctx.lineTo(165,78); ctx.lineTo(200,95); ctx.lineTo(240,82); ctx.lineTo(280,100);
+  ctx.lineTo(320,90); ctx.lineTo(320,130); ctx.closePath(); ctx.fill();
+
+  // hills
   for(let i=0;i<6;i++){ drawHill(40+i*60, i%2===0); }
+
   // grass ground
-  ctx.fillStyle='#8a5a2c'; ctx.fillRect(0,204,VW,40);
-  ctx.fillStyle='#3aa83a'; ctx.fillRect(0,200,VW,8); ctx.fillStyle='#5fce4a'; ctx.fillRect(0,200,VW,3);
-  // logo
+  ctx.fillStyle='#6a3c1a'; ctx.fillRect(0,206,VW,34);
+  ctx.fillStyle='#2d8a2d'; ctx.fillRect(0,200,VW,10);
+  ctx.fillStyle='#4dce3a'; ctx.fillRect(0,200,VW,4);
+  // grass texture dots
+  for(let i=0;i<40;i++){
+    ctx.fillStyle='rgba(80,220,60,.5)';
+    ctx.fillRect(i*8+((frame>>2)%8),198,1,4);
+  }
+
+  // decorative coin blocks floating
+  const blinkOn=Math.floor(frame/15)%2;
+  function qBlock(x,y){ // ? block
+    ctx.fillStyle='#c88a00'; ctx.fillRect(x-8,y-8,16,16);
+    ctx.fillStyle='#f0aa00'; ctx.fillRect(x-7,y-7,14,14);
+    ctx.fillStyle='#ffe060'; ctx.fillRect(x-7,y-7,14,4);
+    ctx.fillStyle='#c88a00'; ctx.font='bold 10px monospace'; ctx.textAlign='center';
+    ctx.fillStyle=blinkOn?'#fff':'#f0aa00';
+    ctx.fillText('?',x,y+4);
+  }
+  qBlock(48, 156); qBlock(76, 156); qBlock(104, 156);
+  qBlock(200, 148); qBlock(228, 148);
+  // coin sparkles above blocks
+  if(blinkOn){
+    for(const bx of [48,76,104,200,228]){
+      ctx.fillStyle='#ffd700'; ctx.fillRect(bx-2,148,4,4);
+    }
+  }
+
+  // ── LOGO ──────────────────────────────────────────────
   ctx.textAlign='center';
-  ctx.fillStyle='#3a2410'; ctx.font='bold 26px "Courier New",monospace'; ctx.fillText('もりの',VW/2+2,84);
-  ctx.fillStyle='#ffd000'; ctx.fillText('もりの',VW/2,82);
-  ctx.fillStyle='#3a2410'; ctx.fillText('なかまたち',VW/2+2,116);
-  ctx.fillStyle='#ff7a30'; ctx.fillText('なかまたち',VW/2,114);
-  ctx.fillStyle='#2a5e2a'; ctx.font='bold 11px "Courier New",monospace'; ctx.fillText('～ FOREST FRIENDS ～',VW/2,134);
-  // fox hero waving + a friend
+  // green label badge
+  const badgeX=VW/2-40, badgeW=80, badgeY=56;
+  ctx.fillStyle='#1a5a1a'; ctx.fillRect(badgeX,badgeY,badgeW,10);
+  ctx.fillStyle='#2a8a2a'; ctx.fillRect(badgeX,badgeY,badgeW,7);
+  ctx.fillStyle='#aaff88'; ctx.font='bold 6px "Courier New",monospace';
+  ctx.fillText('WORLD 1-1  ★ START', VW/2, badgeY+6);
+
+  // "もりの" - outline effect
+  ctx.font='bold 28px "Courier New",monospace';
+  for(const [dx,dy] of [[-2,2],[2,2],[-2,-2],[2,-2]]){
+    ctx.fillStyle='#1a0a00'; ctx.fillText('もりの',VW/2+dx,82+dy);
+  }
+  ctx.fillStyle='#ffe040'; ctx.fillText('もりの',VW/2,82);
+
+  // "なかまたち" - outline
+  ctx.font='bold 22px "Courier New",monospace';
+  for(const [dx,dy] of [[-2,2],[2,2],[-2,-2],[2,-2]]){
+    ctx.fillStyle='#1a0a00'; ctx.fillText('なかまたち',VW/2+dx,108+dy);
+  }
+  ctx.fillStyle='#ff8030'; ctx.fillText('なかまたち',VW/2,108);
+  ctx.fillStyle='rgba(255,140,0,.3)';
+  ctx.fillText('なかまたち',VW/2,110); // glow layer
+
+  // subtitle
+  ctx.fillStyle='#88ddff'; ctx.font='bold 9px "Courier New",monospace';
+  ctx.fillText('～ FOREST FRIENDS ～', VW/2, 120);
+
+  // characters
   drawBigFox(VW/2-7,164,{fire:false},true,Math.floor(frame/8)%2);
-  drawHedgehog(VW/2+24,186,false); drawSnail(VW/2-40,186,{dir:1});
-  ctx.fillStyle='#1a3a1a'; ctx.font='bold 10px monospace';
-  if(Math.floor(frame/20)%2) ctx.fillText('タップ / ENTER でスタート',VW/2,196);
-  ctx.fillStyle='#2a5e2a'; ctx.font='7px monospace'; ctx.fillText('3 STAGES  ★ ステージ3で とくぎ（ファイア）',VW/2,232);
+  drawHedgehog(VW/2+28,185,false); drawSnail(VW/2-44,185,{dir:1});
+
+  // blink start text with color cycling
+  const col=['#fff','#ffd700','#ff8888','#88ffaa'][Math.floor(frame/10)%4];
+  ctx.fillStyle='#000'; ctx.font='bold 11px monospace';
+  ctx.fillText('タップ / ENTER でスタート',VW/2+1,197);
+  if(Math.floor(frame/18)%2){ ctx.fillStyle=col; ctx.fillText('タップ / ENTER でスタート',VW/2,196); }
+
+  // bottom info
+  ctx.fillStyle='rgba(150,255,120,.7)'; ctx.font='7px monospace';
+  ctx.fillText('3 STAGES  ★ ステージ3で とくぎ（ファイア）',VW/2,230);
 }
 function drawWin(){
   ctx.fillStyle='#000'; ctx.fillRect(0,0,VW,VH);
