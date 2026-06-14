@@ -73,6 +73,20 @@
   .mute{position:absolute;top:8px;right:50%;transform:translateX(50%);pointer-events:auto;
     background:rgba(255,255,255,.85);border:none;border-radius:999px;padding:5px 10px;font-size:13px;cursor:pointer;}
   @media (max-width:380px){.ctl{width:54px;height:54px;font-size:22px}#go{width:78px;height:78px}#turbo{width:64px;height:78px}}
+
+  /* ===== Landscape compaction (short height) ===== */
+  @media (max-height:480px){
+    .screen{ gap:6px !important; padding:6px 16px !important; justify-content:center; overflow-y:auto; }
+    .bike-hero{ font-size:34px !important; animation:none; }
+    .flag-deco span{ font-size:16px !important; }
+    .spline{ display:none; }
+    h1{ font-size:22px !important; }
+    .sub{ font-size:11px !important; margin:0 !important; }
+    .chars{ gap:6px !important; max-width:560px; }
+    .chars button, .chars > *{ transform:scale(.85); }
+    .diff{ gap:8px !important; }
+    .diff button, .diff > *{ padding:8px 20px !important; font-size:15px !important; }
+  }
 </style>
 </head>
 <body>
@@ -266,9 +280,13 @@ function update(dt){
   if(p.overheat>0){ p.overheat-=dt; accelOn=false; }
   if(p.stumble>0){ p.stumble-=dt; }
   const top = (keys.turbo && p.overheat<=0)? p.maxSpeed*1.45 : p.maxSpeed;
-  if(accelOn && p.stumble<=0){ p.speed += p.accel*dt; }
-  else { p.speed -= p.friction*dt; }
-  if(p.stumble>0) p.speed = Math.min(p.speed, p.maxSpeed*0.35);
+  if(p.stumble>0){
+    // Stopped after hitting a rock: hold near-zero speed during stumble
+    p.speed = 0;
+  } else {
+    if(accelOn){ p.speed += p.accel*dt; }
+    else { p.speed -= p.friction*dt; }
+  }
   p.speed=Math.max(0,Math.min(p.speed,top));
 
   // heat
@@ -304,19 +322,25 @@ function update(dt){
     const rel = it.x - (world.dist/8); // scale: dist units
     // we instead compare in same unit: define item.x in "meters*?" simpler: use world.dist directly
   }
-  // Simpler collision: use world.dist as the player's position in level units.
+  // Collision: use world.dist as the player's position in level units.
   const px = world.dist/8; // player level-x
   for(const it of lv.items){
     if(it.done) continue;
+    if(it.type==='goal'){
+      // Goal: trigger as soon as player reaches OR passes (prevents skipping at high speed)
+      if(!p.finished && px >= it.x - 3){ p.finished=true; finish(); }
+      continue;
+    }
     if(Math.abs(it.x - px) < 6){
       if(it.type==='ramp' && !p.air && p.stumble<=0){
         p.air=true; p.vy = -(22 + p.speed*2.8) * (it.big?1.4:1); it.done=true; AudioFX.jump();
       } else if(it.type==='coin'){
         if(it.lane===p.lane || p.air){ world.coins++; it.done=true; AudioFX.coin(); }
       } else if(it.type==='rock'){
-        if(!p.air && it.lane===p.lane && p.stumble<=0){ p.stumble=0.7; p.speed*=0.45; AudioFX.crash(); flash('😵',p); it.hit=true; }
-      } else if(it.type==='goal'){
-        if(!p.finished){ p.finished=true; finish(); }
+        // Hit rock: come to a full stop briefly, then recover
+        if(!p.air && it.lane===p.lane && p.stumble<=0){
+          p.stumble=1.1; p.speed=0; AudioFX.crash(); flash('💥 ストップ！',p); it.hit=true;
+        }
       }
     }
   }

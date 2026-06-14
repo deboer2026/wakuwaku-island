@@ -41,6 +41,7 @@ export default function Meiro() {
   const [resultData, setResultData] = useState({ title: '', msg: '', hiText: '', isNew: false });
   const [selectedChar, setSelectedChar] = useState(CHARACTERS[0]);
   const [muted, setMuted] = useState(() => getMuteState());
+  const [isLandscape, setIsLandscape] = useState(false);
 
   const mazeCanvasRef = useRef(null);
   const bgCanvasRef = useRef(null);
@@ -330,6 +331,22 @@ export default function Meiro() {
     setScreen('result');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ---- Landscape hint ----
+  useEffect(() => {
+    const check = () => {
+      const landscape = window.innerWidth > window.innerHeight;
+      const shortSide = Math.min(window.innerWidth, window.innerHeight);
+      setIsLandscape(landscape && shortSide < 500);
+    };
+    check();
+    window.addEventListener('resize', check);
+    window.addEventListener('orientationchange', () => setTimeout(check, 200));
+    return () => {
+      window.removeEventListener('resize', check);
+      window.removeEventListener('orientationchange', check);
+    };
+  }, []);
+
   // page title
   useEffect(() => {
     document.title = 'めいろあそび | わくわくアイランド - 無料子供向けゲーム';
@@ -524,10 +541,27 @@ export default function Meiro() {
     };
   }, []);
 
+  // ---- Landscape overlay ----
+  const landscapeHint = isLandscape ? (
+    <div style={{
+      position:'fixed', inset:0, zIndex:999999,
+      display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:18,
+      background:'linear-gradient(160deg,#1a2d5a,#2a1040)', color:'#fff',
+      fontFamily:"'M PLUS Rounded 1c',system-ui,sans-serif", textAlign:'center', padding:24,
+    }}>
+      <div style={{ fontSize:72, animation:'rhSpin 2s ease-in-out infinite' }}>📱</div>
+      <div style={{ fontSize:36, animation:'rhBob 1.2s ease-in-out infinite' }}>🔄</div>
+      <div style={{ fontSize:24, fontWeight:900, color:'#FFD54F', textShadow:'2px 2px 0 rgba(0,0,0,.4)' }}>たてむきにしてね</div>
+      <div style={{ fontSize:15, color:'rgba(255,255,255,.85)', lineHeight:1.7 }}>このゲームは スマホを たてに もって<br/>あそんでね！</div>
+      <style>{`@keyframes rhSpin{0%,40%{transform:rotate(-90deg)}60%,100%{transform:rotate(0deg)}}@keyframes rhBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}`}</style>
+    </div>
+  ) : null;
+
   // ---- Title screen ----
   if (screen === 'title') {
     return (
       <div className="meiro-wrap meiro-title">
+        {landscapeHint}
         <div className="meiro-title-box">
           <div className="meiro-title-emoji">🗺️</div>
           <h1 className="meiro-title-text">{{ja:'めいろあそび', en:'Maze Adventure!', zh:'迷宫冒险！', ko:'미로 어드벤처!', es:'¡Laberinto!'}[lang] || 'めいろあそび'}</h1>
@@ -561,6 +595,7 @@ export default function Meiro() {
   if (screen === 'result') {
     return (
       <div className="meiro-wrap meiro-result">
+        {landscapeHint}
         <div className="meiro-result-box">
           <div className="meiro-result-title">{resultData.title}</div>
           <div className="meiro-result-msg">{resultData.msg}</div>
@@ -582,6 +617,7 @@ export default function Meiro() {
 
   return (
     <div className="meiro-wrap" ref={wrapRef}>
+      {landscapeHint}
       {/* Background canvas */}
       <canvas ref={bgCanvasRef} className="meiro-canvas-bg" />
       {/* HUD */}
