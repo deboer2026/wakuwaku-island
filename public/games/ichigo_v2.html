@@ -95,6 +95,20 @@ canvas#cv { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2;
 .big-btn.blue { background:linear-gradient(145deg,#42A5F5,#1565C0); box-shadow:0 6px 0 #0D47A1; }
 .big-btn.blue:active { box-shadow:0 1px 0 #0D47A1; }
 
+/* Stage Clear */
+#stage-clear-overlay {
+  position: absolute; inset: 0; z-index: 28; display: none; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(15,0,8,0.92);
+}
+.ichigo-sc-frame {
+  background: linear-gradient(145deg, rgba(60,5,30,0.97), rgba(35,2,18,0.99));
+  border: 4px solid #F48FB1; border-radius: 28px; padding: 28px; text-align: center;
+  box-shadow: 0 0 0 2px #880E4F, 0 0 40px rgba(244,143,177,0.2);
+  width: 100%; max-width: 320px;
+}
+.ichigo-sc-frame h2 { font-size: 28px; font-weight: 900; color: #FFD700; text-shadow: 2px 2px 0 #7a5000; margin-bottom: 8px; }
+.ichigo-sc-frame p  { font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.9; margin-bottom: 16px; }
+
 /* Result */
 #result-overlay {
   position: absolute; inset: 0; z-index: 30; display: none; flex-direction: column; align-items: center; justify-content: center;
@@ -166,6 +180,16 @@ canvas#cv { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2;
   <span id="basket-count">0こ</span>
 </div>
 
+<!-- Stage Clear -->
+<div id="stage-clear-overlay">
+  <div class="ichigo-sc-frame">
+    <div style="font-size:56px;margin-bottom:8px">🍓</div>
+    <h2 id="sc-title">ステージ1 クリア！</h2>
+    <p id="sc-msg">つぎのステージへいこう！</p>
+    <button class="big-btn" onclick="nextStage()">つぎへ ▶</button>
+  </div>
+</div>
+
 <!-- Result -->
 <div id="result-overlay" style="display:none;">
   <div class="result-frame">
@@ -199,6 +223,15 @@ const STRAWBERRY_TYPES=[
 ];
 const TRAPS=['🐱','🐶','🐸','🐼','🦊','🐰','🐧','🐻'];
 
+// Stage config: timeLimit (s), spawnInterval (ms), trapProb, label
+const STAGE_CONFIG=[
+  {time:30, spawnMs:420, trapProb:0.14, label:'ステージ1', hint:'いちごをあつめよう！'},
+  {time:35, spawnMs:320, trapProb:0.22, label:'ステージ2', hint:'もっとはやくなったよ！'},
+  {time:40, spawnMs:240, trapProb:0.30, label:'ステージ3', hint:'さいごのステージ！がんばれ！'},
+];
+let currentStage=0;
+let stageScore=0; // score accumulated this stage
+
 let items=[],score=0,timeLeft=30,running=false,hp=3,collected=0,combo=1,comboTimer=null;
 let animId,timerInt,spawnTimeout;
 let bgFlowers=[];
@@ -222,7 +255,7 @@ function resize(){
 }
 
 function mkItem(){
-  const isTrap=Math.random()<0.18;
+  const isTrap=Math.random()<STAGE_CONFIG[currentStage].trapProb;
   if(isTrap){
     const sz=(20+Math.random()*14)*(W/400);
     return{emoji:TRAPS[Math.floor(Math.random()*TRAPS.length)],isTrap:true,pts:0,size:sz,
@@ -244,19 +277,28 @@ function spawnLoop(){
   if(!running)return;
   const active=items.filter(i=>i.alive&&!i.popping).length;
   if(active<16)items.push(mkItem());
-  spawnTimeout=setTimeout(spawnLoop,350+Math.random()*500);
+  const cfg=STAGE_CONFIG[currentStage];
+  spawnTimeout=setTimeout(spawnLoop,cfg.spawnMs+Math.random()*150);
 }
 
 function startGame(){
-  score=0;timeLeft=30;running=true;hp=3;items=[];collected=0;combo=1;
+  currentStage=0;
+  score=0;
+  loadStage();
+}
+
+function loadStage(){
+  const cfg=STAGE_CONFIG[currentStage];
+  stageScore=0;timeLeft=cfg.time;running=true;hp=3;items=[];collected=0;combo=1;
   document.getElementById('title-screen').style.display='none';
   document.getElementById('result-overlay').style.display='none';
+  document.getElementById('stage-clear-overlay').style.display='none';
   document.getElementById('hud').style.display='block';
   document.getElementById('combo-area').style.display='block';
   document.getElementById('life-area').style.display='block';
   document.getElementById('basket-area').style.display='flex';
-  document.getElementById('score-disp').textContent='0';
-  document.getElementById('time-disp').textContent='30';
+  document.getElementById('score-disp').textContent=score;
+  document.getElementById('time-disp').textContent=cfg.time;
   document.getElementById('timer-chip').classList.remove('urgent');
   updateBasket();updateCombo();updateLife();
   clearInterval(timerInt);clearTimeout(spawnTimeout);cancelAnimationFrame(animId);
@@ -265,12 +307,43 @@ function startGame(){
   timerInt=setInterval(()=>{
     timeLeft--;document.getElementById('time-disp').textContent=timeLeft;
     if(timeLeft<=10)document.getElementById('timer-chip').classList.add('urgent');
-    if(timeLeft<=0)endGame();
+    if(timeLeft<=0)stageClear();
   },1000);
+}
+
+function stageClear(){
+  running=false;clearInterval(timerInt);clearTimeout(spawnTimeout);cancelAnimationFrame(animId);clearTimeout(comboTimer);
+  const isLast=(currentStage>=STAGE_CONFIG.length-1);
+  if(isLast){
+    endGame();
+    return;
+  }
+  const cfg=STAGE_CONFIG[currentStage];
+  document.getElementById('sc-title').textContent=cfg.label+' クリア！';
+  document.getElementById('sc-msg').textContent=`スコア: ${score}てん　いちご: ${collected}こ\n${STAGE_CONFIG[currentStage+1].hint}`;
+  document.getElementById('hud').style.display='none';
+  document.getElementById('combo-area').style.display='none';
+  document.getElementById('life-area').style.display='none';
+  document.getElementById('basket-area').style.display='none';
+  document.getElementById('stage-clear-overlay').style.display='flex';
+  for(let i=0;i<16;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div');el.className='pop-label';
+      el.textContent=['🍓','⭐','✨','🌟','🎉'][Math.floor(Math.random()*5)];
+      el.style.fontSize='22px';el.style.left=Math.random()*window.innerWidth+'px';el.style.top='60px';
+      document.body.appendChild(el);setTimeout(()=>el.remove(),900);
+    },i*80);
+  }
+}
+
+function nextStage(){
+  currentStage++;
+  loadStage();
 }
 function goTitle(){
   running=false;cancelAnimationFrame(animId);clearInterval(timerInt);clearTimeout(spawnTimeout);
   document.getElementById('result-overlay').style.display='none';
+  document.getElementById('stage-clear-overlay').style.display='none';
   document.getElementById('hud').style.display='none';
   document.getElementById('combo-area').style.display='none';
   document.getElementById('life-area').style.display='none';
@@ -462,17 +535,15 @@ function endGame(){
   document.getElementById('combo-area').style.display='none';
   document.getElementById('life-area').style.display='none';
   document.getElementById('basket-area').style.display='none';
+  document.getElementById('stage-clear-overlay').style.display='none';
   document.getElementById('result-overlay').style.display='flex';
+  const isAllClear=(currentStage>=STAGE_CONFIG.length-1);
+  document.getElementById('r-title').textContent=isAllClear?'ぜんぶクリア！🎊':score>=60?'いちごてんさい！':score>=30?'ナイス！':'もういちど！';
+  document.getElementById('r-trophy').textContent=isAllClear?'🏆':score>=60?'🏆':score>=30?'🍓':'😊';
   document.getElementById('r-score').textContent=score;
   const hiEl=document.getElementById('r-hi');
   hiEl.textContent=isNew?'🏆 ニューレコード！':'ハイスコア: '+hi+'てん';
   hiEl.className='result-hi'+(isNew?' new':'');
-  let trophy,title;
-  if(score>=60){trophy='🏆';title='いちごてんさい！';}
-  else if(score>=30){trophy='🍓';title='ナイス！';}
-  else{trophy='😊';title='もういちど！';}
-  document.getElementById('r-trophy').textContent=trophy;
-  document.getElementById('r-title').textContent=title;
   for(let i=0;i<20;i++){
     setTimeout(()=>{
       const el=document.createElement('div');el.className='pop-label';
