@@ -7,7 +7,7 @@
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
   html,body{ height:100%; background:#000; overflow:hidden; font-family:'Courier New',monospace; }
-  #wrap{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column;
+  #wrap{ position:relative; position:fixed; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column;
          background:radial-gradient(circle at 50% 30%, #1a1030, #000 70%); }
   #stage{ position:relative; image-rendering:pixelated; image-rendering:crisp-edges;
           box-shadow:0 0 0 4px #111, 0 0 40px rgba(80,40,160,.6), 0 20px 60px rgba(0,0,0,.8);
@@ -17,15 +17,20 @@
      background:repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 2px, rgba(0,0,0,0) 2px 4px); mix-blend-mode:multiply; opacity:.5;}
   #hint{ color:#ffd24a; font-size:12px; margin-top:10px; letter-spacing:1px; text-shadow:0 2px 0 #000; opacity:.85;}
   /* mobile controls */
-  #pad{ position:fixed; inset:0; pointer-events:none; display:none; z-index:20; }
-  .btn{ position:absolute; pointer-events:auto; width:64px; height:64px; border-radius:50%;
-        background:rgba(255,255,255,.10); border:2px solid rgba(255,255,255,.35); color:#fff;
-        font-size:24px; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(2px);}
-  .btn:active{ background:rgba(255,255,255,.3); }
-  #bLeft{ left:18px; bottom:90px;} #bRight{ left:96px; bottom:90px;}
-  #bJump{ right:18px; bottom:96px; width:74px; height:74px; background:rgba(80,180,255,.18);}
-  #bFire{ right:104px; bottom:54px; background:rgba(255,90,60,.18);}
-  @media (pointer:coarse){ #pad{display:block;} #hint{display:none;} }
+  #pad{ position:absolute; inset:0; pointer-events:none; display:block; z-index:20; }
+  .btn{ position:absolute; pointer-events:auto; width:68px; height:68px; border-radius:50%;
+        background:rgba(255,255,255,.18); border:3px solid rgba(255,255,255,.55); color:#fff;
+        font-size:26px; font-weight:900; display:flex; align-items:center; justify-content:center;
+        backdrop-filter:blur(2px); box-shadow:0 4px 12px rgba(0,0,0,.4); user-select:none;
+        touch-action:manipulation;}
+  .btn:active{ background:rgba(255,255,255,.4); transform:scale(.92); }
+  #bLeft{ left:18px; bottom:calc(20px + env(safe-area-inset-bottom));}
+  #bRight{ left:100px; bottom:calc(20px + env(safe-area-inset-bottom));}
+  #bJump{ right:18px; bottom:calc(26px + env(safe-area-inset-bottom)); width:80px; height:80px; background:rgba(80,180,255,.32); border-color:#7fd0ff;}
+  #bFire{ right:108px; bottom:calc(20px + env(safe-area-inset-bottom)); background:rgba(255,90,60,.32); border-color:#ff9a7a;}
+  /* show hint only on devices with a real keyboard (fine pointer, no touch) */
+  @media (hover:hover) and (pointer:fine){ #hint{display:block;} }
+  @media (hover:none),(pointer:coarse){ #hint{display:none;} }
 </style>
 </head>
 <body>
@@ -35,12 +40,12 @@
     <div id="scanlines"></div>
   </div>
   <div id="hint">←→ いどう ・ Z/Space ジャンプ（空中でもう一度押すと2段ジャンプ）・ X はしる/とくぎ</div>
-</div>
-<div id="pad">
-  <div id="bLeft" class="btn">◀</div>
-  <div id="bRight" class="btn">▶</div>
-  <div id="bJump" class="btn">A</div>
-  <div id="bFire" class="btn">B</div>
+  <div id="pad">
+    <div id="bLeft" class="btn">◀</div>
+    <div id="bRight" class="btn">▶</div>
+    <div id="bJump" class="btn">A</div>
+    <div id="bFire" class="btn">B</div>
+  </div>
 </div>
 <script>
 (()=>{

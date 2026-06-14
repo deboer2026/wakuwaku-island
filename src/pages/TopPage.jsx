@@ -24,14 +24,14 @@ const CARD_GRADIENTS = {
 const DEFAULT_GRADIENT = 'linear-gradient(145deg, #7B8FA1, #3D4A5C)';
 
 const CATEGORIES = [
-  { key:'すべて',     icon:'🎮' },
-  { key:'かずあそび', icon:'🔢' },
-  { key:'もじあそび', icon:'✏️' },
-  { key:'パズル',     icon:'🧩' },
-  { key:'アクション', icon:'⚡' },
-  { key:'レース',     icon:'🏁' },
-  { key:'クイズ',     icon:'❓' },
-  { key:'そうぞう',   icon:'🎨' },
+  { key:'すべて',     icon:'🎮', label:{ja:'すべて',     en:'All',      zh:'全部',   ko:'전체',   es:'Todo'    } },
+  { key:'かずあそび', icon:'🔢', label:{ja:'かずあそび', en:'Numbers',  zh:'数字',   ko:'숫자',   es:'Números' } },
+  { key:'もじあそび', icon:'✏️', label:{ja:'もじあそび', en:'Letters',  zh:'文字',   ko:'글자',   es:'Letras'  } },
+  { key:'パズル',     icon:'🧩', label:{ja:'パズル',     en:'Puzzle',   zh:'拼图',   ko:'퍼즐',   es:'Puzzle'  } },
+  { key:'アクション', icon:'⚡', label:{ja:'アクション', en:'Action',   zh:'动作',   ko:'액션',   es:'Acción'  } },
+  { key:'レース',     icon:'🏁', label:{ja:'レース',     en:'Racing',   zh:'赛车',   ko:'레이싱', es:'Carreras'} },
+  { key:'クイズ',     icon:'❓', label:{ja:'クイズ',     en:'Quiz',     zh:'问答',   ko:'퀴즈',   es:'Quiz'    } },
+  { key:'そうぞう',   icon:'🎨', label:{ja:'そうぞう',   en:'Create',   zh:'创造',   ko:'창작',   es:'Crear'   } },
 ];
 
 /* ════════════════════════════════════════════════════
@@ -1188,7 +1188,7 @@ export default function TopPage() {
               className={`tp-cat-btn${categoryFilter === cat.key ? ' tp-cat-btn--active' : ''}`}
               onClick={() => setCategoryFilter(cat.key)}
             >
-              {cat.icon} {cat.key}
+              {cat.icon} {cat.label[lang] || cat.label.ja}
             </button>
           ))}
         </div>
