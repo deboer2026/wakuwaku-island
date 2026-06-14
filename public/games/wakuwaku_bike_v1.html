@@ -377,19 +377,61 @@ function render(){
     ctx.globalAlpha=1; ctx.fillStyle='rgba(255,255,255,.92)';
     cloud(cx,cy,30+(i%2)*10);
   }
-  // ground bands (3 lanes pseudo perspective)
-  for(let lane=2;lane>=0;lane--){
-    const y=laneScreenY(lane); const h=44;
-    ctx.fillStyle= lane%2? '#83cf5f':'#8fd66a';
-    ctx.fillRect(0,y,W,H-y);
-    // lane top edge stripe
-    ctx.fillStyle='rgba(255,255,255,.35)'; ctx.fillRect(0,y,W,3);
+  // ── Horizontal side-scroller road (SNES style) ──
+  const roadTopY = laneScreenY(2) - 12;   // top of road area
+  const roadBotY = laneScreenY(0) + 44;   // bottom of road area
+
+  // Grass above road (far) with horizon
+  const grassTopG = ctx.createLinearGradient(0,H*0.52,0,roadTopY);
+  grassTopG.addColorStop(0,'#8ad95a'); grassTopG.addColorStop(1,'#6db84a');
+  ctx.fillStyle=grassTopG; ctx.fillRect(0,H*0.52,W,roadTopY-H*0.52);
+
+  // Roadside scenery (trees/signs/spectators) sitting on grass above road
+  drawRoadside(px, roadTopY);
+
+  // Asphalt road band
+  const asphG=ctx.createLinearGradient(0,roadTopY,0,roadBotY);
+  asphG.addColorStop(0,'#62686f'); asphG.addColorStop(.5,'#70767e'); asphG.addColorStop(1,'#5c6168');
+  ctx.fillStyle=asphG; ctx.fillRect(0,roadTopY,W,roadBotY-roadTopY);
+
+  // top & bottom red/white curb (scrolling horizontally)
+  const curbSeg=36, curbOff=(world.dist*3)%(curbSeg*2);
+  for(let cx=-curbOff; cx<W+curbSeg; cx+=curbSeg*2){
+    ctx.fillStyle='#e84545';
+    ctx.fillRect(cx,roadTopY-6,curbSeg,6);
+    ctx.fillRect(cx+curbSeg,roadBotY,curbSeg,6);
+    ctx.fillStyle='#fff';
+    ctx.fillRect(cx+curbSeg,roadTopY-6,curbSeg,6);
+    ctx.fillRect(cx,roadBotY,curbSeg,6);
   }
-  // road dashes scrolling on player lane baseline
-  ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=4; ctx.setLineDash([26,22]);
-  ctx.lineDashOffset=-(world.dist*1.2)%48;
-  for(let lane=0;lane<3;lane++){ const y=laneScreenY(lane)+24; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+  // lane divider dashed lines (between the 3 lanes) - horizontal, scrolling
+  ctx.strokeStyle='rgba(255,235,120,.9)'; ctx.lineWidth=4;
+  ctx.setLineDash([30,24]); ctx.lineDashOffset=-(world.dist*3)%54;
+  for(let lane=0;lane<2;lane++){
+    const y=(laneScreenY(lane)+laneScreenY(lane+1))/2 + 22;
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
   ctx.setLineDash([]);
+
+  // asphalt speckle texture (scrolling dots)
+  const spOff=(world.dist*3)%40;
+  ctx.fillStyle='rgba(255,255,255,.06)';
+  for(let sx=-spOff; sx<W; sx+=40){
+    for(let sy=roadTopY+12; sy<roadBotY; sy+=26){
+      ctx.fillRect(sx+(sy%13),sy,2,2);
+    }
+  }
+
+  // grass below road (near) checker stripes scrolling
+  const grassBotG=ctx.createLinearGradient(0,roadBotY,0,H);
+  grassBotG.addColorStop(0,'#7fce52'); grassBotG.addColorStop(1,'#8ad95a');
+  ctx.fillStyle=grassBotG; ctx.fillRect(0,roadBotY+6,W,H-roadBotY);
+  const stripeW=70, gOff=(world.dist*3)%(stripeW*2);
+  for(let sx=-gOff; sx<W+stripeW; sx+=stripeW*2){
+    ctx.fillStyle='rgba(90,180,60,.28)';
+    ctx.fillRect(sx,roadBotY+6,stripeW,H-roadBotY);
+  }
 
   // items
   for(const it of lv.items){
@@ -434,6 +476,67 @@ function render(){
 }
 
 function cloud(x,y,r){ ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.arc(x+r,y+6,r*0.8,0,7); ctx.arc(x-r,y+6,r*0.7,0,7); ctx.fill(); }
+
+// ── Roadside scenery: trees, signs, spectators (horizontal scroll) ──
+function drawRoadside(px, roadTopY){
+  // Objects placed every N level-units, scroll horizontally right-to-left
+  const spacing=18;
+  const startIdx=Math.floor(px/spacing)-1;
+  for(let i=startIdx; i<startIdx+12; i++){
+    const objX = i*spacing;
+    const rel = objX - px;                    // units ahead of player
+    const screenX = W*0.26 + rel*8;           // same 8px/unit scale as items
+    if(screenX<-60 || screenX>W+60) continue;
+    const baseY = roadTopY - 4;               // sit on grass just above road
+    const kind = (i*7) % 5;
+    const sc = 0.85 + ((i*13)%5)*0.06;        // slight size variation
+    drawScenery(kind, screenX, baseY, sc, i);
+  }
+}
+function drawScenery(kind,x,y,sc,seed){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(sc,sc);
+  if(kind===0 || kind===1){
+    // ── Tree ──
+    ctx.fillStyle='#6b4423';
+    ctx.fillRect(-5,-18,10,22);
+    ctx.fillStyle= kind===0?'#2e8b40':'#37a14a';
+    ctx.beginPath(); ctx.arc(0,-30,22,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(-15,-22,16,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(15,-22,16,0,7); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.18)';
+    ctx.beginPath(); ctx.arc(-6,-36,10,0,7); ctx.fill();
+  } else if(kind===2){
+    // ── Sign board ──
+    ctx.fillStyle='#8d6e63'; ctx.fillRect(-3,-10,6,16);
+    ctx.fillStyle='#1976d2'; ctx.fillRect(-22,-40,44,30);
+    ctx.fillStyle='#fff'; ctx.fillRect(-19,-37,38,24);
+    ctx.fillStyle='#1976d2';
+    ctx.font='bold 18px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(['🏁','⛽','🍔','➡️'][seed%4],0,-25);
+  } else if(kind===3){
+    // ── Spectators (cheering) ──
+    const emos=['🐰','🐱','🐶','🐻','🦊','🐼'];
+    for(let k=-1;k<=1;k++){
+      ctx.font='26px serif'; ctx.textAlign='center';
+      const bob=Math.sin(world.time*5+k+seed)*3;
+      ctx.fillText(emos[(seed+k+6)%emos.length], k*22, -10+bob);
+    }
+    // banner
+    ctx.fillStyle='#ff5fa2'; ctx.fillRect(-34,-34,68,10);
+    ctx.fillStyle='#fff'; ctx.font='bold 8px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('GANBARE!',0,-29);
+  } else {
+    // ── Building/house ──
+    ctx.fillStyle='#ffab91'; ctx.fillRect(-20,-34,40,38);
+    ctx.fillStyle='#d84315';
+    ctx.beginPath(); ctx.moveTo(-24,-34); ctx.lineTo(0,-52); ctx.lineTo(24,-34); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#4fc3f7'; ctx.fillRect(-14,-26,11,11); ctx.fillRect(4,-26,11,11);
+    ctx.fillStyle='#6d4c41'; ctx.fillRect(-6,-14,12,18);
+  }
+  ctx.restore();
+}
 
 function drawBike(x,y,p){
   ctx.save(); ctx.translate(x,y);
