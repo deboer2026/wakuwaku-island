@@ -19,10 +19,20 @@ const CARD_GRADIENTS = {
   'もじあそび': 'linear-gradient(145deg, #5BC99A, #1A7A56)',
   'クイズ':     'linear-gradient(145deg, #4FC3A1, #1A5C3A)',
   'そうぞう':   'linear-gradient(145deg, #C97FE0, #3D0D6B)',
+  'レース':     'linear-gradient(145deg, #F9A825, #E53935)',
 };
 const DEFAULT_GRADIENT = 'linear-gradient(145deg, #7B8FA1, #3D4A5C)';
 
-const CATEGORIES = ['すべて', 'かずあそび', 'もじあそび', 'パズル', 'アクション', 'クイズ', 'そうぞう'];
+const CATEGORIES = [
+  { key:'すべて',     icon:'🎮' },
+  { key:'かずあそび', icon:'🔢' },
+  { key:'もじあそび', icon:'✏️' },
+  { key:'パズル',     icon:'🧩' },
+  { key:'アクション', icon:'⚡' },
+  { key:'レース',     icon:'🏁' },
+  { key:'クイズ',     icon:'❓' },
+  { key:'そうぞう',   icon:'🎨' },
+];
 
 /* ════════════════════════════════════════════════════
    ゲームSVGイラスト（SNES風）
@@ -733,7 +743,7 @@ const SCHOOL_GAMES = [
     zh:{ name:'动物方块',         desc:'叠方块消行！\n俄罗斯方块！'                             },
     ko:{ name:'동물 블록',         desc:'블록을 쌓아\n줄을 없애요!'                             },
     es:{ name:'Bloques Animal',   desc:'¡Apila bloques y\nelimina líneas!'                      } },
-  { id:'s2', route:'/runner',   icon:'🏃', num:2, color:'#43A047', stars:4, isNew:false, category:'アクション',
+  { id:'s2', route:'/runner',   icon:'🏃', num:2, color:'#43A047', stars:4, isNew:false, category:'レース',
     ja:{ name:'どうぶつランナー', desc:'タップでジャンプ！\n2かいジャンプもできるよ！\n障害物をよけて走れ！' },
     en:{ name:'Animal Runner',   desc:'Tap to jump!\nDouble jump available!\nAvoid obstacles!' },
     zh:{ name:'动物跑酷',         desc:'点击跳跃！\n二段跳也可以！'                            },
@@ -751,7 +761,7 @@ const SCHOOL_GAMES = [
     zh:{ name:'动物狙击手',       desc:'点击移动动物\n积累分数！'                              },
     ko:{ name:'동물 스나이퍼',     desc:'움직이는 동물을\n탭해서 맞혀요!'                      },
     es:{ name:'Francotirador',    desc:'¡Toca animales\nen movimiento!'                        } },
-  { id:'s5', route:'/crossing', icon:'🐔', num:5, color:'#e65100', stars:5, isNew:false, category:'アクション',
+  { id:'s5', route:'/crossing', icon:'🐔', num:5, color:'#e65100', stars:5, isNew:false, category:'レース',
     ja:{ name:'どうぶつクロッシング', desc:'みちをわたって\nどこまでいけるかな？\nくるまに気をつけて！' },
     en:{ name:'Animal Crossing', desc:'Cross the road\nand go as far as you can!\nWatch for cars!' },
     zh:{ name:'动物过马路',       desc:'穿越马路\n走多远？'                                   },
@@ -769,7 +779,7 @@ const SCHOOL_GAMES = [
     zh:{ name:'飞天公主',         desc:'翱翔天空\n消灭敌人！' },
     ko:{ name:'하늘나는 공주',     desc:'하늘을 날아\n적을 물리쳐요!' },
     es:{ name:'Princesa del Cielo',desc:'¡Vuela por el cielo\ny derrota enemigos!' } },
-  { id:'g_bike', route:'/bike', icon:'🏍️', num:8, color:'#f57c00', stars:3, isNew:false, category:'アクション',
+  { id:'g_bike', route:'/bike', icon:'🏍️', num:8, color:'#f57c00', stars:3, isNew:false, category:'レース',
     ja:{ name:'わくわくバイク', desc:'バイクでコースを\nはしりぬけろ！' },
     en:{ name:'Wakuwaku Bike',  desc:'Race through the course\non your bike!' },
     zh:{ name:'嗡嗡摩托',        desc:'骑摩托车\n冲过赛道！' },
@@ -1069,7 +1079,7 @@ export default function TopPage() {
       <div className="tp-top-btns">
         <button className="tp-top-btn tp-shop-btn" onClick={() => setShopOpen(true)}
           title={lang === 'en' ? 'Shop' : 'ショップ'}>
-          🛍️
+          🛒 {{ja:'ショップ', en:'Shop', zh:'商店', ko:'상점', es:'Tienda'}[lang] || 'ショップ'}
         </button>
         <button className="tp-top-btn ksk-top-btn" onClick={() => openPanel('princess')}
           title={lang === 'en' ? 'Dress up' : 'きがえ'}>
@@ -1079,9 +1089,9 @@ export default function TopPage() {
           title={isMuted ? 'Unmute' : 'Mute'}>
           {isMuted ? '🔇' : '🔊'}
         </button>
-        <button className="tp-top-btn" onClick={handleLangToggle}
+        <button className="tp-top-btn tp-lang-btn" onClick={handleLangToggle}
           title="Language / 言語">
-          {LANG_FLAGS[lang]}
+          {LANG_FLAGS[lang]}<span className="tp-lang-code">{lang.toUpperCase()}</span>
         </button>
       </div>
 
@@ -1090,7 +1100,7 @@ export default function TopPage() {
         <div className="tp-park-badge">🏝️ GAME PARK ✦</div>
 
         <div className="ksk-title-zone">
-          <div onClick={(e) => spawnParticles(e.clientX, e.clientY)} style={{ display:'contents' }}>
+          <div className="tp-hero-chars" onClick={(e) => spawnParticles(e.clientX, e.clientY)}>
             <KisekaeCharacters
               kisekaeState={kisekaeState}
               onOpen={openPanel}
@@ -1114,16 +1124,16 @@ export default function TopPage() {
           </div>
         </div>
 
-        {/* ② 季節バナー */}
-        <div
-          className="tp-season"
-          style={{ '--season-color': season.color, '--season-glow': season.glow }}
-        >
-          {season.emoji} {season[lang] || season.ja}
+        {/* ② 季節バナー + ⑤ プレイカウンター（横並び） */}
+        <div className="tp-hero-row">
+          <div
+            className="tp-season"
+            style={{ '--season-color': season.color, '--season-glow': season.glow }}
+          >
+            {season.emoji} {season[lang] || season.ja}
+          </div>
+          <PlayCounter target={playCount} lang={lang} />
         </div>
-
-        {/* ⑤ プレイカウンター */}
-        <PlayCounter target={playCount} lang={lang} />
       </div>
 
       {/* ── ゲームセクション ── */}
@@ -1174,11 +1184,11 @@ export default function TopPage() {
         <div className="tp-cat-filter">
           {CATEGORIES.map(cat => (
             <button
-              key={cat}
-              className={`tp-cat-btn${categoryFilter === cat ? ' tp-cat-btn--active' : ''}`}
-              onClick={() => setCategoryFilter(cat)}
+              key={cat.key}
+              className={`tp-cat-btn${categoryFilter === cat.key ? ' tp-cat-btn--active' : ''}`}
+              onClick={() => setCategoryFilter(cat.key)}
             >
-              {cat}
+              {cat.icon} {cat.key}
             </button>
           ))}
         </div>
@@ -1242,7 +1252,7 @@ export default function TopPage() {
         </div>
         <div style={{ marginTop: 6, fontSize: 11, color: 'rgba(0,0,0,0.28)', display:'flex', justifyContent:'center', gap:12 }}>
           <span>© 2025 Wakuwaku Island</span>
-          <span style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>v1.1.1</span>
+          <span style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>v1.1.2</span>
         </div>
       </div>
 
