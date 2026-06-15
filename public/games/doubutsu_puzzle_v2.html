@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -15,7 +15,7 @@ canvas#bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-eve
 #hud {
   position: fixed; top: 0; left: 50%; transform: translateX(-50%);
   width: 100%; max-width: 480px; z-index: 100; box-sizing: border-box;
-  padding: max(10px, env(safe-area-inset-top)) 12px 8px; display: none;
+  padding: 8px 12px; padding-top: max(12px, var(--sat, env(safe-area-inset-top, 0px))); display: none;
   background: linear-gradient(180deg, rgba(30,10,0,0.93) 0%, rgba(30,10,0,0.6) 70%, transparent);
 }
 .hud-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
@@ -124,17 +124,6 @@ canvas#bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-eve
 #feedback-text { font-size:90px; filter:drop-shadow(0 4px 12px rgba(0,0,0,.3)); }
 #flash { position:fixed; inset:0; z-index:45; pointer-events:none; opacity:0; }
 
-/* Stage Clear */
-#stage-clear-overlay { position:absolute; inset:0; z-index:25; display:none; flex-direction:column; align-items:center; justify-content:center; background:rgba(15,5,0,0.92); }
-.stage-clear-frame {
-  background: linear-gradient(145deg, rgba(60,25,0,0.97), rgba(35,12,0,0.99));
-  border: 4px solid #FFB300; border-radius: 28px; padding: 28px; text-align: center;
-  box-shadow: 0 0 0 2px #7a5000, 0 0 40px rgba(255,179,0,0.2);
-  width: 100%; max-width: 320px;
-}
-.stage-clear-frame h2 { font-size: 30px; font-weight: 900; color: #FFD700; text-shadow: 2px 2px 0 #8B6914; margin-bottom: 8px; }
-.stage-clear-frame p  { font-size: 15px; color: rgba(255,255,255,0.8); line-height: 1.8; margin-bottom: 16px; }
-
 /* Result */
 #result-overlay { position:absolute; inset:0; z-index:30; display:none; flex-direction:column; align-items:center; justify-content:center; background:rgba(15,5,0,0.93); }
 .result-frame {
@@ -164,7 +153,7 @@ canvas#bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-eve
 .pop-word { position:fixed; font-weight:900; pointer-events:none; z-index:49; font-size:24px; animation:pWord .9s ease forwards; }
 @keyframes pWord { 0%{opacity:0;transform:translateY(10px) scale(.6)} 25%{opacity:1;transform:translateY(-8px) scale(1.2)} 100%{opacity:0;transform:translateY(-60px) scale(.9)} }
 </style>
-<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/safe_area.js"></script>
 </head>
 <body>
 <div id="game-wrap">
@@ -209,16 +198,6 @@ canvas#bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-eve
 <!-- FEEDBACK -->
 <div id="feedback-overlay"><div id="feedback-text">⭕</div></div>
 <div id="flash"></div>
-
-<!-- STAGE CLEAR -->
-<div id="stage-clear-overlay">
-  <div class="stage-clear-frame">
-    <div style="font-size:56px;margin-bottom:8px">🎉</div>
-    <h2 id="sc-title">ステージ1 クリア！</h2>
-    <p id="sc-msg">つぎのステージへいこう！</p>
-    <button class="big-btn" onclick="nextStage()">つぎへ ▶</button>
-  </div>
-</div>
 
 <!-- RESULT -->
 <div id="result-overlay" style="display:none;">
@@ -281,17 +260,7 @@ initC();requestAnimationFrame(bgLoop);window.addEventListener('resize',initC);
 const ANIMALS=[
   {e:'🐱',n:'ねこ'},{e:'🐶',n:'いぬ'},{e:'🐸',n:'かえる'},{e:'🐼',n:'パンダ'},
   {e:'🦊',n:'きつね'},{e:'🐧',n:'ペンギン'},{e:'🐰',n:'うさぎ'},{e:'🐻',n:'くま'},
-  {e:'🐯',n:'とら'},{e:'🦁',n:'ライオン'},{e:'🐨',n:'コアラ'},{e:'🦔',n:'はりねずみ'},
 ];
-
-// Stage config: pairs count, grid cols
-const STAGE_CONFIG=[
-  {pairs:6, cols:4, label:'ステージ1', diff:'かんたん（6ペア）'},
-  {pairs:9, cols:4, label:'ステージ2', diff:'ふつう（9ペア）'},
-  {pairs:12,cols:4, label:'ステージ3', diff:'むずかしい（12ペア）'},
-];
-let currentStage=0;
-
 let W2,H2,cards=[],flipped=[],matched=0,misses=0,elapsed=0,timerInt,waiting=false,animId2;
 
 function getBest(){return localStorage.getItem('puzzle_best2')||null;}
@@ -299,35 +268,26 @@ function saveBest(v){localStorage.setItem('puzzle_best2',v);}
 function fmtTime(s){return Math.floor(s/60)+':'+(s%60<10?'0':'')+s%60;}
 function updateHiBadge(){const b=getBest();document.getElementById('hi-title').textContent=b?'🏆 ベストタイム: '+fmtTime(parseInt(b)):'🏆 ベストタイム: --';}
 
-function initPairsDots(n){
-  n=n||8;
+function initPairsDots(){
   const t=document.getElementById('pairs-track');t.innerHTML='';
-  for(let i=0;i<n;i++){const d=document.createElement('div');d.className='pair-dot';d.id='pd-'+i;t.appendChild(d);}
+  for(let i=0;i<8;i++){const d=document.createElement('div');d.className='pair-dot';d.id='pd-'+i;t.appendChild(d);}
 }
 function markPair(n){const d=document.getElementById('pd-'+n);if(d)d.classList.add('matched');}
 
 function startGame(){
-  currentStage=0;
-  loadStage();
-}
-
-function loadStage(){
   matched=0;misses=0;elapsed=0;flipped=[];waiting=false;
   clearInterval(timerInt);
-  const cfg=STAGE_CONFIG[currentStage];
   document.getElementById('title-screen').style.display='none';
   document.getElementById('result-overlay').style.display='none';
-  document.getElementById('stage-clear-overlay').style.display='none';
   document.getElementById('hud').style.display='block';
   document.getElementById('game-area').style.display='flex';
   document.getElementById('miss-disp').textContent='0';
   document.getElementById('time-disp').textContent='0:00';
-  initPairsDots(cfg.pairs);
+  initPairsDots();
   const grid=document.getElementById('card-grid');
   grid.innerHTML='';cards=[];
-  const pool=ANIMALS.slice(0,cfg.pairs);
-  const deck=[...pool,...pool].sort(()=>Math.random()-.5);
-  layoutGrid(cfg);
+  const deck=[...ANIMALS,...ANIMALS].sort(()=>Math.random()-.5);
+  layoutGrid();
   deck.forEach((a,i)=>{
     const el=document.createElement('div');el.className='card';el.dataset.idx=i;
     el.innerHTML=`<div class="card-inner">
@@ -346,22 +306,17 @@ function loadStage(){
   timerInt=setInterval(()=>{elapsed++;document.getElementById('time-disp').textContent=fmtTime(elapsed);},1000);
 }
 
-let cardW=0,cardH=0,_layoutCols=4;
-function layoutGrid(cfg){
+let cardW=0,cardH=0;
+function layoutGrid(){
   const wrap=document.getElementById('game-wrap');
   W2=wrap.clientWidth;H2=wrap.clientHeight;
   const grid=document.getElementById('card-grid');
-  const gap=10;
-  const cols=cfg?cfg.cols:4;
-  const pairs=cfg?cfg.pairs:8;
-  const rows=Math.ceil(pairs*2/cols);
-  _layoutCols=cols;
+  const gap=10,cols=4,rows=4;
   const pad=W2*.06;
   cardW=Math.floor((W2-pad*2-gap*(cols-1))/cols);
   cardH=Math.floor(cardW*1.12);
   const totalH=cardH*rows+gap*(rows-1);
-  const topY=Math.max((H2-totalH)/2+40,90);
-  grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  const topY=(H2-totalH)/2+40;
   grid.style.width=(cardW*cols+gap*(cols-1))+'px';
   grid.style.top=topY+'px';
   grid.style.gap=gap+'px';
@@ -393,8 +348,7 @@ function onCardClick(idx){
         showFeedback('✨');flash('rgba(255,180,0,0.25)');burst();pop('✨ ペア！','#FFD700');
         hideFeedback();
         flipped=[];waiting=false;
-        const cfg=STAGE_CONFIG[currentStage];
-        if(matched===cfg.pairs)setTimeout(stageClear,500);
+        if(matched===8)setTimeout(endGame,500);
       },350);
     } else {
       misses++;document.getElementById('miss-disp').textContent=misses;
@@ -433,33 +387,6 @@ function pop(text,color){
   document.body.appendChild(el);setTimeout(()=>el.remove(),1000);
 }
 
-function stageClear(){
-  clearInterval(timerInt);
-  const isLast=(currentStage>=STAGE_CONFIG.length-1);
-  if(isLast){
-    endGame();
-    return;
-  }
-  const cfg=STAGE_CONFIG[currentStage];
-  document.getElementById('sc-title').textContent=cfg.label+' クリア！';
-  document.getElementById('sc-msg').textContent=`ミス: ${misses}かい　タイム: ${fmtTime(elapsed)}`;
-  document.getElementById('stage-clear-overlay').style.display='flex';
-  // confetti
-  for(let i=0;i<14;i++){
-    setTimeout(()=>{
-      const d=document.createElement('div');d.className='confetti';
-      d.textContent=['🎉','⭐','✨','🌟','🐾','🦊'][Math.floor(Math.random()*6)];
-      d.style.cssText=`left:${Math.random()*window.innerWidth}px;top:20px;font-size:${16+Math.random()*12}px;--dur:${1+Math.random()*.8}s;animation-delay:${Math.random()*.3}s`;
-      document.body.appendChild(d);setTimeout(()=>d.remove(),2000);
-    },i*80);
-  }
-}
-
-function nextStage(){
-  currentStage++;
-  loadStage();
-}
-
 function endGame(){
   clearInterval(timerInt);
   const best=getBest(),isNew=!best||elapsed<parseInt(best);
@@ -467,11 +394,9 @@ function endGame(){
   updateHiBadge();
   document.getElementById('hud').style.display='none';
   document.getElementById('game-area').style.display='none';
-  document.getElementById('stage-clear-overlay').style.display='none';
   document.getElementById('result-overlay').style.display='flex';
   const stars=misses<=3?'⭐⭐⭐':misses<=7?'⭐⭐':'⭐';
   document.getElementById('r-trophy').textContent=misses<=3?'🏆':'🎉';
-  document.querySelector('#result-overlay .result-title').textContent='ぜんぶクリア！🎊';
   document.getElementById('r-stars').textContent=stars;
   document.getElementById('r-time').textContent=fmtTime(elapsed);
   document.getElementById('r-miss').textContent=misses;
@@ -491,42 +416,5 @@ function goBack(){if(window.parent!==window)window.parent.postMessage({type:'goB
 window.addEventListener('resize',()=>{if(cards.length)layoutGrid();});
 updateHiBadge();
 </script>
-
-<script>
-// ── BGM (WakuwakuBGM library) ──────────────────────
-let _bgm = null;
-
-function _startBGM() {
-  if (_bgm) return;
-  _bgm = new WakuwakuBGM('puzzle');
-  const on = WakuwakuBGM.loadState();
-  _bgm.setEnabled(on);
-  if (on) _bgm.start();
-  _syncBgmBtn();
-}
-
-function toggleCommonBGM() {
-  if (!_bgm) { _startBGM(); return; }
-  const on = _bgm.toggle();
-  WakuwakuBGM.saveState(on);
-  _syncBgmBtn();
-}
-
-function _syncBgmBtn() {
-  const on = _bgm ? _bgm.enabled : WakuwakuBGM.loadState();
-  const btns = document.querySelectorAll(
-    '#bgm-btn,#ui-bgm-btn,#bgm-toggle,#sound-btn,.bgm-btn'
-  );
-  btns.forEach(b => { b.textContent = on ? '🔊' : '🔇'; });
-}
-
-(function(){
-  function _first(){ _startBGM(); }
-  document.addEventListener('click', _first, { once: true });
-  document.addEventListener('touchstart', _first, { once: true });
-})();
-// ── End BGM ────────────────────────────────────────
-</script>
-<script src="/games/rotate_hint.js"></script>
 </body>
 </html>

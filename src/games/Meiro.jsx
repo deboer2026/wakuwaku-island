@@ -46,6 +46,7 @@ export default function Meiro() {
   const mazeCanvasRef = useRef(null);
   const bgCanvasRef = useRef(null);
   const wrapRef = useRef(null);
+  const hudRef = useRef(null);
 
   const W = useRef(0);
   const H = useRef(0);
@@ -116,13 +117,14 @@ export default function Meiro() {
   const computeLayout = useCallback(() => {
     const w = W.current, h = H.current;
     const availW = w - 32;
-    const availH = h - HUD_H - 40; // 40 for bottom hint
+    const actualHudH = hudRef.current?.getBoundingClientRect().height || HUD_H;
+    const availH = h - actualHudH - 40; // 40 for bottom hint
     const cell = Math.floor(Math.min(availW / COLS, availH / ROWS));
     cellRef.current = cell;
     const mazeW = cell * COLS;
     const mazeH = cell * ROWS;
     OXRef.current = Math.floor((w - mazeW) / 2);
-    OYRef.current = HUD_H + Math.floor((availH - mazeH) / 2) + 8;
+    OYRef.current = actualHudH + Math.floor((availH - mazeH) / 2) + 8;
   }, []);
 
   // ---- Gallery build ----
@@ -621,7 +623,7 @@ export default function Meiro() {
       {/* Background canvas */}
       <canvas ref={bgCanvasRef} className="meiro-canvas-bg" />
       {/* HUD */}
-      <div className="meiro-hud">
+      <div className="meiro-hud" ref={hudRef}>
         {/* LEFT */}
         <button className="meiro-hud-back" onClick={() => {
           runningRef.current = false;

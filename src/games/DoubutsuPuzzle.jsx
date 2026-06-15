@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+﻿import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useIframeBridge } from '../hooks/useIframeBridge';
 
 export default function DoubutsuPuzzle() {
   const navigate = useNavigate();
@@ -14,24 +15,7 @@ export default function DoubutsuPuzzle() {
     return () => window.removeEventListener('message', handler);
   }, [navigate]);
 
-  useEffect(() => {
-    const notify = () => {
-      const landscapePhone =
-        window.innerWidth > window.innerHeight &&
-        Math.min(window.innerWidth, window.innerHeight) < 500;
-      const f = iframeRef.current;
-      if (f && f.contentWindow) {
-        f.contentWindow.postMessage({ type: 'orientation', landscapePhone }, '*');
-      }
-    };
-    window.addEventListener('resize', notify);
-    window.addEventListener('orientationchange', () => setTimeout(notify, 250));
-    const f = iframeRef.current;
-    if (f) f.addEventListener('load', () => setTimeout(notify, 300));
-    notify();
-    setTimeout(notify, 500);
-    return () => window.removeEventListener('resize', notify);
-  }, []);
+  useIframeBridge(iframeRef);
 
   return (
     <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:0, overflow:'hidden' }}>

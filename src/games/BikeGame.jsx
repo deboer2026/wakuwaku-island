@@ -1,10 +1,15 @@
+﻿import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useIframeBridge } from '../hooks/useIframeBridge';
 
 export default function BikeGame() {
   const navigate = useNavigate();
+  const iframeRef = useRef(null);
+  useIframeBridge(iframeRef);
   return (
     <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:0, overflow:'hidden' }}>
       <iframe
+        ref={iframeRef}
         src="/games/wakuwaku_bike_v1.html"
         style={{ width:'100%', height:'100%', border:'none', display:'block', position:'absolute', top:0, left:0 }}
         title="わくわくバイク"

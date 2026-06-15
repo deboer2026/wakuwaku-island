@@ -1,8 +1,11 @@
-import { useEffect } from 'react';
+﻿import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useIframeBridge } from '../hooks/useIframeBridge';
 
 export default function DoubutsuCrossing() {
   const navigate = useNavigate();
+  const iframeRef = useRef(null);
+  useIframeBridge(iframeRef);
 
   useEffect(() => {
     const handler = (e) => {
@@ -21,6 +24,7 @@ export default function DoubutsuCrossing() {
       overflow: 'hidden'
     }}>
       <iframe
+        ref={iframeRef}
         src="/games/crossing_v2.html"
         style={{
           width: '100%',

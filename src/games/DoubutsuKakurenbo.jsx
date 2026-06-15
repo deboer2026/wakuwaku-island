@@ -1,8 +1,11 @@
-import { useEffect } from 'react';
+﻿import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useIframeBridge } from '../hooks/useIframeBridge';
 
 export default function DoubutsuKakurenbo() {
   const navigate = useNavigate();
+  const iframeRef = useRef(null);
+  useIframeBridge(iframeRef);
 
   useEffect(() => {
     const handler = (e) => {
@@ -21,6 +24,7 @@ export default function DoubutsuKakurenbo() {
       overflow: 'hidden'
     }}>
       <iframe
+        ref={iframeRef}
         src="/games/kakurenbo_v1.html"
         style={{
           width: '100%',
