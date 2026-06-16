@@ -20,7 +20,7 @@ export default function MoriGame() {
       <button
         onClick={() => navigate('/')}
         style={{
-          position:'absolute', top:10, left:10, zIndex:10,
+          position:'absolute', top:'max(10px, env(safe-area-inset-top))', left:'max(12px, env(safe-area-inset-left))', zIndex:10,
           background:'rgba(0,0,0,0.55)', color:'white',
           border:'1.5px solid rgba(255,255,255,0.3)', borderRadius:20,
           padding:'5px 14px', fontSize:12, fontWeight:700, cursor:'pointer'
