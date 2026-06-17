@@ -1067,16 +1067,11 @@ export default function TopPage() {
         ))}
       </div>
 
-      {/* ── コイン残高（左上） ── */}
-      <div className="tp-coin-badge">
-        🪙 <span className="tp-coin-num">{coins}</span>
-        <span className="tp-coin-unit">
-          {lang === 'en' ? 'coins' : lang === 'zh' ? '枚' : lang === 'ko' ? '개' : lang === 'es' ? ' monedas' : 'まい'}
-        </span>
-      </div>
-
-      {/* ── 右上ボタン群 ── */}
+      {/* ── 右上ボタン群（コイン含む） ── */}
       <div className="tp-top-btns">
+        <div className="tp-coin-badge">
+          🪙 <span className="tp-coin-num">{coins}</span>
+        </div>
         <button className="tp-top-btn tp-shop-btn" onClick={() => setShopOpen(true)}
           title={lang === 'en' ? 'Shop' : 'ショップ'}>
           🛒 {{ja:'ショップ', en:'Shop', zh:'商店', ko:'상점', es:'Tienda'}[lang] || 'ショップ'}
