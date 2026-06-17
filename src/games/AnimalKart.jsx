@@ -1,0 +1,33 @@
+import { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useIframeBridge } from '../hooks/useIframeBridge';
+
+export default function AnimalKart() {
+  const navigate = useNavigate();
+  const iframeRef = useRef(null);
+  useIframeBridge(iframeRef);
+  return (
+    <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:0, overflow:'hidden' }}>
+      <iframe
+        ref={iframeRef}
+        src="/games/animal_kart_v1.html"
+        style={{ width:'100%', height:'100%', border:'none', display:'block', position:'absolute', top:0, left:0 }}
+        title="アニマルカートGP"
+        allow="autoplay; fullscreen"
+        allowFullScreen
+        sandbox="allow-scripts allow-same-origin allow-popups"
+      />
+      <button
+        onClick={() => navigate('/')}
+        style={{
+          position:'absolute', top:'max(10px, env(safe-area-inset-top))', left:'max(12px, env(safe-area-inset-left))', zIndex:10,
+          background:'rgba(0,0,0,0.55)', color:'white',
+          border:'1.5px solid rgba(255,255,255,0.3)', borderRadius:20,
+          padding:'5px 14px', fontSize:12, fontWeight:700, cursor:'pointer'
+        }}
+      >
+        🏠 もどる
+      </button>
+    </div>
+  );
+}

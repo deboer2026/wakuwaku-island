@@ -785,6 +785,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'嗡嗡摩托',        desc:'骑摩托车\n冲过赛道！' },
     ko:{ name:'두근두근 바이크',  desc:'오토바이로\n코스를 달려요!' },
     es:{ name:'Moto Wakuwaku',  desc:'¡Corre por el circuito\nen tu moto!' } },
+  { id:'g_kart', route:'/kart', icon:'🏎️', num:9, color:'#e53935', stars:3, isNew:true, category:'レース',
+    ja:{ name:'アニマルカートGP', desc:'どうぶつたちのカートで\nコースをはしりぬけろ！' },
+    en:{ name:'Animal Kart GP',  desc:'Race with animal karts\naround the course!' },
+    zh:{ name:'动物卡丁车GP',     desc:'驾驶动物卡丁车\n冲过赛道！' },
+    ko:{ name:'애니멀 카트 GP',   desc:'동물 카트로\n코스를 달려요!' },
+    es:{ name:'Kart de Animales GP', desc:'¡Corre con karts\nde animales!' } },
 ];
 
 /* ════════════════════════════════════════════════════

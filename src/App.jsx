@@ -25,6 +25,7 @@ import DressUp from './games/DressUp'
 import MoriGame from './games/MoriGame'
 import SoraGame from './games/SoraGame'
 import BikeGame from './games/BikeGame'
+import AnimalKart from './games/AnimalKart'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 import { recordRecentGame } from './utils/recentGames'
@@ -37,7 +38,7 @@ const GAME_ROUTES = new Set([
   '/kokki', '/jewelry-master', '/tetris', '/runner', '/shooting',
   '/sniper', '/crossing', '/dressup',
   '/moji-asobi', '/iro-awase', '/flag-quiz', '/shoot',
-  '/mori', '/sora', '/bike',
+  '/mori', '/sora', '/bike', '/kart',
   // 短縮URLエイリアスも記録
   '/kudamono', '/puzzle', '/kazu', '/soccer',
 ]);
@@ -92,6 +93,7 @@ export default function App() {
         <Route path="/mori" element={<MoriGame />} />
         <Route path="/sora" element={<SoraGame />} />
         <Route path="/bike" element={<BikeGame />} />
+        <Route path="/kart" element={<AnimalKart />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms"   element={<TermsPage />} />
       </Routes>
