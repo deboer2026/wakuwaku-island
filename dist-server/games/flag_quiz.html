@@ -1,0 +1,771 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>こっきクイズ</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:'M PLUS Rounded 1c',sans-serif;user-select:none;}
+body{background:#0a1628;display:flex;flex-direction:column;align-items:center;}
+#app{width:100%;max-width:480px;height:100vh;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+
+/* ===== タイトル ===== */
+#title-screen{
+  position:absolute;inset:0;z-index:100;
+  background:linear-gradient(160deg,#050d1e,#0a1a35,#050d1e);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  overflow:hidden;
+}
+#title-globe{
+  position:absolute;top:0;left:0;right:0;height:55%;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:8px;
+}
+.title-flag-row{
+  display:flex;gap:8px;
+  animation:marquee 12s linear infinite;
+  white-space:nowrap;
+}
+.title-flag-row:nth-child(2){animation-duration:15s;animation-direction:reverse;}
+.title-flag-row:nth-child(3){animation-duration:10s;}
+@keyframes marquee{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+.tflag{font-size:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5));}
+#title-card{
+  position:relative;z-index:10;width:100%;
+  display:flex;flex-direction:column;align-items:center;
+  padding-bottom:28px;
+}
+.diff-btn{
+  width:100%;padding:14px;border:none;border-radius:14px;
+  font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;
+  margin-bottom:8px;transition:transform 0.15s;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.diff-btn:active{transform:scale(0.97);}
+.diff-easy{background:linear-gradient(135deg,#1B5E20,#4CAF50);color:white;}
+.diff-mid{background:linear-gradient(135deg,#E65100,#FF9800);color:white;}
+.diff-hard{background:linear-gradient(135deg,#880E4F,#E91E63);color:white;}
+.diff-tag{font-size:11px;opacity:0.8;font-weight:700;}
+
+/* ===== ゲーム画面 ===== */
+#game-screen{
+  flex:1;display:flex;flex-direction:column;
+  background:linear-gradient(180deg,#050d1e 0%,#0a1a35 100%);
+  padding-top:90px;
+}
+
+/* HUD */
+#hud{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:max(10px,var(--sat,env(safe-area-inset-top,0px))) 12px 8px;
+  background:linear-gradient(180deg,rgba(0,0,0,0.75) 0%,rgba(0,0,0,0.4) 70%,transparent 100%);
+  box-sizing:border-box;
+}
+.hud-back{background:none;border:1px solid rgba(255,255,255,0.2);border-radius:9px;padding:4px 10px;color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
+.hud-box{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:9px;padding:4px 10px;font-size:12px;font-weight:800;color:white;}
+#hud-score{color:#FFD700;}
+#hud-combo{color:#FF8A65;display:none;}
+.hud-back{pointer-events:all;}
+#status-bar {
+  position: fixed;
+  top: calc(max(10px, var(--sat,env(safe-area-inset-top,0px))) + 44px);
+  left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  z-index: 99;
+  pointer-events: none;
+}
+/* プログレスバー */
+#progress-wrap{flex-shrink:0;padding:0 14px 6px;}
+#progress-bg{height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;}
+#progress-fill{height:100%;border-radius:3px;transition:width 0.4s ease;background:linear-gradient(90deg,#4CAF50,#FFD700);}
+
+/* 問題エリア */
+#question-area{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:0 16px;min-height:0;
+}
+
+/* 国旗カード */
+#flag-card{
+  width:100%;max-width:340px;
+  background:linear-gradient(160deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04));
+  border:1.5px solid rgba(255,255,255,0.15);
+  border-radius:24px;
+  padding:20px 16px 16px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  margin-bottom:16px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+#flag-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 0%,rgba(255,255,255,0.08),transparent 70%);
+}
+/* 国旗 */
+#flag-display{
+  line-height:1;
+  margin-bottom:12px;
+  transition:transform 0.3s;
+  display:flex;justify-content:center;align-items:center;
+  min-height:100px;
+}
+/* 国を表すもの（建造物・動物・景色） */
+#country-hints{
+  display:flex;gap:8px;justify-content:center;flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.hint-item{
+  background:none;border-radius:0;
+  padding:4px 6px;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  border:none;
+}
+.hint-emoji{font-size:28px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));}
+.hint-label{font-size:8px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:0.5px;}
+/* 問題番号・ステージ */
+#question-label{
+  font-size:11px;font-weight:800;color:rgba(255,215,0,0.7);
+  letter-spacing:1px;position:relative;z-index:1;
+}
+
+/* 選択肢 */
+#choices{
+  width:100%;max-width:340px;
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.choice-btn{
+  background:linear-gradient(160deg,rgba(255,255,255,0.13),rgba(255,255,255,0.06));
+  border:2px solid rgba(255,255,255,0.28);
+  border-radius:16px;padding:13px 8px;
+  font-size:14px;font-weight:900;color:white;
+  cursor:pointer;transition:all 0.12s;
+  font-family:inherit;text-align:center;
+  line-height:1.3;
+  box-shadow:0 3px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+  position:relative;
+}
+.choice-btn:active{transform:scale(0.94);box-shadow:0 1px 4px rgba(0,0,0,0.3);}
+.choice-btn.correct{background:rgba(76,175,80,0.35);border-color:#4CAF50;color:#A5D6A7;}
+.choice-btn.wrong{background:rgba(244,67,54,0.3);border-color:#F44336;color:#EF9A9A;}
+.choice-btn.reveal{background:rgba(76,175,80,0.2);border-color:rgba(76,175,80,0.5);}
+.choice-btn:disabled{cursor:default;}
+
+/* 結果バッジ */
+#answer-badge{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:50;pointer-events:none;display:none;
+  font-size:52px;
+  animation:badgePop 0.4s ease-out forwards;
+}
+@keyframes badgePop{0%{transform:translate(-50%,-50%) scale(0.3);opacity:0;}60%{transform:translate(-50%,-50%) scale(1.2);}100%{transform:translate(-50%,-50%) scale(1);opacity:1;}}
+
+/* ===== ステージクリア・ゲームオーバー ===== */
+.ov{
+  position:absolute;inset:0;z-index:200;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(5,13,30,0.92);backdrop-filter:blur(10px);
+  opacity:0;pointer-events:none;transition:opacity 0.3s;
+}
+.ov.show{opacity:1;pointer-events:all;}
+.ov-box{
+  background:linear-gradient(160deg,#0d1f3a,#050d1e);
+  border:1.5px solid rgba(255,215,0,0.35);border-radius:24px;
+  padding:24px 28px;text-align:center;max-width:300px;width:88%;
+  box-shadow:0 20px 60px rgba(0,0,0,0.7);
+}
+.ov-emoji{font-size:44px;margin-bottom:8px;}
+.ov-title{font-size:22px;font-weight:900;color:#FFD700;margin-bottom:6px;}
+.ov-sub{font-size:12px;color:rgba(255,255,255,0.55);margin-bottom:12px;line-height:1.8;}
+.ov-score{font-size:34px;font-weight:900;color:#FFD700;margin:6px 0;}
+.btn-gold{background:linear-gradient(135deg,#FF8F00,#FFD700);color:#0d0025;border:none;border-radius:13px;padding:12px 26px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;margin:4px;box-shadow:0 4px 14px rgba(255,215,0,0.4);}
+.btn-ghost{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:13px;padding:10px 20px;font-size:13px;font-weight:700;color:rgba(255,255,255,0.7);cursor:pointer;font-family:inherit;margin:4px;}
+
+/* スコアポップ */
+@keyframes scoreFloat{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(-55px);opacity:0;}}
+.score-pop{position:absolute;font-size:18px;font-weight:900;pointer-events:none;z-index:60;animation:scoreFloat 0.8s ease-out forwards;white-space:nowrap;}
+
+@keyframes shimmer{0%{background-position:0%}100%{background-position:200%}}
+
+
+#common-bgm-btn{
+  position:fixed;
+  top:max(10px,var(--sat,env(safe-area-inset-top,0px)));
+  right:10px;z-index:1000;
+  background:rgba(0,0,0,0.45);
+  border:1.5px solid rgba(255,255,255,0.35);
+  border-radius:50%;width:40px;height:40px;
+  font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:white;
+}
+
+/* === safe-area & common buttons === */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+}
+#ui-bgm-btn {
+  width: 40px; height: 40px;
+  background: rgba(0,0,0,0.5);
+  border: 1.5px solid rgba(255,255,255,0.4);
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+/* === 横向き対応 === */
+@media (orientation: landscape) {
+  body { overflow-y: auto; }
+  #hud { top: max(6px, var(--sat,env(safe-area-inset-top,0px))); }
+  #status-bar { top: calc(max(6px, var(--sat,env(safe-area-inset-top,0px))) + 40px); }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  /* 横向き時にゲームエリアを縮小・スクロール対応 */
+  canvas { max-height: 100vh; }
+  #game-area { overflow-y: auto; }
+}
+</style>
+<script src="/games/wakuwaku_bgm.js"></script>
+    <script src="/games/safe_area.js"></script>
+</head>
+<body>
+
+<div id="app">
+
+<!-- タイトル -->
+<div id="title-screen">
+  <div id="title-globe">
+    <!-- 流れる国旗 -->
+    <div class="title-flag-row" id="flagrow1"></div>
+    <div class="title-flag-row" id="flagrow2"></div>
+    <div class="title-flag-row" id="flagrow3"></div>
+  </div>
+  <div id="title-card">
+    <div style="text-align:center;padding:0 20px 16px;background:linear-gradient(0deg,rgba(5,13,30,0.97) 50%,transparent);width:100%;">
+      <div style="font-size:38px;font-weight:900;background:linear-gradient(180deg,#fff,#FFE066 35%,#FF8C00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 18px rgba(255,215,0,0.5));letter-spacing:2px;margin-bottom:2px;">こっきクイズ</div>
+      <div style="font-size:10px;font-weight:700;color:rgba(255,215,0,0.55);letter-spacing:4px;">✦ FLAG QUIZ ✦</div>
+    </div>
+    <div style="background:linear-gradient(160deg,rgba(13,31,58,0.97),rgba(5,13,30,0.98));border:1.5px solid rgba(255,215,0,0.28);border-radius:22px;padding:16px 18px 18px;max-width:320px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.7);">
+      <div style="font-size:12px;font-weight:800;color:rgba(255,215,0,0.7);text-align:center;margin-bottom:12px;letter-spacing:1px;">✦ むずかしさを えらんでね ✦</div>
+      <button class="diff-btn diff-easy" onclick="startGame('easy')">
+        <span>🌍 かんたん</span>
+        <span class="diff-tag">10カ国・ゆうめいな国</span>
+      </button>
+      <button class="diff-btn diff-mid" onclick="startGame('mid')">
+        <span>🌎 ふつう</span>
+        <span class="diff-tag">30カ国・いろんな地域</span>
+      </button>
+      <button class="diff-btn diff-hard" onclick="startGame('hard')">
+        <span>🌏 むずかしい</span>
+        <span class="diff-tag">50カ国・マニアむけ</span>
+      </button>
+      <div id="title-hs" style="font-size:11px;text-align:center;color:rgba(255,215,0,0.5);margin-top:10px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ゲーム画面 -->
+<div id="game-screen" style="display:none;">
+  <div id="hud">
+    <button class="hud-back" onclick="showTitle()">← もどる</button>
+    <button id="ui-bgm-btn" onclick="toggleCommonBGM()">🔊</button>
+  </div>
+  <div id="status-bar">
+    <div class="hud-box" id="hud-stage">ステージ 1</div>
+    <div class="hud-box" id="hud-score">⭐ 0</div>
+    <div class="hud-box" id="hud-combo">🔥 コンボ</div>
+  </div>
+  <div id="progress-wrap">
+    <div id="progress-bg"><div id="progress-fill" style="width:0%"></div></div>
+  </div>
+  <div id="question-area">
+    <div id="flag-card">
+      <div id="question-label">ステージ1 - 1もんめ</div>
+      <div id="flag-display">🇯🇵</div>
+      <div id="flag-code" style="font-size:13px;font-weight:800;color:rgba(255,255,255,0.5);letter-spacing:3px;margin-bottom:8px;"></div>
+      <div id="country-hints"></div>
+      <div id="answer-badge"></div>
+    </div>
+    <div id="choices"></div>
+  </div>
+</div>
+
+<!-- ステージクリア -->
+<div class="ov" id="stage-clear-ov">
+  <div class="ov-box">
+    <div class="ov-emoji" id="sc-emoji">🎉</div>
+    <div class="ov-title" id="sc-title">ステージ1 クリア！</div>
+    <div class="ov-sub" id="sc-sub"></div>
+    <div class="ov-score" id="sc-score"></div>
+    <button class="btn-gold" id="sc-next-btn">つぎへ ▶</button>
+  </div>
+</div>
+
+<!-- 全クリア -->
+<div class="ov" id="all-clear-ov">
+  <div class="ov-box">
+    <div class="ov-emoji">🏆</div>
+    <div class="ov-title">ぜんもん せいかい！！</div>
+    <div class="ov-sub" id="ac-sub"></div>
+    <div class="ov-score" id="ac-score"></div>
+    <div id="ac-hs" style="font-size:11px;color:rgba(255,215,0,0.6);margin-bottom:10px;"></div>
+    <button class="btn-gold" onclick="restartGame()">もういちど</button>
+    <button class="btn-ghost" onclick="showTitle()">タイトルへ</button>
+  </div>
+</div>
+
+<!-- ゲームオーバー -->
+<div class="ov" id="gameover-ov">
+  <div class="ov-box">
+    <div class="ov-emoji">😢</div>
+    <div class="ov-title">ざんねん！</div>
+    <div class="ov-sub" id="go-sub"></div>
+    <div class="ov-score" id="go-score"></div>
+    <button class="btn-gold" onclick="restartGame()">もういちど</button>
+    <button class="btn-ghost" onclick="showTitle()">タイトルへ</button>
+  </div>
+</div>
+
+<script>
+
+// 国旗絵文字→ISOコードマッピング
+const FLAG_COLORS = {"JP": ["#BC002D", "#FFFFFF"], "US": ["#B22234", "#FFFFFF"], "FR": ["#002395", "#FFFFFF"], "GB": ["#012169", "#C8102E"], "DE": ["#000000", "#DD0000"], "IT": ["#009246", "#CE2B37"], "CN": ["#DE2910", "#FFDE00"], "BR": ["#009C3B", "#FFDF00"], "AU": ["#00008B", "#CC0000"], "EG": ["#CE1126", "#000000"], "ES": ["#AA151B", "#F1BF00"], "KR": ["#003478", "#CD2E3A"], "IN": ["#FF9933", "#138808"], "RU": ["#FFFFFF", "#0039A6"], "MX": ["#006847", "#CE1126"], "CA": ["#FF0000", "#FFFFFF"], "TR": ["#E30A17", "#FFFFFF"], "SA": ["#006C35", "#FFFFFF"], "GR": ["#0D5EAF", "#FFFFFF"], "PT": ["#006600", "#FF0000"], "CH": ["#FF0000", "#FFFFFF"], "NL": ["#AE1C28", "#21468B"], "SE": ["#006AA7", "#FECC02"], "NO": ["#EF2B2D", "#002868"], "AR": ["#74ACDF", "#FFFFFF"], "ZA": ["#007A4D", "#FFB612"], "KE": ["#006600", "#CC0001"], "TH": ["#A51931", "#2D2A4A"], "ID": ["#CE1126", "#FFFFFF"], "VN": ["#DA251D", "#FFCD00"], "PL": ["#FFFFFF", "#DC143C"], "AT": ["#ED2939", "#FFFFFF"], "NZ": ["#00247D", "#CC142B"], "PE": ["#D91023", "#FFFFFF"], "MA": ["#C1272D", "#006233"], "KZ": ["#00AFCA", "#FFCC00"], "PH": ["#0038A8", "#CE1126"], "IL": ["#0038B8", "#FFFFFF"], "CO": ["#FCD116", "#003087"], "UA": ["#005BBB", "#FFD500"], "IS": ["#003897", "#D72828"], "NP": ["#003893", "#DC143C"], "MN": ["#C4272F", "#015197"], "KH": ["#032EA1", "#E00025"], "MM": ["#FECB00", "#34B233"], "MV": ["#D21034", "#007E3A"], "RW": ["#20603D", "#FAD201"], "ET": ["#078930", "#FCDD09"], "TZ": ["#1EB53A", "#00A3DD"], "GH": ["#006B3F", "#FCD116"], "NG": ["#008751", "#FFFFFF"], "SN": ["#00853F", "#FDEF42"], "CL": ["#D52B1E", "#003087"], "BO": ["#D52B1E", "#F4E400"], "EC": ["#FFD100", "#003893"], "VE": ["#CF142B", "#00247D"], "PA": ["#FFFFFF", "#DA121A"], "CU": ["#CC0001", "#002A8F"], "JM": ["#000000", "#007748"], "PG": ["#000000", "#CE1126"], "FJ": ["#68BFE5", "#003087"], "MG": ["#FC3D32", "#007E3A"], "MZ": ["#009A44", "#FCE100"], "AZ": ["#0092BC", "#E8192C"], "GE": ["#FFFFFF", "#FF0000"], "AM": ["#D90012", "#0033A0"], "BD": ["#006A4E", "#F42A41"], "LK": ["#8D153A", "#F5820C"], "UZ": ["#1EB53A", "#CE1126"], "TM": ["#1C7A3D", "#D22630"], "MW": ["#000000", "#339E35"]};
+
+const FLAG_ISO = {
+  '🇯🇵':'JP','🇺🇸':'US','🇫🇷':'FR','🇬🇧':'GB','🇩🇪':'DE',
+  '🇮🇹':'IT','🇨🇳':'CN','🇧🇷':'BR','🇦🇺':'AU','🇪🇬':'EG',
+  '🇪🇸':'ES','🇰🇷':'KR','🇮🇳':'IN','🇷🇺':'RU','🇲🇽':'MX',
+  '🇨🇦':'CA','🇹🇷':'TR','🇸🇦':'SA','🇬🇷':'GR','🇵🇹':'PT',
+  '🇨🇭':'CH','🇳🇱':'NL','🇸🇪':'SE','🇳🇴':'NO','🇦🇷':'AR',
+  '🇿🇦':'ZA','🇰🇪':'KE','🇹🇭':'TH','🇮🇩':'ID','🇻🇳':'VN',
+  '🇵🇱':'PL','🇦🇹':'AT','🇳🇿':'NZ','🇵🇪':'PE','🇲🇦':'MA',
+  '🇰🇿':'KZ','🇵🇭':'PH','🇮🇱':'IL','🇨🇴':'CO','🇺🇦':'UA',
+  '🇮🇸':'IS','🇳🇵':'NP','🇲🇳':'MN','🇰🇭':'KH','🇲🇲':'MM',
+  '🇲🇻':'MV','🇷🇼':'RW','🇪🇹':'ET','🇹🇿':'TZ','🇬🇭':'GH',
+  '🇳🇬':'NG','🇸🇳':'SN','🇨🇱':'CL','🇧🇴':'BO','🇪🇨':'EC',
+  '🇻🇪':'VE','🇵🇦':'PA','🇨🇺':'CU','🇯🇲':'JM','🇵🇬':'PG',
+  '🇫🇯':'FJ','🇲🇬':'MG','🇲🇿':'MZ','🇦🇿':'AZ','🇬🇪':'GE',
+  '🇦🇲':'AM','🇧🇩':'BD','🇱🇰':'LK','🇺🇿':'UZ','🇹🇲':'TM',
+  '🇲🇼':'MW'
+};
+
+// ===== 国データ =====
+// flag: 国旗絵文字, name: 国名, hints: [{emoji, label}]
+// category: easy/mid/hard
+const COUNTRIES = [
+  // ===== EASY (有名10カ国) =====
+  {flag:'🇯🇵',name:'にほん',     hints:[{e:'🗼',l:'とうきょうタワー'},{e:'🍣',l:'すし'},{e:'🌸',l:'さくら'},{e:'🏔️',l:'ふじさん'}], cat:'easy'},
+  {flag:'🇺🇸',name:'アメリカ', hints:[{e:'🗽',l:'じゆうのめがみ'},{e:'🍔',l:'ハンバーガー'},{e:'🦅',l:'ハクトウワシ'},{e:'🎬',l:'ハリウッド'}], cat:'easy'},
+  {flag:'🇫🇷',name:'フランス', hints:[{e:'🗼',l:'エッフェルとう'},{e:'🥐',l:'クロワッサン'},{e:'🍷',l:'ワイン'},{e:'🎨',l:'ルーブルびじゅつかん'}], cat:'easy'},
+  {flag:'🇬🇧',name:'イギリス', hints:[{e:'👑',l:'おうしつ'},{e:'🎡',l:'ロンドンアイ'},{e:'🫖',l:'こうちゃ'},{e:'🏰',l:'バッキンガムきゅうでん'}], cat:'easy'},
+  {flag:'🇩🇪',name:'ドイツ',   hints:[{e:'🍺',l:'ビール'},{e:'🚗',l:'じどうしゃ'},{e:'🏰',l:'ノイシュバンシュタイン'},{e:'🥨',l:'プレッツェル'}], cat:'easy'},
+  {flag:'🇮🇹',name:'イタリア', hints:[{e:'🏛️',l:'コロッセオ'},{e:'🍕',l:'ピザ'},{e:'🤌',l:'イタリアごっこ'},{e:'🎭',l:'ベネチアカーニバル'}], cat:'easy'},
+  {flag:'🇨🇳',name:'ちゅうごく',     hints:[{e:'🧱',l:'ばんりのちょうじょう'},{e:'🐼',l:'パンダ'},{e:'🏮',l:'ちょうちん'},{e:'🥢',l:'はし'}], cat:'easy'},
+  {flag:'🇧🇷',name:'ブラジル', hints:[{e:'⛪',l:'キリストぞう'},{e:'⚽',l:'サッカー'},{e:'🌴',l:'ジャングル'},{e:'🦜',l:'オウム'}], cat:'easy'},
+  {flag:'🇦🇺',name:'オーストラリア',hints:[{e:'🦘',l:'カンガルー'},{e:'🏄',l:'サーフィン'},{e:'🪃',l:'ブーメラン'},{e:'🐨',l:'コアラ'}], cat:'easy'},
+  {flag:'🇪🇬',name:'エジプト', hints:[{e:'🔺',l:'ピラミッド'},{e:'🐪',l:'ラクダ'},{e:'🏺',l:'スフィンクス'},{e:'🌊',l:'ナイルかわ'}], cat:'easy'},
+
+  // ===== MID (30カ国) =====
+  {flag:'🇪🇸',name:'スペイン', hints:[{e:'🐂',l:'とうぎゅう'},{e:'💃',l:'フラメンコ'},{e:'🍊',l:'オレンジ'},{e:'🏟️',l:'サグラダファミリア'}], cat:'mid'},
+  {flag:'🇰🇷',name:'かんこく',     hints:[{e:'🏯',l:'ギョンボックン'},{e:'🌶️',l:'キムチ'},{e:'🎎',l:'ハンボク'},{e:'🎵',l:'K-POP'}], cat:'mid'},
+  {flag:'🇮🇳',name:'インド',   hints:[{e:'🕌',l:'タージマハル'},{e:'🐘',l:'ゾウ'},{e:'🍛',l:'カレー'},{e:'💃',l:'ボリウッド'}], cat:'mid'},
+  {flag:'🇷🇺',name:'ロシア',   hints:[{e:'🧅',l:'タマネギドーム'},{e:'🐻',l:'クマ'},{e:'❄️',l:'ゆき'},{e:'🎭',l:'バレエ'}], cat:'mid'},
+  {flag:'🇲🇽',name:'メキシコ', hints:[{e:'🌮',l:'タコス'},{e:'🎺',l:'マリアッチ'},{e:'🌵',l:'サボテン'},{e:'💀',l:'がいこつまつり'}], cat:'mid'},
+  {flag:'🇨🇦',name:'カナダ',   hints:[{e:'🍁',l:'もみじ'},{e:'🦫',l:'ビーバー'},{e:'🏒',l:'アイスホッケー'},{e:'🏔️',l:'ロッキーさんみゃく'}], cat:'mid'},
+  {flag:'🇹🇷',name:'トルコ',   hints:[{e:'🕌',l:'ブルーモスク'},{e:'🎈',l:'ねっきゅうきゅう'},{e:'🫖',l:'チャイ'},{e:'🍡',l:'ドンドゥルマ'}], cat:'mid'},
+  {flag:'🇸🇦',name:'サウジアラビア',hints:[{e:'🕌',l:'メッカ'},{e:'🐪',l:'ラクダ'},{e:'🛢️',l:'せきゆ'},{e:'🌴',l:'ナツメヤシ'}], cat:'mid'},
+  {flag:'🇬🇷',name:'ギリシャ', hints:[{e:'🏛️',l:'パルテノン'},{e:'🫒',l:'オリーブ'},{e:'🌊',l:'エーゲかい'},{e:'⚡',l:'ゼウス'}], cat:'mid'},
+  {flag:'🇵🇹',name:'ポルトガル',hints:[{e:'🐓',l:'にわとり'},{e:'🎵',l:'ファド'},{e:'🐟',l:'タラ'},{e:'🏄',l:'サーフィン'}], cat:'mid'},
+  {flag:'🇨🇭',name:'スイス',   hints:[{e:'⛰️',l:'アルプス'},{e:'🧀',l:'チーズ'},{e:'🍫',l:'チョコレート'},{e:'⌚',l:'とけい'}], cat:'mid'},
+  {flag:'🇳🇱',name:'オランダ', hints:[{e:'💐',l:'チューリップ'},{e:'🌬️',l:'ふうしゃ'},{e:'🚲',l:'じてんしゃ'},{e:'🧀',l:'ゴーダチーズ'}], cat:'mid'},
+  {flag:'🇸🇪',name:'スウェーデン',hints:[{e:'🫎',l:'ムース'},{e:'💡',l:'IKEA'},{e:'🌅',l:'きょくこう'},{e:'🎶',l:'ABBA'}], cat:'mid'},
+  {flag:'🇳🇴',name:'ノルウェー',hints:[{e:'🌅',l:'オーロラ'},{e:'🐟',l:'サーモン'},{e:'⛵',l:'バイキング'},{e:'🛢️',l:'せきゆ'}], cat:'mid'},
+  {flag:'🇦🇷',name:'アルゼンチン',hints:[{e:'⚽',l:'サッカー'},{e:'💃',l:'タンゴ'},{e:'🥩',l:'アサード'},{e:'🏔️',l:'アンデスさんみゃく'}], cat:'mid'},
+  {flag:'🇿🇦',name:'みなみアフリカ',hints:[{e:'🦁',l:'ライオン'},{e:'💎',l:'ダイヤモンド'},{e:'🦒',l:'キリン'},{e:'🏆',l:'ラグビーワールドカップ'}], cat:'mid'},
+  {flag:'🇰🇪',name:'ケニア',   hints:[{e:'🦒',l:'キリン'},{e:'🐘',l:'ゾウ'},{e:'🏃',l:'マラソン'},{e:'🌋',l:'サバンナ'}], cat:'mid'},
+  {flag:'🇹🇭',name:'タイ',     hints:[{e:'🐘',l:'ゾウ'},{e:'🙏',l:'ワット'},{e:'🍜',l:'パッタイ'},{e:'👑',l:'おうこく'}], cat:'mid'},
+  {flag:'🇮🇩',name:'インドネシア',hints:[{e:'🌋',l:'バリとう'},{e:'🦧',l:'オランウータン'},{e:'🎋',l:'バティック'},{e:'🌴',l:'ヤシのき'}], cat:'mid'},
+  {flag:'🇻🇳',name:'ベトナム', hints:[{e:'🍜',l:'フォー'},{e:'⛵',l:'ハロンわん'},{e:'🛵',l:'バイク'},{e:'🎋',l:'タケのうかぶしま'}], cat:'mid'},
+  {flag:'🇵🇱',name:'ポーランド',hints:[{e:'🦅',l:'ワシ'},{e:'🌹',l:'バラ'},{e:'🥟',l:'ピエロギ'},{e:'🏰',l:'ワルシャワじょう'}], cat:'mid'},
+  {flag:'🇦🇹',name:'オーストリア',hints:[{e:'🎼',l:'モーツァルト'},{e:'🎡',l:'ウィーンのしゃりん'},{e:'🏔️',l:'アルプス'},{e:'☕',l:'カフェ'}], cat:'mid'},
+  {flag:'🇳🇿',name:'ニュージーランド',hints:[{e:'🐑',l:'ヒツジ'},{e:'🥝',l:'キウイ'},{e:'🏉',l:'ラグビー'},{e:'🌋',l:'ロトルア'}], cat:'mid'},
+  {flag:'🇵🇪',name:'ペルー',   hints:[{e:'🦙',l:'ラマ'},{e:'🏔️',l:'マチュピチュ'},{e:'🌽',l:'トウモロコシ'},{e:'🎭',l:'インカぶんめい'}], cat:'mid'},
+  {flag:'🇲🇦',name:'モロッコ', hints:[{e:'🕌',l:'モスク'},{e:'🐪',l:'ラクダ'},{e:'🏺',l:'タジンなべ'},{e:'🌴',l:'サハラさばく'}], cat:'mid'},
+  {flag:'🇰🇿',name:'カザフスタン',hints:[{e:'🦅',l:'タカ'},{e:'🐎',l:'ウマ'},{e:'🏔️',l:'てんさんさんみゃく'},{e:'🛢️',l:'せきゆ'}], cat:'mid'},
+  {flag:'🇵🇭',name:'フィリピン',hints:[{e:'🌴',l:'ヤシのしま'},{e:'🌺',l:'サンパギタ'},{e:'🐚',l:'うみ'},{e:'🎤',l:'カラオケ'}], cat:'mid'},
+  {flag:'🇮🇱',name:'イスラエル',hints:[{e:'🕍',l:'エルサレム'},{e:'🕌',l:'せいちのまち'},{e:'🌊',l:'しにかい'},{e:'🫒',l:'オリーブ'}], cat:'mid'},
+  {flag:'🇨🇴',name:'コロンビア',hints:[{e:'☕',l:'コーヒー'},{e:'🌺',l:'はな'},{e:'💛',l:'きんいろのまち'},{e:'🦜',l:'オウム'}], cat:'mid'},
+  {flag:'🇺🇦',name:'ウクライナ',hints:[{e:'🌻',l:'ひまわり'},{e:'🐣',l:'ピサンカ'},{e:'🏰',l:'キーウのきゅうでん'},{e:'🌾',l:'むぎばたけ'}], cat:'mid'},
+
+  // ===== HARD (50カ国 - 上記に追加) =====
+  {flag:'🇮🇸',name:'アイスランド',hints:[{e:'🌋',l:'かざん'},{e:'🌅',l:'オーロラ'},{e:'♨️',l:'おんせん'},{e:'🐳',l:'クジラ'}], cat:'hard'},
+  {flag:'🇳🇵',name:'ネパール',  hints:[{e:'🏔️',l:'エベレスト'},{e:'🙏',l:'ぶっきょう'},{e:'🦏',l:'サイ'},{e:'🎋',l:'ヒマラヤ'}], cat:'hard'},
+  {flag:'🇲🇳',name:'モンゴル',  hints:[{e:'🏕️',l:'ゲル'},{e:'🐎',l:'ウマ'},{e:'🏹',l:'ゆみや'},{e:'🌾',l:'だいそうげん'}], cat:'hard'},
+  {flag:'🇰🇭',name:'カンボジア',hints:[{e:'🏛️',l:'アンコールワット'},{e:'🐊',l:'ワニ'},{e:'🌴',l:'ヤシのき'},{e:'🍜',l:'アモック'}], cat:'hard'},
+  {flag:'🇲🇲',name:'ミャンマー',hints:[{e:'🏯',l:'パゴダ'},{e:'🐘',l:'ゾウ'},{e:'💎',l:'ルビー'},{e:'🌹',l:'タビャ'}], cat:'hard'},
+  {flag:'🇲🇻',name:'モルディブ',hints:[{e:'🏝️',l:'かんしょ'},{e:'🐟',l:'さかな'},{e:'🤿',l:'ダイビング'},{e:'🌊',l:'インドよう'}], cat:'hard'},
+  {flag:'🇷🇼',name:'ルワンダ',  hints:[{e:'🦍',l:'ゴリラ'},{e:'☕',l:'コーヒー'},{e:'🌄',l:'せんのおか'},{e:'🌿',l:'もり'}], cat:'hard'},
+  {flag:'🇪🇹',name:'エチオピア',hints:[{e:'☕',l:'コーヒーはっしょうち'},{e:'🏛️',l:'ラリベラいわきりきょうかい'},{e:'🦁',l:'ライオン'},{e:'🌄',l:'こうち'}], cat:'hard'},
+  {flag:'🇹🇿',name:'タンザニア',hints:[{e:'🦒',l:'キリン'},{e:'🏔️',l:'キリマンジャロ'},{e:'🌴',l:'サンジバルとう'},{e:'🐘',l:'ゾウ'}], cat:'hard'},
+  {flag:'🇬🇭',name:'ガーナ',    hints:[{e:'🍫',l:'カカオ'},{e:'🥁',l:'たいこ'},{e:'🏺',l:'ケンテぬの'},{e:'⚽',l:'サッカー'}], cat:'hard'},
+  {flag:'🇳🇬',name:'ナイジェリア',hints:[{e:'🎭',l:'ノリウッド'},{e:'🛢️',l:'せきゆ'},{e:'🥁',l:'アフロビート'},{e:'🌊',l:'ギニアわん'}], cat:'hard'},
+  {flag:'🇸🇳',name:'セネガル',  hints:[{e:'🦁',l:'ライオン'},{e:'🥜',l:'ピーナッツ'},{e:'⚽',l:'サッカー'},{e:'🌊',l:'たいせいよう'}], cat:'hard'},
+  {flag:'🇨🇱',name:'チリ',      hints:[{e:'🍷',l:'ワイン'},{e:'🏔️',l:'アタカマさばく'},{e:'🐧',l:'ペンギン'},{e:'⭐',l:'ながいくに'}], cat:'hard'},
+  {flag:'🇧🇴',name:'ボリビア',  hints:[{e:'🦙',l:'ラマ'},{e:'🧂',l:'ウユニしおこ'},{e:'🏔️',l:'アンデス'},{e:'🎋',l:'チチカカこ'}], cat:'hard'},
+  {flag:'🇪🇨',name:'エクアドル',hints:[{e:'🐢',l:'ガラパゴス'},{e:'🌺',l:'はな'},{e:'🍌',l:'バナナ'},{e:'🌋',l:'コトパクシ'}], cat:'hard'},
+  {flag:'🇻🇪',name:'ベネズエラ',hints:[{e:'💧',l:'エンジェルフォールズ'},{e:'🛢️',l:'せきゆ'},{e:'🌺',l:'ランほうちょう'},{e:'🏖️',l:'かいがん'}], cat:'hard'},
+  {flag:'🇵🇦',name:'パナマ',    hints:[{e:'🚢',l:'パナマうんが'},{e:'🎩',l:'パナマハット'},{e:'🌴',l:'もり'},{e:'🐸',l:'カエル'}], cat:'hard'},
+  {flag:'🇨🇺',name:'キューバ',  hints:[{e:'🎺',l:'サルサ'},{e:'🚗',l:'クラシックカー'},{e:'🌴',l:'カリブかい'},{e:'💈',l:'タバコ'}], cat:'hard'},
+  {flag:'🇯🇲',name:'ジャマイカ',hints:[{e:'🎵',l:'レゲエ'},{e:'🏃',l:'ボルト'},{e:'🌴',l:'カリブかい'},{e:'☕',l:'コーヒー'}], cat:'hard'},
+  {flag:'🇵🇬',name:'パプアニューギニア',hints:[{e:'🦜',l:'フウチョウ'},{e:'🌴',l:'もり'},{e:'🥁',l:'たいこ'},{e:'🐊',l:'ワニ'}], cat:'hard'},
+  {flag:'🇫🇯',name:'フィジー',  hints:[{e:'🏝️',l:'しま'},{e:'🏉',l:'ラグビー'},{e:'🌺',l:'はな'},{e:'🤿',l:'ダイビング'}], cat:'hard'},
+  {flag:'🇲🇬',name:'マダガスカル',hints:[{e:'🦎',l:'カメレオン'},{e:'🐒',l:'キツネザル'},{e:'🌴',l:'バオバブ'},{e:'🌊',l:'インドよう'}], cat:'hard'},
+  {flag:'🇲🇿',name:'モザンビーク',hints:[{e:'🐘',l:'ゾウ'},{e:'🌊',l:'インドよう'},{e:'🌺',l:'はな'},{e:'🎵',l:'マラビ'}], cat:'hard'},
+  {flag:'🇦🇿',name:'アゼルバイジャン',hints:[{e:'🔥',l:'ひのくに'},{e:'🛢️',l:'せきゆ'},{e:'🏔️',l:'コーカサス'},{e:'🎻',l:'おんがく'}], cat:'hard'},
+  {flag:'🇬🇪',name:'ジョージア',hints:[{e:'🍷',l:'ワインはっしょうち'},{e:'🏔️',l:'コーカサス'},{e:'🕍',l:'きょうかい'},{e:'🐺',l:'おおかみ'}], cat:'hard'},
+  {flag:'🇦🇲',name:'アルメニア',hints:[{e:'🏔️',l:'アララトさん'},{e:'⛪',l:'きょうかい'},{e:'🍑',l:'アンズ'},{e:'🎻',l:'おんがく'}], cat:'hard'},
+  {flag:'🇧🇩',name:'バングラデシュ',hints:[{e:'🌊',l:'ガンジスがわ'},{e:'🐅',l:'ベンガルトラ'},{e:'🌾',l:'こめ'},{e:'🎋',l:'ジュート'}], cat:'hard'},
+  {flag:'🇱🇰',name:'スリランカ',hints:[{e:'🐘',l:'ゾウ'},{e:'🍵',l:'セイロンちゃ'},{e:'🏝️',l:'しま'},{e:'💎',l:'サファイア'}], cat:'hard'},
+  {flag:'🇺🇿',name:'ウズベキスタン',hints:[{e:'🕌',l:'サマルカンド'},{e:'🍑',l:'もも'},{e:'🛤️',l:'シルクロード'},{e:'🏺',l:'とうき'}], cat:'hard'},
+  {flag:'🇹🇲',name:'トルクメニスタン',hints:[{e:'🔥',l:'ねんしょうするあな'},{e:'🐎',l:'アハルテケうま'},{e:'🌵',l:'さばく'},{e:'🕌',l:'モスク'}], cat:'hard'},
+  {flag:'🇲🇼',name:'マラウイ',  hints:[{e:'🌊',l:'マラウイこ'},{e:'🐟',l:'さかな'},{e:'🌄',l:'こうち'},{e:'🌺',l:'はな'}], cat:'hard'},
+];
+
+// ===== ゲーム状態 =====
+let difficulty='easy';
+let questionPool=[];
+let currentStage=0;
+let stageQuestions=[];
+let currentQ=0;
+let score=0;
+let combo=0;
+let wrongCount=0;
+let answered=false;
+const QUESTIONS_PER_STAGE=5;
+const MAX_WRONG=3; // 3ミスでゲームオーバー
+
+// ===== 国旗画像プリロード =====
+(function preloadFlags(){
+  Object.values(FLAG_ISO).forEach(iso=>{
+    const img=new Image();
+    img.src=`https://flagicons.lipis.dev/flags/4x3/${iso.toLowerCase()}.svg`;
+  });
+})();
+
+// ===== タイトル初期化 =====
+function initTitle(){
+  const allFlags=COUNTRIES.map(c=>c.flag);
+  // 流れる国旗3列
+  for(let row=1;row<=3;row++){
+    const el=document.getElementById('flagrow'+row);
+    const shuffled=[...allFlags].sort(()=>Math.random()-0.5);
+    // 2倍にしてループ
+    el.innerHTML=[...shuffled,...shuffled].map(f=>`<span class="tflag">${f}</span>`).join('');
+  }
+  updateHsTitle();
+}
+
+function updateHsTitle(){
+  const hs=getHs();
+  const el=document.getElementById('title-hs');
+  if(hs>0)el.textContent=`ハイスコア：⭐${hs}`;
+}
+
+// ===== ゲーム開始 =====
+function startGame(diff){
+  difficulty=diff;
+  // 難易度に応じた国プール（低難易度は上位を含む）
+  let pool;
+  if(diff==='easy') pool=COUNTRIES.filter(c=>c.cat==='easy');
+  else if(diff==='mid') pool=COUNTRIES.filter(c=>c.cat==='easy'||c.cat==='mid');
+  else pool=[...COUNTRIES];
+
+  // シャッフル
+  questionPool=[...pool].sort(()=>Math.random()-0.5);
+  currentStage=0;score=0;combo=0;wrongCount=0;
+
+  document.getElementById('title-screen').style.display='none';
+  document.getElementById('game-screen').style.display='flex';
+  ['stage-clear-ov','all-clear-ov','gameover-ov'].forEach(id=>document.getElementById(id).classList.remove('show'));
+
+  setupStage();
+}
+
+function setupStage(){
+  const start=currentStage*QUESTIONS_PER_STAGE;
+  stageQuestions=questionPool.slice(start,start+QUESTIONS_PER_STAGE);
+  if(stageQuestions.length<QUESTIONS_PER_STAGE){
+    // 足りない場合はプールから補充（シャッフルして追加）
+    const extra=[...questionPool].sort(()=>Math.random()-0.5);
+    while(stageQuestions.length<QUESTIONS_PER_STAGE){
+      stageQuestions.push(extra[stageQuestions.length%extra.length]);
+    }
+  }
+  currentQ=0;
+  wrongCount=0; // ステージごとにミスをリセット
+  document.getElementById('hud-stage').textContent=`ステージ ${currentStage+1}`;
+  showQuestion();
+}
+
+function showQuestion(){
+  if(currentQ>=stageQuestions.length){
+    stageClear();return;
+  }
+  answered=false;
+  const q=stageQuestions[currentQ];
+  const total=stageQuestions.length;
+
+  // プログレス
+  document.getElementById('progress-fill').style.width=`${(currentQ/total)*100}%`;
+  document.getElementById('question-label').textContent=`ステージ${currentStage+1} - ${currentQ+1}もんめ／${total}もん`;
+
+  // 国旗（画像で表示）
+  const flagEl=document.getElementById('flag-display');
+  const iso=FLAG_ISO[q.flag]||'';
+  if(iso){
+    // 複数CDNをフォールバックで試す
+    flagEl.innerHTML=`<img 
+      src="https://flagicons.lipis.dev/flags/4x3/${iso.toLowerCase()}.svg"
+      style="width:160px;height:auto;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.4);display:block;"
+      alt="${iso}"
+      onerror="this.onerror=null;this.src='https://purecatamphetamine.github.io/country-flag-icons/3x2/${iso}.svg'"
+    />`;
+  } else {
+    flagEl.textContent=q.flag;
+  }
+  // flag-code非表示
+  const codeEl=document.getElementById('flag-code');
+  if(codeEl) codeEl.textContent='';
+  flagEl.style.transform='scale(0.5)';
+  setTimeout(()=>flagEl.style.transition='transform 0.3s', 0);
+  setTimeout(()=>flagEl.style.transform='scale(1)', 10);
+
+  // ヒント（建造物・動物・景色）
+  const hintsEl=document.getElementById('country-hints');
+  hintsEl.innerHTML=q.hints.map(h=>`
+    <div class="hint-item">
+      <div class="hint-emoji">${h.e}</div>
+      <div class="hint-label">${h.l}</div>
+    </div>
+  `).join('');
+
+  // 答えバッジ非表示
+  document.getElementById('answer-badge').style.display='none';
+
+  // 選択肢生成（正解1+不正解3）
+  const pool=difficulty==='easy'?COUNTRIES.filter(c=>c.cat==='easy'):
+             difficulty==='mid'?COUNTRIES.filter(c=>c.cat==='easy'||c.cat==='mid'):
+             COUNTRIES;
+  const wrong=pool.filter(c=>c.name!==q.name).sort(()=>Math.random()-0.5).slice(0,3);
+  const choices=[q,...wrong].sort(()=>Math.random()-0.5);
+
+  const choicesEl=document.getElementById('choices');
+  choicesEl.innerHTML='';
+  choices.forEach(c=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn';
+    btn.textContent=c.name;
+    btn.onclick=()=>onAnswer(c.name===q.name, btn, q.name, choicesEl);
+    choicesEl.appendChild(btn);
+  });
+
+  updateHUD();
+}
+
+function onAnswer(correct, btn, correctName, choicesEl){
+  if(answered)return;
+  answered=true;
+
+  if(correct){
+    combo++;
+    const bonus=combo>=3?50:combo>=2?20:0;
+    const pts=100+bonus;
+    score+=pts;
+    btn.classList.add('correct');
+    showAnswerBadge('⭕');
+    showScorePop(`+${pts}${bonus>0?` 🔥コンボ！`:''}`, btn);
+    updateComboHud();
+  } else {
+    combo=0;
+    wrongCount++;
+    btn.classList.add('wrong');
+    // 正解を表示
+    Array.from(choicesEl.children).forEach(b=>{
+      if(b.textContent===correctName)b.classList.add('reveal');
+    });
+    showAnswerBadge('❌');
+    updateComboHud();
+    if(wrongCount>=MAX_WRONG){
+      // ゲームオーバー
+      setTimeout(()=>gameOver(),1200);
+      return;
+    }
+  }
+
+  // 全ボタン無効化
+  Array.from(choicesEl.children).forEach(b=>b.disabled=true);
+
+  setTimeout(()=>{
+    currentQ++;
+    showQuestion();
+  },1300);
+}
+
+function showAnswerBadge(emoji){
+  const el=document.getElementById('answer-badge');
+  el.textContent=emoji;
+  el.style.display='block';
+  el.style.animation='none';el.offsetHeight;
+  el.style.animation='badgePop 0.4s ease-out forwards';
+  setTimeout(()=>el.style.display='none',1200);
+}
+
+function showScorePop(text, refEl){
+  const el=document.createElement('div');
+  el.className='score-pop';
+  el.textContent=text;
+  el.style.color='#FFD700';
+  const rect=refEl.getBoundingClientRect();
+  el.style.left=rect.left+'px';
+  el.style.top=(rect.top-10)+'px';
+  document.getElementById('app').appendChild(el);
+  setTimeout(()=>el.remove(),850);
+}
+
+function updateComboHud(){
+  const el=document.getElementById('hud-combo');
+  if(combo>=2){el.style.display='';el.textContent=`🔥 ${combo}コンボ`;}
+  else el.style.display='none';
+}
+
+function updateHUD(){
+  document.getElementById('hud-score').textContent=`⭐ ${score}`;
+}
+
+// ===== ステージクリア =====
+function stageClear(){
+  document.getElementById('progress-fill').style.width='100%';
+  const stageScore=score;
+  const perfect=wrongCount===0;
+  document.getElementById('sc-emoji').textContent=perfect?'🌟':'🎉';
+  document.getElementById('sc-title').textContent=`ステージ ${currentStage+1} クリア！`;
+  document.getElementById('sc-sub').innerHTML=perfect?'かんぺき！ぜんもんせいかい！':'よくできました！';
+  document.getElementById('sc-score').textContent=`⭐ ${score} てん`;
+
+  // 次ステージあるか
+  const nextStart=(currentStage+1)*QUESTIONS_PER_STAGE;
+  const hasNext=nextStart<questionPool.length||(questionPool.length>=QUESTIONS_PER_STAGE);
+  const totalStages=Math.ceil(questionPool.length/QUESTIONS_PER_STAGE);
+
+  if(currentStage+1>=totalStages){
+    // 全クリア
+    setTimeout(()=>allClear(),400);
+  } else {
+    const btn=document.getElementById('sc-next-btn');
+    btn.textContent=`ステージ ${currentStage+2} へ ▶`;
+    btn.onclick=()=>{
+      document.getElementById('stage-clear-ov').classList.remove('show');
+      currentStage++;wrongCount=0;
+      setupStage();
+    };
+    document.getElementById('stage-clear-ov').classList.add('show');
+  }
+}
+
+function allClear(){
+  const hs=getHs();const isNew=score>hs;
+  if(isNew)saveHs(score);
+  document.getElementById('stage-clear-ov').classList.remove('show');
+  const diff={easy:'かんたん',mid:'ふつう',hard:'むずかしい'}[difficulty];
+  document.getElementById('ac-sub').innerHTML=`【${diff}】ぜんステージ クリア！<br>コンボボーナスも かんぺき！`;
+  document.getElementById('ac-score').textContent=`⭐ ${score} てん`;
+  document.getElementById('ac-hs').textContent=isNew?'🏆 ハイスコアこうしん！':`ハイスコア：⭐${hs}`;
+  document.getElementById('all-clear-ov').classList.add('show');
+}
+
+function gameOver(){
+  const hs=getHs();const isNew=score>hs;
+  if(isNew)saveHs(score);
+  document.getElementById('go-sub').innerHTML=`ステージ${currentStage+1}・${currentQ}もんめで ミス${wrongCount}かい`;
+  document.getElementById('go-score').textContent=`⭐ ${score} てん${isNew?' 🏆':''}`;
+  document.getElementById('gameover-ov').classList.add('show');
+}
+
+function restartGame(){
+  ['stage-clear-ov','all-clear-ov','gameover-ov'].forEach(id=>document.getElementById(id).classList.remove('show'));
+  startGame(difficulty);
+}
+
+function showTitle(){
+  document.getElementById('game-screen').style.display='none';
+  document.getElementById('title-screen').style.display='flex';
+  ['stage-clear-ov','all-clear-ov','gameover-ov'].forEach(id=>document.getElementById(id).classList.remove('show'));
+  updateHsTitle();
+}
+
+function getHs(){return parseInt(localStorage.getItem('flag_quiz_hs')||'0');}
+function saveHs(s){localStorage.setItem('flag_quiz_hs',s);}
+
+// 初期化
+initTitle();
+
+
+
+// === 共通UI ===
+function goHome(){
+  if(window.parent!==window){window.parent.postMessage({type:'goHome'},'*');}
+  else{window.location.href='/';}
+}
+// ── BGM (WakuwakuBGM library) ──────────────────────
+let _bgm = null;
+
+function _startBGM() {
+  if (_bgm) return;
+  _bgm = new WakuwakuBGM('japanese');
+  const on = WakuwakuBGM.loadState();
+  _bgm.setEnabled(on);
+  if (on) _bgm.start();
+  _syncBgmBtn();
+}
+
+function toggleCommonBGM() {
+  if (!_bgm) { _startBGM(); return; }
+  const on = _bgm.toggle();
+  WakuwakuBGM.saveState(on);
+  _syncBgmBtn();
+}
+
+function _syncBgmBtn() {
+  const on = _bgm ? _bgm.enabled : WakuwakuBGM.loadState();
+  const btns = document.querySelectorAll(
+    '#bgm-btn,#ui-bgm-btn,#bgm-toggle,#sound-btn,.bgm-btn'
+  );
+  btns.forEach(b => { b.textContent = on ? '🔊' : '🔇'; });
+}
+
+// First interaction triggers BGM start
+(function(){
+  function _first(){ _startBGM(); }
+  document.addEventListener('click', _first, { once: true });
+  document.addEventListener('touchstart', _first, { once: true });
+})();
+// ── End BGM ────────────────────────────────────────
+</script>
+
+  <!-- 共通UIボタン -->
+
+</body>
+</html>

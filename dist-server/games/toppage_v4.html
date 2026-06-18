@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>わくわくアイランド</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'M PLUS Rounded 1c',sans-serif;background:#87CEEB;overflow-x:hidden;}
+#hud{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:max(8px, env(safe-area-inset-top, 0px)) 12px;pointer-events:none;}
+.coin-badge{background:rgba(255,255,255,0.93);border-radius:20px;padding:6px 14px;font-size:14px;font-weight:800;color:#FF8F00;box-shadow:0 2px 8px rgba(0,0,0,0.15);pointer-events:all;border:2px solid rgba(255,215,0,0.4);}
+.hud-right{display:flex;gap:6px;pointer-events:all;}
+.hud-btn{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.93);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+#hero{position:relative;width:100%;height:300px;overflow:hidden;}
+#hero-svg{position:absolute;inset:0;width:100%;height:100%;}
+#title-area{position:absolute;top:48%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:10;pointer-events:none;}
+.title-main{font-size:38px;font-weight:900;line-height:1.05;background:linear-gradient(180deg,#FFFFFF 0%,#FFE066 40%,#FF8C00 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(2px 4px 0 rgba(0,80,160,0.35));letter-spacing:2px;}
+.title-sub{background:rgba(255,255,255,0.93);border-radius:22px;padding:7px 20px;font-size:14px;font-weight:800;color:#3B8DEF;margin-top:8px;display:inline-block;box-shadow:0 3px 10px rgba(0,0,0,0.12);}
+@keyframes cloudL{0%{transform:translateX(0);}100%{transform:translateX(28px);}}
+@keyframes cloudR{0%{transform:translateX(0);}100%{transform:translateX(-22px);}}
+@keyframes palmSway{0%,100%{transform:rotate(-4deg);}50%{transform:rotate(4deg);}}
+@keyframes floatA{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
+@keyframes floatB{0%,100%{transform:translateY(0);}50%{transform:translateY(-7px);}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(0);}50%{opacity:1;transform:scale(1);}}
+@keyframes fishSwim{0%{transform:translateX(0);}100%{transform:translateX(25px);}}
+.cl1{animation:cloudL 9s ease-in-out infinite alternate;}
+.cl2{animation:cloudR 11s ease-in-out infinite alternate;}
+.cl3{animation:cloudL 7s ease-in-out 2s infinite alternate;}
+.palm1{animation:palmSway 3.2s ease-in-out infinite;transform-origin:bottom center;}
+.palm2{animation:palmSway 3.8s ease-in-out 1.2s infinite;transform-origin:bottom center;}
+.char-princess{animation:floatA 3s ease-in-out infinite;}
+.char-prince{animation:floatB 3.5s ease-in-out infinite;}
+.tw1{animation:twinkle 2.2s ease-in-out infinite;}
+.tw2{animation:twinkle 2.8s ease-in-out 0.7s infinite;}
+.tw3{animation:twinkle 1.9s ease-in-out 1.4s infinite;}
+.fish1{animation:fishSwim 4s ease-in-out infinite alternate;}
+#content{background:linear-gradient(180deg,#b8e4f7 0%,#e2f4d0 25%,#c8ebb0 100%);min-height:500px;padding:14px;}
+.banner{background:linear-gradient(135deg,#4A90D9,#7B52C8);border-radius:18px;padding:13px 18px;margin-bottom:10px;color:white;font-weight:800;font-size:15px;box-shadow:0 4px 14px rgba(74,144,217,0.4);display:flex;align-items:center;gap:8px;}
+.counter-card{background:rgba(255,255,255,0.85);border-radius:18px;padding:12px 18px;margin-bottom:14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+.counter-num{font-size:38px;font-weight:900;color:#4A90D9;}
+.counter-label{font-size:11px;color:#888;font-weight:700;}
+.section-title{font-size:16px;font-weight:800;color:#333;margin-bottom:10px;}
+.tab-row{display:flex;gap:8px;margin-bottom:10px;}
+.tab{flex:1;padding:10px;border-radius:22px;font-size:14px;font-weight:800;border:none;cursor:pointer;font-family:inherit;background:rgba(255,255,255,0.7);color:#555;box-shadow:0 2px 6px rgba(0,0,0,0.08);}
+.tab.active{background:linear-gradient(135deg,#5B9EEF,#4A7DE8);color:white;}
+.cat-row{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none;padding-bottom:2px;}
+.cat-row::-webkit-scrollbar{display:none;}
+.cat-btn{padding:6px 16px;border-radius:20px;font-size:12px;font-weight:800;border:none;cursor:pointer;font-family:inherit;white-space:nowrap;background:rgba(255,255,255,0.8);color:#666;}
+.cat-btn.active{background:#FFB800;color:white;}
+.game-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.game-card{background:white;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.1);cursor:pointer;}
+.card-img{height:110px;display:flex;align-items:center;justify-content:center;font-size:52px;position:relative;}
+.card-tag{position:absolute;bottom:7px;left:7px;background:rgba(255,255,255,0.9);border-radius:8px;padding:2px 9px;font-size:10px;font-weight:800;color:#555;}
+.card-new{position:absolute;top:7px;left:7px;background:linear-gradient(135deg,#FF5252,#FF1744);border-radius:8px;padding:3px 9px;font-size:10px;font-weight:900;color:white;}
+.card-body{padding:10px 12px 12px;}
+.card-name{font-size:15px;font-weight:900;color:#222;margin-bottom:3px;}
+.card-desc{font-size:11px;color:#888;line-height:1.5;}
+.card-stars{color:#FFB800;font-size:12px;margin-top:5px;}
+</style>
+</head>
+<body>
+<div id="hud">
+  <div class="coin-badge">🪙 221 まい</div>
+  <div class="hud-right">
+    <button class="hud-btn">🛍️</button>
+    <button class="hud-btn">👗</button>
+    <button class="hud-btn">🔊</button>
+    <button class="hud-btn">🇯🇵</button>
+  </div>
+</div>
+
+<div id="hero">
+<svg id="hero-svg" viewBox="0 0 390 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4BBFFF"/><stop offset="60%" stop-color="#74CEFF"/><stop offset="100%" stop-color="#A8DEFF"/></linearGradient>
+  <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1E90D4"/><stop offset="50%" stop-color="#1060A8"/><stop offset="100%" stop-color="#0A3D78"/></linearGradient>
+  <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6DC96D"/><stop offset="100%" stop-color="#4CAF50"/></linearGradient>
+  <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFE082"/><stop offset="100%" stop-color="#FFCA28"/></linearGradient>
+  <linearGradient id="islandSm" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#81C784"/><stop offset="70%" stop-color="#FFD54F"/></linearGradient>
+  <radialGradient id="sunG" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(255,240,80,0.55)"/><stop offset="100%" stop-color="rgba(255,220,0,0)"/></radialGradient>
+  <filter id="shadow"><feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="rgba(0,60,140,0.2)"/></filter>
+  <filter id="cs"><feDropShadow dx="1" dy="3" stdDeviation="3" flood-color="rgba(0,0,0,0.22)"/></filter>
+  <filter id="glow"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+
+<!-- 空 -->
+<rect width="390" height="300" fill="url(#sky)"/>
+
+<!-- 太陽 -->
+<circle cx="330" cy="45" r="55" fill="url(#sunG)"/>
+<circle cx="330" cy="45" r="28" fill="#FFD600"/>
+<circle cx="330" cy="45" r="20" fill="#FFEE58"/>
+<circle cx="322" cy="38" r="6" fill="rgba(255,255,255,0.4)"/>
+
+<!-- 雲 -->
+<g class="cl1" filter="url(#shadow)">
+  <ellipse cx="68" cy="38" rx="50" ry="21" fill="white"/>
+  <ellipse cx="48" cy="30" rx="29" ry="27" fill="white"/>
+  <ellipse cx="88" cy="28" rx="25" ry="23" fill="white"/>
+</g>
+<g class="cl2" filter="url(#shadow)" transform="translate(222,16)">
+  <ellipse cx="38" cy="22" rx="34" ry="17" fill="white" opacity="0.95"/>
+  <ellipse cx="23" cy="17" rx="21" ry="19" fill="white" opacity="0.95"/>
+  <ellipse cx="52" cy="16" rx="19" ry="17" fill="white" opacity="0.95"/>
+</g>
+<g class="cl3" filter="url(#shadow)" transform="translate(138,6)">
+  <ellipse cx="26" cy="20" rx="24" ry="13" fill="white" opacity="0.65"/>
+  <ellipse cx="16" cy="16" rx="15" ry="15" fill="white" opacity="0.65"/>
+</g>
+
+<!-- 海 -->
+<rect x="0" y="210" width="390" height="90" fill="url(#sea)"/>
+<path d="M0,216 Q49,204 98,216 Q147,228 196,216 Q245,204 294,216 Q343,228 390,216 L390,228 L0,228Z" fill="rgba(255,255,255,0.18)"/>
+<line x1="55" y1="220" x2="78" y2="220" stroke="rgba(255,255,255,0.45)" stroke-width="2.5" stroke-linecap="round"/>
+<line x1="305" y1="222" x2="338" y2="222" stroke="rgba(255,255,255,0.38)" stroke-width="2.5" stroke-linecap="round"/>
+<g class="fish1" transform="translate(18,255)" opacity="0.7">
+  <ellipse cx="12" cy="0" rx="11" ry="5.5" fill="#29B6F6"/>
+  <polygon points="0,0 -9,5 -9,-5" fill="#0288D1"/>
+</g>
+
+<!-- 草地・砂浜 -->
+<ellipse cx="195" cy="218" rx="226" ry="50" fill="#4CAF50"/>
+<ellipse cx="195" cy="212" rx="214" ry="40" fill="url(#grass)"/>
+<ellipse cx="195" cy="224" rx="184" ry="28" fill="url(#sand)"/>
+
+<!-- 右奥小島 -->
+<ellipse cx="334" cy="202" rx="42" ry="17" fill="url(#islandSm)"/>
+<line x1="334" y1="186" x2="330" y2="165" stroke="#6D4C41" stroke-width="4" stroke-linecap="round"/>
+<path d="M313,170 Q327,160 330,170" fill="#388E3C"/>
+<path d="M330,165 Q343,157 347,167" fill="#4CAF50"/>
+
+<!-- 左奥小島 -->
+<ellipse cx="52" cy="206" rx="34" ry="14" fill="url(#islandSm)"/>
+<line x1="52" y1="192" x2="49" y2="175" stroke="#6D4C41" stroke-width="3.5" stroke-linecap="round"/>
+<path d="M38,181 Q48,173 50,181" fill="#388E3C"/>
+<path d="M50,175 Q60,169 62,179" fill="#4CAF50"/>
+
+<!-- ヤシの木 左（x=0〜80付近） -->
+<g class="palm1">
+  <path d="M14,225 Q20,196 28,158 Q32,140 38,115" stroke="#6D4C41" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <path d="M38,115 Q12,88 -8,100 Q4,108 38,115" fill="#2E7D32"/>
+  <path d="M38,115 Q18,86 14,68 Q28,80 38,115" fill="#388E3C"/>
+  <path d="M38,115 Q60,90 78,94 Q62,104 38,115" fill="#2E7D32"/>
+  <path d="M38,115 Q64,96 76,80 Q58,92 38,115" fill="#388E3C"/>
+  <circle cx="32" cy="119" r="7" fill="#6D4C41"/>
+  <circle cx="44" cy="124" r="6" fill="#5D4037"/>
+</g>
+
+<!-- ヤシの木 右（x=310〜390付近） -->
+<g class="palm2">
+  <path d="M348,222 Q354,193 362,155 Q366,137 373,112" stroke="#6D4C41" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <path d="M373,112 Q396,86 414,96 Q398,106 373,112" fill="#2E7D32"/>
+  <path d="M373,112 Q353,84 350,66 Q364,78 373,112" fill="#388E3C"/>
+  <path d="M373,112 Q350,88 337,92 Q354,102 373,112" fill="#2E7D32"/>
+  <path d="M373,112 Q394,90 404,74 Q386,88 373,112" fill="#388E3C"/>
+  <circle cx="367" cy="116" r="7" fill="#6D4C41"/>
+  <circle cx="379" cy="120" r="6" fill="#5D4037"/>
+</g>
+
+<!-- 建物 左の塔（x=60〜100） -->
+<g opacity="0.88">
+  <rect x="62" y="168" width="30" height="48" rx="3" fill="#CE93D8"/>
+  <polygon points="58,168 77,148 96,168" fill="#AB47BC"/>
+  <line x1="77" y1="148" x2="77" y2="136" stroke="#FF8F00" stroke-width="2"/>
+  <polygon points="77,136 89,140 77,144" fill="#FFD700"/>
+  <rect x="67" y="177" width="8" height="8" rx="2" fill="#FFF9C4" opacity="0.9"/>
+  <rect x="79" y="177" width="8" height="8" rx="2" fill="#FFF9C4" opacity="0.9"/>
+  <rect x="70" y="207" width="12" height="9" rx="2" fill="#FF8A65"/>
+</g>
+
+<!-- 建物 右の水色ビル（x=285〜330） -->
+<g opacity="0.88">
+  <rect x="286" y="172" width="38" height="46" rx="3" fill="#80DEEA"/>
+  <rect x="282" y="160" width="46" height="14" rx="3" fill="#4DD0E1"/>
+  <rect x="292" y="179" width="9" height="10" rx="2" fill="#E1F5FE" opacity="0.9"/>
+  <rect x="307" y="179" width="9" height="10" rx="2" fill="#E1F5FE" opacity="0.9"/>
+  <rect x="292" y="196" width="9" height="10" rx="2" fill="#E1F5FE" opacity="0.9"/>
+  <rect x="307" y="196" width="9" height="10" rx="2" fill="#E1F5FE" opacity="0.9"/>
+  <rect x="298" y="208" width="12" height="10" rx="2" fill="#FFD700"/>
+</g>
+
+<!-- 中央小屋 -->
+<g opacity="0.9">
+  <rect x="162" y="192" width="26" height="26" rx="3" fill="#FFCC80"/>
+  <polygon points="156,192 175,174 194,192" fill="#FF7043"/>
+  <rect x="168" y="202" width="10" height="16" rx="1" fill="#8D6E63"/>
+</g>
+
+<!-- 花 -->
+<g transform="translate(106,212)"><line x1="0" y1="0" x2="0" y2="-13" stroke="#4CAF50" stroke-width="2.5"/><circle cx="0" cy="-17" r="5.5" fill="#F06292"/><circle cx="-5" cy="-13" r="4" fill="#F48FB1"/><circle cx="5" cy="-13" r="4" fill="#F06292"/><circle cx="0" cy="-14" r="2.8" fill="#FFD700"/></g>
+<g transform="translate(262,210)"><line x1="0" y1="0" x2="0" y2="-12" stroke="#388E3C" stroke-width="2.5"/><circle cx="0" cy="-16" r="5" fill="#B39DDB"/><circle cx="-4" cy="-12" r="4" fill="#CE93D8"/><circle cx="4" cy="-12" r="4" fill="#B39DDB"/><circle cx="0" cy="-12" r="2.8" fill="#FFD700"/></g>
+
+<!-- 虹 -->
+<g opacity="0.5" transform="translate(10,148)">
+  <path d="M0,70 Q50,-15 100,70" fill="none" stroke="#FF5252" stroke-width="5" stroke-linecap="round"/>
+  <path d="M7,70 Q53,-6 93,70" fill="none" stroke="#FF9800" stroke-width="5" stroke-linecap="round"/>
+  <path d="M14,70 Q56,2 86,70" fill="none" stroke="#FFEB3B" stroke-width="5" stroke-linecap="round"/>
+  <path d="M21,70 Q59,10 79,70" fill="none" stroke="#4CAF50" stroke-width="5" stroke-linecap="round"/>
+  <path d="M28,70 Q62,18 72,70" fill="none" stroke="#2196F3" stroke-width="4.5" stroke-linecap="round"/>
+</g>
+
+<!-- キラキラ -->
+<text x="152" y="92" font-size="14" class="tw1">✨</text>
+<text x="244" y="62" font-size="11" class="tw2">⭐</text>
+<text x="270" y="138" font-size="11" class="tw3">✨</text>
+<text x="148" y="224" font-size="18">🌺</text>
+
+<!-- ===== プリンセス（左 x=5〜65） ===== -->
+<g class="char-princess" filter="url(#cs)">
+  <!-- キャラ全体をtranslateで左端に配置 -->
+  <g transform="translate(5,155)">
+    <polygon points="14,12 18,4 22,9 27,1 32,9 36,4 40,12" fill="#FFD700" stroke="#FF8F00" stroke-width="0.8"/>
+    <circle cx="27" cy="2" r="2.5" fill="#E91E63"/>
+    <ellipse cx="27" cy="24" rx="16" ry="13" fill="#FFE082"/>
+    <rect x="11" y="22" width="6.5" height="22" rx="3.2" fill="#FFE082"/>
+    <rect x="36" y="22" width="6.5" height="22" rx="3.2" fill="#FFE082"/>
+    <ellipse cx="27" cy="26" rx="13" ry="14" fill="#FFCCBC"/>
+    <ellipse cx="21" cy="23" rx="3.5" ry="4" fill="white"/>
+    <ellipse cx="33" cy="23" rx="3.5" ry="4" fill="white"/>
+    <circle cx="22" cy="24" r="2.5" fill="#5D4037"/>
+    <circle cx="34" cy="24" r="2.5" fill="#5D4037"/>
+    <circle cx="23" cy="23" r="1" fill="white"/>
+    <circle cx="35" cy="23" r="1" fill="white"/>
+    <line x1="18" y1="19" x2="16" y2="17" stroke="#5D4037" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="21" y1="18" x2="20" y2="16" stroke="#5D4037" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="36" y1="19" x2="38" y2="17" stroke="#5D4037" stroke-width="1.2" stroke-linecap="round"/>
+    <ellipse cx="16" cy="29" rx="4" ry="2.5" fill="#FF8A65" opacity="0.5"/>
+    <ellipse cx="38" cy="29" rx="4" ry="2.5" fill="#FF8A65" opacity="0.5"/>
+    <path d="M22,33 Q27,37 32,33" stroke="#E91E63" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <rect x="22" y="38" width="10" height="8" rx="2.5" fill="#FFCCBC"/>
+    <path d="M18,44 Q27,48 36,44" stroke="#FFD700" stroke-width="1.8" fill="none"/>
+    <circle cx="27" cy="47" r="3.5" fill="#E91E63"/>
+    <path d="M14,44 Q6,66 4,100 L50,100 Q48,66 40,44 Q33,50 27,50 Q21,50 14,44Z" fill="#F48FB1"/>
+    <path d="M20,56 Q27,51 34,56 Q27,61 20,56Z" fill="#E91E63" opacity="0.7"/>
+    <path d="M4,82 Q10,76 17,82 Q23,88 30,82 Q36,76 43,82 Q47,88 50,82 L50,100 L4,100Z" fill="#FCE4EC"/>
+    <rect x="3" y="44" width="9" height="20" rx="4.5" fill="#FFCCBC"/>
+    <rect x="42" y="44" width="9" height="20" rx="4.5" fill="#FFCCBC"/>
+    <circle cx="7" cy="65" r="5" fill="#FFCCBC"/>
+    <circle cx="46" cy="65" r="5" fill="#FFCCBC"/>
+    <line x1="46" y1="65" x2="58" y2="44" stroke="#FF8F00" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="58" cy="42" r="6" fill="#FFD700" filter="url(#glow)"/>
+    <ellipse cx="14" cy="102" rx="9" ry="4" fill="#F48FB1"/>
+    <ellipse cx="40" cy="102" rx="9" ry="4" fill="#F48FB1"/>
+    <text x="46" y="100" font-size="18">🦊</text>
+  </g>
+</g>
+
+<!-- ===== プリンス（右 x=330〜390） ===== -->
+<g class="char-prince" filter="url(#cs)">
+  <g transform="translate(330,157)">
+    <polygon points="4,14 8,4 15,11 23,2 31,11 38,4 42,14" fill="#FFD700" stroke="#FF8F00" stroke-width="0.8"/>
+    <circle cx="23" cy="3" r="2.5" fill="#2196F3"/>
+    <ellipse cx="23" cy="24" rx="15" ry="12" fill="#5D4037"/>
+    <rect x="8" y="22" width="6" height="12" rx="3" fill="#5D4037"/>
+    <rect x="32" y="22" width="6" height="12" rx="3" fill="#5D4037"/>
+    <ellipse cx="23" cy="27" rx="12" ry="13" fill="#FFCCBC"/>
+    <ellipse cx="17" cy="24" rx="3" ry="3.5" fill="white"/>
+    <ellipse cx="29" cy="24" rx="3" ry="3.5" fill="white"/>
+    <circle cx="18" cy="25" r="2.2" fill="#1565C0"/>
+    <circle cx="30" cy="25" r="2.2" fill="#1565C0"/>
+    <circle cx="19" cy="24" r="0.9" fill="white"/>
+    <circle cx="31" cy="24" r="0.9" fill="white"/>
+    <path d="M14,20 Q17,18 20,20" stroke="#5D4037" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <path d="M26,20 Q29,18 32,20" stroke="#5D4037" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <ellipse cx="12" cy="30" rx="3.5" ry="2" fill="#FF8A65" opacity="0.38"/>
+    <ellipse cx="34" cy="30" rx="3.5" ry="2" fill="#FF8A65" opacity="0.38"/>
+    <path d="M18,34 Q23,38 28,34" stroke="#BF360C" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <rect x="18" y="38" width="10" height="8" rx="2.5" fill="#FFCCBC"/>
+    <path d="M10,44 Q2,66 1,100 L45,100 Q44,66 36,44 Q29,50 23,50 Q17,50 10,44Z" fill="#1565C0"/>
+    <line x1="23" y1="50" x2="23" y2="100" stroke="rgba(255,215,0,0.45)" stroke-width="1.5"/>
+    <circle cx="16" cy="57" r="4.5" fill="#FFD700"/>
+    <circle cx="16" cy="57" r="2.5" fill="#FF6F00"/>
+    <rect x="6" y="72" width="34" height="5" rx="2.5" fill="#FFD700" opacity="0.75"/>
+    <path d="M1,84 Q8,78 15,84 Q22,90 29,84 Q36,78 45,84 L45,100 L1,100Z" fill="#1976D2"/>
+    <rect x="0" y="44" width="9" height="22" rx="4.5" fill="#1565C0"/>
+    <rect x="37" y="44" width="9" height="22" rx="4.5" fill="#1565C0"/>
+    <circle cx="4" cy="67" r="5" fill="#FFCCBC"/>
+    <circle cx="41" cy="67" r="5" fill="#FFCCBC"/>
+    <ellipse cx="11" cy="102" rx="9" ry="4" fill="#1A237E"/>
+    <ellipse cx="35" cy="102" rx="9" ry="4" fill="#1A237E"/>
+    <text x="-10" y="58" font-size="14">⭐</text>
+  </g>
+</g>
+
+</svg>
+
+<div id="title-area">
+  <div class="title-main">わくわく<br>アイランド</div>
+  <div class="title-sub">🏝️ たのしい あそびじま！</div>
+</div>
+</div>
+
+<div id="content">
+  <div class="banner">🌊 なつの ゲームパーク！</div>
+  <div class="counter-card">
+    <div class="counter-label">みんなで あそんだかず</div>
+    <div class="counter-num">1,357</div>
+    <div class="counter-label">かい</div>
+  </div>
+  <div class="section-title">🎮 ゲームえらんでね</div>
+  <div class="tab-row">
+    <button class="tab active">🌸 かんたん</button>
+    <button class="tab">🔥 チャレンジ <span style="background:#FF5252;color:white;font-size:9px;padding:1px 6px;border-radius:6px;margin-left:2px;">NEW</span></button>
+  </div>
+  <div class="cat-row">
+    <button class="cat-btn active">すべて</button>
+    <button class="cat-btn">かずあそび</button>
+    <button class="cat-btn">もじあそび</button>
+    <button class="cat-btn">パズル</button>
+    <button class="cat-btn">アクション</button>
+    <button class="cat-btn">クイズ</button>
+    <button class="cat-btn">そうぞう</button>
+  </div>
+  <div class="game-grid">
+    <div class="game-card"><div class="card-img" style="background:linear-gradient(160deg,#FF8A65,#E64A19);">🫧<span class="card-tag">アクション</span></div><div class="card-body"><div class="card-name">シャボンだまポン</div><div class="card-desc">とんでくる たまを タップしよう！</div><div class="card-stars">★★★☆☆</div></div></div>
+    <div class="game-card"><div class="card-img" style="background:linear-gradient(160deg,#66BB6A,#2E7D32);">🍎<span class="card-tag">アクション</span></div><div class="card-body"><div class="card-name">くだものキャッチ</div><div class="card-desc">おちてくる くだものを キャッチ！</div><div class="card-stars">★★★☆☆</div></div></div>
+    <div class="game-card"><div class="card-img" style="background:linear-gradient(160deg,#AB47BC,#6A1B9A);">💎<div class="card-new">NEW</div><span class="card-tag">そうぞう</span></div><div class="card-body"><div class="card-name">ジュエリーマスター</div><div class="card-desc">ほうせきを えらんで わたそう！</div><div class="card-stars">★★★★☆</div></div></div>
+    <div class="game-card"><div class="card-img" style="background:linear-gradient(160deg,#26C6DA,#00838F);">🌍<div class="card-new">NEW</div><span class="card-tag">クイズ</span></div><div class="card-body"><div class="card-name">こっきクイズ</div><div class="card-desc">せかいの こっきを みわけよう！</div><div class="card-stars">★★★★☆</div></div></div>
+    <div class="game-card"><div class="card-img" style="background:linear-gradient(160deg,#FF7043,#BF360C);">🍓<span class="card-tag">アクション</span></div><div class="card-body"><div class="card-name">いちご</div><div class="card-desc">30びょうで あつめよう！</div><div class="card-stars">★★★★★</div></div></div>
+    <div class="game-card"><div class="card-img" style="background:linear-gradient(160deg,#42A5F5,#1565C0);">⚽<span class="card-tag">アクション</span></div><div class="card-body"><div class="card-name">どうぶつサッカー</div><div class="card-desc">サッカーで たたかおう！</div><div class="card-stars">★★★★★</div></div></div>
+  </div>
+</div>
+</body>
+</html>

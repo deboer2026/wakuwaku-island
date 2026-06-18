@@ -15,7 +15,7 @@ const CAT_LABELS = {
 
 export default function Shop({ isOpen, onClose, lang, onCoinsChange }) {
   const [activeChara, setActiveChara] = useState('princess');
-  const [coins,       setCoins]       = useState(getCoins);
+  const [coins,       setCoins]       = useState(() => typeof localStorage !== 'undefined' ? getCoins() : 0);
 
   if (!isOpen) return null;
 

@@ -1,0 +1,895 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>くだものキャッチ！</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'M PLUS Rounded 1c',sans-serif;user-select:none;}
+body{background:#87CEEB;}
+#wrap{position:fixed;inset:0;overflow:hidden;}
+canvas{position:absolute;top:0;left:0;display:block;}
+#dl{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden;z-index:6;}
+
+/* HUD */
+#hud{position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:max(10px,var(--sat,env(safe-area-inset-top,0px))) 12px 8px;
+  background:linear-gradient(180deg,rgba(0,0,0,0.75) 0%,rgba(0,0,0,0.4) 70%,transparent 100%);
+  box-sizing:border-box;}
+#hud-stage{font-size:13px;font-weight:800;color:white;text-shadow:0 1px 4px rgba(0,60,0,0.5);}
+#hud-score{font-size:18px;font-weight:900;color:white;text-shadow:0 1px 4px rgba(0,60,0,0.5);}
+#hud-life{font-size:16px;}
+
+/* クリア条件バー */
+#goal-bar{position:absolute;top:88px;left:12px;right:12px;z-index:20;pointer-events:none;}
+#goal-label{font-size:10px;font-weight:800;color:rgba(255,255,255,0.9);
+  text-shadow:0 1px 3px rgba(0,60,0,0.4);margin-bottom:3px;}
+#goal-bg{height:8px;background:rgba(255,255,255,0.3);border-radius:4px;overflow:hidden;}
+#goal-fill{height:100%;border-radius:4px;transition:width 0.3s;
+  background:linear-gradient(90deg,#FFD700,#FF8C00);}
+
+/* コンボ・パワーアップ */
+#combo-disp{position:absolute;top:110px;right:12px;z-index:20;pointer-events:none;
+  font-size:15px;font-weight:900;color:#FFD700;
+  text-shadow:0 0 10px rgba(255,215,0,0.7);display:none;}
+#power-disp{position:absolute;top:110px;left:12px;z-index:20;pointer-events:none;
+  font-size:11px;font-weight:800;background:rgba(0,0,0,0.3);
+  border-radius:10px;padding:3px 10px;color:white;display:none;}
+
+/* ステージバナー */
+#stage-banner{position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);z-index:30;pointer-events:none;
+  display:none;text-align:center;}
+@keyframes bannerPop{0%{transform:translate(-50%,-50%) scale(0.3);opacity:0;}
+  55%{transform:translate(-50%,-50%) scale(1.15);}
+  100%{transform:translate(-50%,-50%) scale(1);opacity:1;}}
+
+/* もどる */
+#back-btn{background:rgba(0,0,0,0.5);color:white;border:1px solid rgba(255,255,255,0.3);
+  border-radius:20px;padding:6px 14px;font-size:13px;font-weight:700;
+  cursor:pointer;pointer-events:all;font-family:inherit;}
+
+/* スコアポップ */
+@keyframes scoreFloat{0%{transform:translateX(-50%) translateY(0);opacity:1;}
+  100%{transform:translateX(-50%) translateY(-65px);opacity:0;}}
+.score-pop{position:absolute;font-size:17px;font-weight:900;
+  pointer-events:none;z-index:9;
+  animation:scoreFloat 0.85s ease-out forwards;white-space:nowrap;
+  text-shadow:0 2px 6px rgba(0,0,0,0.4);}
+@keyframes catchBurst{0%{transform:translate(-50%,-50%) scale(0.5);opacity:1;}
+  100%{transform:translate(-50%,-50%) scale(2.2);opacity:0;}}
+.catch-burst{position:absolute;border-radius:50%;pointer-events:none;z-index:8;
+  animation:catchBurst 0.4s ease-out forwards;}
+@keyframes missShake{0%,100%{transform:translateX(0);}
+  25%{transform:translateX(-10px);}75%{transform:translateX(10px);}}
+
+/* オーバーレイ */
+.ov{position:absolute;inset:0;z-index:100;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(0,60,0,0.25);backdrop-filter:blur(12px);
+  opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.ov.show{opacity:1;pointer-events:all;}
+.ob{background:linear-gradient(160deg,rgba(255,255,255,0.95),rgba(220,255,220,0.97));
+  border-radius:24px;padding:22px 26px;text-align:center;
+  max-width:300px;width:90%;
+  box-shadow:0 8px 32px rgba(0,100,0,0.25);}
+.ot{font-size:21px;font-weight:900;color:#1a5c1a;margin:8px 0 6px;}
+.os{font-size:12px;color:rgba(20,80,20,0.6);margin-bottom:12px;line-height:1.8;}
+.osc{font-size:32px;font-weight:900;color:#FF8C00;margin:6px 0;}
+.btn-green{background:linear-gradient(135deg,#2E7D32,#66BB6A);color:white;
+  border:none;border-radius:13px;padding:12px 26px;font-size:15px;font-weight:900;
+  cursor:pointer;font-family:inherit;margin:4px;
+  box-shadow:0 4px 14px rgba(46,125,50,0.4);}
+.btn-ghost{background:rgba(0,100,0,0.1);border:1px solid rgba(0,100,0,0.25);
+  border-radius:13px;padding:10px 20px;font-size:13px;font-weight:700;
+  color:#2d6a2d;cursor:pointer;font-family:inherit;margin:4px;}
+
+/* タイトル */
+#ts{position:absolute;inset:0;z-index:200;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;-webkit-overflow-scrolling:touch;}
+#tsvg{position:absolute;inset:0;z-index:0;width:100%;height:100%;pointer-events:none;}
+#tc{position:relative;z-index:10;width:100%;
+  display:flex;flex-direction:column;align-items:center;padding-bottom:var(--sab,env(safe-area-inset-bottom,0px));}
+@keyframes sh{0%{background-position:0%}100%{background-position:200%}}
+@keyframes fruitFall{0%{transform:translateY(-30px);opacity:0;}100%{transform:translateY(0);opacity:1;}}
+
+
+#common-bgm-btn{
+  position:fixed;
+  top:max(10px,var(--sat,env(safe-area-inset-top,0px)));
+  right:10px;z-index:1000;
+  background:rgba(0,0,0,0.45);
+  border:1.5px solid rgba(255,255,255,0.35);
+  border-radius:50%;width:40px;height:40px;
+  font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:white;
+}
+
+/* === safe-area & common buttons === */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+}
+#ui-bgm-btn {
+  width: 40px; height: 40px;
+  background: rgba(0,0,0,0.5);
+  border: 1.5px solid rgba(255,255,255,0.4);
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+#status-bar {
+  position: fixed;
+  top: calc(max(10px, var(--sat,env(safe-area-inset-top,0px))) + 44px);
+  left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 12px;
+  z-index: 99;
+  pointer-events: none;
+}
+
+/* === 横向き対応 === */
+@media (orientation: landscape) {
+  body { overflow-y: auto; }
+  #hud { top: max(6px, var(--sat,env(safe-area-inset-top,0px))); }
+  #status-bar { top: calc(max(6px, var(--sat,env(safe-area-inset-top,0px))) + 40px); }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  /* 横向き時にゲームエリアを縮小・スクロール対応 */
+  canvas { max-height: 100vh; }
+  #game-area { overflow-y: auto; }
+}
+</style>
+<script src="/games/wakuwaku_bgm.js"></script>
+    <script src="/games/safe_area.js"></script>
+</head>
+<body>
+
+<div id="wrap">
+  <canvas id="cv"></canvas>
+  <div id="dl"></div>
+  <div id="hud">
+    <button id="back-btn" onclick="goBack()">🏠 もどる</button>
+    <button id="ui-bgm-btn" onclick="toggleCommonBGM()">🔊</button>
+  </div>
+  <div id="status-bar">
+    <div id="hud-stage">ステージ 1</div>
+    <div id="hud-score">🍎 0</div>
+    <div id="hud-life">❤️❤️❤️</div>
+  </div>
+  <div id="goal-bar">
+    <div id="goal-label">0 / 15 こ</div>
+    <div id="goal-bg"><div id="goal-fill" style="width:0%"></div></div>
+  </div>
+  <div id="combo-disp"></div>
+  <div id="power-disp"></div>
+  <div id="stage-banner"></div>
+
+
+  <!-- タイトル -->
+  <div id="ts">
+    <svg id="tsvg" viewBox="0 0 390 844" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="tsky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#29B6F6"/>
+          <stop offset="55%" stop-color="#81D4FA"/>
+          <stop offset="100%" stop-color="#B2EBF2"/>
+        </linearGradient>
+        <linearGradient id="tgrass" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#81C784"/>
+          <stop offset="100%" stop-color="#4CAF50"/>
+        </linearGradient>
+        <radialGradient id="tsun" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(255,240,150,0.6)"/>
+          <stop offset="100%" stop-color="rgba(255,200,0,0)"/>
+        </radialGradient>
+        <filter id="fruitGlow"><feGaussianBlur stdDeviation="3" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="shadow"><feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="rgba(0,80,0,0.3)"/></filter>
+      </defs>
+      <!-- 空 -->
+      <rect width="390" height="844" fill="url(#tsky)"/>
+      <!-- 太陽 -->
+      <circle cx="320" cy="90" r="70" fill="url(#tsun)"/>
+      <circle cx="320" cy="90" r="38" fill="#FFE566"/>
+      <circle cx="320" cy="90" r="28" fill="#FFF9C4"/>
+      <circle cx="308" cy="78" r="9" fill="rgba(255,255,255,0.5)"/>
+      <!-- 雲 -->
+      <g opacity="0.88">
+        <ellipse cx="75" cy="125" rx="68" ry="28" fill="white"/>
+        <ellipse cx="50" cy="116" rx="40" ry="34" fill="white"/>
+        <ellipse cx="105" cy="114" rx="34" ry="28" fill="white"/>
+        <ellipse cx="265" cy="82" rx="55" ry="22" fill="white"/>
+        <ellipse cx="243" cy="75" rx="32" ry="26" fill="white"/>
+        <ellipse cx="293" cy="74" rx="28" ry="22" fill="white"/>
+      </g>
+      <!-- 木（左） -->
+      <rect x="22" y="480" width="16" height="120" rx="5" fill="#5D4037"/>
+      <ellipse cx="30" cy="460" rx="42" ry="50" fill="#2E7D32"/>
+      <ellipse cx="30" cy="445" rx="32" ry="38" fill="#388E3C"/>
+      <ellipse cx="30" cy="432" rx="22" ry="26" fill="#43A047"/>
+      <!-- 木（右） -->
+      <rect x="352" y="490" width="16" height="110" rx="5" fill="#5D4037"/>
+      <ellipse cx="360" cy="468" rx="40" ry="48" fill="#2E7D32"/>
+      <ellipse cx="360" cy="454" rx="30" ry="36" fill="#388E3C"/>
+      <ellipse cx="360" cy="442" rx="20" ry="24" fill="#43A047"/>
+      <!-- 木に実る果物 -->
+      <text x="18" y="445" font-size="22" filter="url(#fruitGlow)">🍎</text>
+      <text x="38" y="425" font-size="18" filter="url(#fruitGlow)">🍊</text>
+      <text x="12" y="420" font-size="16" filter="url(#fruitGlow)">🍋</text>
+      <text x="348" y="455" font-size="22" filter="url(#fruitGlow)">🍇</text>
+      <text x="365" y="434" font-size="18" filter="url(#fruitGlow)">🍓</text>
+      <text x="344" y="428" font-size="16" filter="url(#fruitGlow)">🍑</text>
+      <!-- 落ちてくる果物（装飾） -->
+      <g filter="url(#shadow)">
+        <text x="100" y="300" font-size="52" text-anchor="middle">🍎</text>
+        <text x="200" y="240" font-size="44" text-anchor="middle">🍊</text>
+        <text x="300" y="310" font-size="48" text-anchor="middle">🍇</text>
+        <text x="155" y="370" font-size="36" text-anchor="middle">🍓</text>
+        <text x="250" y="370" font-size="40" text-anchor="middle">🍋</text>
+        <text x="75"  y="380" font-size="32" text-anchor="middle">🍑</text>
+        <text x="330" y="390" font-size="30" text-anchor="middle">🍉</text>
+      </g>
+      <!-- かご -->
+      <g transform="translate(195,530)" filter="url(#shadow)">
+        <!-- かごの本体 -->
+        <path d="M-55,0 Q-55,45 0,50 Q55,45 55,0Z" fill="#8D6E63"/>
+        <path d="M-55,0 Q-55,45 0,50 Q55,45 55,0Z" fill="none" stroke="#6D4C41" stroke-width="3"/>
+        <!-- 網目 -->
+        <line x1="-40" y1="5" x2="-25" y2="48" stroke="#6D4C41" stroke-width="1.5" opacity="0.6"/>
+        <line x1="-15" y1="2" x2="-8"  y2="50" stroke="#6D4C41" stroke-width="1.5" opacity="0.6"/>
+        <line x1="15"  y1="2" x2="8"   y2="50" stroke="#6D4C41" stroke-width="1.5" opacity="0.6"/>
+        <line x1="40"  y1="5" x2="25"  y2="48" stroke="#6D4C41" stroke-width="1.5" opacity="0.6"/>
+        <ellipse cx="0" cy="10" rx="55" ry="12" fill="#A1887F"/>
+        <ellipse cx="0" cy="10" rx="55" ry="12" fill="none" stroke="#8D6E63" stroke-width="3"/>
+        <!-- 縁のデコ -->
+        <rect x="-57" y="6" width="114" height="8" rx="4" fill="#FFCC02"/>
+        <rect x="-57" y="6" width="114" height="8" rx="4" fill="none" stroke="#FF8F00" stroke-width="1"/>
+      </g>
+      <!-- 草地 -->
+      <rect x="0" y="618" width="390" height="226" fill="url(#tgrass)"/>
+      <ellipse cx="195" cy="618" rx="220" ry="22" fill="#66BB6A"/>
+      <!-- 花 -->
+      <text x="55"  y="648" font-size="24">🌸</text>
+      <text x="115" y="642" font-size="20">🌼</text>
+      <text x="175" y="650" font-size="22">🌺</text>
+      <text x="240" y="643" font-size="20">🌷</text>
+      <text x="300" y="648" font-size="22">🌸</text>
+      <text x="355" y="641" font-size="18">🌼</text>
+    </svg>
+    <div id="tc">
+      <div style="text-align:center;padding:0 20px 12px;background:linear-gradient(0deg,rgba(240,255,240,0.97) 50%,transparent);width:100%;">
+        <div style="font-size:38px;font-weight:900;background:linear-gradient(180deg,#1B5E20,#4CAF50,#FF8C00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 8px rgba(0,100,0,0.3));letter-spacing:2px;margin-bottom:2px;">くだもの</div>
+        <div style="font-size:38px;font-weight:900;background:linear-gradient(180deg,#FF5722,#FF8C00,#FFD700);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 8px rgba(255,100,0,0.3));letter-spacing:2px;margin-bottom:5px;">キャッチ！</div>
+        <div style="font-size:10px;font-weight:700;color:rgba(30,100,30,0.6);letter-spacing:4px;">✦ FRUIT CATCH ✦</div>
+      </div>
+      <div style="background:linear-gradient(160deg,rgba(240,255,240,0.97),rgba(220,245,220,0.98));border-radius:22px;padding:13px 18px 15px;max-width:300px;width:90%;box-shadow:0 8px 32px rgba(0,100,0,0.2);">
+        <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(0,150,0,0.08);border-radius:9px;padding:6px 10px;">
+            <span style="font-size:18px;">👆</span><div><div style="font-size:11px;font-weight:800;color:#2E7D32;">ひだり・みぎに スライド！</div><div style="font-size:9px;color:rgba(20,80,20,0.5);">かごで くだものを キャッチ！</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(0,150,0,0.08);border-radius:9px;padding:6px 10px;">
+            <span style="font-size:18px;">🔥</span><div><div style="font-size:11px;font-weight:800;color:#FF6600;">れんぞくで コンボ！</div><div style="font-size:9px;color:rgba(20,80,20,0.5);">つづけてとると ボーナスポイント！</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(0,150,0,0.08);border-radius:9px;padding:6px 10px;">
+            <span style="font-size:18px;">💎</span><div><div style="font-size:11px;font-weight:800;color:#AA44FF;">とくべつな くだものも あるよ！</div><div style="font-size:9px;color:rgba(20,80,20,0.5);">🌟スター・⚡ひっさつ・❌さける！</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(0,150,0,0.08);border-radius:9px;padding:6px 10px;">
+            <span style="font-size:18px;">⭐</span><div><div style="font-size:11px;font-weight:800;color:#FF8C00;">ステージを クリアしよう！</div><div style="font-size:9px;color:rgba(20,80,20,0.5);">ぜんぶとれたらつぎのステージ！</div></div>
+          </div>
+        </div>
+        <div id="ths" style="font-size:11px;text-align:center;color:rgba(30,100,30,0.6);margin-bottom:8px;"></div>
+        <button id="sbtn" style="width:100%;background:linear-gradient(135deg,#2E7D32,#66BB6A,#2E7D32);background-size:200%;animation:sh 2.5s infinite linear;color:white;border:none;border-radius:13px;padding:13px;font-size:17px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:2px;box-shadow:0 4px 16px rgba(46,125,50,0.4);pointer-events:all;">🍎 スタート！</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- クリア -->
+  <div class="ov" id="clear-ov">
+    <div class="ob">
+      <div style="font-size:44px;" id="clear-emoji">🎉</div>
+      <div class="ot" id="clear-title">ステージ1 クリア！</div>
+      <div class="os" id="clear-sub"></div>
+      <div class="osc" id="clear-score"></div>
+      <button class="btn-green" id="next-btn">つぎへ ▶</button>
+    </div>
+  </div>
+  <!-- 全クリア -->
+  <div class="ov" id="ac-ov">
+    <div class="ob">
+      <div style="font-size:44px;">🏆</div>
+      <div class="ot">ぜんぶ クリア！！</div>
+      <div class="os" id="ac-sub"></div>
+      <div class="osc" id="ac-score"></div>
+      <button class="btn-green" onclick="startGame()">もういちど</button>
+      <button class="btn-ghost" onclick="showTitle()">タイトルへ</button>
+    </div>
+  </div>
+  <!-- ゲームオーバー -->
+  <div class="ov" id="go-ov">
+    <div class="ob">
+      <div style="font-size:44px;">😢</div>
+      <div class="ot">ゲームオーバー</div>
+      <div class="os" id="go-sub"></div>
+      <div class="osc" id="go-score"></div>
+      <button class="btn-green" onclick="startGame()">もういちど</button>
+      <button class="btn-ghost" onclick="showTitle()">タイトルへ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 定数 =====
+const FRUITS=[
+  {e:'🍎',pts:10,w:1.0},{e:'🍊',pts:10,w:1.0},{e:'🍋',pts:10,w:1.0},
+  {e:'🍇',pts:15,w:0.8},{e:'🍓',pts:15,w:0.8},{e:'🍑',pts:12,w:0.9},
+  {e:'🍉',pts:20,w:0.6},{e:'🍌',pts:10,w:1.0},{e:'🍒',pts:18,w:0.7},
+  {e:'🥝',pts:12,w:0.9},{e:'🍍',pts:20,w:0.5},{e:'🫐',pts:15,w:0.7},
+];
+// 特殊アイテム
+const SPECIALS=[
+  {e:'🌟',type:'star', pts:50, label:'スター！+50！', color:'#FFD700', prob:0.06},
+  {e:'⚡',type:'speed',pts:30, label:'かごがひろがる！', color:'#00AAFF', prob:0.05},
+  {e:'💣',type:'bomb', pts:-1, label:'ミス！', color:'#FF4444', prob:0.07},
+];
+const STAGES=[
+  {num:1,goal:15,lives:3,spawnRate:55,maxFruits:4, speedMin:2.0,speedMax:3.0,name:'はじまり！'},
+  {num:2,goal:22,lives:3,spawnRate:45,maxFruits:5, speedMin:2.5,speedMax:3.8,name:'なれてきた？'},
+  {num:3,goal:30,lives:3,spawnRate:36,maxFruits:6, speedMin:3.0,speedMax:4.5,name:'もっとはやく！'},
+  {num:4,goal:40,lives:3,spawnRate:28,maxFruits:7, speedMin:3.5,speedMax:5.5,name:'かなりはやい！'},
+  {num:5,goal:50,lives:3,spawnRate:20,maxFruits:8, speedMin:4.2,speedMax:6.5,name:'さいきょう！'},
+];
+
+// ===== 状態 =====
+let W,H;
+let stageIdx=0,score=0,caught=0,lives=3,combo=0,comboTimer=null;
+let fruits=[],particles=[];
+let frameCount=0,spawnTimer=0;
+let gameRunning=false;
+let basketX=0,basketW=0,basketY=0;
+let speedBoost=false,speedTimer=null;
+let raf=null;
+// スライド操作
+let touchStartX=0,isDragging=false;
+// 雲スクロール
+let cloudX=0;
+// 背景の木の実
+let bgFruits=[];
+
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+
+// ===== 初期化 =====
+function init(){
+  const _r=cv.getBoundingClientRect();W=_r.width||window.innerWidth;H=_r.height||window.innerHeight;
+  cv.width=W; cv.height=H;
+  basketX=W/2; basketW=W*0.22; basketY=H*0.82;
+  updateHsDisp();
+  document.getElementById('sbtn').addEventListener('click',startGame);
+  document.getElementById('sbtn').addEventListener('touchend',e=>{e.preventDefault();startGame();},{passive:false});
+  setupInput();
+  initBgFruits();
+  window.addEventListener('resize',()=>{const r=cv.getBoundingClientRect();W=r.width||window.innerWidth;H=r.height||window.innerHeight;cv.width=W;cv.height=H;basketY=H*0.82;});
+}
+
+function initBgFruits(){
+  bgFruits=[];
+  for(let i=0;i<6;i++){
+    bgFruits.push({
+      x:Math.random()*W, y:-30-Math.random()*H*0.5,
+      spd:0.3+Math.random()*0.5,
+      emoji:FRUITS[Math.floor(Math.random()*FRUITS.length)].e,
+      size:16+Math.random()*14,
+      alpha:0.15+Math.random()*0.1,
+    });
+  }
+}
+
+// ===== ゲーム開始 =====
+function startGame(){
+  document.getElementById('ts').style.display='none';
+  ['clear-ov','go-ov','ac-ov'].forEach(id=>document.getElementById(id).classList.remove('show'));
+  stageIdx=0; score=0;
+  if(raf)cancelAnimationFrame(raf);
+  setupStage();
+  gameRunning=true;
+  loop();
+}
+
+function showTitle(){
+  cancelAnimationFrame(raf); gameRunning=false;
+  document.getElementById('ts').style.display='flex';
+  ['clear-ov','go-ov','ac-ov'].forEach(id=>document.getElementById(id).classList.remove('show'));
+}
+
+function setupStage(){
+  const st=STAGES[stageIdx];
+  caught=0; lives=st.lives; combo=0; fruits=[];
+  speedBoost=false; clearTimeout(speedTimer); clearTimeout(comboTimer);
+  basketW=W*0.22; spawnTimer=0; frameCount=0;
+  updateHUD(); updateGoalBar();
+  showStageBanner(st.name, st.num);
+}
+
+// ===== ループ =====
+function loop(){
+  if(!gameRunning)return;
+  update(); draw();
+  raf=requestAnimationFrame(loop);
+}
+
+function update(){
+  frameCount++;
+  const st=STAGES[stageIdx];
+  cloudX=(cloudX+0.4)%(W+200);
+
+  // 背景の果物
+  bgFruits.forEach(f=>{f.y+=f.spd;if(f.y>H+30){f.y=-30;f.x=Math.random()*W;}});
+
+  // スポーン
+  spawnTimer++;
+  if(spawnTimer>=st.spawnRate && fruits.length<st.maxFruits){
+    spawnTimer=0; spawnFruit();
+  }
+
+  // 果物の落下
+  fruits.forEach(f=>{f.y+=f.spd; f.wobble+=0.06;});
+
+  // 当たり判定
+  const bHW=(speedBoost?basketW*1.45:basketW)/2;
+  const bLeft=basketX-bHW, bRight=basketX+bHW;
+  fruits=fruits.filter(f=>{
+    if(f.y+f.size/2>=basketY-8 && f.y-f.size/2<=basketY+10){
+      if(f.x+f.size/2>bLeft && f.x-f.size/2<bRight){
+        onCatch(f); return false;
+      }
+    }
+    // 落下ミス
+    if(f.y>H+20){
+      if(f.special?.type==='bomb') return false; // 爆弾は落としても OK
+      onMiss(f); return false;
+    }
+    return true;
+  });
+
+  // パーティクル
+  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.18;p.life--;p.alpha=p.life/p.maxLife;});
+  particles=particles.filter(p=>p.life>0);
+}
+
+// ===== スポーン =====
+function spawnFruit(){
+  const st=STAGES[stageIdx];
+  const spd=st.speedMin+Math.random()*(st.speedMax-st.speedMin);
+  const size=Math.min(W,H)*(0.065+Math.random()*0.04);
+  // 特殊アイテム判定
+  let special=null;
+  const pr=Math.random(); let acc=0;
+  for(const s of SPECIALS){acc+=s.prob;if(pr<acc){special=s;break;}}
+  // 通常果物
+  const fw=FRUITS.reduce((s,f)=>s+f.w,0);
+  let rnd=Math.random()*fw, fi=0;
+  for(;fi<FRUITS.length;fi++){rnd-=FRUITS[fi].w;if(rnd<=0)break;}
+  const fruit=FRUITS[Math.min(fi,FRUITS.length-1)];
+
+  fruits.push({
+    x:size/2+Math.random()*(W-size),
+    y:-size,
+    spd, size,
+    emoji:special?special.e:fruit.e,
+    pts:special?special.pts:fruit.pts,
+    special,
+    wobble:Math.random()*Math.PI*2,
+    _id:Math.random(),
+  });
+}
+
+// ===== キャッチ =====
+function onCatch(f){
+  // 爆弾
+  if(f.special?.type==='bomb'){
+    onMiss(f,true); return;
+  }
+  caught++;
+  // コンボ
+  combo++;
+  clearTimeout(comboTimer);
+  comboTimer=setTimeout(()=>{combo=0;updateComboDisp();},1200);
+  const comboMult=combo>=5?3:combo>=3?2:1;
+  const pts=Math.max(1,f.pts)*comboMult;
+  score+=pts;
+  // スピードブースト
+  if(f.special?.type==='speed'){
+    speedBoost=true; clearTimeout(speedTimer);
+    speedTimer=setTimeout(()=>{speedBoost=false;},5000);
+    showPower('⚡ かごがひろがった！','#00AAFF');
+  }
+  // 演出
+  addParticles(f.x,basketY,f.special?f.special.color:'#FFD700');
+  showCatchBurst(f.x,basketY,f.special?.color||'#FFD700');
+  showScorePop(`+${pts}${combo>=3?` 🔥${combo}コンボ！`:''}`,f.x,basketY-20,f.special?.color||'white');
+  updateHUD(); updateGoalBar(); updateComboDisp();
+  // クリア判定
+  if(caught>=STAGES[stageIdx].goal){
+    setTimeout(()=>stageClear(),400);
+  }
+}
+
+// ===== ミス =====
+function onMiss(f,isBomb=false){
+  if(isBomb){
+    lives--;
+    showScorePop('💣 ミス！',f.x,basketY-20,'#FF4444');
+  } else {
+    combo=0; updateComboDisp();
+    showScorePop('💦',f.x,H*0.7,'#FF8888');
+    // 落としてもライフは減らない
+    return;
+  }
+  addParticles(f.x,isBomb?basketY:H*0.85,'#FF6666');
+  cv.style.animation='none'; cv.offsetHeight;
+  cv.style.animation='missShake 0.3s ease';
+  updateHUD();
+  if(lives<=0) setTimeout(()=>endGameOver(),500);
+}
+
+// ===== 描画 =====
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  drawBg();
+  drawFruits();
+  drawBasket();
+  drawParticles();
+}
+
+function drawBg(){
+  // 空
+  const sg=ctx.createLinearGradient(0,0,0,H);
+  sg.addColorStop(0,'#29B6F6');sg.addColorStop(0.5,'#81D4FA');sg.addColorStop(1,'#C8F0C8');
+  ctx.fillStyle=sg;ctx.fillRect(0,0,W,H);
+
+  // 太陽
+  ctx.save();
+  const sunG=ctx.createRadialGradient(W*0.82,H*0.08,0,W*0.82,H*0.08,70);
+  sunG.addColorStop(0,'rgba(255,235,100,0.55)');sunG.addColorStop(1,'rgba(255,200,0,0)');
+  ctx.fillStyle=sunG;ctx.fillRect(W*0.65,0,W*0.35,H*0.22);
+  ctx.fillStyle='#FFE566';ctx.beginPath();ctx.arc(W*0.82,H*0.08,26,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#FFF9C4';ctx.beginPath();ctx.arc(W*0.82,H*0.08,18,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  // 背景の装飾果物
+  bgFruits.forEach(f=>{
+    ctx.save();ctx.globalAlpha=f.alpha;
+    ctx.font=`${f.size}px "Apple Color Emoji","Segoe UI Emoji",serif`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(f.emoji,f.x,f.y);
+    ctx.restore();
+  });
+
+  // 雲（スクロール）
+  const cc='rgba(255,255,255,0.88)';
+  drawCloud((cloudX+W*0.12)%W,H*0.1,72,cc);
+  drawCloud((cloudX*0.7+W*0.55)%(W+150)-75,H*0.065,58,cc);
+  drawCloud((cloudX*0.45+W*0.78)%W,H*0.155,40,'rgba(255,255,255,0.72)');
+
+  // 木（左）
+  ctx.fillStyle='#6D4C41';ctx.fillRect(W*0.04,H*0.45,W*0.04,H*0.18);
+  ctx.fillStyle='#2E7D32';ctx.beginPath();ctx.ellipse(W*0.06,H*0.42,W*0.1,H*0.1,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#388E3C';ctx.beginPath();ctx.ellipse(W*0.06,H*0.39,W*0.08,H*0.08,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#43A047';ctx.beginPath();ctx.ellipse(W*0.06,H*0.37,W*0.055,H*0.055,0,0,Math.PI*2);ctx.fill();
+  // 木（右）
+  ctx.fillStyle='#6D4C41';ctx.fillRect(W*0.92,H*0.47,W*0.04,H*0.16);
+  ctx.fillStyle='#2E7D32';ctx.beginPath();ctx.ellipse(W*0.94,H*0.44,W*0.09,H*0.09,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#388E3C';ctx.beginPath();ctx.ellipse(W*0.94,H*0.41,W*0.07,H*0.07,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#43A047';ctx.beginPath();ctx.ellipse(W*0.94,H*0.39,W*0.05,H*0.05,0,0,Math.PI*2);ctx.fill();
+
+  // 草地
+  const gg=ctx.createLinearGradient(0,H*0.88,0,H);
+  gg.addColorStop(0,'#81C784');gg.addColorStop(1,'#4CAF50');
+  ctx.fillStyle=gg;ctx.fillRect(0,H*0.88,W,H*0.12);
+  ctx.fillStyle='#A5D6A7';
+  ctx.beginPath();ctx.ellipse(W/2,H*0.88,W*0.65,H*0.028,0,0,Math.PI*2);ctx.fill();
+
+  // スピードブースト時のエフェクト
+  if(speedBoost){
+    ctx.save();ctx.globalAlpha=0.08;
+    ctx.fillStyle='#00AAFF';ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+}
+
+function drawCloud(x,y,r,color){
+  ctx.save();ctx.fillStyle=color;
+  ctx.beginPath();ctx.ellipse(x,y,r,r*0.38,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(x-r*0.42,y+4,r*0.58,r*0.38,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(x+r*0.4,y+5,r*0.5,r*0.34,0,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+
+function drawFruits(){
+  fruits.forEach(f=>{
+    ctx.save();
+    // 影
+    ctx.globalAlpha=0.15;ctx.fillStyle='#005500';
+    ctx.beginPath();ctx.ellipse(f.x+3,f.y+6,f.size*0.38,f.size*0.14,0,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+    // ゆらゆら
+    const wx=Math.sin(f.wobble)*2.5;
+    ctx.font=`${f.size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    // 特殊アイテムはグロー
+    if(f.special){
+      ctx.shadowBlur=12;
+      ctx.shadowColor=f.special.color;
+    }
+    ctx.fillText(f.emoji,f.x+wx,f.y);
+    ctx.restore();
+  });
+}
+
+function drawBasket(){
+  const bHW=(speedBoost?basketW*1.45:basketW)/2;
+  const bx=basketX-bHW;
+  ctx.save();
+  // かごの影
+  ctx.globalAlpha=0.18;ctx.fillStyle='#003300';
+  ctx.beginPath();ctx.ellipse(basketX,basketY+18,bHW*0.85,10,0,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
+  // かごの本体（台形）
+  const bh=H*0.07;
+  const bTop=basketY-bh*0.3;
+  const bBot=basketY+bh*0.7;
+  // 本体
+  ctx.fillStyle='#8D6E63';
+  ctx.beginPath();
+  ctx.moveTo(bx,bTop);ctx.lineTo(bx+bHW*2,bTop);
+  ctx.lineTo(bx+bHW*2-8,bBot);ctx.lineTo(bx+8,bBot);
+  ctx.closePath();ctx.fill();
+  // ハイライト
+  ctx.fillStyle='#A1887F';
+  ctx.fillRect(bx,bTop,bHW*2,bh*0.25);
+  // 縁の装飾
+  ctx.fillStyle=speedBoost?'#00AAFF':'#FFD700';
+  ctx.fillRect(bx,bTop,bHW*2,6);
+  ctx.fillStyle=speedBoost?'#0088CC':'#FF8F00';
+  ctx.fillRect(bx,bTop,bHW*2,3);
+  // 網目
+  ctx.strokeStyle='rgba(90,50,30,0.4)';ctx.lineWidth=1.5;
+  for(let i=1;i<4;i++){
+    const lx=bx+bHW*2*(i/4);
+    const lt=bTop+bh*0.25;
+    const lb=bBot-(i%2===0?2:0);
+    ctx.beginPath();ctx.moveTo(lx,lt);ctx.lineTo(lx+(lb-lt)*0.15,lb);ctx.stroke();
+  }
+  // スピード時の光
+  if(speedBoost){
+    ctx.save();ctx.globalAlpha=0.15;
+    ctx.fillStyle='#00AAFF';
+    ctx.beginPath();
+    ctx.moveTo(bx,bTop);ctx.lineTo(bx+bHW*2,bTop);
+    ctx.lineTo(bx+bHW*2-8,bBot);ctx.lineTo(bx+8,bBot);
+    ctx.closePath();ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawParticles(){
+  particles.forEach(p=>{
+    ctx.save();ctx.globalAlpha=p.alpha;ctx.fillStyle=p.color;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  });
+}
+
+// ===== パーティクル =====
+function addParticles(x,y,color){
+  const cols=[color,'#FFD700','white',color];
+  for(let i=0;i<14;i++){
+    const a=Math.random()*Math.PI*2, spd=3+Math.random()*5;
+    particles.push({x,y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd-3,
+      r:2+Math.random()*5,color:cols[i%cols.length],life:20,maxLife:20,alpha:1});
+  }
+}
+
+// ===== DOM演出 =====
+function showCatchBurst(x,y,color){
+  const el=document.createElement('div');
+  el.className='catch-burst';
+  const sz=60;
+  el.style.cssText=`left:${x}px;top:${y}px;width:${sz}px;height:${sz}px;background:radial-gradient(circle,${color}99,${color}22);`;
+  document.getElementById('dl').appendChild(el);
+  setTimeout(()=>el.remove(),420);
+}
+
+function showScorePop(text,x,y,color='white'){
+  const el=document.createElement('div');
+  el.className='score-pop';
+  el.textContent=text;el.style.color=color;
+  el.style.left=x+'px';el.style.top=y+'px';
+  document.getElementById('dl').appendChild(el);
+  setTimeout(()=>el.remove(),900);
+}
+
+function showStageBanner(name,num){
+  const el=document.getElementById('stage-banner');
+  el.innerHTML=`<div style="font-size:28px;font-weight:900;color:#1B5E20;text-shadow:0 2px 8px rgba(0,100,0,0.3);white-space:nowrap;">ステージ ${num}</div><div style="font-size:18px;font-weight:800;color:#FF6600;">${name}</div>`;
+  el.style.display='block';el.style.animation='none';el.offsetHeight;
+  el.style.animation='bannerPop 0.5s ease-out forwards';
+  setTimeout(()=>el.style.display='none',2000);
+}
+
+function showPower(text,color){
+  const el=document.getElementById('power-disp');
+  el.style.display='block';el.textContent=text;el.style.color=color;
+  setTimeout(()=>el.style.display='none',5200);
+}
+
+// ===== HUD =====
+function updateHUD(){
+  const st=STAGES[stageIdx];
+  document.getElementById('hud-stage').textContent=`ステージ ${st.num}`;
+  document.getElementById('hud-score').textContent=`🍎 ${score}`;
+  document.getElementById('hud-life').textContent='❤️'.repeat(lives)+'🖤'.repeat(st.lives-lives);
+}
+function updateGoalBar(){
+  const st=STAGES[stageIdx];
+  const pct=Math.min(100,(caught/st.goal)*100);
+  document.getElementById('goal-fill').style.width=pct+'%';
+  document.getElementById('goal-label').textContent=`${caught} / ${st.goal} こ`;
+}
+function updateComboDisp(){
+  const el=document.getElementById('combo-disp');
+  if(combo>=2){el.style.display='block';el.textContent=`🔥 ${combo}コンボ！`;}
+  else el.style.display='none';
+}
+
+// ===== クリア・ゲームオーバー =====
+function stageClear(){
+  gameRunning=false;
+  const st=STAGES[stageIdx];
+  const isLast=stageIdx>=STAGES.length-1;
+  document.getElementById('clear-emoji').textContent=isLast?'🌟':'🎉';
+  document.getElementById('clear-title').textContent=`ステージ ${st.num} クリア！`;
+  document.getElementById('clear-sub').innerHTML=`🍎 ${caught}こ キャッチ！`;
+  document.getElementById('clear-score').textContent=`⭐ ${score} てん`;
+  const btn=document.getElementById('next-btn');
+  if(isLast){
+    btn.textContent='🏆 ぜんぶクリア！';
+    btn.onclick=()=>endAllClear();
+  } else {
+    btn.textContent=`ステージ ${st.num+1} へ ▶`;
+    btn.onclick=()=>{
+      document.getElementById('clear-ov').classList.remove('show');
+      stageIdx++; setupStage(); gameRunning=true; loop();
+    };
+  }
+  document.getElementById('clear-ov').classList.add('show');
+}
+
+function endAllClear(){
+  const hs=getHs(),isNew=score>hs;if(isNew)saveHs(score);
+  document.getElementById('clear-ov').classList.remove('show');
+  document.getElementById('ac-sub').innerHTML='ぜんステージ クリア！';
+  document.getElementById('ac-score').textContent=`⭐ ${score} てん${isNew?' 🏆':''}`;
+  document.getElementById('ac-ov').classList.add('show');
+}
+
+function endGameOver(){
+  gameRunning=false;
+  const hs=getHs(),isNew=score>hs;if(isNew)saveHs(score);
+  document.getElementById('go-sub').innerHTML=`ステージ${STAGES[stageIdx].num}　🍎${caught}こ`;
+  document.getElementById('go-score').textContent=`⭐ ${score} てん${isNew?' 🏆':''}`;
+  document.getElementById('go-ov').classList.add('show');
+}
+
+function getHs(){return parseInt(localStorage.getItem('kudamono_hs')||'0');}
+function saveHs(s){localStorage.setItem('kudamono_hs',s);}
+function updateHsDisp(){const hs=getHs();document.getElementById('ths').textContent=hs>0?`ハイスコア：⭐${hs}`:''}
+
+// ===== 入力（スライド） =====
+function setupInput(){
+  // タッチ：スライドでかご移動
+  cv.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    isDragging=true;
+    touchStartX=e.touches[0].clientX;
+  },{passive:false});
+  cv.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    if(!isDragging)return;
+    const dx=e.touches[0].clientX-touchStartX;
+    touchStartX=e.touches[0].clientX;
+    const bHW=(speedBoost?basketW*1.45:basketW)/2;
+    basketX=Math.max(bHW,Math.min(W-bHW,basketX+dx));
+  },{passive:false});
+  cv.addEventListener('touchend',()=>{isDragging=false;});
+  // マウス
+  let md=false;
+  cv.addEventListener('mousedown',e=>{md=true;touchStartX=e.clientX;});
+  cv.addEventListener('mousemove',e=>{
+    if(!md||!gameRunning)return;
+    const dx=e.clientX-touchStartX;
+    touchStartX=e.clientX;
+    const bHW=(speedBoost?basketW*1.45:basketW)/2;
+    basketX=Math.max(bHW,Math.min(W-bHW,basketX+dx));
+  });
+  cv.addEventListener('mouseup',()=>{md=false;});
+}
+
+
+
+
+function goBack(){
+  cancelAnimationFrame(raf);gameRunning=false;
+  if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');
+  else history.back();
+}
+
+// 確実な初期化
+function _safeInit(){
+  if(document.readyState==='complete'){
+    setTimeout(init,100);
+  } else {
+    window.addEventListener('load',()=>setTimeout(init,100),{once:true});
+  }
+}
+_safeInit();
+
+
+
+// === 共通UI ===
+function goHome(){
+  if(window.parent!==window){window.parent.postMessage({type:'goHome'},'*');}
+  else{window.location.href='/';}
+}
+// ── BGM (WakuwakuBGM library) ──────────────────────
+let _bgm = null;
+
+function _startBGM() {
+  if (_bgm) return;
+  _bgm = new WakuwakuBGM('fruity');
+  const on = WakuwakuBGM.loadState();
+  _bgm.setEnabled(on);
+  if (on) _bgm.start();
+  _syncBgmBtn();
+}
+
+function toggleCommonBGM() {
+  if (!_bgm) { _startBGM(); return; }
+  const on = _bgm.toggle();
+  WakuwakuBGM.saveState(on);
+  _syncBgmBtn();
+}
+
+function _syncBgmBtn() {
+  const on = _bgm ? _bgm.enabled : WakuwakuBGM.loadState();
+  const btns = document.querySelectorAll(
+    '#bgm-btn,#ui-bgm-btn,#bgm-toggle,#sound-btn,.bgm-btn'
+  );
+  btns.forEach(b => { b.textContent = on ? '🔊' : '🔇'; });
+}
+
+// First interaction triggers BGM start
+(function(){
+  function _first(){ _startBGM(); }
+  document.addEventListener('click', _first, { once: true });
+  document.addEventListener('touchstart', _first, { once: true });
+})();
+// ── End BGM ────────────────────────────────────────
+</script>
+
+  <!-- 共通UIボタン -->
+
+</body>
+</html>

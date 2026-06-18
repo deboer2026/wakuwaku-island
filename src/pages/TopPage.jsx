@@ -920,23 +920,23 @@ function GameCard({ game, lang, isRecommended, onClick, animIndex }) {
 ════════════════════════════════════════════════════ */
 export default function TopPage() {
   const navigate   = useNavigate();
-  const [lang,        setLang]        = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
-  const [isMuted,     setIsMuted]     = useState(() => localStorage.getItem('wakuwaku_bgm') === 'off');
+  const [lang,        setLang]        = useState(() => (typeof localStorage !== 'undefined' ? localStorage.getItem('wakuwaku_lang') : null) || 'ja');
+  const [isMuted,     setIsMuted]     = useState(() => typeof localStorage !== 'undefined' && localStorage.getItem('wakuwaku_bgm') === 'off');
   const [playCount,   setPlayCount]   = useState(0);
   const [kisekaeState,setKisekaeState]= useState(() => {
     try {
-      const saved = localStorage.getItem('kisekae_state');
+      const saved = typeof localStorage !== 'undefined' && localStorage.getItem('kisekae_state');
       return saved ? JSON.parse(saved) : DEFAULT_KISEKAE;
     } catch { return DEFAULT_KISEKAE; }
   });
   const [panelOpen,   setPanelOpen]   = useState(false);
   const [panelChara,  setPanelChara]  = useState('princess');
   const [shopOpen,    setShopOpen]    = useState(false);
-  const [coins,       setCoins]       = useState(getCoins);
+  const [coins,       setCoins]       = useState(() => typeof localStorage !== 'undefined' ? getCoins() : 0);
   const [loginBonus,  setLoginBonus]  = useState(null);
-  const [activeTab,      setActiveTab]      = useState(() => localStorage.getItem('wakuwaku_tab') || 'kids');
+  const [activeTab,      setActiveTab]      = useState(() => (typeof localStorage !== 'undefined' ? localStorage.getItem('wakuwaku_tab') : null) || 'kids');
   const [categoryFilter, setCategoryFilter] = useState('すべて');
-  const [recentRoutes,   setRecentRoutes]   = useState(() => getRecentGames());
+  const [recentRoutes,   setRecentRoutes]   = useState(() => typeof localStorage !== 'undefined' ? getRecentGames() : []);
 
   const season    = getSeason();
   const daysSince = getDaysSinceUpdate();

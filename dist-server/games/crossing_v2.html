@@ -1,0 +1,978 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>どうぶつクロッシング</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'M PLUS Rounded 1c',sans-serif;user-select:none;}
+body{background:#2d7a2d;}
+#wrap{position:fixed;inset:0;overflow:hidden;}
+canvas{position:absolute;top:0;left:0;display:block;}
+
+/* HUD */
+#hud{position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:max(10px,var(--sat,env(safe-area-inset-top,0px))) 12px 8px;
+  background:linear-gradient(180deg,rgba(0,0,0,0.75) 0%,rgba(0,0,0,0.4) 70%,transparent 100%);
+  box-sizing:border-box;}
+#hud-score{font-size:20px;font-weight:900;color:white;text-shadow:0 2px 6px rgba(0,0,0,0.5);}
+#hud-hi{font-size:12px;font-weight:800;color:rgba(255,215,0,0.9);text-shadow:0 1px 4px rgba(0,0,0,0.4);}
+
+/* 操作ガイド */
+#op-hint{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);
+  z-index:20;pointer-events:none;font-size:11px;font-weight:800;
+  color:rgba(255,255,255,0.7);text-shadow:0 1px 4px rgba(0,0,0,0.4);
+  white-space:nowrap;text-align:center;}
+
+/* もどる */
+#back-btn{background:rgba(0,0,0,0.5);color:white;border:1px solid rgba(255,255,255,0.3);
+  border-radius:20px;padding:6px 14px;font-size:13px;font-weight:700;
+  cursor:pointer;pointer-events:all;font-family:inherit;}
+
+/* オーバーレイ */
+.ov{position:absolute;inset:0;z-index:100;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(0,40,0,0.88);backdrop-filter:blur(12px);
+  opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.ov.show{opacity:1;pointer-events:all;}
+.ob{background:linear-gradient(160deg,rgba(255,255,255,0.95),rgba(220,255,220,0.97));
+  border-radius:24px;padding:22px 28px;text-align:center;
+  max-width:300px;width:90%;box-shadow:0 8px 32px rgba(0,80,0,0.3);}
+.ot{font-size:22px;font-weight:900;color:#1a5c1a;margin:8px 0 6px;}
+.os{font-size:12px;color:rgba(20,80,20,0.6);margin-bottom:12px;line-height:1.8;}
+.osc{font-size:34px;font-weight:900;color:#FF8C00;margin:6px 0;}
+.btn-g{background:linear-gradient(135deg,#2E7D32,#66BB6A);color:white;
+  border:none;border-radius:13px;padding:12px 26px;font-size:15px;font-weight:900;
+  cursor:pointer;font-family:inherit;margin:4px;box-shadow:0 4px 14px rgba(46,125,50,0.4);}
+.btn-gh{background:rgba(0,100,0,0.1);border:1px solid rgba(0,100,0,0.25);
+  border-radius:13px;padding:10px 20px;font-size:13px;font-weight:700;
+  color:#2d6a2d;cursor:pointer;font-family:inherit;margin:4px;}
+
+/* タイトル */
+#ts{position:absolute;inset:0;z-index:200;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;}
+#tc{position:relative;z-index:10;width:100%;
+  display:flex;flex-direction:column;align-items:center;padding-bottom:26px;}
+@keyframes sh{0%{background-position:0%}100%{background-position:200%}}
+
+/* スコアポップ */
+@keyframes scoreUp{0%{transform:translateX(-50%) scale(1);opacity:1;}100%{transform:translateX(-50%) scale(1.3) translateY(-40px);opacity:0;}}
+.sc-pop{position:absolute;font-size:20px;font-weight:900;color:#FFD700;
+  text-shadow:0 2px 8px rgba(0,0,0,0.5);pointer-events:none;z-index:30;
+  animation:scoreUp 0.8s ease-out forwards;white-space:nowrap;}
+@keyframes deathFlash{0%,100%{opacity:0;}30%{opacity:1;}}
+.death-flash{position:fixed;inset:0;background:rgba(255,50,50,0.35);
+  pointer-events:none;z-index:50;animation:deathFlash 0.5s ease-out forwards;}
+
+
+#common-bgm-btn{
+  position:fixed;
+  top:max(10px,var(--sat,env(safe-area-inset-top,0px)));
+  right:10px;z-index:1000;
+  background:rgba(0,0,0,0.45);
+  border:1.5px solid rgba(255,255,255,0.35);
+  border-radius:50%;width:40px;height:40px;
+  font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:white;
+}
+
+/* === safe-area & common buttons === */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+}
+#ui-bgm-btn {
+  width: 40px; height: 40px;
+  background: rgba(0,0,0,0.5);
+  border: 1.5px solid rgba(255,255,255,0.4);
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+#status-bar {
+  position: fixed;
+  top: calc(max(10px, var(--sat,env(safe-area-inset-top,0px))) + 44px);
+  left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 12px;
+  z-index: 99;
+  pointer-events: none;
+}
+
+/* === 横向き対応 === */
+@media (orientation: landscape) {
+  body { overflow-y: auto; }
+  #hud { top: max(6px, var(--sat,env(safe-area-inset-top,0px))); }
+  #status-bar { top: calc(max(6px, var(--sat,env(safe-area-inset-top,0px))) + 40px); }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  /* 横向き時にゲームエリアを縮小・スクロール対応 */
+  canvas { max-height: 100vh; }
+  #game-area { overflow-y: auto; }
+}
+</style>
+<script src="/games/wakuwaku_bgm.js"></script>
+    <script src="/games/safe_area.js"></script>
+</head>
+<body>
+
+<div id="wrap">
+  <canvas id="cv"></canvas>
+  <div id="hud">
+    <button id="back-btn" onclick="goBack()">🏠 もどる</button>
+    <button id="ui-bgm-btn" onclick="toggleCommonBGM()">🔊</button>
+  </div>
+  <div id="status-bar">
+    <div id="hud-score">🐾 0</div>
+    <div id="hud-hi">ベスト: 0</div>
+    <div id="hud-life">❤️❤️❤️</div>
+  </div>
+  <div id="op-hint">キャラの うえ・ひだり・みぎを タップ！</div>
+
+
+  <!-- タイトル -->
+  <div id="ts">
+    <canvas id="tcv" style="position:absolute;inset:0;width:100%;height:100%;z-index:0;"></canvas>
+    <div id="tc">
+      <div style="text-align:center;padding:0 20px 14px;background:linear-gradient(0deg,rgba(240,255,240,0.97) 50%,transparent);width:100%;position:relative;z-index:10;">
+        <div style="font-size:38px;font-weight:900;background:linear-gradient(180deg,#1B5E20,#4CAF50,#8BC34A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 8px rgba(0,100,0,0.3));letter-spacing:2px;margin-bottom:2px;">どうぶつ</div>
+        <div style="font-size:38px;font-weight:900;background:linear-gradient(180deg,#FF5722,#FF9800,#FFD700);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 8px rgba(255,100,0,0.3));letter-spacing:2px;margin-bottom:5px;">クロッシング</div>
+        <div style="font-size:10px;font-weight:700;color:rgba(30,100,30,0.6);letter-spacing:4px;">✦ ANIMAL CROSSING ✦</div>
+      </div>
+      <div style="background:linear-gradient(160deg,rgba(240,255,240,0.97),rgba(220,245,220,0.98));border-radius:22px;padding:14px 18px 16px;max-width:300px;width:90%;box-shadow:0 8px 32px rgba(0,100,0,0.2);position:relative;z-index:10;">
+        <div style="font-size:11px;font-weight:700;color:rgba(30,100,30,0.7);text-align:center;margin-bottom:8px;letter-spacing:1px;">✦ キャラを えらんでね ✦</div>
+        <div id="csel" style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-bottom:10px;pointer-events:all;overflow:hidden;"></div>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(0,150,0,0.08);border-radius:9px;padding:6px 10px;">
+            <span style="font-size:18px;">👆</span><div><div style="font-size:11px;font-weight:800;color:#2E7D32;">うえをタップ → すすむ！</div><div style="font-size:9px;color:rgba(20,80,20,0.5);">ひだり・みぎ タップで よこいどう</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(0,150,0,0.08);border-radius:9px;padding:6px 10px;">
+            <span style="font-size:18px;">🚗</span><div><div style="font-size:11px;font-weight:800;color:#E53935;">くるまに ぶつかると アウト！</div><div style="font-size:9px;color:rgba(20,80,20,0.5);">タイミングを みはからって わたろう</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(0,150,0,0.08);border-radius:9px;padding:6px 10px;">
+            <span style="font-size:18px;">🪵</span><div><div style="font-size:11px;font-weight:800;color:#1565C0;">かわは まるたに のってわたる！</div><div style="font-size:9px;color:rgba(20,80,20,0.5);">おちたら アウト！</div></div>
+          </div>
+        </div>
+        <div id="ths" style="font-size:11px;text-align:center;color:rgba(30,100,30,0.6);margin-bottom:8px;"></div>
+        <button id="sbtn" style="width:100%;background:linear-gradient(135deg,#2E7D32,#4CAF50,#2E7D32);background-size:200%;animation:sh 2.5s infinite linear;color:white;border:none;border-radius:13px;padding:13px;font-size:17px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:2px;box-shadow:0 4px 16px rgba(46,125,50,0.4);pointer-events:all;">🐾 スタート！</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ゲームオーバー -->
+  <div class="ov" id="go-ov">
+    <div class="ob">
+      <div style="font-size:44px;" id="go-emoji">😢</div>
+      <div class="ot">ゲームオーバー</div>
+      <div class="os" id="go-sub"></div>
+      <div class="osc" id="go-score"></div>
+      <button class="btn-g" onclick="startGame()">もういちど</button>
+      <button class="btn-gh" onclick="showTitle()">タイトルへ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== キャラ =====
+const CHARS=['🐔','🐰','🐸','🐱','🦊','🐧','🐼','🐶'];
+let selChar=0;
+
+// ===== レーン定義 =====
+// type: grass/road/river/rail
+// grass=安全, road=車, river=丸太, rail=電車
+const LANE_W=52; // 1マスの幅
+const LANE_TYPES=['grass','road','road','river','grass','road','river','rail','road','grass','road','road','river','road','rail','grass'];
+
+// ===== 状態 =====
+let W,H,COLS,ROWS; // グリッドサイズ
+let px,py; // プレイヤーグリッド座標
+let pRenderX,pRenderY; // 描画座標（アニメーション）
+let pJump=0; // ジャンプ高さ
+let isJumping=false;
+let jumpTargetX,jumpTargetY,jumpFromX,jumpFromY;
+let jumpProgress=0;
+let score,hiScore;
+let gameRunning=false;
+let cameraY; // カメラのY（スクロール）
+let lanes=[]; // レーンデータ
+let vehicles=[]; // 車・丸太・電車
+let particles=[];
+let raf=null,lastTime=0;
+let onLog=false,logVx=0,ridingLog=null;
+let lives=3; // 丸太に乗っているか・乗っている丸太
+let deathCooldown=false;
+let riverGraceTimer=null;
+// タッチ入力
+let tapX=0,tapY=0;
+// 木・花の装飾
+let decorations=[];
+
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+const tcv=document.getElementById('tcv');
+const tctx=tcv.getContext('2d');
+
+// ===== 初期化 =====
+function init(){
+  W=window.innerWidth; H=window.innerHeight;
+  cv.width=W; cv.height=H;
+  tcv.width=W; tcv.height=H;
+  COLS=Math.floor(W/LANE_W);
+  hiScore=parseInt(localStorage.getItem('crossing_hs2')||'0');
+  buildCharSel();
+  updateHsDisp();
+  drawTitleBg();
+  setupInput();
+  window.addEventListener('resize',()=>{
+    W=window.innerWidth;H=window.innerHeight;
+    cv.width=W;cv.height=H;
+    tcv.width=W;tcv.height=H;
+    COLS=Math.floor(W/LANE_W);
+    drawTitleBg();
+  });
+}
+
+function buildCharSel(){
+  const w=document.getElementById('csel');w.innerHTML='';
+  CHARS.forEach((c,i)=>{
+    const btn=document.createElement('button');
+    btn.style.cssText=`width:40px;height:40px;border-radius:10px;background:${i===selChar?'rgba(76,175,80,0.25)':'rgba(255,255,255,0.06)'};border:2px solid ${i===selChar?'#4CAF50':'rgba(0,100,0,0.15)'};display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;touch-action:manipulation;`;
+    btn.textContent=c;
+    const fn=()=>{selChar=i;buildCharSel();};
+    btn.onclick=fn;btn.addEventListener('touchend',e=>{e.preventDefault();fn();},{passive:false});
+    w.appendChild(btn);
+  });
+}
+
+// ===== タイトル背景 =====
+function drawTitleBg(){
+  const w=tcv.width,h=tcv.height;
+  tctx.clearRect(0,0,w,h);
+
+  // ===== 空 =====
+  const sg=tctx.createLinearGradient(0,0,0,h*0.58);
+  sg.addColorStop(0,'#64B5F6');sg.addColorStop(0.5,'#90CAF9');sg.addColorStop(1,'#B3E5FC');
+  tctx.fillStyle=sg;tctx.fillRect(0,0,w,h*0.58);
+
+  // 太陽
+  const sunG=tctx.createRadialGradient(w*0.82,h*0.07,0,w*0.82,h*0.07,65);
+  sunG.addColorStop(0,'rgba(255,235,100,0.5)');sunG.addColorStop(1,'transparent');
+  tctx.fillStyle=sunG;tctx.fillRect(w*0.6,0,w*0.4,h*0.2);
+  tctx.fillStyle='#FFE566';tctx.beginPath();tctx.arc(w*0.82,h*0.07,24,0,Math.PI*2);tctx.fill();
+  tctx.fillStyle='#FFF9C4';tctx.beginPath();tctx.arc(w*0.82,h*0.07,16,0,Math.PI*2);tctx.fill();
+
+  // 雲
+  drawTCloud(tctx,w*0.18,h*0.09,62);
+  drawTCloud(tctx,w*0.68,h*0.05,50);
+  drawTCloud(tctx,w*0.44,h*0.15,38);
+
+  // ===== フィールド（レーン） =====
+  const lh=h*0.075;
+  const laneData=[
+    {c:'#66BB6A',c2:'#4CAF50',type:'grass'},
+    {c:'#757575',c2:'#616161',type:'road'},
+    {c:'#26A69A',c2:'#1E88E5',type:'river'},
+    {c:'#66BB6A',c2:'#4CAF50',type:'grass'},
+    {c:'#757575',c2:'#616161',type:'road'},
+    {c:'#546E7A',c2:'#424242',type:'rail'},
+  ];
+  const fieldTop=h*0.38;
+  laneData.forEach((l,i)=>{
+    const ly=fieldTop+i*lh;
+    // グラデ
+    const lg=tctx.createLinearGradient(0,ly,0,ly+lh);
+    lg.addColorStop(0,l.c);lg.addColorStop(1,l.c2);
+    tctx.fillStyle=lg;tctx.fillRect(0,ly,w,lh);
+    // レーン装飾
+    if(l.type==='road'){
+      tctx.strokeStyle='rgba(255,255,255,0.4)';tctx.lineWidth=2;tctx.setLineDash([20,14]);
+      tctx.beginPath();tctx.moveTo(0,ly+lh/2);tctx.lineTo(w,ly+lh/2);tctx.stroke();
+      tctx.setLineDash([]);
+    }
+    if(l.type==='river'){
+      tctx.strokeStyle='rgba(255,255,255,0.25)';tctx.lineWidth=1.5;
+      for(let x=0;x<w;x+=45){
+        tctx.beginPath();tctx.moveTo(x,ly+lh*0.3);
+        tctx.quadraticCurveTo(x+11,ly+lh*0.15,x+22,ly+lh*0.3);
+        tctx.quadraticCurveTo(x+33,ly+lh*0.45,x+45,ly+lh*0.3);
+        tctx.stroke();
+      }
+    }
+    if(l.type==='rail'){
+      tctx.strokeStyle='rgba(200,200,200,0.5)';tctx.lineWidth=2.5;tctx.setLineDash([]);
+      tctx.beginPath();tctx.moveTo(0,ly+lh*0.35);tctx.lineTo(w,ly+lh*0.35);tctx.stroke();
+      tctx.beginPath();tctx.moveTo(0,ly+lh*0.65);tctx.lineTo(w,ly+lh*0.65);tctx.stroke();
+    }
+    // レーン境界線
+    tctx.strokeStyle='rgba(0,0,0,0.1)';tctx.lineWidth=1;tctx.setLineDash([]);
+    tctx.beginPath();tctx.moveTo(0,ly);tctx.lineTo(w,ly);tctx.stroke();
+  });
+
+  // ===== 乗り物・装飾 =====
+  const esz=Math.round(lh*0.85);
+  tctx.font=`${esz}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif`;
+  tctx.textAlign='center';tctx.textBaseline='middle';
+  // 車
+  tctx.fillText('🚗',w*0.25,fieldTop+lh*1.5);
+  tctx.fillText('🚌',w*0.72,fieldTop+lh*1.5);
+  // 丸太
+  tctx.fillText('🪵',w*0.5,fieldTop+lh*2.5);
+  tctx.fillText('🪵',w*0.15,fieldTop+lh*2.5);
+  // タクシー
+  tctx.fillText('🚕',w*0.6,fieldTop+lh*4.5);
+  // 電車
+  tctx.fillText('🚂',w*0.3,fieldTop+lh*5.5);
+
+  // ===== キャラ（道路を歩いている演出） =====
+  const csz=Math.round(lh*1.1);
+  tctx.font=`${csz}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif`;
+  // 草の上のキャラ
+  tctx.fillText(CHARS[0],w*0.12,fieldTop+lh*0.5);
+  tctx.fillText(CHARS[1],w*0.88,fieldTop+lh*0.5);
+  tctx.fillText(CHARS[2],w*0.12,fieldTop+lh*3.5);
+  tctx.fillText(CHARS[3],w*0.88,fieldTop+lh*3.5);
+
+  // ===== 木・花（草レーン） =====
+  const dsz=Math.round(lh*0.75);
+  tctx.font=`${dsz}px "Apple Color Emoji","Segoe UI Emoji",serif`;
+  ['🌳','🌸','🌲','🌼'].forEach((e,i)=>{
+    tctx.fillText(e,[w*0.35,w*0.55,w*0.38,w*0.52][i],fieldTop+[lh*0.5,lh*0.5,lh*3.5,lh*3.5][i]);
+  });
+}
+
+function drawTCloud(c,x,y,r){
+  c.save();c.fillStyle='rgba(255,255,255,0.88)';
+  c.beginPath();c.ellipse(x,y,r,r*0.38,0,0,Math.PI*2);c.fill();
+  c.beginPath();c.ellipse(x-r*0.4,y+4,r*0.55,r*0.36,0,0,Math.PI*2);c.fill();
+  c.beginPath();c.ellipse(x+r*0.38,y+5,r*0.48,r*0.32,0,0,Math.PI*2);c.fill();
+  c.restore();
+}
+
+// ===== ゲーム開始 =====
+function startGame(){
+  document.getElementById('ts').style.display='none';
+  document.getElementById('go-ov').classList.remove('show');
+  score=0;
+  gameRunning=true;
+  COLS=Math.floor(W/LANE_W);
+  // グリッド設定
+  ROWS=Math.ceil(H/LANE_W)+4;
+  // プレイヤー初期位置（画面下草地）
+  px=Math.floor(COLS/2); py=0;
+  pRenderX=px*LANE_W+LANE_W/2;
+  // world座標: lane0のY = H*0.72（画面下寄り）
+  pRenderY=laneWorldY(0);
+  jumpTargetX=pRenderX;jumpTargetY=pRenderY;
+  jumpFromX=pRenderX;jumpFromY=pRenderY;
+  jumpProgress=1;isJumping=false;pJump=0;
+  // カメラ: スタート時はプレイヤーが画面下72%に来るよう
+  cameraY=0;
+  deathCooldown=false;onLog=false;ridingLog=null;
+  lives=3;
+  if(riverGraceTimer){clearTimeout(riverGraceTimer);riverGraceTimer=null;}
+  // レーン生成
+  generateLanes();
+  // 装飾
+  generateDecorations();
+  vehicles=[];particles=[];
+  updateHUD();
+  if(raf)cancelAnimationFrame(raf);
+  lastTime=0;
+  loop2(0);
+}
+
+function showTitle(){
+  cancelAnimationFrame(raf);gameRunning=false;
+  document.getElementById('ts').style.display='flex';
+  document.getElementById('go-ov').classList.remove('show');
+}
+
+// ===== レーン生成 =====
+function generateLanes(){
+  lanes=[];
+  // 最下段は草（スタート）
+  lanes.push({type:'grass',y:0,color:'#4CAF50',darken:false});
+  // 上に向かってランダム生成
+  for(let i=1;i<60;i++){
+    let type;
+    if(i<3) type='grass';
+    else{
+      const r=Math.random();
+      // 連続道路・川は最大3レーン
+      const prev=lanes[i-1]?.type;
+      const pprev=lanes[i-2]?.type;
+      if(prev===pprev&&prev!=='grass'&&Math.random()<0.6) type='grass';
+      else if(r<0.35) type='road';
+      else if(r<0.55) type='river';
+      else if(r<0.65&&i>8) type='rail';
+      else type='grass';
+    }
+    const color=type==='grass'?(Math.random()<0.5?'#4CAF50':'#43A047'):
+                type==='road'?(Math.random()<0.5?'#616161':'#757575'):
+                type==='river'?'#1E88E5':'#424242';
+    const baseSpd=type==='river'?1.0+Math.random()*1.2:1.5+Math.random()*2.5;
+    const spd=baseSpd*(Math.random()<0.5?1:-1)*(1+i*0.015);
+    lanes.push({type,y:i,color,spd,
+      logSpacing:110+Math.random()*80, // 間隔を狭く（丸太を多く）
+      carSpacing:140+Math.random()*100,
+      carEmoji:['🚗','🚕','🚙','🚌','🚎'][Math.floor(Math.random()*5)],
+      railWarning:false,railCooldown:60+Math.random()*120, // 最初は少し待つ
+    });
+  }
+}
+
+function generateDecorations(){
+  decorations=[];
+  lanes.forEach((l,i)=>{
+    if(l.type!=='grass')return;
+    // 草レーンに木・花を配置
+    const items=['🌳','🌲','🌸','🌼','🌺','🪨'];
+    const count=2+Math.floor(Math.random()*3);
+    for(let j=0;j<count;j++){
+      decorations.push({
+        laneY:i,
+        gx:Math.random()*COLS,
+        emoji:items[Math.floor(Math.random()*items.length)],
+        scale:0.7+Math.random()*0.5,
+      });
+    }
+  });
+}
+
+// ===== メインループ =====
+function loop2(ts){
+  if(!gameRunning)return;
+  const dt=Math.min((ts-lastTime)/16.67,3);lastTime=ts;
+  update2(dt); draw2();
+  raf=requestAnimationFrame(loop2);
+}
+
+function update2(dt){
+  // ジャンプアニメーション
+  if(isJumping){
+    jumpProgress=Math.min(1,jumpProgress+0.13*dt);
+    // 放物線
+    const t=jumpProgress;
+    pRenderX=jumpFromX+(jumpTargetX-jumpFromX)*t;
+    pRenderY=jumpFromY+(jumpTargetY-jumpFromY)*t;
+    pJump=Math.sin(t*Math.PI)*LANE_W*0.6;
+    if(jumpProgress>=1){
+      isJumping=false;pJump=0;
+      pRenderX=jumpTargetX;pRenderY=jumpTargetY;
+      checkDeath();
+    }
+  }
+
+  // カメラ追従: pRenderYが常に画面の72%付近になるように
+  // screen = world + cameraY → cameraY = screen - world
+  const targetScreenY = H*0.72;
+  const targetCamY = targetScreenY - pRenderY;
+  cameraY += (targetCamY - cameraY) * 0.12 * dt;
+
+  // 乗り物更新
+  updateVehicles(dt);
+
+  // 丸太に乗っている場合、丸太と同じ速度で流れる
+  if(!isJumping&&onLog&&ridingLog){
+    // ridingLogはvehicles配列内のオブジェクトなので常に最新のx座標を持つ
+    // プレイヤーのx座標を丸太の速度分だけ動かす
+    pRenderX+=ridingLog.vx*dt*0.9;
+    px=pRenderX/LANE_W; // グリッド座標も同期
+    // 画面外チェック
+    if(pRenderX<-10||pRenderX>W+10)death('おぼれた！🌊');
+  }
+
+  // パーティクル
+  particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=0.3*dt;p.life-=dt;p.alpha=Math.max(0,p.life/p.maxLife);});
+  particles=particles.filter(p=>p.life>0);
+
+  // 線路警告
+  lanes.forEach(l=>{
+    if(l.type!=='rail')return;
+    l.railCooldown-=dt;
+    if(l.railCooldown<=0){
+      l.railCooldown=180+Math.random()*120;
+      l.railWarning=true;
+      setTimeout(()=>{
+        if(!gameRunning)return;
+        l.railWarning=false;
+        // 電車を追加
+        const dir=Math.random()<0.5?1:-1;
+        vehicles.push({
+          laneY:l.y, x:dir>0?-80:W+80,
+          vx:dir*14, emoji:'🚂', type:'rail', w:70,
+        });
+      },1800);
+    }
+  });
+}
+
+function updateVehicles(dt){
+  // 車・丸太を生成・移動（画面付近のみ）
+  lanes.forEach(l=>{
+    if(Math.abs(l.y-py)>12)return; // 遠いレーンはスキップ
+    if(l.type==='road'||l.type==='river'){
+      // このレーンの乗り物数
+      const myV=vehicles.filter(v=>v.laneY===l.y);
+      if(myV.length<4){
+        const spacing=l.type==='river'?l.logSpacing:l.carSpacing;
+        const lastV=myV.sort((a,b)=>(l.spd>0?b.x-a.x:a.x-b.x))[0];
+        const shouldSpawn=!lastV||
+          (l.spd>0&&lastV.x>spacing)||
+          (l.spd<0&&lastV.x<W-spacing);
+        if(shouldSpawn){
+          vehicles.push({
+            laneY:l.y,
+            x:l.spd>0?-60:W+60,
+            vx:l.spd*1.2,
+            emoji:l.type==='river'?'🪵':l.carEmoji,
+            type:l.type,
+            w:l.type==='river'?200:55, // 流木：横長で大きく
+          });
+        }
+      }
+    }
+  });
+
+  // 移動
+  vehicles.forEach(v=>v.x+=v.vx*dt*0.9);
+  // 画面外削除
+  vehicles=vehicles.filter(v=>v.x>-200&&v.x<W+200);
+
+  // 衝突チェック（ジャンプ中は判定しない）
+  if(!isJumping&&!deathCooldown){
+    const lane=lanes[py];
+    if(!lane)return;
+    // 道路・線路：車・電車との衝突
+    if(lane.type==='road'||lane.type==='rail'){
+      vehicles.filter(v=>v.laneY===py).forEach(v=>{
+        if(Math.abs(pRenderX-v.x)<v.w*0.45){
+          death(lane.type==='rail'?'でんしゃに はねられた！🚂':'くるまに はねられた！🚗');
+        }
+      });
+    }
+    // 川：丸太に乗っているか判定
+    if(lane.type==='river'){
+      const logs=vehicles.filter(v=>v.laneY===py&&v.type==='river');
+      // 丸太がまだ来ていない場合は少し待つ（grace期間）
+      if(logs.length===0){
+        // 丸太なし＝川に入ったばかり、少し猶予
+        if(!riverGraceTimer){
+          riverGraceTimer=setTimeout(()=>{
+            riverGraceTimer=null;
+            // 猶予後も丸太なしなら死
+            if(gameRunning&&!deathCooldown&&!isJumping){
+              const l2=vehicles.filter(v=>v.laneY===py&&v.type==='river');
+              if(!l2.some(v=>Math.abs(pRenderX-v.x)<v.w*0.42)){
+                death('おぼれた！🌊');
+              }
+            }
+          },600);
+        }
+        onLog=false;
+      } else {
+        // 丸太あり：乗っているか確認
+        const onALog=logs.some(v=>Math.abs(pRenderX-v.x)<v.w*0.42);
+        if(!onALog){
+          death('おぼれた！🌊');
+        }else{
+          onLog=true;
+          ridingLog=logs.find(v=>Math.abs(pRenderX-v.x)<v.w*0.42)||null;
+          if(riverGraceTimer){clearTimeout(riverGraceTimer);riverGraceTimer=null;}
+        }
+      }
+    }else{
+      onLog=false;
+      if(riverGraceTimer){clearTimeout(riverGraceTimer);riverGraceTimer=null;}
+    }
+  }
+}
+
+// ===== 入力 =====
+function setupInput(){
+  const el=cv;
+  el.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    tapX=e.touches[0].clientX;
+    tapY=e.touches[0].clientY;
+  },{passive:false});
+  el.addEventListener('touchend',e=>{
+    e.preventDefault();
+    const ex=e.changedTouches[0].clientX;
+    const ey=e.changedTouches[0].clientY;
+    handleTap(tapX,tapY,ex,ey);
+  },{passive:false});
+  // マウス
+  let msx=0,msy=0;
+  el.addEventListener('mousedown',e=>{msx=e.clientX;msy=e.clientY;});
+  el.addEventListener('mouseup',e=>{handleTap(msx,msy,e.clientX,e.clientY);});
+
+  document.getElementById('sbtn').addEventListener('click',startGame);
+  document.getElementById('sbtn').addEventListener('touchend',e=>{e.preventDefault();startGame();},{passive:false});
+}
+
+function handleTap(sx,sy,ex,ey){
+  if(!gameRunning||isJumping)return;
+  const dx=ex-sx,dy=ey-sy;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+
+  // スワイプ判定（20px以上）
+  if(dist>20){
+    const angle=Math.atan2(dy,dx);
+    if(Math.abs(angle)<Math.PI/4) movePlayer(1,0);       // 右スワイプ
+    else if(Math.abs(angle)>Math.PI*3/4) movePlayer(-1,0); // 左スワイプ
+    else if(angle<0) movePlayer(0,1);  // 上スワイプ→前進
+    else movePlayer(0,-1);             // 下スワイプ→後退
+    return;
+  }
+
+  // タップ：キャラの画面座標を基準に方向を判定
+  const charScreenX = pRenderX;
+  const charScreenY = pRenderY + cameraY;
+  const tdx = sx - charScreenX;
+  const tdy = sy - charScreenY;
+  const tDist = Math.sqrt(tdx*tdx+tdy*tdy);
+
+  if(tDist < 20){
+    // キャラ自身をタップ→前進
+    movePlayer(0,1);
+    return;
+  }
+
+  const angle = Math.atan2(tdy,tdx);
+  if(Math.abs(angle) < Math.PI/4) movePlayer(1,0);        // キャラの右→右
+  else if(Math.abs(angle) > Math.PI*3/4) movePlayer(-1,0); // キャラの左→左
+  else if(angle < 0) movePlayer(0,1);  // キャラの上→前進
+  else movePlayer(0,-1);               // キャラの下→後退
+}
+
+function movePlayer(dx,ddy){
+  if(isJumping)return;
+  const nx=px+dx;
+  const ny=py+ddy;
+  if(nx<0||nx>=COLS)return;
+  // 新しいY（前進＝py増加）
+  if(ddy<0&&py<=0)return; // 最下段より下には行けない
+  const newPy=Math.max(0,py+ddy);
+  px=Math.max(0,Math.min(COLS-1,nx));
+  const oldPy=py;
+  py=newPy;
+  // スコア更新（前進のみ）
+  if(ddy>0&&py>score){
+    score=py;
+    if(score>hiScore){hiScore=score;localStorage.setItem('crossing_hs2',hiScore);}
+    updateHUD();
+    showScorePop(`+1 🐾`,pRenderX,pRenderY-30);
+  }
+  // ジャンプアニメ開始
+  jumpFromX=pRenderX;jumpFromY=pRenderY;
+  jumpTargetX=px*LANE_W+LANE_W/2;
+  jumpTargetY=laneWorldY(py);
+  jumpProgress=0;isJumping=true;onLog=false;ridingLog=null;
+}
+
+
+function checkDeath(){
+  if(deathCooldown)return;
+  const lane=lanes[py];
+  if(!lane)return;
+  if(lane.type==='road'){
+    vehicles.filter(v=>v.laneY===py).forEach(v=>{
+      if(Math.abs(pRenderX-v.x)<v.w*0.45){
+        death('くるまに はねられた！🚗');
+      }
+    });
+  }
+  if(lane.type==='rail'){
+    vehicles.filter(v=>v.laneY===py).forEach(v=>{
+      if(Math.abs(pRenderX-v.x)<v.w*0.45){
+        death('でんしゃに はねられた！🚂');
+      }
+    });
+  }
+}
+
+function death(msg){
+  if(deathCooldown||!gameRunning)return;
+  deathCooldown=true;
+  lives--;
+  updateHUD();
+  // デスエフェクト
+  addParticles(pRenderX,pRenderY+cameraY,'#FF5252');
+  const df=document.createElement('div');df.className='death-flash';
+  document.getElementById('wrap').appendChild(df);setTimeout(()=>df.remove(),520);
+
+  if(lives<=0){
+    // ゲームオーバー
+    setTimeout(()=>{
+      gameRunning=false;
+      const hs=hiScore;
+      document.getElementById('go-emoji').textContent=msg.includes('おぼ')?'🌊':msg.includes('でん')?'🚂':'🚗';
+      document.getElementById('go-sub').innerHTML=`${msg}<br>すすんだ　${score} マス！`;
+      document.getElementById('go-score').textContent=`🐾 ${score} マス${score>=hs&&score>0?' 🏆 ベスト！':''}`;
+      document.getElementById('go-ov').classList.add('show');
+    },600);
+  } else {
+    // ライフが残っている：その場でリスポーン
+    setTimeout(()=>{
+      if(!gameRunning)return;
+      // 直前の草レーンまで戻す
+      let safeY=py;
+      while(safeY>0&&lanes[safeY]?.type!=='grass') safeY--;
+      py=safeY;
+      pRenderX=W/2;
+      pRenderY=laneWorldY(py);
+      jumpFromX=pRenderX;jumpFromY=pRenderY;
+      jumpTargetX=pRenderX;jumpTargetY=pRenderY;
+      jumpProgress=1;isJumping=false;pJump=0;
+      onLog=false;ridingLog=null;
+      deathCooldown=false;
+      if(riverGraceTimer){clearTimeout(riverGraceTimer);riverGraceTimer=null;}
+    },700);
+  }
+}
+
+// ===== 描画 =====
+function draw2(){
+  ctx.clearRect(0,0,W,H);
+  // world座標レイヤー（cameraYで全体をシフト）
+  ctx.save();
+  ctx.translate(0,cameraY);
+  drawLanes();
+  drawVehicles();
+  drawDecorations();
+  ctx.restore();
+  drawPlayer();
+  drawParticles();
+  drawWarnings();
+}
+
+// world座標系でのレーンY（カメラなし）
+function laneWorldY(laneY){
+  return H*0.72 - laneY*LANE_W;
+}
+
+function laneToScreen(laneY){
+  return laneWorldY(laneY);
+}
+
+function drawLanes(){
+  const lh=LANE_W;
+  lanes.forEach((l,i)=>{
+    const sy=laneToScreen(l.y);
+    const ssy=sy+cameraY; // screen座標
+    if(ssy>H+lh||ssy<-lh)return;
+    // レーン本体
+    ctx.fillStyle=l.color;
+    ctx.fillRect(0,sy,W,lh);
+    // レーン装飾
+    if(l.type==='grass'){
+      // 草のテクスチャ
+      ctx.fillStyle='rgba(255,255,255,0.06)';
+      for(let x=0;x<W;x+=18){
+        ctx.fillRect(x,sy+lh*0.7,3,lh*0.3);
+      }
+      // 草の明暗
+      ctx.fillStyle=i%2===0?'rgba(0,0,0,0.05)':'rgba(255,255,255,0.04)';
+      ctx.fillRect(0,sy,W,lh);
+    }
+    if(l.type==='road'){
+      // 道路の白線
+      ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=2;ctx.setLineDash([24,16]);
+      ctx.beginPath();ctx.moveTo(0,sy+lh/2);ctx.lineTo(W,sy+lh/2);ctx.stroke();
+      ctx.setLineDash([]);
+      // 縁石
+      ctx.fillStyle='rgba(255,255,255,0.15)';
+      ctx.fillRect(0,sy,W,3);ctx.fillRect(0,sy+lh-3,W,3);
+    }
+    if(l.type==='river'){
+      // 水の波
+      ctx.save();ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1.5;
+      for(let x=-40;x<W+40;x+=50){
+        const ox=(Date.now()*0.02*Math.sign(l.spd)+i*20)%50;
+        ctx.beginPath();ctx.moveTo(x+ox,sy+lh*0.3);
+        ctx.quadraticCurveTo(x+ox+12,sy+lh*0.15,x+ox+25,sy+lh*0.3);
+        ctx.quadraticCurveTo(x+ox+38,sy+lh*0.45,x+ox+50,sy+lh*0.3);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    if(l.type==='rail'){
+      // レール
+      ctx.strokeStyle='rgba(200,200,200,0.6)';ctx.lineWidth=3;ctx.setLineDash([]);
+      ctx.beginPath();ctx.moveTo(0,sy+lh*0.35);ctx.lineTo(W,sy+lh*0.35);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(0,sy+lh*0.65);ctx.lineTo(W,sy+lh*0.65);ctx.stroke();
+      ctx.strokeStyle='rgba(180,180,180,0.4)';ctx.lineWidth=2;
+      for(let x=0;x<W;x+=20){
+        ctx.beginPath();ctx.moveTo(x,sy+lh*0.25);ctx.lineTo(x,sy+lh*0.75);ctx.stroke();
+      }
+      // 警告
+      if(l.railWarning){
+        const alpha=Math.sin(Date.now()*0.01)*0.4+0.5;
+        ctx.fillStyle=`rgba(255,200,0,${alpha*0.3})`;
+        ctx.fillRect(0,sy,W,lh);
+        ctx.fillStyle=`rgba(255,200,0,${alpha})`;
+        ctx.font=`bold ${Math.round(lh*0.45)}px sans-serif`;
+        ctx.textAlign='center';ctx.fillText('⚠️ でんしゃ きます！',W/2,sy+lh*0.72);
+      }
+    }
+    // 現在いるレーンのハイライト
+    if(i===py&&!isJumping){
+      ctx.fillStyle='rgba(255,255,255,0.06)';ctx.fillRect(0,sy,W,lh);
+    }
+  });
+}
+
+function drawVehicles(){
+  const sz=LANE_W*0.88;
+  vehicles.forEach(v=>{
+    const sy=laneWorldY(v.laneY)+LANE_W/2; // world座標
+    ctx.save();
+    // 影
+    ctx.globalAlpha=0.2;ctx.fillStyle='#000';
+    ctx.beginPath();ctx.ellipse(v.x,sy+sz*0.35,sz*0.4,sz*0.12,0,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+    ctx.font=`${sz}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    // 車は進行方向に合わせてflip
+    if(v.vx<0){ctx.scale(-1,1);ctx.fillText(v.emoji,-v.x,sy);}
+    else ctx.fillText(v.emoji,v.x,sy);
+    ctx.restore();
+  });
+}
+
+function drawDecorations(){
+  decorations.forEach(d=>{
+    const sy=laneToScreen(d.laneY)+LANE_W*0.85;
+    if(sy+cameraY>H+60||sy+cameraY<-60)return;
+    const sz=LANE_W*d.scale*0.7;
+    ctx.font=`${sz}px "Apple Color Emoji","Segoe UI Emoji",serif`;
+    ctx.textAlign='center';ctx.textBaseline='bottom';
+    ctx.fillText(d.emoji,d.gx*LANE_W,sy);
+  });
+}
+
+function drawPlayer(){
+  const sz=LANE_W*1.1;
+  const drawX=pRenderX;
+  const drawY=pRenderY+cameraY-pJump; // world→screen変換
+  ctx.save();
+  // 影（ジャンプ中は着地点に）
+  ctx.globalAlpha=0.2;ctx.fillStyle='#000';
+  ctx.beginPath();ctx.ellipse(drawX,pRenderY+cameraY+LANE_W*0.3,sz*0.35*(1-pJump/LANE_W*0.5),sz*0.1,0,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
+  // キャラ
+  ctx.font=`${sz}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.shadowBlur=8;ctx.shadowColor='rgba(255,255,255,0.5)';
+  ctx.fillText(CHARS[selChar],drawX,drawY);
+  ctx.restore();
+}
+
+function drawParticles(){
+  particles.forEach(p=>{
+    ctx.save();ctx.globalAlpha=p.alpha;ctx.fillStyle=p.color;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  });
+}
+
+function drawWarnings(){
+  // 電車警告は drawLanes内で描画済み
+}
+
+function addParticles(x,y,color){
+  for(let i=0;i<14;i++){
+    const a=Math.random()*Math.PI*2,spd=3+Math.random()*5;
+    particles.push({x,y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd-3,
+      r:2+Math.random()*5,color,life:20,maxLife:20,alpha:1});
+  }
+}
+
+function showScorePop(text,x,y){
+  const el=document.createElement('div');el.className='sc-pop';
+  el.textContent=text;el.style.left=x+'px';el.style.top=y+'px';
+  document.getElementById('wrap').appendChild(el);
+  setTimeout(()=>el.remove(),850);
+}
+
+// ===== HUD =====
+function updateHUD(){
+  document.getElementById('hud-score').textContent=`🐾 ${score} マス`;
+  document.getElementById('hud-hi').textContent=`ベスト: ${hiScore} マス`;
+  document.getElementById('hud-life').textContent='❤️'.repeat(lives)+'🖤'.repeat(3-lives);
+}
+function updateHsDisp(){
+  const hs=parseInt(localStorage.getItem('crossing_hs2')||'0');
+  document.getElementById('ths').textContent=hs>0?`ベストきろく：🐾${hs}マス`:'';
+}
+
+
+
+
+function goBack(){
+  cancelAnimationFrame(raf);gameRunning=false;
+  if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');
+  else history.back();
+}
+
+setTimeout(init,80);
+
+
+
+// === 共通UI ===
+function goHome(){
+  if(window.parent!==window){window.parent.postMessage({type:'goHome'},'*');}
+  else{window.location.href='/';}
+}
+// ── BGM (WakuwakuBGM library) ──────────────────────
+let _bgm = null;
+
+function _startBGM() {
+  if (_bgm) return;
+  _bgm = new WakuwakuBGM('adventure');
+  const on = WakuwakuBGM.loadState();
+  _bgm.setEnabled(on);
+  if (on) _bgm.start();
+  _syncBgmBtn();
+}
+
+function toggleCommonBGM() {
+  if (!_bgm) { _startBGM(); return; }
+  const on = _bgm.toggle();
+  WakuwakuBGM.saveState(on);
+  _syncBgmBtn();
+}
+
+function _syncBgmBtn() {
+  const on = _bgm ? _bgm.enabled : WakuwakuBGM.loadState();
+  const btns = document.querySelectorAll(
+    '#bgm-btn,#ui-bgm-btn,#bgm-toggle,#sound-btn,.bgm-btn'
+  );
+  btns.forEach(b => { b.textContent = on ? '🔊' : '🔇'; });
+}
+
+// First interaction triggers BGM start
+(function(){
+  function _first(){ _startBGM(); }
+  document.addEventListener('click', _first, { once: true });
+  document.addEventListener('touchstart', _first, { once: true });
+})();
+// ── End BGM ────────────────────────────────────────
+</script>
+
+  <!-- 共通UIボタン -->
+
+</body>
+</html>

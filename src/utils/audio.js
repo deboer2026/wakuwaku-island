@@ -11,7 +11,7 @@ function _getCtx() {
 }
 
 // ===== State =====
-let isMuted = localStorage.getItem('wakuwaku_muted') === '1';
+let isMuted = typeof localStorage !== 'undefined' && localStorage.getItem('wakuwaku_muted') === '1';
 
 // Active BGM loop descriptor
 // { steps, loopDuration, type, active, timeout }

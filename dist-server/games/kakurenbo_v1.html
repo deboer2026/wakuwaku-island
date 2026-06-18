@@ -1,0 +1,595 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>どうぶつかくれんぼ</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'M PLUS Rounded 1c',sans-serif;user-select:none;}
+body{background:#2d5a1b;}
+#wrap{position:fixed;inset:0;overflow:hidden;}
+
+/* 背景レイヤー */
+#bg{position:absolute;inset:0;z-index:0;}
+.bg-layer{position:absolute;inset:0;}
+#sky{background:linear-gradient(180deg,#87CEEB 0%,#c8e6a0 60%,#5a9e2f 100%);}
+
+/* 光の粒子 */
+.sparkle{position:absolute;border-radius:50%;background:rgba(255,255,200,0.8);animation:twinkle 2s ease-in-out infinite;}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(0.5)}50%{opacity:1;transform:scale(1)}}
+
+/* 風のライン */
+.wind-line{position:absolute;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent);animation:windMove 3s ease-in-out infinite;}
+@keyframes windMove{0%{transform:translateX(-100px);opacity:0}50%{opacity:1}100%{transform:translateX(200px);opacity:0}}
+
+/* 木の揺れ */
+.tree-sway{animation:sway 3s ease-in-out infinite;}
+@keyframes sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+
+/* HUD */
+#hud{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  display:flex;flex-direction:column;gap:4px;
+  padding:max(10px,var(--sat,env(safe-area-inset-top,0px))) 12px 8px;
+  background:linear-gradient(180deg,rgba(0,60,0,0.75),rgba(0,60,0,0.4) 70%,transparent);
+  box-sizing:border-box;
+}
+.hud-nav-row{display:flex;justify-content:space-between;align-items:center;}
+.hud-status-row{display:flex;justify-content:space-between;align-items:center;}
+#hud-left{display:flex;flex-direction:column;gap:2px;}
+#stage-label{font-size:11px;font-weight:800;color:rgba(255,255,255,0.8);}
+#stage-name{font-size:14px;font-weight:900;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.4);}
+#hud-right{display:flex;gap:8px;align-items:center;}
+#timer-box{background:rgba(0,0,0,0.3);border-radius:12px;padding:4px 10px;display:flex;align-items:center;gap:4px;}
+#timer-icon{font-size:14px;}
+#timer{font-size:16px;font-weight:900;color:#fff;}
+#score-box{background:rgba(255,200,0,0.3);border-radius:12px;padding:4px 10px;}
+#score{font-size:16px;font-weight:900;color:#FFD700;text-shadow:0 1px 3px rgba(0,0,0,0.5);}
+#back-btn{background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.25);border-radius:14px;padding:5px 12px;font-size:13px;font-weight:700;color:white;cursor:pointer;font-family:inherit;}
+#ui-bgm-btn{background:rgba(0,0,0,0.3);border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+/* ターゲット表示 */
+#target-bar{position:fixed;top:90px;left:0;right:0;z-index:50;display:flex;justify-content:center;}
+#target-box{background:rgba(255,255,255,0.92);border-radius:24px;padding:6px 20px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 12px rgba(0,0,0,0.15);}
+#target-label{font-size:12px;font-weight:800;color:#5a9e2f;}
+#target-animal{font-size:28px;}
+#target-name{font-size:14px;font-weight:900;color:#2d5a1b;}
+#found-count{font-size:12px;font-weight:800;color:#999;margin-left:4px;}
+
+/* 進捗バー */
+#progress-bar{position:fixed;top:130px;left:20px;right:20px;z-index:50;height:6px;background:rgba(255,255,255,0.3);border-radius:3px;overflow:hidden;}
+#progress-fill{height:100%;background:linear-gradient(90deg,#FFD700,#FF8C00);border-radius:3px;transition:width 0.4s ease;}
+
+/* ゲームエリア */
+#game-area{position:fixed;top:145px;left:0;right:0;bottom:0;z-index:10;}
+
+/* オブジェクト */
+.obj{position:absolute;cursor:pointer;transition:transform 0.1s;transform-origin:bottom center;}
+.obj:active{transform:scale(0.92);}
+.obj-inner{position:relative;display:flex;flex-direction:column;align-items:center;}
+.obj-base{font-size:52px;display:block;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.2));}
+.animal{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:28px;opacity:0;transition:none;pointer-events:none;}
+
+/* ヒット演出 */
+.obj.hit .obj-base{animation:shake 0.15s ease;}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+
+/* 飛び出しアニメ */
+@keyframes popOut{
+  0%{opacity:0;transform:translateX(-50%) scale(0.3) translateY(20px);}
+  30%{opacity:1;transform:translateX(-50%) scale(1.4) translateY(-30px);}
+  50%{transform:translateX(-50%) scale(1.1) translateY(-40px);}
+  70%{transform:translateX(-50%) scale(1.3) translateY(-35px);}
+  100%{opacity:1;transform:translateX(-50%) scale(1.2) translateY(-45px);}
+}
+@keyframes popWrong{
+  0%{opacity:0;transform:translateX(-50%) scale(0.3);}
+  30%{opacity:1;transform:translateX(-50%) scale(1.3);}
+  60%{transform:translateX(-50%) scale(1.1);}
+  100%{opacity:1;transform:translateX(-50%) scale(1.0);}
+}
+.animal.show-correct{animation:popOut 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+.animal.show-wrong{animation:popWrong 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+
+/* パーティクル */
+#particles{position:absolute;inset:0;pointer-events:none;z-index:60;}
+.particle{position:absolute;border-radius:50%;pointer-events:none;animation:particleFly 0.8s ease-out forwards;}
+@keyframes particleFly{
+  0%{opacity:1;transform:translate(0,0) scale(1);}
+  100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0.3);}
+}
+
+/* ミス演出 */
+.wrong-x{position:absolute;font-size:36px;pointer-events:none;z-index:70;animation:wrongAnim 0.8s ease-out forwards;}
+@keyframes wrongAnim{0%{opacity:1;transform:scale(0.5)}20%{transform:scale(1.3)}100%{opacity:0;transform:scale(1) translateY(-30px)}}
+
+/* 正解ラベル */
+.correct-label{position:absolute;background:#FFD700;border-radius:20px;padding:2px 10px;font-size:13px;font-weight:900;color:#7a5000;pointer-events:none;z-index:70;white-space:nowrap;animation:labelPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+@keyframes labelPop{0%{opacity:0;transform:scale(0.5) translateY(10px)}100%{opacity:1;transform:scale(1) translateY(-50px)}}
+
+/* スタート画面 */
+#start-screen{position:absolute;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(45,90,27,0.95),rgba(20,60,5,0.98));}
+#start-title{font-size:32px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.4);margin-bottom:8px;}
+#start-sub{font-size:16px;color:rgba(255,255,255,0.8);margin-bottom:32px;}
+.stage-select-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;width:min(360px,90vw);margin-bottom:32px;}
+.stage-btn{background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.3);border-radius:16px;padding:10px 4px;cursor:pointer;text-align:center;transition:all 0.2s;}
+.stage-btn:hover,.stage-btn:active{background:rgba(255,255,255,0.25);border-color:#FFD700;transform:scale(1.05);}
+.stage-btn .s-num{font-size:18px;font-weight:900;color:#FFD700;display:block;}
+.stage-btn .s-name{font-size:9px;font-weight:800;color:rgba(255,255,255,0.7);display:block;margin-top:2px;}
+.stage-btn .s-diff{font-size:9px;color:rgba(255,255,200,0.6);display:block;}
+#start-btn{background:linear-gradient(135deg,#FFD700,#FF8C00);border:none;border-radius:32px;padding:14px 48px;font-size:20px;font-weight:900;color:#7a3000;cursor:pointer;box-shadow:0 4px 20px rgba(255,200,0,0.4);font-family:'M PLUS Rounded 1c',sans-serif;transition:transform 0.1s;}
+#start-btn:active{transform:scale(0.95);}
+.forest-deco{font-size:48px;margin-bottom:16px;animation:float 2s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* クリア画面 */
+#clear-screen{position:absolute;inset:0;z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(20,80,5,0.96),rgba(10,50,0,0.98));}
+#clear-title{font-size:48px;font-weight:900;color:#FFD700;text-shadow:0 2px 12px rgba(255,200,0,0.5);margin-bottom:8px;}
+#clear-stage{font-size:18px;color:rgba(255,255,255,0.8);margin-bottom:4px;}
+#clear-time{font-size:24px;font-weight:900;color:#fff;margin-bottom:4px;}
+#clear-best{font-size:14px;color:#FFD700;margin-bottom:32px;}
+.clear-animals{font-size:40px;margin-bottom:24px;letter-spacing:8px;}
+#next-btn{background:linear-gradient(135deg,#FFD700,#FF8C00);border:none;border-radius:32px;padding:12px 40px;font-size:18px;font-weight:900;color:#7a3000;cursor:pointer;margin-bottom:12px;font-family:'M PLUS Rounded 1c',sans-serif;}
+#retry-btn{background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.4);border-radius:32px;padding:10px 32px;font-size:16px;font-weight:800;color:#fff;cursor:pointer;font-family:'M PLUS Rounded 1c',sans-serif;}
+.star-row{font-size:32px;margin-bottom:16px;}
+
+/* ゲームオーバー */
+#gameover-screen{position:absolute;inset:0;z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(60,20,5,0.97),rgba(30,5,0,0.98));}
+#go-title{font-size:36px;font-weight:900;color:#FF6B6B;margin-bottom:16px;}
+#go-sub{font-size:16px;color:rgba(255,255,255,0.7);margin-bottom:32px;}
+#go-retry{background:linear-gradient(135deg,#FF6B6B,#FF4500);border:none;border-radius:32px;padding:12px 40px;font-size:18px;font-weight:900;color:#fff;cursor:pointer;margin-bottom:12px;font-family:'M PLUS Rounded 1c',sans-serif;}
+#go-home{background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.3);border-radius:32px;padding:10px 32px;font-size:16px;font-weight:800;color:#fff;cursor:pointer;font-family:'M PLUS Rounded 1c',sans-serif;}
+
+</style>
+<script src="/games/wakuwaku_bgm.js"></script>
+    <script src="/games/safe_area.js"></script>
+</head>
+<body>
+<div id="wrap">
+  <!-- 背景 -->
+  <div id="bg">
+    <div class="bg-layer" id="sky"></div>
+    <div id="wind-container"></div>
+    <div id="sparkle-container"></div>
+  </div>
+
+  <!-- パーティクル -->
+  <div id="particles"></div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-nav-row">
+      <button id="back-btn" onclick="goHome()">🏠 もどる</button>
+      <div id="ui-bgm-btn" onclick="toggleBGM()">🔊</div>
+    </div>
+    <div class="hud-status-row">
+      <div id="hud-left">
+        <span id="stage-label">ステージ</span>
+        <span id="stage-name">1 / 5</span>
+      </div>
+      <div id="hud-right">
+        <div id="timer-box">⏱ <span id="timer">--</span></div>
+        <div id="score-box"><span id="score">0pt</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ターゲット -->
+  <div id="target-bar">
+    <div id="target-box">
+      <span id="target-label">さがせ！</span>
+      <span id="target-animal">🐻</span>
+      <span id="target-name">くま</span>
+      <span id="found-count">0/0</span>
+    </div>
+  </div>
+
+  <!-- 進捗 -->
+  <div id="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
+
+  <!-- ゲームエリア -->
+  <div id="game-area"></div>
+
+  <!-- スタート画面 -->
+  <div id="start-screen">
+    <div class="forest-deco">🌳🐾🌿</div>
+    <div id="start-title">どうぶつかくれんぼ</div>
+    <div id="start-sub">かくれてる どうぶつを みつけよう！</div>
+    <div class="stage-select-grid" id="stage-grid"></div>
+    <button id="start-btn" onclick="startGame()">▶ あそぶ！</button>
+  </div>
+
+  <!-- クリア画面 -->
+  <div id="clear-screen">
+    <div class="star-row" id="star-row">⭐⭐⭐</div>
+    <div id="clear-title">クリア！🎉</div>
+    <div class="clear-animals" id="clear-animals"></div>
+    <div id="clear-stage"></div>
+    <div id="clear-time"></div>
+    <div id="clear-best"></div>
+    <button id="next-btn" onclick="nextStage()">つぎのステージ ▶</button>
+    <button id="retry-btn" onclick="retryStage()">もういちど</button>
+  </div>
+
+  <!-- ゲームオーバー -->
+  <div id="gameover-screen">
+    <div id="go-title">じかんぎれ⏰</div>
+    <div id="go-sub">もういちど チャレンジしよう！</div>
+    <button id="go-retry" onclick="retryStage()">もういちど！</button>
+    <button id="go-home" onclick="showStart()">ステージえらぶ</button>
+  </div>
+
+</div>
+
+<script>
+const STAGES=[
+  {name:'はじまりのもり',time:0,objs:6,animals:3,targets:1,diff:'かんたん'},
+  {name:'みどりのおか',time:45,objs:8,animals:4,targets:1,diff:'ふつう'},
+  {name:'ふかいもり',time:40,objs:10,animals:5,targets:2,diff:'ふつう'},
+  {name:'ひみつのいずみ',time:35,objs:12,animals:6,targets:2,diff:'むずかしい'},
+  {name:'まほうのもり',time:30,objs:14,animals:7,targets:3,diff:'さいなんかん'}
+];
+
+const ANIMALS=[
+  {emoji:'🐻',name:'くま'},
+  {emoji:'🦊',name:'きつね'},
+  {emoji:'🐰',name:'うさぎ'},
+  {emoji:'🐸',name:'かえる'},
+  {emoji:'🦔',name:'はりねずみ'},
+  {emoji:'🐿️',name:'りす'},
+  {emoji:'🦉',name:'ふくろう'},
+  {emoji:'🐺',name:'おおかみ'},
+  {emoji:'🦌',name:'しか'},
+  {emoji:'🐇',name:'しろうさぎ'}
+];
+
+const OBJ_TYPES=[
+  {emoji:'🌿',name:'くさむら',size:64},
+  {emoji:'🌳',name:'き',size:72},
+  {emoji:'🪨',name:'いわ',size:56},
+  {emoji:'🌸',name:'はな',size:52},
+  {emoji:'🍄',name:'きのこ',size:52},
+  {emoji:'🌾',name:'かや',size:60},
+  {emoji:'🌵',name:'しげみ',size:64},
+  {emoji:'🪵',name:'まるた',size:56}
+];
+
+const PARTICLE_COLORS=['#FFD700','#FF8C00','#FF6B6B','#4CAF50','#00BCD4','#E91E63','#9C27B0'];
+
+let currentStage=0,selectedStage=0,score=0,timeLeft=0,timerInterval=null;
+let objects=[],targets=[],foundTargets=[];
+let gameActive=false,stageStartTime=0;
+let audioCtx=null;
+
+// ── BGM (WakuwakuBGM library) ──────────────────────
+let _bgm = null;
+
+function initBGM() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  if (_bgm) return;
+  _bgm = new WakuwakuBGM('cute');
+  const on = WakuwakuBGM.loadState();
+  _bgm.setEnabled(on);
+  if (on) _bgm.start();
+  _syncBgmBtn();
+}
+
+function toggleBGM() {
+  if (!_bgm) { initBGM(); return; }
+  const on = _bgm.toggle();
+  WakuwakuBGM.saveState(on);
+  _syncBgmBtn();
+}
+
+function _syncBgmBtn() {
+  const on = _bgm ? _bgm.enabled : WakuwakuBGM.loadState();
+  const btns = document.querySelectorAll(
+    '#bgm-btn,#ui-bgm-btn,#bgm-toggle,#sound-btn,.bgm-btn'
+  );
+  btns.forEach(b => { b.textContent = on ? '🔊' : '🔇'; });
+}
+
+(function(){
+  function _first(){ initBGM(); }
+  document.addEventListener('click', _first, { once: true });
+  document.addEventListener('touchstart', _first, { once: true });
+})();
+// ── End BGM ────────────────────────────────────────
+
+function playSE(type){
+  if(!audioCtx)return;
+  const t=audioCtx.currentTime;
+  if(type==='correct'){
+    [523.3,659.3,783.9,1046.5].forEach((f,i)=>{
+      const o=audioCtx.createOscillator();
+      const g=audioCtx.createGain();
+      o.frequency.value=f;o.type='sine';
+      g.gain.setValueAtTime(0.3,t+i*0.08);
+      g.gain.linearRampToValueAtTime(0,t+i*0.08+0.15);
+      o.connect(g);g.connect(audioCtx.destination);
+      o.start(t+i*0.08);o.stop(t+i*0.08+0.2);
+    });
+  }else if(type==='wrong'){
+    [220,196].forEach((f,i)=>{
+      const o=audioCtx.createOscillator();
+      const g=audioCtx.createGain();
+      o.frequency.value=f;o.type='sawtooth';
+      g.gain.setValueAtTime(0.2,t+i*0.12);
+      g.gain.linearRampToValueAtTime(0,t+i*0.12+0.12);
+      o.connect(g);g.connect(audioCtx.destination);
+      o.start(t+i*0.12);o.stop(t+i*0.12+0.15);
+    });
+  }else if(type==='clear'){
+    [523.3,659.3,783.9,1046.5,1318.5].forEach((f,i)=>{
+      const o=audioCtx.createOscillator();
+      const g=audioCtx.createGain();
+      o.frequency.value=f;o.type='sine';
+      g.gain.setValueAtTime(0.35,t+i*0.1);
+      g.gain.linearRampToValueAtTime(0,t+i*0.1+0.3);
+      o.connect(g);g.connect(audioCtx.destination);
+      o.start(t+i*0.1);o.stop(t+i*0.1+0.35);
+    });
+  }
+}
+
+function buildStageButtons(){
+  const grid=document.getElementById('stage-grid');
+  grid.innerHTML='';
+  STAGES.forEach((s,i)=>{
+    const btn=document.createElement('div');
+    btn.className='stage-btn'+(i===selectedStage?' selected':'');
+    btn.innerHTML=`<span class="s-num">${i+1}</span><span class="s-name">${s.name}</span><span class="s-diff">${s.diff}</span>`;
+    btn.onclick=()=>{selectedStage=i;buildStageButtons();};
+    grid.appendChild(btn);
+  });
+}
+
+function showStart(){
+  clearInterval(timerInterval);gameActive=false;
+  document.getElementById('start-screen').style.display='flex';
+  document.getElementById('clear-screen').style.display='none';
+  document.getElementById('gameover-screen').style.display='none';
+  buildStageButtons();
+  buildBGDecorations();
+}
+
+function buildBGDecorations(){
+  const wc=document.getElementById('wind-container');
+  const sc=document.getElementById('sparkle-container');
+  wc.innerHTML='';sc.innerHTML='';
+  for(let i=0;i<5;i++){
+    const w=document.createElement('div');
+    w.className='wind-line';
+    w.style.cssText=`top:${20+i*15}%;width:${60+Math.random()*80}px;left:${Math.random()*60}%;animation-delay:${Math.random()*3}s;animation-duration:${2+Math.random()*2}s`;
+    wc.appendChild(w);
+  }
+  for(let i=0;i<12;i++){
+    const s=document.createElement('div');
+    s.className='sparkle';
+    s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*60}%;width:${3+Math.random()*4}px;height:${3+Math.random()*4}px;animation-delay:${Math.random()*2}s;animation-duration:${1.5+Math.random()*2}s`;
+    sc.appendChild(s);
+  }
+}
+
+function startGame(){
+  initBGM();
+  currentStage=selectedStage;
+  score=0;
+  buildStageButtons();
+  document.getElementById('start-screen').style.display='none';
+  loadStage(currentStage);
+}
+
+function loadStage(idx){
+  clearInterval(timerInterval);
+  gameActive=false;
+  const s=STAGES[idx];
+  document.getElementById('stage-name').textContent=`${idx+1} / ${STAGES.length}`;
+  document.getElementById('stage-label').textContent=s.name;
+  document.getElementById('score').textContent=score+'pt';
+  objects=[];targets=[];foundTargets=[];
+  const area=document.getElementById('game-area');
+  area.innerHTML='';
+  const W=window.innerWidth,H=window.innerHeight-130;
+  const shuffled=[...ANIMALS].sort(()=>Math.random()-0.5);
+  const targetAnimals=shuffled.slice(0,s.targets);
+  const otherAnimals=shuffled.slice(s.targets,s.targets+s.animals-s.targets);
+  targets=targetAnimals;
+  showTarget(0);
+  document.getElementById('found-count').textContent=`0/${targetAnimals.length}`;
+  const placed=[];
+  const shuffledObjs=[...OBJ_TYPES].sort(()=>Math.random()-0.5);
+  for(let i=0;i<s.objs;i++){
+    let x,y,tries=0;
+    do{
+      x=10+Math.random()*(W-80);
+      y=10+Math.random()*(H-100);
+      tries++;
+    }while(tries<30&&placed.some(p=>Math.hypot(p.x-x,p.y-y)<80));
+    placed.push({x,y});
+    const objType=shuffledObjs[i%shuffledObjs.length];
+    const div=document.createElement('div');
+    div.className='obj';
+    div.style.cssText=`left:${x}px;top:${y}px;`;
+    let animalInside=null;
+    if(i<targetAnimals.length){animalInside=targetAnimals[i];}
+    else if(i<targetAnimals.length+otherAnimals.length){animalInside=otherAnimals[i-targetAnimals.length];}
+    div.innerHTML=`<div class="obj-inner"><span class="obj-base">${objType.emoji}</span>${animalInside?`<span class="animal" data-animal='${JSON.stringify(animalInside)}'>${animalInside.emoji}</span>`:''}</div>`;
+    div.addEventListener('click',()=>onObjClick(div));
+    div.addEventListener('touchstart',(e)=>{e.preventDefault();onObjClick(div);},{passive:false});
+    area.appendChild(div);
+    objects.push({div,revealed:false,animalInside});
+  }
+  if(s.time>0){
+    timeLeft=s.time;
+    document.getElementById('timer').textContent=timeLeft+'s';
+    document.getElementById('timer-box').style.display='flex';
+    timerInterval=setInterval(()=>{
+      timeLeft--;
+      document.getElementById('timer').textContent=timeLeft+'s';
+      if(timeLeft<=10)document.getElementById('timer').style.color='#FF6B6B';
+      else document.getElementById('timer').style.color='#fff';
+      if(timeLeft<=0){clearInterval(timerInterval);showGameOver();}
+    },1000);
+  }else{
+    document.getElementById('timer-box').style.display='none';
+  }
+  updateProgress(0,targetAnimals.length);
+  stageStartTime=Date.now();
+  gameActive=true;
+}
+
+function showTarget(idx){
+  const t=targets[idx]||targets[0];
+  document.getElementById('target-animal').textContent=t.emoji;
+  document.getElementById('target-name').textContent=t.name;
+}
+
+function onObjClick(div){
+  if(!gameActive||div.dataset.revealed)return;
+  initBGM();
+  div.dataset.revealed='1';
+  const animalEl=div.querySelector('.animal');
+  if(!animalEl){
+    div.classList.add('hit');
+    setTimeout(()=>div.classList.remove('hit'),200);
+    return;
+  }
+  const animal=JSON.parse(animalEl.dataset.animal);
+  const isTarget=targets.some(t=>t.name===animal.name&&!foundTargets.includes(t.name));
+  animalEl.style.opacity='1';
+  if(isTarget){
+    animalEl.classList.add('show-correct');
+    foundTargets.push(animal.name);
+    score+=100;
+    document.getElementById('score').textContent=score+'pt';
+    playSE('correct');
+    spawnParticles(div);
+    showCorrectLabel(div,animal);
+    updateProgress(foundTargets.length,targets.length);
+    document.getElementById('found-count').textContent=`${foundTargets.length}/${targets.length}`;
+    if(foundTargets.length>=targets.length){
+      setTimeout(()=>showClear(),800);
+    }
+  }else{
+    animalEl.classList.add('show-wrong');
+    playSE('wrong');
+    showWrongMark(div);
+    div.style.filter='grayscale(60%)';
+  }
+}
+
+function spawnParticles(div){
+  const rect=div.getBoundingClientRect();
+  const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+  const container=document.getElementById('particles');
+  for(let i=0;i<12;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const angle=Math.random()*Math.PI*2;
+    const dist=40+Math.random()*60;
+    const dx=Math.cos(angle)*dist,dy=Math.sin(angle)*dist;
+    p.style.cssText=`left:${cx}px;top:${cy}px;width:8px;height:8px;background:${PARTICLE_COLORS[Math.floor(Math.random()*PARTICLE_COLORS.length)]};--dx:${dx}px;--dy:${dy}px;`;
+    container.appendChild(p);
+    setTimeout(()=>p.remove(),900);
+  }
+}
+
+function showCorrectLabel(div,animal){
+  const label=document.createElement('div');
+  label.className='correct-label';
+  label.textContent=`${animal.emoji} みつけた！`;
+  label.style.cssText=`left:${div.offsetLeft}px;top:${div.offsetTop}px;`;
+  document.getElementById('game-area').appendChild(label);
+  setTimeout(()=>label.remove(),900);
+}
+
+function showWrongMark(div){
+  const x=document.createElement('div');
+  x.className='wrong-x';
+  x.textContent='✕';
+  x.style.cssText=`left:${div.offsetLeft+div.offsetWidth/2-18}px;top:${div.offsetTop-10}px;`;
+  document.getElementById('game-area').appendChild(x);
+  setTimeout(()=>x.remove(),900);
+}
+
+function updateProgress(found,total){
+  const pct=total>0?(found/total*100):0;
+  document.getElementById('progress-fill').style.width=pct+'%';
+}
+
+function showClear(){
+  clearInterval(timerInterval);gameActive=false;
+  playSE('clear');
+  const elapsed=Math.floor((Date.now()-stageStartTime)/1000);
+  const s=STAGES[currentStage];
+  const bestKey=`kakurenbo_best_${currentStage}`;
+  const prev=parseInt(localStorage.getItem(bestKey)||'9999');
+  if(elapsed<prev)localStorage.setItem(bestKey,elapsed);
+  const stars=elapsed<(s.time*0.5||20)?3:elapsed<(s.time*0.8||35)?2:1;
+  document.getElementById('star-row').textContent='⭐'.repeat(stars)+'☆'.repeat(3-stars);
+  document.getElementById('clear-title').textContent=`クリア！🎉`;
+  document.getElementById('clear-stage').textContent=`ステージ ${currentStage+1}「${s.name}」`;
+  document.getElementById('clear-time').textContent=`⏱ ${elapsed}びょう`;
+  document.getElementById('clear-best').textContent=elapsed<=prev?`🏆 ベスト！`:`ベスト: ${prev}びょう`;
+  document.getElementById('clear-animals').textContent=targets.map(t=>t.emoji).join(' ');
+  const nextBtn=document.getElementById('next-btn');
+  if(currentStage>=STAGES.length-1){
+    nextBtn.textContent='🎊 ぜんぶクリア！';
+    nextBtn.onclick=showStart;
+  }else{
+    nextBtn.textContent='つぎのステージ ▶';
+    nextBtn.onclick=nextStage;
+  }
+  spawnClearParticles();
+  document.getElementById('clear-screen').style.display='flex';
+}
+
+function spawnClearParticles(){
+  const container=document.getElementById('particles');
+  for(let i=0;i<30;i++){
+    setTimeout(()=>{
+      const p=document.createElement('div');
+      p.className='particle';
+      const x=Math.random()*window.innerWidth;
+      const y=Math.random()*window.innerHeight*0.5+100;
+      const dx=(Math.random()-0.5)*120,dy=-80-Math.random()*120;
+      p.style.cssText=`left:${x}px;top:${y}px;width:10px;height:10px;background:${PARTICLE_COLORS[Math.floor(Math.random()*PARTICLE_COLORS.length)]};--dx:${dx}px;--dy:${dy}px;animation-duration:1s;`;
+      container.appendChild(p);
+      setTimeout(()=>p.remove(),1100);
+    },i*60);
+  }
+}
+
+function showGameOver(){
+  gameActive=false;
+  document.getElementById('gameover-screen').style.display='flex';
+}
+
+function nextStage(){
+  document.getElementById('clear-screen').style.display='none';
+  currentStage++;selectedStage=currentStage;
+  loadStage(currentStage);
+}
+
+function retryStage(){
+  document.getElementById('clear-screen').style.display='none';
+  document.getElementById('gameover-screen').style.display='none';
+  loadStage(currentStage);
+}
+
+function goHome(){
+  if(window.parent&&window.parent!==window){
+    window.parent.postMessage({type:'goHome'},'*');
+  }else{window.location.href='/';}
+}
+
+showStart();
+buildBGDecorations();
+</script>
+</body>
+</html>

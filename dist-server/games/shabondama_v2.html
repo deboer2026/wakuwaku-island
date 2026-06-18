@@ -1,0 +1,976 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>しゃぼんだまポン！</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'M PLUS Rounded 1c',sans-serif;user-select:none;}
+body{background:#87CEEB;}
+#wrap{position:fixed;inset:0;overflow:hidden;}
+canvas#cv{position:absolute;top:0;left:0;display:block;}
+
+/* DOM レイヤー（泡・エフェクト） */
+#dl{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden;z-index:5;}
+
+/* HUD */
+#hud{position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:max(10px,var(--sat,env(safe-area-inset-top,0px))) 12px 8px;
+  background:linear-gradient(180deg,rgba(0,0,0,0.75) 0%,rgba(0,0,0,0.4) 70%,transparent 100%);
+  box-sizing:border-box;}
+#hud-stage{font-size:13px;font-weight:800;color:white;text-shadow:0 1px 4px rgba(0,0,80,0.4);}
+#hud-score{font-size:18px;font-weight:900;color:white;text-shadow:0 1px 4px rgba(0,0,80,0.4);}
+#hud-life{font-size:16px;}
+
+/* クリア条件バー */
+#goal-bar{position:absolute;top:88px;left:12px;right:12px;z-index:20;pointer-events:none;}
+#goal-bg{height:8px;background:rgba(255,255,255,0.3);border-radius:4px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,80,0.2);}
+#goal-fill{height:100%;border-radius:4px;transition:width 0.3s ease;background:linear-gradient(90deg,#FFD700,#FF8C00);}
+#goal-label{font-size:10px;font-weight:800;color:rgba(255,255,255,0.85);text-shadow:0 1px 3px rgba(0,0,80,0.3);margin-bottom:3px;}
+
+/* コンボ表示 */
+#combo-disp{position:absolute;top:110px;right:12px;z-index:20;pointer-events:none;
+  font-size:15px;font-weight:900;color:#FFD700;text-shadow:0 0 10px rgba(255,215,0,0.6);
+  display:none;}
+
+/* もどるボタン */
+#back-btn{background:rgba(0,0,0,0.5);color:white;border:1px solid rgba(255,255,255,0.3);
+  border-radius:20px;padding:6px 14px;font-size:13px;font-weight:700;
+  cursor:pointer;pointer-events:all;font-family:inherit;}
+
+/* ポップアニメ */
+@keyframes popBurst{0%{transform:translate(-50%,-50%) scale(1);opacity:1;}100%{transform:translate(-50%,-50%) scale(2.5);opacity:0;}}
+.pop-burst{position:absolute;border-radius:50%;pointer-events:none;z-index:8;
+  animation:popBurst 0.35s ease-out forwards;}
+@keyframes scoreFloat{0%{transform:translateX(-50%) translateY(0);opacity:1;}100%{transform:translateX(-50%) translateY(-60px);opacity:0;}}
+.score-pop{position:absolute;font-size:16px;font-weight:900;color:white;
+  text-shadow:0 2px 6px rgba(0,0,80,0.5);pointer-events:none;z-index:9;
+  animation:scoreFloat 0.8s ease-out forwards;white-space:nowrap;}
+@keyframes missShake{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+
+/* ステージ名バナー */
+#stage-banner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:30;pointer-events:none;display:none;text-align:center;}
+@keyframes bannerPop{0%{transform:translate(-50%,-50%) scale(0.3);opacity:0;}50%{transform:translate(-50%,-50%) scale(1.15);}100%{transform:translate(-50%,-50%) scale(1);opacity:1;}}
+
+/* パワーアップ表示 */
+#power-disp{position:absolute;top:110px;left:12px;z-index:20;pointer-events:none;
+  font-size:11px;font-weight:800;background:rgba(255,255,255,0.3);
+  border-radius:10px;padding:3px 10px;color:white;display:none;
+  backdrop-filter:blur(4px);}
+
+/* オーバーレイ */
+.ov{position:absolute;inset:0;z-index:100;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:rgba(100,180,255,0.2);backdrop-filter:blur(12px);
+  opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.ov.show{opacity:1;pointer-events:all;}
+.ob{background:linear-gradient(160deg,rgba(255,255,255,0.92),rgba(220,240,255,0.95));
+  border-radius:24px;padding:24px 28px;text-align:center;max-width:300px;width:90%;
+  box-shadow:0 8px 32px rgba(100,150,255,0.3);}
+.ot{font-size:22px;font-weight:900;color:#1a3a8a;margin:8px 0 6px;}
+.os{font-size:12px;color:rgba(30,60,120,0.65);margin-bottom:12px;line-height:1.8;}
+.osc{font-size:34px;font-weight:900;color:#FF8C00;margin:6px 0;}
+.btn-blue{background:linear-gradient(135deg,#4488FF,#66AAFF);color:white;border:none;
+  border-radius:13px;padding:12px 26px;font-size:15px;font-weight:900;
+  cursor:pointer;font-family:inherit;margin:4px;box-shadow:0 4px 14px rgba(68,136,255,0.4);}
+.btn-ghost{background:rgba(100,150,255,0.15);border:1px solid rgba(100,150,255,0.3);
+  border-radius:13px;padding:10px 20px;font-size:13px;font-weight:700;
+  color:#3355aa;cursor:pointer;font-family:inherit;margin:4px;}
+
+/* タイトル */
+#ts{position:absolute;inset:0;z-index:200;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;-webkit-overflow-scrolling:touch;}
+#tsvg{position:absolute;inset:0;z-index:0;width:100%;height:100%;pointer-events:none;}
+#tc{position:relative;z-index:10;width:100%;display:flex;flex-direction:column;align-items:center;padding-bottom:var(--sab,env(safe-area-inset-bottom,0px));}
+@keyframes sh{0%{background-position:0%}100%{background-position:200%}}
+@keyframes bubbleFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+
+
+#common-bgm-btn{
+  position:fixed;
+  top:max(10px,var(--sat,env(safe-area-inset-top,0px)));
+  right:10px;z-index:1000;
+  background:rgba(0,0,0,0.45);
+  border:1.5px solid rgba(255,255,255,0.35);
+  border-radius:50%;width:40px;height:40px;
+  font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:white;
+}
+
+/* === safe-area & common buttons === */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+}
+#ui-bgm-btn {
+  width: 40px; height: 40px;
+  background: rgba(0,0,0,0.5);
+  border: 1.5px solid rgba(255,255,255,0.4);
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+#status-bar {
+  position: fixed;
+  top: calc(max(10px, var(--sat,env(safe-area-inset-top,0px))) + 44px);
+  left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 12px;
+  z-index: 99;
+  pointer-events: none;
+}
+
+/* === 横向き対応 === */
+@media (orientation: landscape) {
+  body { overflow-y: auto; }
+  #hud { top: max(6px, var(--sat,env(safe-area-inset-top,0px))); }
+  #status-bar { top: calc(max(6px, var(--sat,env(safe-area-inset-top,0px))) + 40px); }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  /* 横向き時にゲームエリアを縮小・スクロール対応 */
+  canvas { max-height: 100vh; }
+  #game-area { overflow-y: auto; }
+}
+</style>
+<script src="/games/wakuwaku_bgm.js"></script>
+    <script src="/games/safe_area.js"></script>
+</head>
+<body>
+
+<div id="wrap">
+  <canvas id="cv"></canvas>
+  <div id="dl"></div>
+
+  <div id="hud">
+    <button id="back-btn" onclick="goBack()">🏠 もどる</button>
+    <button id="ui-bgm-btn" onclick="toggleCommonBGM()">🔊</button>
+  </div>
+  <div id="status-bar">
+    <div id="hud-stage">ステージ 1</div>
+    <div id="hud-score">⭐ 0</div>
+    <div id="hud-life">❤️❤️❤️</div>
+  </div>
+  <div id="goal-bar">
+    <div id="goal-label">0 / 10 ポン！</div>
+    <div id="goal-bg"><div id="goal-fill" style="width:0%"></div></div>
+  </div>
+  <div id="combo-disp"></div>
+  <div id="power-disp"></div>
+  <div id="stage-banner"></div>
+
+
+  <!-- タイトル -->
+  <div id="ts">
+    <svg id="tsvg" viewBox="0 0 390 844" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="tsky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#4FC3F7"/>
+          <stop offset="50%" stop-color="#81D4FA"/>
+          <stop offset="100%" stop-color="#B3E5FC"/>
+        </linearGradient>
+        <linearGradient id="tground" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#A5D6A7"/>
+          <stop offset="100%" stop-color="#81C784"/>
+        </linearGradient>
+        <radialGradient id="bub1" cx="35%" cy="30%" r="65%">
+          <stop offset="0%" stop-color="rgba(255,255,255,0.9)"/>
+          <stop offset="60%" stop-color="rgba(180,220,255,0.5)"/>
+          <stop offset="100%" stop-color="rgba(100,180,255,0.2)"/>
+        </radialGradient>
+        <radialGradient id="bub2" cx="35%" cy="30%" r="65%">
+          <stop offset="0%" stop-color="rgba(255,255,255,0.85)"/>
+          <stop offset="60%" stop-color="rgba(255,200,220,0.5)"/>
+          <stop offset="100%" stop-color="rgba(255,150,200,0.2)"/>
+        </radialGradient>
+        <radialGradient id="bub3" cx="35%" cy="30%" r="65%">
+          <stop offset="0%" stop-color="rgba(255,255,255,0.85)"/>
+          <stop offset="60%" stop-color="rgba(200,255,200,0.5)"/>
+          <stop offset="100%" stop-color="rgba(100,220,100,0.2)"/>
+        </radialGradient>
+        <radialGradient id="bub4" cx="35%" cy="30%" r="65%">
+          <stop offset="0%" stop-color="rgba(255,255,255,0.85)"/>
+          <stop offset="60%" stop-color="rgba(255,240,180,0.5)"/>
+          <stop offset="100%" stop-color="rgba(255,200,50,0.2)"/>
+        </radialGradient>
+        <filter id="blur2"><feGaussianBlur stdDeviation="2"/></filter>
+        <filter id="shadow"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="rgba(100,150,255,0.25)"/></filter>
+      </defs>
+      <!-- 空 -->
+      <rect width="390" height="844" fill="url(#tsky)"/>
+      <!-- 雲 -->
+      <g opacity="0.85">
+        <ellipse cx="70" cy="120" rx="65" ry="28" fill="white"/>
+        <ellipse cx="45" cy="112" rx="38" ry="32" fill="white"/>
+        <ellipse cx="100" cy="110" rx="32" ry="26" fill="white"/>
+        <ellipse cx="280" cy="80" rx="55" ry="22" fill="white"/>
+        <ellipse cx="258" cy="73" rx="32" ry="26" fill="white"/>
+        <ellipse cx="308" cy="72" rx="28" ry="22" fill="white"/>
+        <ellipse cx="170" cy="155" rx="45" ry="18" fill="white" opacity="0.7"/>
+        <ellipse cx="150" cy="149" rx="26" ry="20" fill="white" opacity="0.7"/>
+        <ellipse cx="195" cy="148" rx="22" ry="18" fill="white" opacity="0.7"/>
+      </g>
+      <!-- 大きなしゃぼんだま群 -->
+      <!-- 青い泡 -->
+      <g filter="url(#shadow)">
+        <circle cx="80" cy="350" r="55" fill="url(#bub1)" stroke="rgba(150,210,255,0.6)" stroke-width="1.5"/>
+        <ellipse cx="65" cy="330" rx="18" ry="12" fill="rgba(255,255,255,0.5)" transform="rotate(-20,65,330)"/>
+        <circle cx="62" cy="326" r="6" fill="rgba(255,255,255,0.4)"/>
+        <text x="80" y="362" font-size="38" text-anchor="middle">🐱</text>
+      </g>
+      <!-- ピンクの泡 -->
+      <g filter="url(#shadow)">
+        <circle cx="290" cy="280" r="48" fill="url(#bub2)" stroke="rgba(255,180,210,0.6)" stroke-width="1.5"/>
+        <ellipse cx="276" cy="262" rx="15" ry="10" fill="rgba(255,255,255,0.5)" transform="rotate(-20,276,262)"/>
+        <text x="290" y="291" font-size="34" text-anchor="middle">🐰</text>
+      </g>
+      <!-- 緑の泡 -->
+      <g filter="url(#shadow)">
+        <circle cx="200" cy="420" r="40" fill="url(#bub3)" stroke="rgba(150,220,150,0.6)" stroke-width="1.5"/>
+        <ellipse cx="188" cy="405" rx="13" ry="8" fill="rgba(255,255,255,0.5)" transform="rotate(-20,188,405)"/>
+        <text x="200" y="430" font-size="28" text-anchor="middle">🐸</text>
+      </g>
+      <!-- 黄の泡 -->
+      <g filter="url(#shadow)">
+        <circle cx="330" cy="420" r="35" fill="url(#bub4)" stroke="rgba(255,220,100,0.6)" stroke-width="1.5"/>
+        <ellipse cx="320" cy="408" rx="11" ry="7" fill="rgba(255,255,255,0.5)" transform="rotate(-20,320,408)"/>
+        <text x="330" y="429" font-size="24" text-anchor="middle">🐼</text>
+      </g>
+      <!-- 小さな泡 -->
+      <circle cx="40" cy="500" r="22" fill="url(#bub1)" stroke="rgba(150,210,255,0.5)" stroke-width="1" opacity="0.8"/>
+      <circle cx="360" cy="340" r="18" fill="url(#bub2)" stroke="rgba(255,180,210,0.5)" stroke-width="1" opacity="0.8"/>
+      <circle cx="150" cy="300" r="15" fill="url(#bub3)" stroke="rgba(150,220,150,0.5)" stroke-width="1" opacity="0.7"/>
+      <circle cx="250" cy="480" r="20" fill="url(#bub4)" stroke="rgba(255,220,100,0.5)" stroke-width="1" opacity="0.7"/>
+      <circle cx="120" cy="470" r="12" fill="url(#bub1)" stroke="rgba(150,210,255,0.5)" stroke-width="1" opacity="0.6"/>
+      <!-- 草地 -->
+      <rect x="0" y="620" width="390" height="224" fill="url(#tground)"/>
+      <ellipse cx="195" cy="620" rx="220" ry="22" fill="#90C990"/>
+      <!-- 花 -->
+      <g font-size="28" text-anchor="middle">
+        <text x="40"  y="650">🌸</text>
+        <text x="100" y="645">🌼</text>
+        <text x="160" y="652">🌺</text>
+        <text x="230" y="646">🌷</text>
+        <text x="290" y="651">🌸</text>
+        <text x="350" y="644">🌼</text>
+      </g>
+      <!-- 木 -->
+      <text x="15"  y="625" font-size="50" text-anchor="middle">🌳</text>
+      <text x="375" y="622" font-size="50" text-anchor="middle">🌲</text>
+    </svg>
+
+    <div id="tc">
+      <div style="text-align:center;padding:0 20px 14px;background:linear-gradient(0deg,rgba(255,255,255,0.95) 50%,transparent);width:100%;">
+        <div style="font-size:38px;font-weight:900;background:linear-gradient(180deg,#1a5aff,#00aaff,#00ddff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 8px rgba(0,150,255,0.3));letter-spacing:2px;margin-bottom:2px;">しゃぼんだま</div>
+        <div style="font-size:38px;font-weight:900;background:linear-gradient(180deg,#ff44aa,#ff88cc,#ffaadd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 8px rgba(255,100,200,0.3));letter-spacing:2px;margin-bottom:6px;">ポン！</div>
+        <div style="font-size:10px;font-weight:700;color:rgba(50,100,200,0.6);letter-spacing:4px;">✦ BUBBLE POP ✦</div>
+      </div>
+      <div style="background:linear-gradient(160deg,rgba(255,255,255,0.95),rgba(220,240,255,0.95));border-radius:22px;padding:14px 18px 16px;max-width:300px;width:90%;box-shadow:0 8px 32px rgba(100,150,255,0.2);">
+        <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(100,180,255,0.1);border-radius:9px;padding:6px 10px;">
+            <span style="font-size:18px;">🫧</span><div><div style="font-size:11px;font-weight:800;color:#1a5aff;">しゃぼんだまを タップ！</div><div style="font-size:9px;color:rgba(30,60,120,0.5);">どうぶつが はいってるよ</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(100,180,255,0.1);border-radius:9px;padding:6px 10px;">
+            <span style="font-size:18px;">🔥</span><div><div style="font-size:11px;font-weight:800;color:#FF6600;">れんぞくで コンボ！</div><div style="font-size:9px;color:rgba(30,60,120,0.5);">つづけてポンするとボーナス！</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(100,180,255,0.1);border-radius:9px;padding:6px 10px;">
+            <span style="font-size:18px;">⭐</span><div><div style="font-size:11px;font-weight:800;color:#FF8C00;">ステージを クリアしよう！</div><div style="font-size:9px;color:rgba(30,60,120,0.5);">ぜんぶポンするとつぎへ！</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(100,180,255,0.1);border-radius:9px;padding:6px 10px;">
+            <span style="font-size:18px;">💎</span><div><div style="font-size:11px;font-weight:800;color:#AA44FF;">パワーアップも あるよ！</div><div style="font-size:9px;color:rgba(30,60,120,0.5);">ポンポン・じかんストップ・ビッグ</div></div>
+          </div>
+        </div>
+        <div id="ths" style="font-size:11px;text-align:center;color:rgba(100,150,200,0.7);margin-bottom:8px;"></div>
+        <button id="sbtn" style="width:100%;background:linear-gradient(135deg,#4488FF,#66AAFF,#4488FF);background-size:200%;animation:sh 2.5s infinite linear;color:white;border:none;border-radius:13px;padding:13px;font-size:17px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:2px;box-shadow:0 4px 16px rgba(68,136,255,0.4);pointer-events:all;">🫧 スタート！</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ステージクリア -->
+  <div class="ov" id="clear-ov">
+    <div class="ob">
+      <div style="font-size:44px;" id="clear-emoji">🎉</div>
+      <div class="ot" id="clear-title">ステージ1 クリア！</div>
+      <div class="os" id="clear-sub"></div>
+      <div class="osc" id="clear-score"></div>
+      <button class="btn-blue" id="next-btn">つぎへ ▶</button>
+    </div>
+  </div>
+  <!-- 全クリア -->
+  <div class="ov" id="ac-ov">
+    <div class="ob">
+      <div style="font-size:44px;">🏆</div>
+      <div class="ot">ぜんぶ クリア！！</div>
+      <div class="os" id="ac-sub"></div>
+      <div class="osc" id="ac-score"></div>
+      <button class="btn-blue" onclick="startGame()">もういちど</button>
+      <button class="btn-ghost" onclick="showTitle()">タイトルへ</button>
+    </div>
+  </div>
+  <!-- ゲームオーバー -->
+  <div class="ov" id="go-ov">
+    <div class="ob">
+      <div style="font-size:44px;">💦</div>
+      <div class="ot">ゲームオーバー</div>
+      <div class="os" id="go-sub"></div>
+      <div class="osc" id="go-score"></div>
+      <button class="btn-blue" onclick="startGame()">もういちど</button>
+      <button class="btn-ghost" onclick="showTitle()">タイトルへ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== ステージ設定 =====
+const STAGES=[
+  {num:1, goal:15, lives:3, spawnRate:28, maxBubbles:9,  speedMin:1.8, speedMax:2.5, name:'はじまり！',    missLimit:3},
+  {num:2, goal:22, lives:3, spawnRate:22, maxBubbles:11, speedMin:2.2, speedMax:3.0, name:'なれてきた？',  missLimit:3},
+  {num:3, goal:30, lives:3, spawnRate:18, maxBubbles:13, speedMin:2.6, speedMax:3.5, name:'もっとはやく！',missLimit:3},
+  {num:4, goal:38, lives:3, spawnRate:14, maxBubbles:15, speedMin:3.0, speedMax:4.0, name:'かなりはやい！',missLimit:3},
+  {num:5, goal:50, lives:3, spawnRate:10, maxBubbles:18, speedMin:3.5, speedMax:5.0, name:'さいきょう！',  missLimit:3},
+];
+const ANIMALS=['🐱','🐰','🦊','🐸','🐧','🐼','🐶','🐭','🐹','🐨','🐯','🦁'];
+const BUBBLE_COLORS=[
+  {fill:'rgba(180,220,255,0.45)',stroke:'rgba(100,180,255,0.7)',hl:'rgba(255,255,255,0.8)',tint:'#64B4FF'},
+  {fill:'rgba(255,200,220,0.45)',stroke:'rgba(255,130,180,0.7)',hl:'rgba(255,255,255,0.8)',tint:'#FF82B4'},
+  {fill:'rgba(200,255,200,0.45)',stroke:'rgba(100,200,100,0.7)',hl:'rgba(255,255,255,0.8)',tint:'#64C864'},
+  {fill:'rgba(255,240,180,0.45)',stroke:'rgba(220,180,50,0.7)', hl:'rgba(255,255,255,0.8)',tint:'#DCC832'},
+  {fill:'rgba(220,200,255,0.45)',stroke:'rgba(160,100,255,0.7)',hl:'rgba(255,255,255,0.8)',tint:'#A064FF'},
+];
+const POWERUPS=[
+  {type:'ponpon', emoji:'💥', label:'ポンポン！', color:'#FF6600', prob:0.06},
+  {type:'freeze', emoji:'❄️', label:'じかんストップ！', color:'#00AAFF', prob:0.05},
+  {type:'big',    emoji:'⬆️', label:'ビッグボーナス！', color:'#AA00FF', prob:0.05},
+];
+
+// ===== 状態 =====
+let W,H;
+let cloudX=0; // 雲スクロール
+let bgBubbles=[]; // 背景の装飾泡
+let stageIdx=0, score=0, popped=0, lives=3, combo=0, comboTimer=null;
+let bubbles=[], particles=[];
+let frameCount=0, spawnTimer=0;
+let gameRunning=false, paused=false;
+let powerType=null, powerTimer=null;
+let frozen=false, frozenTimer=null;
+let raf=null;
+
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+
+// ===== 初期化 =====
+function init(){
+  W=window.innerWidth; H=window.innerHeight;
+  cv.width=W; cv.height=H;
+  updateHsDisp();
+  document.getElementById('sbtn').addEventListener('click',startGame);
+  document.getElementById('sbtn').addEventListener('touchend',e=>{e.preventDefault();startGame();},{passive:false});
+  cv.addEventListener('touchstart',onTap,{passive:false});
+  cv.addEventListener('click',onTap);
+  window.addEventListener('resize',()=>{W=window.innerWidth;H=window.innerHeight;cv.width=W;cv.height=H;});
+}
+
+// ===== ゲーム開始 =====
+function startGame(){
+  document.getElementById('ts').style.display='none';
+  ['clear-ov','go-ov','ac-ov'].forEach(id=>document.getElementById(id).classList.remove('show'));
+  stageIdx=0; score=0;
+  if(raf)cancelAnimationFrame(raf);
+  setupStage();
+  gameRunning=true;
+  loop();
+}
+
+function showTitle(){
+  cancelAnimationFrame(raf); gameRunning=false;
+  document.getElementById('ts').style.display='flex';
+  ['clear-ov','go-ov','ac-ov'].forEach(id=>document.getElementById(id).classList.remove('show'));
+}
+
+function setupStage(){
+  const st=STAGES[stageIdx];
+  popped=0; lives=st.lives; combo=0; bubbles=[];
+  frozen=false; powerType=null;
+  spawnTimer=0; frameCount=0;
+  initBgBubbles();
+  clearTimeout(powerTimer); clearTimeout(comboTimer); clearTimeout(frozenTimer);
+  updateHUD(); updateGoalBar();
+  showStageBanner(st.name, st.num);
+}
+
+function nextStage(){
+  document.getElementById('clear-ov').classList.remove('show');
+  stageIdx++;
+  if(stageIdx>=STAGES.length){ endAllClear(); return; }
+  setupStage();
+}
+
+// ===== メインループ =====
+function loop(){
+  if(!gameRunning)return;
+  update(); draw();
+  raf=requestAnimationFrame(loop);
+}
+
+function update(){
+  frameCount++;
+  const st=STAGES[stageIdx];
+  // 雲スクロール
+  cloudX=(cloudX+0.3)%W;
+  // 背景泡
+  bgBubbles.forEach(b=>{
+    b.y-=b.vy; b.x+=b.vx; b.wobble+=0.02;
+    if(b.y+b.r<0){ b.y=H+b.r; b.x=Math.random()*W; }
+    if(b.x-b.r>W) b.x=-b.r;
+    if(b.x+b.r<0) b.x=W+b.r;
+  });
+
+  // スポーン
+  if(!frozen){
+    spawnTimer++;
+    if(spawnTimer>=st.spawnRate && bubbles.length<st.maxBubbles){
+      spawnTimer=0;
+      spawnBubble();
+    }
+  }
+
+  // 泡の移動
+  bubbles.forEach(b=>{
+    if(frozen)return;
+    b.x+=b.vx;
+    b.y+=b.vy;
+    // ゆらゆら
+    b.wobble+=0.05;
+    // 画面外（全方向）→ミス
+    const outLeft=b.x+b.r<-20;
+    const outRight=b.x-b.r>W+20;
+    const outTop=b.y+b.r<-20;
+    const outBottom=b.y-b.r>H+20;
+    if((outLeft||outRight||outTop||outBottom)&&!b.missed){
+      b.missed=true;
+      onMiss(b);
+    }
+  });
+  bubbles=bubbles.filter(b=>{
+    const outLeft=b.x+b.r<-40;
+    const outRight=b.x-b.r>W+40;
+    const outTop=b.y+b.r<-40;
+    const outBottom=b.y-b.r>H+40;
+    return !(outLeft||outRight||outTop||outBottom);
+  });
+
+  // パーティクル
+  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.15;p.life--;p.alpha=p.life/p.maxLife;});
+  particles=particles.filter(p=>p.life>0);
+}
+
+// ===== 背景泡初期化 =====
+function initBgBubbles(){
+  bgBubbles=[];
+  for(let i=0;i<12;i++){
+    bgBubbles.push({
+      x:Math.random()*W,
+      y:Math.random()*H*0.8,
+      r:8+Math.random()*20,
+      vy:0.2+Math.random()*0.4,
+      vx:(Math.random()-0.5)*0.3,
+      alpha:0.08+Math.random()*0.12,
+      wobble:Math.random()*Math.PI*2,
+      col:Math.floor(Math.random()*5),
+    });
+  }
+}
+
+// ===== スポーン =====
+function spawnBubble(){
+  const st=STAGES[stageIdx];
+  const r=Math.min(W,H)*(0.06+Math.random()*0.10); // 小〜大のバリエーション
+  const col=BUBBLE_COLORS[Math.floor(Math.random()*BUBBLE_COLORS.length)];
+  const animal=ANIMALS[Math.floor(Math.random()*ANIMALS.length)];
+  const spd=st.speedMin+Math.random()*(st.speedMax-st.speedMin);
+  // パワーアップ泡
+  let power=null;
+  const pr=Math.random();
+  let acc=0;
+  for(const p of POWERUPS){ acc+=p.prob; if(pr<acc){power=p;break;} }
+
+  // どの端から出るか（下60%・左20%・右20%）
+  const side=Math.random();
+  let bx,by,bvx,bvy;
+  if(side<0.6){
+    // 下から上へ
+    bx=r+Math.random()*(W-r*2);
+    by=H+r;
+    bvx=(Math.random()-0.5)*1.2;
+    bvy=-spd;
+  } else if(side<0.8){
+    // 左から右へ
+    bx=-r;
+    by=H*0.15+Math.random()*(H*0.7);
+    bvx=spd*0.9;
+    bvy=-(0.3+Math.random()*0.6);
+  } else {
+    // 右から左へ
+    bx=W+r;
+    by=H*0.15+Math.random()*(H*0.7);
+    bvx=-spd*0.9;
+    bvy=-(0.3+Math.random()*0.6);
+  }
+
+  bubbles.push({
+    x:bx, y:by,
+    r, col, animal, power,
+    vx:bvx, vy:bvy,
+    wobble:Math.random()*Math.PI*2,
+    missed:false,
+    _id:Math.random(),
+  });
+}
+
+// ===== タップ処理 =====
+function onTap(e){
+  e.preventDefault();
+  if(!gameRunning)return;
+  const touches=e.touches||[e];
+  for(const t of touches){
+    const cx2=t.clientX||t.x, cy2=t.clientY||t.y;
+    // 泡との当たり判定（大きめに判定、手前からチェック）
+    let hit=false;
+    for(let i=bubbles.length-1;i>=0;i--){
+      const b=bubbles[i];
+      const dx=cx2-b.x, dy=cy2-b.y;
+      if(Math.sqrt(dx*dx+dy*dy)<b.r*1.2){
+        popBubble(b,i,cx2,cy2);
+        hit=true;
+        break;
+      }
+    }
+  }
+}
+
+// ===== 泡をポップ =====
+function popBubble(b,idx,tx,ty){
+  bubbles.splice(idx,1);
+  popped++;
+  combo++;
+
+  // コンボリセットタイマー
+  clearTimeout(comboTimer);
+  comboTimer=setTimeout(()=>{combo=0;updateComboDisp();},1500);
+
+  // スコア計算
+  const comboMult=combo>=5?3:combo>=3?2:1;
+  let pts=10*comboMult;
+  if(powerType==='big') pts*=2;
+  score+=pts;
+
+  // パーティクル
+  addParticles(b.x,b.y,b.col.tint);
+
+  // ポップ演出（DOM）
+  showPopBurst(b.x,b.y,b.r,b.col.tint);
+  showScorePop(`+${pts}${combo>=3?` 🔥${combo}コンボ！`:''}`,b.x,b.y);
+
+  // パワーアップ処理
+  if(b.power){
+    activatePower(b.power);
+  }
+
+  // ポンポン（連鎖）
+  if(powerType==='ponpon'){
+    setTimeout(()=>{
+      const near=bubbles.slice().sort((a,b2)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y)-Math.abs(b2.x-b.x)-Math.abs(b2.y-b.y));
+      near.slice(0,3).forEach(nb=>{
+        const idx2=bubbles.indexOf(nb);
+        if(idx2>=0) popBubble(nb,idx2,nb.x,nb.y);
+      });
+    },100);
+  }
+
+  updateHUD(); updateGoalBar(); updateComboDisp();
+
+  // クリア判定
+  const st=STAGES[stageIdx];
+  if(popped>=st.goal){
+    setTimeout(()=>stageClear(),500);
+  }
+}
+
+// ===== ミス =====
+function onMiss(b){
+  lives--;
+  updateHUD();
+  combo=0; updateComboDisp();
+  // 画面シェイク（CSS）
+  cv.style.animation='none'; cv.offsetHeight;
+  cv.style.animation='missShake 0.3s ease';
+  if(lives<=0){
+    setTimeout(()=>endGameOver(),400);
+  }
+}
+
+// ===== パワーアップ =====
+function activatePower(p){
+  if(p.type==='freeze'){
+    frozen=true;
+    clearTimeout(frozenTimer);
+    frozenTimer=setTimeout(()=>{frozen=false;},3000);
+  }
+  powerType=p.type;
+  clearTimeout(powerTimer);
+  const dispEl=document.getElementById('power-disp');
+  dispEl.style.display='block';
+  dispEl.textContent=`${p.emoji} ${p.label}`;
+  dispEl.style.color=p.color;
+  powerTimer=setTimeout(()=>{
+    powerType=null;
+    dispEl.style.display='none';
+    if(p.type==='freeze')frozen=false;
+  },5000);
+}
+
+// ===== 描画（Canvas：背景のみ） =====
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  drawBg();
+  drawBubbles();
+  drawParticles();
+}
+
+function drawBg(){
+  // 空グラデ（昼の青空）
+  const sg=ctx.createLinearGradient(0,0,0,H);
+  sg.addColorStop(0,'#29B6F6');
+  sg.addColorStop(0.45,'#81D4FA');
+  sg.addColorStop(0.75,'#B3E5FC');
+  sg.addColorStop(1,'#C8F0C8');
+  ctx.fillStyle=sg;ctx.fillRect(0,0,W,H);
+
+  // 太陽
+  ctx.save();
+  const sunG=ctx.createRadialGradient(W*0.85,H*0.08,0,W*0.85,H*0.08,60);
+  sunG.addColorStop(0,'rgba(255,240,150,0.5)');sunG.addColorStop(1,'rgba(255,220,0,0)');
+  ctx.fillStyle=sunG;ctx.fillRect(W*0.7,0,W*0.3,H*0.2);
+  ctx.fillStyle='#FFE566';ctx.beginPath();ctx.arc(W*0.85,H*0.08,22,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#FFF9C4';ctx.beginPath();ctx.arc(W*0.85,H*0.08,16,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  // 背景の装飾泡（ふわふわ）
+  const bgCols=['rgba(150,210,255,','rgba(255,180,220,','rgba(180,255,180,','rgba(255,240,160,','rgba(210,180,255,'];
+  bgBubbles.forEach(b=>{
+    ctx.save();
+    ctx.globalAlpha=b.alpha;
+    const wx=Math.sin(b.wobble)*2;
+    const bg2=ctx.createRadialGradient(b.x+wx-b.r*0.3,b.y-b.r*0.3,1,b.x+wx,b.y,b.r);
+    bg2.addColorStop(0,'rgba(255,255,255,0.8)');
+    bg2.addColorStop(0.5,bgCols[b.col]+'0.4)');
+    bg2.addColorStop(1,'rgba(255,255,255,0.05)');
+    ctx.fillStyle=bg2;
+    ctx.beginPath();ctx.arc(b.x+wx,b.y,b.r,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=bgCols[b.col]+'0.5)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.arc(b.x+wx,b.y,b.r,0,Math.PI*2);ctx.stroke();
+    ctx.restore();
+  });
+
+  // 雲（スクロール）
+  const cColor=frozen?'rgba(200,230,255,0.92)':'rgba(255,255,255,0.88)';
+  drawCloud((cloudX+W*0.15)%W, H*0.11, 70, cColor);
+  drawCloud((cloudX+W*0.58)%(W+140)-70, H*0.07, 55, cColor);
+  drawCloud((cloudX*0.6+W*0.35)%W, H*0.19, 42, 'rgba(255,255,255,0.72)');
+  drawCloud((cloudX*0.4+W*0.75)%W, H*0.14, 36, 'rgba(255,255,255,0.65)');
+
+  // 草地（リッチ）
+  const gg=ctx.createLinearGradient(0,H*0.82,0,H);
+  gg.addColorStop(0,'#81C784');gg.addColorStop(0.4,'#66BB6A');gg.addColorStop(1,'#4CAF50');
+  ctx.fillStyle=gg;ctx.fillRect(0,H*0.82,W,H*0.18);
+  // 草のハイライト
+  ctx.fillStyle='#A5D6A7';
+  ctx.beginPath();ctx.ellipse(W/2,H*0.82,W*0.65,H*0.03,0,0,Math.PI*2);ctx.fill();
+  // 草の影
+  ctx.fillStyle='rgba(0,0,0,0.08)';
+  ctx.fillRect(0,H*0.82,W,4);
+
+  // 凍結エフェクト
+  if(frozen){
+    ctx.fillStyle='rgba(180,230,255,0.15)';ctx.fillRect(0,0,W,H);
+    ctx.save();ctx.strokeStyle='rgba(150,220,255,0.25)';ctx.lineWidth=1;ctx.setLineDash([4,8]);
+    for(let i=0;i<6;i++){ctx.beginPath();ctx.moveTo(0,H*i*0.18);ctx.lineTo(W,H*i*0.18);ctx.stroke();}
+    ctx.setLineDash([]);ctx.restore();
+    // 雪の結晶エフェクト
+    ctx.fillStyle='rgba(200,240,255,0.4)';
+    for(let i=0;i<8;i++){
+      const fx=(i*137+frameCount)%W;
+      const fy=((i*97+frameCount*0.5))%H;
+      ctx.beginPath();ctx.arc(fx,fy,3,0,Math.PI*2);ctx.fill();
+    }
+  }
+}
+
+function drawCloud(x,y,r,color){
+  ctx.save();ctx.fillStyle=color;
+  ctx.beginPath();ctx.ellipse(x,y,r,r*0.4,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(x-r*0.4,y+4,r*0.55,r*0.38,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(x+r*0.4,y+4,r*0.5,r*0.34,0,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+
+function drawBubbles(){
+  // 影を先に描画（奥から）
+  bubbles.forEach(b=>{
+    ctx.save();ctx.globalAlpha=0.12;ctx.fillStyle='#005588';
+    ctx.beginPath();ctx.ellipse(b.x+4,b.y+6,b.r*0.85,b.r*0.3,0,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  });
+
+  bubbles.forEach(b=>{
+    ctx.save();
+    const wx=Math.sin(b.wobble)*3;
+    const wy=Math.cos(b.wobble*0.7)*1.5;
+
+    // ===== 虹色のアウトライン =====
+    const rainbow=ctx.createLinearGradient(b.x+wx-b.r,b.y-b.r,b.x+wx+b.r,b.y+b.r);
+    rainbow.addColorStop(0,'rgba(255,100,100,0.7)');
+    rainbow.addColorStop(0.2,'rgba(255,200,50,0.7)');
+    rainbow.addColorStop(0.4,'rgba(100,255,100,0.7)');
+    rainbow.addColorStop(0.6,'rgba(50,200,255,0.7)');
+    rainbow.addColorStop(0.8,'rgba(150,100,255,0.7)');
+    rainbow.addColorStop(1,'rgba(255,100,200,0.7)');
+    ctx.strokeStyle=rainbow;ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(b.x+wx,b.y+wy,b.r,0,Math.PI*2);ctx.stroke();
+
+    // ===== 泡本体（3層グラデ） =====
+    // 外層
+    const grad1=ctx.createRadialGradient(b.x+wx,b.y+wy,b.r*0.7,b.x+wx,b.y+wy,b.r);
+    grad1.addColorStop(0,'rgba(255,255,255,0)');
+    grad1.addColorStop(1,b.col.fill.replace('0.45','0.25'));
+    ctx.fillStyle=grad1;
+    ctx.beginPath();ctx.arc(b.x+wx,b.y+wy,b.r,0,Math.PI*2);ctx.fill();
+    // 内層（中心が明るい）
+    const grad2=ctx.createRadialGradient(b.x+wx-b.r*0.25,b.y+wy-b.r*0.25,0,b.x+wx,b.y+wy,b.r*0.9);
+    grad2.addColorStop(0,'rgba(255,255,255,0.45)');
+    grad2.addColorStop(0.4,b.col.fill);
+    grad2.addColorStop(1,'rgba(200,230,255,0.05)');
+    ctx.fillStyle=grad2;
+    ctx.beginPath();ctx.arc(b.x+wx,b.y+wy,b.r,0,Math.PI*2);ctx.fill();
+
+    // ===== 内側の細い縁 =====
+    ctx.strokeStyle=b.col.stroke;ctx.lineWidth=1.2;ctx.globalAlpha=0.6;
+    ctx.beginPath();ctx.arc(b.x+wx,b.y+wy,b.r*0.94,0,Math.PI*2);ctx.stroke();
+    ctx.globalAlpha=1;
+
+    // ===== ハイライト（大・小） =====
+    // 大ハイライト
+    ctx.fillStyle='rgba(255,255,255,0.55)';
+    ctx.beginPath();
+    ctx.ellipse(b.x+wx-b.r*0.28,b.y+wy-b.r*0.3,b.r*0.25,b.r*0.15,Math.PI*-0.35,0,Math.PI*2);
+    ctx.fill();
+    // 小ハイライト（点）
+    ctx.fillStyle='rgba(255,255,255,0.75)';
+    ctx.beginPath();ctx.arc(b.x+wx-b.r*0.32,b.y+wy-b.r*0.35,b.r*0.07,0,Math.PI*2);ctx.fill();
+    // 下部の反射
+    ctx.fillStyle='rgba(255,255,255,0.15)';
+    ctx.beginPath();
+    ctx.ellipse(b.x+wx+b.r*0.2,b.y+wy+b.r*0.3,b.r*0.15,b.r*0.08,Math.PI*0.3,0,Math.PI*2);
+    ctx.fill();
+
+    // ===== 動物絵文字 =====
+    const sz=Math.round(b.r*1.15);
+    ctx.font=`${sz}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.globalAlpha=0.92;
+    ctx.fillText(b.power?b.power.emoji:b.animal, b.x+wx, b.y+wy+b.r*0.04);
+
+    ctx.restore();
+  });
+}
+
+function drawParticles(){
+  particles.forEach(p=>{
+    ctx.save();ctx.globalAlpha=p.alpha;
+    ctx.fillStyle=p.color;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  });
+}
+
+// ===== パーティクル =====
+function addParticles(x,y,color){
+  const colors=[color,'rgba(255,255,255,0.9)',color,'rgba(255,240,100,0.9)',color];
+  for(let i=0;i<16;i++){
+    const a=(i/16)*Math.PI*2+Math.random()*0.3;
+    const spd=3+Math.random()*6;
+    particles.push({
+      x,y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd-3,
+      r:2+Math.random()*5,
+      color:colors[i%colors.length],
+      life:22,maxLife:22,alpha:1,
+    });
+  }
+  // 中心の白い閃光
+  for(let i=0;i<5;i++){
+    const a=Math.random()*Math.PI*2;
+    particles.push({
+      x,y,vx:Math.cos(a)*(1+Math.random()*2),vy:Math.sin(a)*(1+Math.random()*2)-1,
+      r:5+Math.random()*6,color:'rgba(255,255,255,0.8)',
+      life:10,maxLife:10,alpha:1,
+    });
+  }
+}
+
+// ===== DOM演出 =====
+function showPopBurst(x,y,r,color){
+  const el=document.createElement('div');
+  el.className='pop-burst';
+  el.style.cssText=`left:${x}px;top:${y}px;width:${r*2}px;height:${r*2}px;background:radial-gradient(circle,${color}88,${color}22);`;
+  document.getElementById('dl').appendChild(el);
+  setTimeout(()=>el.remove(),380);
+}
+
+function showScorePop(text,x,y){
+  const el=document.createElement('div');
+  el.className='score-pop';
+  el.textContent=text;
+  el.style.left=x+'px';el.style.top=y+'px';
+  document.getElementById('dl').appendChild(el);
+  setTimeout(()=>el.remove(),850);
+}
+
+function showStageBanner(name,num){
+  const el=document.getElementById('stage-banner');
+  el.innerHTML=`<div style="font-size:28px;font-weight:900;color:#1a5aff;text-shadow:0 2px 8px rgba(0,100,255,0.3);white-space:nowrap;">ステージ ${num}</div><div style="font-size:18px;font-weight:800;color:#FF6600;text-shadow:0 2px 6px rgba(255,100,0,0.3);">${name}</div>`;
+  el.style.display='block';
+  el.style.animation='none';el.offsetHeight;
+  el.style.animation='bannerPop 0.5s ease-out forwards';
+  setTimeout(()=>el.style.display='none',2000);
+}
+
+// ===== HUD =====
+function updateHUD(){
+  const st=STAGES[stageIdx];
+  document.getElementById('hud-stage').textContent=`ステージ ${st.num}`;
+  document.getElementById('hud-score').textContent=`⭐ ${score}`;
+  document.getElementById('hud-life').textContent='❤️'.repeat(lives)+'🖤'.repeat(st.lives-lives);
+}
+function updateGoalBar(){
+  const st=STAGES[stageIdx];
+  const pct=Math.min(100,(popped/st.goal)*100);
+  document.getElementById('goal-fill').style.width=pct+'%';
+  document.getElementById('goal-label').textContent=`${popped} / ${st.goal} ポン！`;
+}
+function updateComboDisp(){
+  const el=document.getElementById('combo-disp');
+  if(combo>=2){el.style.display='block';el.textContent=`🔥 ${combo}コンボ！`;}
+  else el.style.display='none';
+}
+
+// ===== クリア・ゲームオーバー =====
+function stageClear(){
+  gameRunning=false;
+  const st=STAGES[stageIdx];
+  const isLast=stageIdx>=STAGES.length-1;
+  document.getElementById('clear-emoji').textContent=isLast?'🌟':'🎉';
+  document.getElementById('clear-title').textContent=`ステージ ${st.num} クリア！`;
+  document.getElementById('clear-sub').innerHTML=`⭐ ${popped}ポン！${isLast?'<br>ぜんぶ クリア！！':''}`;
+  document.getElementById('clear-score').textContent=`⭐ ${score} てん`;
+  const btn=document.getElementById('next-btn');
+  if(isLast){btn.textContent='🏆 ぜんぶクリア！';btn.onclick=()=>endAllClear();}
+  else{btn.textContent=`ステージ ${st.num+1} へ ▶`;btn.onclick=()=>{document.getElementById('clear-ov').classList.remove('show');stageIdx++;setupStage();gameRunning=true;loop();};}
+  document.getElementById('clear-ov').classList.add('show');
+}
+
+function endAllClear(){
+  const hs=getHs(),isNew=score>hs;if(isNew)saveHs(score);
+  document.getElementById('clear-ov').classList.remove('show');
+  document.getElementById('ac-sub').innerHTML='ぜんステージ クリア！';
+  document.getElementById('ac-score').textContent=`⭐ ${score} てん${isNew?' 🏆':''}`;
+  document.getElementById('ac-ov').classList.add('show');
+}
+
+function endGameOver(){
+  gameRunning=false;
+  const hs=getHs(),isNew=score>hs;if(isNew)saveHs(score);
+  document.getElementById('go-sub').innerHTML=`ステージ ${STAGES[stageIdx].num}　${popped}ポン`;
+  document.getElementById('go-score').textContent=`⭐ ${score} てん${isNew?' 🏆':''}`;
+  document.getElementById('go-ov').classList.add('show');
+}
+
+function getHs(){return parseInt(localStorage.getItem('shabondama_hs')||'0');}
+function saveHs(s){localStorage.setItem('shabondama_hs',s);}
+function updateHsDisp(){const hs=getHs();document.getElementById('ths').textContent=hs>0?`ハイスコア：⭐${hs}`:''}
+
+
+
+
+function goBack(){
+  cancelAnimationFrame(raf);gameRunning=false;
+  if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');
+  else history.back();
+}
+
+// 確実な初期化
+function _safeInit(){
+  if(document.readyState==='complete'){
+    setTimeout(init,100);
+  } else {
+    window.addEventListener('load',()=>setTimeout(init,100),{once:true});
+  }
+}
+_safeInit();
+
+
+
+// === 共通UI ===
+function goHome(){
+  if(window.parent!==window){window.parent.postMessage({type:'goHome'},'*');}
+  else{window.location.href='/';}
+}
+// ── BGM (WakuwakuBGM library) ──────────────────────
+let _bgm = null;
+
+function _startBGM() {
+  if (_bgm) return;
+  _bgm = new WakuwakuBGM('cute');
+  const on = WakuwakuBGM.loadState();
+  _bgm.setEnabled(on);
+  if (on) _bgm.start();
+  _syncBgmBtn();
+}
+
+function toggleCommonBGM() {
+  if (!_bgm) { _startBGM(); return; }
+  const on = _bgm.toggle();
+  WakuwakuBGM.saveState(on);
+  _syncBgmBtn();
+}
+
+function _syncBgmBtn() {
+  const on = _bgm ? _bgm.enabled : WakuwakuBGM.loadState();
+  const btns = document.querySelectorAll(
+    '#bgm-btn,#ui-bgm-btn,#bgm-toggle,#sound-btn,.bgm-btn'
+  );
+  btns.forEach(b => { b.textContent = on ? '🔊' : '🔇'; });
+}
+
+// First interaction triggers BGM start
+(function(){
+  function _first(){ _startBGM(); }
+  document.addEventListener('click', _first, { once: true });
+  document.addEventListener('touchstart', _first, { once: true });
+})();
+// ── End BGM ────────────────────────────────────────
+</script>
+
+  <!-- 共通UIボタン -->
+
+</body>
+</html>
