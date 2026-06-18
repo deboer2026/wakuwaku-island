@@ -1,0 +1,28 @@
+const GAME_META = {
+  '/shabondama':      { name: 'シャボンだまポン',         desc: 'とんでくるシャボン玉をタップして割ろう！',                    category: 'アクション' },
+  '/kudamono-catch':  { name: 'くだものキャッチ',          desc: 'おちてくるくだものをキャッチしよう！',                        category: 'アクション' },
+  '/meiro':           { name: 'めいろあそび',              desc: 'めいろをとおってゴールをめざせ！',                            category: 'パズル' },
+  '/doubutsu-puzzle': { name: 'どうぶつパズル',            desc: 'どうぶつをならべてパズルをとこう！',                          category: 'パズル' },
+  '/kazu-asobi':      { name: 'かずあそび',                desc: 'かずをかぞえてたのしくまなぼう！',                            category: 'かずあそび' },
+  '/animal-soccer':   { name: 'どうぶつサッカー',          desc: 'どうぶつたちとサッカーをしよう！',                            category: 'アクション' },
+  '/sushi':           { name: 'さーもん',                  desc: 'かいてんずし！サーモンだけタップしよう！',                    category: 'アクション' },
+  '/ichigo':          { name: 'いちご',                    desc: '30びょうでいちごをあつめよう！',                              category: 'アクション' },
+  '/kakurenbo':       { name: 'どうぶつかくれんぼ',        desc: 'くさむらやきのうらにどうぶつがかくれているよ！',              category: 'パズル' },
+  '/moji':            { name: 'もじあそび',                desc: 'えをみてただしいひらがなをえらんでね！',                      category: 'もじあそび' },
+  '/tashizan':        { name: 'たしざんゲーム',            desc: 'どうぶつをかぞえてこたえをえらんでね！',                      category: 'かずあそび' },
+  '/iro':             { name: 'いろあわせ',                desc: 'いろをまぜるとなんいろになるかな？',                          category: 'パズル' },
+  '/machi':           { name: 'わくわくまちづくり',        desc: 'じぶんだけのすてきなまちをつくろう！',                        category: 'そうぞう' },
+  '/kokki':           { name: 'こっきクイズ',              desc: 'せかいのこっきをみわけよう！30かこく以上！',                  category: 'クイズ' },
+  '/jewelry-master':  { name: 'ジュエリーマスター',        desc: 'おきゃくさんのリクエストにこたえてほうせきをえらぼう！',      category: 'そうぞう' },
+  '/tetris':          { name: 'どうぶつブロック',          desc: 'ブロックをならべてラインをけそう！テトリス風ゲーム！',        category: 'パズル' },
+  '/runner':          { name: 'どうぶつランナー',          desc: 'タップでジャンプ！2かいジャンプもできるよ！障害物をよけて走れ！', category: 'レース' },
+  '/shooting':        { name: 'どうぶつシューティング',    desc: 'てきをたおしてボスをやっつけろ！',                            category: 'アクション' },
+  '/sniper':          { name: 'どうぶつスナイパー',        desc: 'うごくどうぶつをタップでねらえ！フェイクに注意！',            category: 'アクション' },
+  '/crossing':        { name: 'どうぶつクロッシング',      desc: 'みちをわたってどこまでいけるかな？くるまに気をつけて！',      category: 'レース' },
+  '/mori':            { name: 'もりのなかまたち',          desc: 'もりをとびこえてゴールをめざせ！',                            category: 'アクション' },
+  '/sora':            { name: 'そらとびプリンセス',        desc: 'そらをとんでてきをたおそう！',                                category: 'アクション' },
+  '/bike':            { name: 'わくわくバイク',            desc: 'バイクでコースをはしりぬけろ！',                              category: 'レース' },
+  '/kart':            { name: 'アニマルカートGP',          desc: '6ひきのどうぶつでレース！スーファミ風の3Dカートゲーム。',    category: 'レース' },
+};
+
+export default GAME_META;

@@ -1,5 +1,7 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
+import GameSEO from './seo/GameSEO'
+import GAME_META from './seo/gameMeta'
 import TopPage from './pages/TopPage'
 import Shabondama from './games/Shabondama'
 import KudamonoCatch from './games/KudamonoCatch'
@@ -29,6 +31,17 @@ import AnimalKart from './games/AnimalKart'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 import { recordRecentGame } from './utils/recentGames'
+
+function GameWithSEO({ route, children }) {
+  const meta = GAME_META[route];
+  if (!meta) return children;
+  return (
+    <>
+      <GameSEO route={route} {...meta} />
+      {children}
+    </>
+  );
+}
 
 // ゲームルートの一覧（トップ・プライバシー等は除外）
 const GAME_ROUTES = new Set([
@@ -60,40 +73,40 @@ export default function App() {
       <RouteTracker />
       <Routes>
         <Route path="/" element={<TopPage />} />
-        <Route path="/shabondama" element={<Shabondama />} />
-        <Route path="/kudamono-catch" element={<KudamonoCatch />} />
-        <Route path="/meiro" element={<Meiro />} />
-        <Route path="/doubutsu-puzzle" element={<DoubutsuPuzzle />} />
-        <Route path="/kazu-asobi" element={<KazuAsobi />} />
-        <Route path="/animal-soccer" element={<AnimalSoccer />} />
-        <Route path="/sushi" element={<SushiGame />} />
-        <Route path="/ichigo" element={<IchigoGame />} />
-        <Route path="/kakurenbo" element={<DoubutsuKakurenbo />} />
-        <Route path="/moji" element={<MojiAsobi />} />
-        <Route path="/tashizan" element={<TashizanGame />} />
-        <Route path="/iro" element={<IroAwase />} />
-        <Route path="/machi" element={<MachiDukuri />} />
+        <Route path="/shabondama" element={<GameWithSEO route="/shabondama"><Shabondama /></GameWithSEO>} />
+        <Route path="/kudamono-catch" element={<GameWithSEO route="/kudamono-catch"><KudamonoCatch /></GameWithSEO>} />
+        <Route path="/meiro" element={<GameWithSEO route="/meiro"><Meiro /></GameWithSEO>} />
+        <Route path="/doubutsu-puzzle" element={<GameWithSEO route="/doubutsu-puzzle"><DoubutsuPuzzle /></GameWithSEO>} />
+        <Route path="/kazu-asobi" element={<GameWithSEO route="/kazu-asobi"><KazuAsobi /></GameWithSEO>} />
+        <Route path="/animal-soccer" element={<GameWithSEO route="/animal-soccer"><AnimalSoccer /></GameWithSEO>} />
+        <Route path="/sushi" element={<GameWithSEO route="/sushi"><SushiGame /></GameWithSEO>} />
+        <Route path="/ichigo" element={<GameWithSEO route="/ichigo"><IchigoGame /></GameWithSEO>} />
+        <Route path="/kakurenbo" element={<GameWithSEO route="/kakurenbo"><DoubutsuKakurenbo /></GameWithSEO>} />
+        <Route path="/moji" element={<GameWithSEO route="/moji"><MojiAsobi /></GameWithSEO>} />
+        <Route path="/tashizan" element={<GameWithSEO route="/tashizan"><TashizanGame /></GameWithSEO>} />
+        <Route path="/iro" element={<GameWithSEO route="/iro"><IroAwase /></GameWithSEO>} />
+        <Route path="/machi" element={<GameWithSEO route="/machi"><MachiDukuri /></GameWithSEO>} />
         {/* ── URL エイリアス ── */}
-        <Route path="/kudamono"   element={<KudamonoCatch />} />
-        <Route path="/puzzle"     element={<DoubutsuPuzzle />} />
-        <Route path="/kazu"       element={<KazuAsobi />} />
-        <Route path="/soccer"     element={<AnimalSoccer />} />
-        <Route path="/moji-asobi" element={<MojiAsobi />} />
-        <Route path="/iro-awase"  element={<IroAwase />} />
-        <Route path="/flag-quiz"  element={<KokkiQuiz />} />
-        <Route path="/shoot"      element={<DoubutsuShoot />} />
-        <Route path="/tetris"   element={<DoubutsuBlock />} />
-        <Route path="/runner"   element={<DoubutsuRunner />} />
-        <Route path="/shooting" element={<DoubutsuShoot />} />
-        <Route path="/sniper"   element={<DoubutsuSniper />} />
-        <Route path="/crossing" element={<DoubutsuCrossing />} />
-        <Route path="/kokki"          element={<KokkiQuiz />} />
-        <Route path="/jewelry-master" element={<JewelryMaster />} />
+        <Route path="/kudamono"   element={<GameWithSEO route="/kudamono-catch"><KudamonoCatch /></GameWithSEO>} />
+        <Route path="/puzzle"     element={<GameWithSEO route="/doubutsu-puzzle"><DoubutsuPuzzle /></GameWithSEO>} />
+        <Route path="/kazu"       element={<GameWithSEO route="/kazu-asobi"><KazuAsobi /></GameWithSEO>} />
+        <Route path="/soccer"     element={<GameWithSEO route="/animal-soccer"><AnimalSoccer /></GameWithSEO>} />
+        <Route path="/moji-asobi" element={<GameWithSEO route="/moji"><MojiAsobi /></GameWithSEO>} />
+        <Route path="/iro-awase"  element={<GameWithSEO route="/iro"><IroAwase /></GameWithSEO>} />
+        <Route path="/flag-quiz"  element={<GameWithSEO route="/kokki"><KokkiQuiz /></GameWithSEO>} />
+        <Route path="/shoot"      element={<GameWithSEO route="/shooting"><DoubutsuShoot /></GameWithSEO>} />
+        <Route path="/tetris"   element={<GameWithSEO route="/tetris"><DoubutsuBlock /></GameWithSEO>} />
+        <Route path="/runner"   element={<GameWithSEO route="/runner"><DoubutsuRunner /></GameWithSEO>} />
+        <Route path="/shooting" element={<GameWithSEO route="/shooting"><DoubutsuShoot /></GameWithSEO>} />
+        <Route path="/sniper"   element={<GameWithSEO route="/sniper"><DoubutsuSniper /></GameWithSEO>} />
+        <Route path="/crossing" element={<GameWithSEO route="/crossing"><DoubutsuCrossing /></GameWithSEO>} />
+        <Route path="/kokki"          element={<GameWithSEO route="/kokki"><KokkiQuiz /></GameWithSEO>} />
+        <Route path="/jewelry-master" element={<GameWithSEO route="/jewelry-master"><JewelryMaster /></GameWithSEO>} />
         <Route path="/dressup"        element={<DressUp />} />
-        <Route path="/mori" element={<MoriGame />} />
-        <Route path="/sora" element={<SoraGame />} />
-        <Route path="/bike" element={<BikeGame />} />
-        <Route path="/kart" element={<AnimalKart />} />
+        <Route path="/mori" element={<GameWithSEO route="/mori"><MoriGame /></GameWithSEO>} />
+        <Route path="/sora" element={<GameWithSEO route="/sora"><SoraGame /></GameWithSEO>} />
+        <Route path="/bike" element={<GameWithSEO route="/bike"><BikeGame /></GameWithSEO>} />
+        <Route path="/kart" element={<GameWithSEO route="/kart"><AnimalKart /></GameWithSEO>} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms"   element={<TermsPage />} />
       </Routes>
