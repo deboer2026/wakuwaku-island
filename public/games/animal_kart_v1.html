@@ -16,8 +16,8 @@
   canvas { position:absolute; inset:0; width:100%; height:100%; image-rendering:pixelated;
     image-rendering:crisp-edges; background:#000; display:block; }
 
-  /* overlay controls */
-  .ctl { position:absolute; bottom:calc(14px + var(--sab, env(safe-area-inset-bottom, 0px))); display:flex; gap:10px; z-index:50; }
+  /* overlay controls (fixed to viewport corners) */
+  .ctl { position:fixed; bottom:calc(14px + var(--sab, env(safe-area-inset-bottom, 0px))); display:flex; gap:10px; z-index:60; }
   #leftPad { left:calc(14px + var(--sal, env(safe-area-inset-left, 0px))); }
   #rightPad { right:calc(14px + var(--sar, env(safe-area-inset-right, 0px))); }
   .btn { width:62px; height:62px; border-radius:14px; border:3px solid rgba(255,255,255,.65);
@@ -28,10 +28,10 @@
   #brakeBtn { background:rgba(190,60,60,.5); border-color:#ffb0b0; font-size:13px; }
 
   /* fixed home / bgm (project standard) */
-  #homeBtn, #bgmBtn { position:fixed; top:calc(10px + var(--sat, env(safe-area-inset-top, 0px))); width:42px; height:42px; border-radius:10px;
+  #bgmBtn { position:fixed; top:calc(10px + var(--sat, env(safe-area-inset-top, 0px))); width:42px; height:42px; border-radius:10px;
     border:2px solid rgba(255,255,255,.6); background:rgba(20,24,40,.55); color:#fff;
     font-size:18px; z-index:9999; touch-action:manipulation; display:flex; align-items:center; justify-content:center; }
-  #homeBtn { left:calc(10px + var(--sal, env(safe-area-inset-left, 0px))); } #bgmBtn { right:calc(10px + var(--sar, env(safe-area-inset-right, 0px))); }
+  #bgmBtn { right:calc(10px + var(--sar, env(safe-area-inset-right, 0px))); }
 
   /* menu overlays */
   .panel { position:absolute; inset:0; z-index:80; display:flex; flex-direction:column;
@@ -50,6 +50,14 @@
   .resultRow { font-size:11px; line-height:2.1; }
   .me { color:#ffe14d; }
   .footnote { font-size:8px; color:#8aa0c0; line-height:1.8; }
+
+  /* rotate-to-landscape hint */
+  #rotate { position:fixed; inset:0; z-index:99999; display:none; flex-direction:column;
+    align-items:center; justify-content:center; gap:18px; text-align:center; padding:24px;
+    background:#0c0e16; color:#fff; font-size:14px; line-height:1.9; }
+  #rotate .ph { font-size:54px; animation:tilt 1.4s ease-in-out infinite; }
+  @keyframes tilt { 0%,100%{transform:rotate(0)} 50%{transform:rotate(90deg)} }
+  body.portrait #rotate { display:flex; }
 </style>
 </head>
 <body>
@@ -93,10 +101,15 @@
   </div>
 </div>
 
-<button id="homeBtn">🏠</button>
 <button id="bgmBtn">🔊</button>
 
+<div id="rotate">
+  <div class="ph">📱</div>
+  <div>よこむきに<br>してね</div>
+</div>
+
 <script src="safe_area.js"></script>
+<script src="wakuwaku_bgm.js"></script>
 <script>
 (() => {
 "use strict";
@@ -141,15 +154,15 @@ function radialControls(cx,cy,radii){
 
 // ---------- courses ----------
 const COURSES = [
-  { name:'みどりサーキット', diff:'★☆☆ かんたん', road:96,
+  { name:'みどりサーキット', diff:'★☆☆ かんたん', road:140,
     radii:[360,380,340,360,380,350,360,375,345,360,380,350],
     pal:{ grass:'#3a9d3a', grass2:'#2f8a2f', road:'#6f6f78', edge:'#34343c', center:'#e8e85a',
           skyTop:'#3f95ff', skyBot:'#bfe8ff' } },
-  { name:'サンセットビーチ', diff:'★★☆ ふつう', road:88,
+  { name:'サンセットビーチ', diff:'★★☆ ふつう', road:124,
     radii:[300,400,260,380,300,420,250,360,300,410,270,380],
     pal:{ grass:'#e2c578', grass2:'#d2ad5c', road:'#7d7064', edge:'#463a2e', center:'#fff0c0',
           skyTop:'#ff7a3a', skyBot:'#ffd98e' } },
-  { name:'こおりサーキット', diff:'★★★ むずかしい', road:78,
+  { name:'こおりサーキット', diff:'★★★ むずかしい', road:110,
     radii:[260,400,230,360,250,420,210,340,250,400,220,360],
     pal:{ grass:'#e0eaf2', grass2:'#ccdcea', road:'#90a4b4', edge:'#4a5a66', center:'#ffffff',
           skyTop:'#5fa8e0', skyBot:'#cfeeff' } },
@@ -296,18 +309,24 @@ function nearestProg(x,z,hint){
   if(hint===undefined){} return bi;
 }
 function onRoad(x,z,i){ const p=centerline[i]; const d=Math.hypot(p[0]-x,p[1]-z); return d<roadHalf+4; }
-// invisible wall: keep racer inside the road
+// invisible wall: keep racer inside the road, but SLIDE along it (no dead stop)
 function clampToRoad(r){
   let bi=0,best=1e9;
   for(let i=0;i<CN;i++){ const p=centerline[i]; const dx=p[0]-r.x, dz=p[1]-r.z; const d=dx*dx+dz*dz; if(d<best){best=d;bi=i;} }
   const p=centerline[bi];
   let dx=r.x-p[0], dz=r.z-p[1];
   const dist=Math.hypot(dx,dz)||0.0001;
-  const limit=roadHalf-6;
+  const limit=roadHalf-8;
   if(dist>limit){
-    r.x=p[0]+dx/dist*limit;
-    r.z=p[1]+dz/dist*limit;
-    r.speed*=0.6;            // scrape the wall: lose speed
+    const nx=dx/dist, nz=dz/dist;          // outward normal
+    r.x=p[0]+nx*limit; r.z=p[1]+nz*limit;   // push back onto edge
+    // slide: remove the velocity component pointing into the wall
+    let vx=Math.sin(r.heading)*r.speed, vz=Math.cos(r.heading)*r.speed;
+    const into=vx*nx+vz*nz;                 // >0 means heading into wall
+    if(into>0){ vx-=into*nx; vz-=into*nz; }
+    const ns=Math.hypot(vx,vz);
+    if(ns>1){ r.heading=Math.atan2(vx,vz); r.speed=ns*0.85; } // keep sliding, mild scrub
+    else { r.speed*=0.85; }
   }
 }
 
@@ -467,19 +486,17 @@ function drawMinimap(){
 let last=performance.now();
 function loop(now){
   let dt=(now-last)/1000; last=now; if(dt>0.05)dt=0.05;
+  if(!document.body.classList.contains('portrait')){
   if(state==='countdown'){
     countdown-=dt; raceTime=0;
     renderFrame(); drawCountdown();
-    if(countdown<=0){ state='race'; }
+    if(countdown<=0){ state='race'; beep(880,0.18); }
   } else if(state==='race'){
     raceTime+=dt;
     for(const r of racers) updateRacer(r,dt);
     renderFrame();
-    if(player.finished && finishOrder.length>=racers.length-1){
-      // let remaining finish quickly then show result
-    }
     if(player.finished){ endRaceSoon(); }
-    updateEngine();
+  }
   }
   requestAnimationFrame(loop);
 }
@@ -525,28 +542,20 @@ function showResult(){
   showPanel('resultPanel');
 }
 
-// ---------- engine sound ----------
-let actx=null, osc=null, gain=null, bgmOn=true;
+// ---------- audio (shared WakuwakuBGM, racing theme) ----------
+let bgm=null, sfx=null;
+let bgmOn = (typeof WakuwakuBGM!=='undefined' && WakuwakuBGM.loadState) ? WakuwakuBGM.loadState() : true;
 function initAudio(){
-  if(actx) return;
-  try{ actx=new (window.AudioContext||window.webkitAudioContext)();
-    osc=actx.createOscillator(); gain=actx.createGain();
-    osc.type='sawtooth'; osc.frequency.value=80; gain.gain.value=0;
-    osc.connect(gain); gain.connect(actx.destination); osc.start();
-  }catch(e){}
-}
-function updateEngine(){
-  if(!actx||!osc) return;
-  const target = bgmOn? clamp(player.speed/MAX_ON,0,1):0;
-  osc.frequency.setTargetAtTime(70+target*180, actx.currentTime,0.08);
-  gain.gain.setTargetAtTime(bgmOn? 0.04+target*0.05 : 0, actx.currentTime,0.1);
+  if(typeof WakuwakuBGM!=='undefined' && !bgm){ try{ bgm=new WakuwakuBGM('racing'); }catch(e){} }
+  if(!sfx){ try{ sfx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if(bgm && bgmOn){ try{ bgm.start(); }catch(e){} }
 }
 function beep(freq,dur){
-  if(!actx||!bgmOn) return;
-  const o=actx.createOscillator(),g=actx.createGain();
+  if(!sfx||!bgmOn) return;
+  const o=sfx.createOscillator(),g=sfx.createGain();
   o.type='square'; o.frequency.value=freq; g.gain.value=0.08;
-  o.connect(g); g.connect(actx.destination); o.start();
-  g.gain.setTargetAtTime(0,actx.currentTime+dur*0.6,0.05); o.stop(actx.currentTime+dur);
+  o.connect(g); g.connect(sfx.destination); o.start();
+  g.gain.setTargetAtTime(0,sfx.currentTime+dur*0.6,0.05); o.stop(sfx.currentTime+dur);
 }
 
 // ---------- UI wiring ----------
@@ -569,11 +578,11 @@ document.getElementById('startBtn').onclick=()=>{ initAudio(); state='select'; s
 document.getElementById('retryBtn').onclick=()=>{ startRace(courseIdx); };
 document.getElementById('backBtn').onclick=()=>{ state='select'; showPanel('coursePanel');
   document.getElementById('leftPad').classList.add('hidden'); document.getElementById('rightPad').classList.add('hidden'); };
-document.getElementById('homeBtn').onclick=()=>{
-  try{ if(window.parent && window.parent!==window){ window.parent.postMessage({type:'goBack'},'*'); return; } }catch(e){}
-  state='title'; showPanel('titlePanel');
-  document.getElementById('leftPad').classList.add('hidden'); document.getElementById('rightPad').classList.add('hidden'); };
-document.getElementById('bgmBtn').onclick=()=>{ bgmOn=!bgmOn; document.getElementById('bgmBtn').textContent=bgmOn?'🔊':'🔇'; };
+document.getElementById('bgmBtn').onclick=()=>{
+  bgmOn=!bgmOn;
+  if(bgm){ try{ bgm.toggle(); }catch(e){} }
+  if(typeof WakuwakuBGM!=='undefined' && WakuwakuBGM.saveState) WakuwakuBGM.saveState(bgmOn);
+  document.getElementById('bgmBtn').textContent=bgmOn?'🔊':'🔇'; };
 
 // touch/mouse controls
 function hold(id,key){
@@ -599,6 +608,16 @@ addEventListener('keyup',e=>{
   if(e.key==='ArrowUp'||e.key==='w')input.a=false;
   if(e.key==='ArrowDown'||e.key==='s')input.b=false;
 });
+
+// orientation: prompt landscape on portrait phones
+function checkOrient(){
+  const portrait = window.innerHeight > window.innerWidth && Math.min(window.innerWidth,window.innerHeight) < 600;
+  document.body.classList.toggle('portrait', portrait);
+}
+addEventListener('resize',checkOrient); addEventListener('orientationchange',checkOrient); checkOrient();
+
+// when embedded in the site, the React wrapper provides the もどる button → hide our 🏠
+document.getElementById('bgmBtn').textContent = bgmOn?'🔊':'🔇';
 
 buildCourseList();
 showPanel('titlePanel');

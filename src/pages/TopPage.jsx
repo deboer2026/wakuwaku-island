@@ -613,7 +613,7 @@ const GAME_SVGS = {
 /* ════════════════════════════════════════════════════
    ① 更新日時（手動で更新する定数）
 ════════════════════════════════════════════════════ */
-const LAST_UPDATE_DATE = '2026-05-18';
+const LAST_UPDATE_DATE = '2026-06-19';
 
 function getDaysSinceUpdate() {
   return Math.floor((new Date() - new Date(LAST_UPDATE_DATE)) / 86400000);
@@ -1258,7 +1258,7 @@ export default function TopPage() {
           </button>
         </div>
         <div style={{ marginTop: 6, fontSize: 11, color: 'rgba(0,0,0,0.28)', display:'flex', justifyContent:'center', gap:12 }}>
-          <span>© 2025 Wakuwaku Island</span>
+          <span>© 2026 Wakuwaku Island</span>
           <span style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>v{__APP_VERSION__}</span>
         </div>
       </div>
