@@ -792,6 +792,18 @@ const SCHOOL_GAMES = [
     zh:{ name:'动物卡丁车GP',     desc:'驾驶动物卡丁车\n冲过赛道！' },
     ko:{ name:'애니멀 카트 GP',   desc:'동물 카트로\n코스를 달려요!' },
     es:{ name:'Kart de Animales GP', desc:'¡Corre con karts\nde animales!' } },
+  { id:'g_block', route:'/block', icon:'🏰', num:10, color:'#ec407a', stars:3, isNew:true, category:'アクション',
+    ja:{ name:'おしろブロックくずし', desc:'パドルでボールをはじいて\nブロックをこわそう！' },
+    en:{ name:'Castle Breakout',   desc:'Bounce the ball and\nbreak all the blocks!' },
+    zh:{ name:'城堡打砖块',         desc:'弹球击碎\n所有砖块！' },
+    ko:{ name:'성 벽돌깨기',        desc:'공을 튕겨서\n블록을 깨요!' },
+    es:{ name:'Rompe Castillo',    desc:'¡Rebota la pelota\ny rompe los bloques!' } },
+  { id:'g_houki', route:'/houki', icon:'🧹', num:11, color:'#ab47bc', stars:3, isNew:true, category:'レース',
+    ja:{ name:'まほうほうきGP', desc:'そらをとんでリングをくぐり\nタイムをのばそう！' },
+    en:{ name:'Magic Broom GP',  desc:'Fly and pass through rings\nto extend your time!' },
+    zh:{ name:'魔法扫帚GP',       desc:'飞行穿过光环\n延长时间！' },
+    ko:{ name:'마법 빗자루 GP',   desc:'날아서 링을 통과해\n시간을 늘려요!' },
+    es:{ name:'Escoba Mágica GP', desc:'¡Vuela y cruza aros\npara ganar tiempo!' } },
 ];
 
 /* ════════════════════════════════════════════════════

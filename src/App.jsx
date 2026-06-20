@@ -28,6 +28,8 @@ import MoriGame from './games/MoriGame'
 import SoraGame from './games/SoraGame'
 import BikeGame from './games/BikeGame'
 import AnimalKart from './games/AnimalKart'
+import BlockKuzushi from './games/BlockKuzushi'
+import MahouHouki from './games/MahouHouki'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 import { recordRecentGame } from './utils/recentGames'
@@ -51,7 +53,7 @@ const GAME_ROUTES = new Set([
   '/kokki', '/jewelry-master', '/tetris', '/runner', '/shooting',
   '/sniper', '/crossing', '/dressup',
   '/moji-asobi', '/iro-awase', '/flag-quiz', '/shoot',
-  '/mori', '/sora', '/bike', '/kart',
+  '/mori', '/sora', '/bike', '/kart', '/block', '/houki',
   // 短縮URLエイリアスも記録
   '/kudamono', '/puzzle', '/kazu', '/soccer',
 ]);
@@ -107,6 +109,8 @@ export default function App() {
         <Route path="/sora" element={<GameWithSEO route="/sora"><SoraGame /></GameWithSEO>} />
         <Route path="/bike" element={<GameWithSEO route="/bike"><BikeGame /></GameWithSEO>} />
         <Route path="/kart" element={<GameWithSEO route="/kart"><AnimalKart /></GameWithSEO>} />
+        <Route path="/block" element={<GameWithSEO route="/block"><BlockKuzushi /></GameWithSEO>} />
+        <Route path="/houki" element={<GameWithSEO route="/houki"><MahouHouki /></GameWithSEO>} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms"   element={<TermsPage />} />
       </Routes>

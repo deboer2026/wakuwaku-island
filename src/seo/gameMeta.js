@@ -23,6 +23,8 @@ const GAME_META = {
   '/sora':            { name: 'そらとびプリンセス',        desc: 'そらをとんでてきをたおそう！',                                category: 'アクション' },
   '/bike':            { name: 'わくわくバイク',            desc: 'バイクでコースをはしりぬけろ！',                              category: 'レース' },
   '/kart':            { name: 'アニマルカートGP',          desc: '6ひきのどうぶつでレース！スーファミ風の3Dカートゲーム。',    category: 'レース' },
+  '/block':           { name: 'おしろブロックくずし',    desc: 'パドルでボールをはじいてブロックをぜんぶこわそう！',          category: 'アクション' },
+  '/houki':           { name: 'まほうほうきGP',          desc: 'そらをとんでリングをくぐり、タイムをのばそう！Mode7のレース。', category: 'レース' },
 };
 
 export default GAME_META;
