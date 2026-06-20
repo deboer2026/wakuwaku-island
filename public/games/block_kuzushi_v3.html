@@ -106,6 +106,20 @@
     try{ window.parent.postMessage({type:'goHome'},'*'); }catch(e){}
   });
 
+  // 親ラッパー(useIframeBridge)から安全領域を受け取り、CSS変数に反映
+  window.addEventListener('message', function(e){
+    var d = e.data || {};
+    if (d.type === 'safeArea') {
+      var s = document.documentElement.style;
+      s.setProperty('--sat', (d.top||0)    + 'px');
+      s.setProperty('--sab', (d.bottom||0) + 'px');
+      s.setProperty('--sal', (d.left||0)   + 'px');
+      s.setProperty('--sar', (d.right||0)  + 'px');
+    }
+  });
+  try { window.parent.postMessage({ type:'requestSafeArea' }, '*'); } catch(e){}
+
+
   /* ---------- GAME ---------- */
   let state='title';
   let diff='easy';
@@ -273,8 +287,8 @@
   function hud(){
     ctx.fillStyle='rgba(12,6,30,0.55)'; ctx.fillRect(0,0,LW,52);
     ctx.fillStyle='#fff'; ctx.font='22px DotGothic16'; ctx.textBaseline='middle';
-    ctx.textAlign='left'; ctx.fillText('スコア '+score, 16, 27);
-    ctx.fillStyle='#ff7b9d'; ctx.textAlign='right'; ctx.fillText('♥'.repeat(Math.max(0,lives)), LW-16, 27);
+    ctx.textAlign='left'; ctx.fillText('スコア '+score, 70, 27);
+    ctx.fillStyle='#ff7b9d'; ctx.textAlign='right'; ctx.fillText('♥'.repeat(Math.max(0,lives)), LW-70, 27);
     ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.fillText('レベル '+(level+1), LW/2, 27);
   }
   function drawPlay(){
