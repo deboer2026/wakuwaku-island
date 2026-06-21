@@ -311,8 +311,8 @@ function nearestProg(x,z,hint){
 function onRoad(x,z,i){ const p=centerline[i]; const d=Math.hypot(p[0]-x,p[1]-z); return d<roadHalf+4; }
 // invisible wall: keep racer inside the road, but SLIDE along it (no dead stop)
 function clampToRoad(r){
-  let bi=0,best=1e9;
-  for(let i=0;i<CN;i++){ const p=centerline[i]; const dx=p[0]-r.x, dz=p[1]-r.z; const d=dx*dx+dz*dz; if(d<best){best=d;bi=i;} }
+  let bi=0,best=1e9; const span=24, h=(r.prog|0);
+  for(let k=h-span;k<=h+span;k++){ const i=((k%CN)+CN)%CN; const p=centerline[i]; const dx=p[0]-r.x, dz=p[1]-r.z; const d=dx*dx+dz*dz; if(d<best){best=d;bi=i;} }
   const p=centerline[bi];
   let dx=r.x-p[0], dz=r.z-p[1];
   const dist=Math.hypot(dx,dz)||0.0001;
@@ -352,7 +352,7 @@ function updateRacer(r,dt){
     const targetSpeed=MAX_ON*r.spd*clamp(1-curve*0.9,0.55,1);
     throttle = r.speed<targetSpeed?1:-0.4;
   }
-  const i=nearestProg(r.x,r.z); const road=onRoad(r.x,r.z,i);
+  const i=nearestProg(r.x,r.z,r.prog); const road=onRoad(r.x,r.z,i);
   const maxS=road?MAX_ON*(r.isPlayer?1:r.spd):MAX_OFF;
   if(throttle>0) r.speed+=ACC*throttle*dt;
   else if(throttle<0) r.speed-=BRK*(-throttle)*dt;
@@ -368,7 +368,7 @@ function advance(r,dt){
   r.z+=Math.cos(r.heading)*r.speed*dt;
   clampToRoad(r);
   // progress + lap
-  const ni=nearestProg(r.x,r.z);
+  const ni=nearestProg(r.x,r.z,r.prog);
   const prev=r.prog;
   if(ni>CN*0.45 && ni<CN*0.7) r.passedHalf=true;
   if(prev>CN*0.7 && ni<CN*0.25){ // crossed start forward
@@ -442,7 +442,7 @@ function drawSprites(camX,camZ,a){
 
 function drawPlayerKart(){
   const r=player; const sp=r.an.sprite;
-  const baseW=120, baseH=120;
+  const baseW=96, baseH=96;
   let lean=0; if(input.l)lean=-10; if(input.r)lean=10;
   const x=W/2-baseW/2+lean, y=H-baseH+8;
   ctx.drawImage(sp,x,y,baseW,baseH);
