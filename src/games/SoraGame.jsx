@@ -25,7 +25,7 @@ export default function SoraGame() {
     }}>
       <iframe
         ref={iframeRef}
-        src="/games/shooting_v1.html"
+        src="/games/sora_v2.html"
         style={{
           width: '100%',
           height: '100%',
