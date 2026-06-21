@@ -1193,18 +1193,6 @@ export default function TopPage() {
           </button>
         </div>
 
-        {/* ── カテゴリフィルター ── */}
-        <div className="tp-cat-filter">
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat.key}
-              className={`tp-cat-btn${categoryFilter === cat.key ? ' tp-cat-btn--active' : ''}`}
-              onClick={() => setCategoryFilter(cat.key)}
-            >
-              {cat.icon} {cat.label[lang] || cat.label.ja}
-            </button>
-          ))}
-        </div>
 
         {/* ── タブコンテンツ ── */}
         <div className={`tp-tab-panel${activeTab === 'kids' ? ' tp-tab-panel--active' : ''}`}>
