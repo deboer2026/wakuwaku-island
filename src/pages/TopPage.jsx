@@ -1143,7 +1143,7 @@ export default function TopPage() {
           </div>
         </div>
 
-        {/* ② 季節バナー + ⑤ プレイカウンター（横並び） */}
+        {/* ② 季節バナー */}
         <div className="tp-hero-row">
           <div
             className="tp-season"
@@ -1151,17 +1151,11 @@ export default function TopPage() {
           >
             {season.emoji} {season[lang] || season.ja}
           </div>
-          <PlayCounter target={playCount} lang={lang} />
         </div>
       </div>
 
       {/* ── ゲームセクション ── */}
       <div className="tp-game-section">
-        <div className="tp-section-header">
-          <h2>{{ja:'🎮 ゲームえらんでね', en:'🎮 Choose a Game', zh:'🎮 选择游戏', ko:'🎮 게임 선택', es:'🎮 Elige un juego'}[lang] || '🎮 ゲームえらんでね'}</h2>
-          <div className="tp-section-divider" />
-        </div>
-
         {/* ── 最近遊んだゲーム ── */}
         {recentGames.length > 0 && (
           <div className="tp-recent">
