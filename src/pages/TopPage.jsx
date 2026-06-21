@@ -39,6 +39,49 @@ const CATEGORIES = [
    ゲームSVGイラスト（SNES風）
 ════════════════════════════════════════════════════ */
 const GAME_SVGS = {
+  g_kart: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="kSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#bfe9ff"/><stop offset="1" stopColor="#8fcdff"/></linearGradient>
+        <linearGradient id="kTrk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#9aa3b5"/><stop offset="1" stopColor="#5b6478"/></linearGradient>
+      </defs>
+      <rect width="100" height="85" fill="url(#kSky)"/>
+      <circle cx="80" cy="15" r="9" fill="#fff3b0" opacity="0.85"/>
+      <path d="M0 85 L34 38 H66 L100 85 Z" fill="url(#kTrk)"/>
+      <path d="M50 40 V85" stroke="#ffd84d" strokeWidth="4" strokeDasharray="5 7"/>
+      <rect x="34" y="55" width="32" height="13" rx="5" fill="#e8471e"/>
+      <path d="M40 55 l5 -7 h10 l5 7 Z" fill="#c62f14"/>
+      <circle cx="41" cy="69" r="6" fill="#222"/><circle cx="59" cy="69" r="6" fill="#222"/>
+      <circle cx="41" cy="69" r="2.4" fill="#aaa"/><circle cx="59" cy="69" r="2.4" fill="#aaa"/>
+    </svg>
+  ),
+  g_block: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="bNight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#5a3a8a"/><stop offset="1" stopColor="#2a1a48"/></linearGradient></defs>
+      <rect width="100" height="85" fill="url(#bNight)"/>
+      <circle cx="14" cy="13" r="1.2" fill="#fff"/><circle cx="86" cy="9" r="1.2" fill="#fff"/><circle cx="70" cy="20" r="1" fill="#fff"/>
+      <rect x="12" y="9" width="22" height="6" rx="2" fill="#ff5d70"/><rect x="38" y="9" width="22" height="6" rx="2" fill="#ffb23a"/><rect x="64" y="9" width="22" height="6" rx="2" fill="#7bd06a"/>
+      <rect x="12" y="17" width="22" height="6" rx="2" fill="#4bb8ff"/><rect x="38" y="17" width="22" height="6" rx="2" fill="#b06bff"/><rect x="64" y="17" width="22" height="6" rx="2" fill="#ff8a3a"/>
+      <path d="M50 38 l2 4.2 4.6 .4 -3.5 3 1 4.4 -4.1 -2.4 -4.1 2.4 1 -4.4 -3.5 -3 4.6 -.4 Z" fill="#ffe14d"/>
+      <rect x="22" y="66" width="56" height="14" fill="#1f1238"/>
+      <rect x="26" y="61" width="6" height="6" fill="#1f1238"/><rect x="47" y="61" width="6" height="6" fill="#1f1238"/><rect x="68" y="61" width="6" height="6" fill="#1f1238"/>
+      <rect x="40" y="71" width="20" height="5" rx="2.5" fill="#19c6c6"/>
+    </svg>
+  ),
+  g_houki: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="hSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#cdeeff"/><stop offset="1" stopColor="#8fcdff"/></linearGradient>
+        <linearGradient id="hGrass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#a6e87a"/><stop offset="1" stopColor="#5fb04a"/></linearGradient>
+      </defs>
+      <rect width="100" height="85" fill="url(#hSky)"/>
+      <path d="M0 85 L38 42 H62 L100 85 Z" fill="url(#hGrass)"/>
+      <path d="M50 44 V85" stroke="#ffffff" strokeWidth="3" strokeDasharray="4 6"/>
+      <circle cx="50" cy="38" r="13" fill="none" stroke="#9a6bff" strokeWidth="5"/>
+      <path d="M38 70 l18 -6" stroke="#9b5a2a" strokeWidth="4" strokeLinecap="round"/>
+      <path d="M56 64 l8 -3 -1 8 Z" fill="#e0b34d"/>
+    </svg>
+  ),
   g1: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
       <circle cx="12" cy="12" r="2" fill="white" opacity=".4"/>
