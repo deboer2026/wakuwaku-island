@@ -204,6 +204,7 @@ let jumpTargetX,jumpTargetY,jumpFromX,jumpFromY;
 let jumpProgress=0;
 let score,hiScore;
 let gameRunning=false;
+function notifyRun(r){try{window.parent.postMessage({type:'crossing-running',running:r},'*');}catch(e){}}
 let cameraY; // カメラのY（スクロール）
 let lanes=[]; // レーンデータ
 let vehicles=[]; // 車・丸太・電車
@@ -364,7 +365,7 @@ function startGame(){
   document.getElementById('ts').style.display='none';
   document.getElementById('go-ov').classList.remove('show');
   score=0;
-  gameRunning=true;
+  gameRunning=true;notifyRun(true);
   COLS=Math.floor(W/LANE_W);
   // グリッド設定
   ROWS=Math.ceil(H/LANE_W)+4;
@@ -393,7 +394,7 @@ function startGame(){
 }
 
 function showTitle(){
-  cancelAnimationFrame(raf);gameRunning=false;
+  cancelAnimationFrame(raf);gameRunning=false;notifyRun(false);
   document.getElementById('ts').style.display='flex';
   document.getElementById('go-ov').classList.remove('show');
 }
@@ -717,7 +718,7 @@ function death(msg){
   if(lives<=0){
     // ゲームオーバー
     setTimeout(()=>{
-      gameRunning=false;
+      gameRunning=false;notifyRun(false);
       const hs=hiScore;
       document.getElementById('go-emoji').textContent=msg.includes('おぼ')?'🌊':msg.includes('でん')?'🚂':'🚗';
       document.getElementById('go-sub').innerHTML=`${msg}<br>すすんだ　${score} マス！`;
@@ -923,7 +924,7 @@ function updateHsDisp(){
 
 
 function goBack(){
-  cancelAnimationFrame(raf);gameRunning=false;
+  cancelAnimationFrame(raf);gameRunning=false;notifyRun(false);
   if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');
   else history.back();
 }

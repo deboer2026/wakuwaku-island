@@ -1,16 +1,18 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIframeBridge } from '../hooks/useIframeBridge';
 
 export default function DoubutsuCrossing() {
   const navigate = useNavigate();
   const iframeRef = useRef(null);
+  const [showPad, setShowPad] = useState(false);
   useIframeBridge(iframeRef);
 
   useEffect(() => {
     const handler = (e) => {
       if (e.data?.type === 'goBack') navigate(-1);
       if (e.data?.type === 'goHome') navigate('/');
+      if (e.data?.type === 'crossing-running') setShowPad(!!e.data.running);
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
@@ -39,19 +41,21 @@ export default function DoubutsuCrossing() {
     <div style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden' }}>
       <iframe
         ref={iframeRef}
-        src="/games/crossing_v3.html"
+        src="/games/crossing_v4.html"
         style={{ width: '100%', height: '100%', border: 'none', display: 'block', position: 'absolute', top: 0, left: 0 }}
         title="どうぶつクロッシング"
         allow="autoplay; fullscreen"
         allowFullScreen
         sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
       />
-      <div style={pad}>
-        <button style={{ ...btn, gridColumn: 2, gridRow: 1 }} onPointerDown={press('up')} aria-label="まえ">▲</button>
-        <button style={{ ...btn, gridColumn: 1, gridRow: 2 }} onPointerDown={press('left')} aria-label="ひだり">◀</button>
-        <button style={{ ...btn, gridColumn: 3, gridRow: 2 }} onPointerDown={press('right')} aria-label="みぎ">▶</button>
-        <button style={{ ...btn, gridColumn: 2, gridRow: 3 }} onPointerDown={press('down')} aria-label="うしろ">▼</button>
-      </div>
+      {showPad && (
+        <div style={pad}>
+          <button style={{ ...btn, gridColumn: 2, gridRow: 1 }} onPointerDown={press('up')} aria-label="まえ">▲</button>
+          <button style={{ ...btn, gridColumn: 1, gridRow: 2 }} onPointerDown={press('left')} aria-label="ひだり">◀</button>
+          <button style={{ ...btn, gridColumn: 3, gridRow: 2 }} onPointerDown={press('right')} aria-label="みぎ">▶</button>
+          <button style={{ ...btn, gridColumn: 2, gridRow: 3 }} onPointerDown={press('down')} aria-label="うしろ">▼</button>
+        </div>
+      )}
     </div>
   );
 }
