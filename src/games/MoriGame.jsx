@@ -25,7 +25,7 @@ export default function MoriGame() {
     }}>
       <iframe
         ref={iframeRef}
-        src="/games/super-retro-bros.html"
+        src="/games/mori_v3.html"
         style={{
           width: '100%',
           height: '100%',
