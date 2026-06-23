@@ -847,6 +847,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'魔法扫帚GP',       desc:'飞行穿过光环\n延长时间！' },
     ko:{ name:'마법 빗자루 GP',   desc:'날아서 링을 통과해\n시간을 늘려요!' },
     es:{ name:'Escoba Mágica GP', desc:'¡Vuela y cruza aros\npara ganar tiempo!' } },
+  { id:'g_usagi', route:'/usagi-carrot', icon:'🐰', num:12, color:'#ff7eb3', stars:4, isNew:true, category:'アクション',
+    ja:{ name:'うさぎとにんじん',  desc:'にげるにんじんを\nおいかけてつかまえよう！' },
+    en:{ name:'Bunny & Carrot',    desc:'Chase the running carrot\nand catch it!' },
+    zh:{ name:'兔子追胡萝卜',       desc:'追逐逃跑的胡萝卜\n把它抓住！' },
+    ko:{ name:'토끼와 당근',        desc:'도망가는 당근을\n쫓아가 잡아요!' },
+    es:{ name:'Conejo y Zanahoria', desc:'¡Persigue la zanahoria\ny atrápala!' } },
 ];
 
 /* ════════════════════════════════════════════════════
