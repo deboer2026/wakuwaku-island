@@ -160,12 +160,17 @@ export function spawnSparkles(x, y) {
 /* ════════════════════════════════════════════════════
    SVG: プリンセス
 ════════════════════════════════════════════════════ */
+function findKisekaeItem(chara, cat, id) {
+  const base = KISEKAE_ITEMS[chara][cat].find(i => i.id === id);
+  if (base) return base;
+  return getShopExtras(chara, cat).find(i => i.id === id);
+}
+
 export function PrincessSVG({ state }) {
-  const dress = KISEKAE_ITEMS.princess.dress.find(i => i.id === state.dress)
-    ?? KISEKAE_ITEMS.princess.dress[0];
-  const crown = KISEKAE_ITEMS.princess.crown.find(i => i.id === state.crown);
-  const acc   = KISEKAE_ITEMS.princess.accessory.find(i => i.id === state.accessory);
-  const item  = KISEKAE_ITEMS.princess.item.find(i => i.id === state.item);
+  const dress = findKisekaeItem('princess','dress',state.dress) ?? KISEKAE_ITEMS.princess.dress[0];
+  const crown = findKisekaeItem('princess','crown',state.crown);
+  const acc   = findKisekaeItem('princess','accessory',state.accessory);
+  const item  = findKisekaeItem('princess','item',state.item);
 
   return (
     <svg className="ksk-svg" viewBox="0 0 72 114" xmlns="http://www.w3.org/2000/svg">
@@ -226,11 +231,10 @@ export function PrincessSVG({ state }) {
    SVG: プリンス
 ════════════════════════════════════════════════════ */
 export function PrinceSVG({ state }) {
-  const dress = KISEKAE_ITEMS.prince.dress.find(i => i.id === state.dress)
-    ?? KISEKAE_ITEMS.prince.dress[0];
-  const crown = KISEKAE_ITEMS.prince.crown.find(i => i.id === state.crown);
-  const acc   = KISEKAE_ITEMS.prince.accessory.find(i => i.id === state.accessory);
-  const item  = KISEKAE_ITEMS.prince.item.find(i => i.id === state.item);
+  const dress = findKisekaeItem('prince','dress',state.dress) ?? KISEKAE_ITEMS.prince.dress[0];
+  const crown = findKisekaeItem('prince','crown',state.crown);
+  const acc   = findKisekaeItem('prince','accessory',state.accessory);
+  const item  = findKisekaeItem('prince','item',state.item);
   const eyebrowColor = dress.hair === '#212121' ? '#555' : dress.hair;
 
   return (
@@ -295,12 +299,6 @@ export function PrinceSVG({ state }) {
 /* ════════════════════════════════════════════════════
    キャラクターウィジェット（タイトル左右に常駐）
 ════════════════════════════════════════════════════ */
-function findKisekaeItem(chara, cat, id) {
-  const base = KISEKAE_ITEMS[chara][cat].find(i => i.id === id);
-  if (base) return base;
-  return getShopExtras(chara, cat).find(i => i.id === id);
-}
-
 export function KisekaeCharacters({ kisekaeState, onOpen, lang }) {
   const psPet = findKisekaeItem('princess', 'pet', kisekaeState.princess.pet);
   const prPet = findKisekaeItem('prince',   'pet', kisekaeState.prince.pet);

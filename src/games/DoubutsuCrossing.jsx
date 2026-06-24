@@ -25,15 +25,15 @@ export default function DoubutsuCrossing() {
 
   const pad = {
     position: 'fixed',
-    bottom: 'calc(env(safe-area-inset-bottom, 0px) + 18px)',
-    left: '50%', transform: 'translateX(-50%)',
-    display: 'grid', gridTemplateColumns: 'repeat(3, 58px)', gridTemplateRows: 'repeat(3, 58px)',
-    gap: '6px', zIndex: 10000, touchAction: 'none',
+    bottom: 'calc(env(safe-area-inset-bottom, 0px) + 14px)',
+    right: 'calc(env(safe-area-inset-right, 0px) + 12px)',
+    display: 'grid', gridTemplateColumns: 'repeat(3, 46px)', gridTemplateRows: 'repeat(3, 46px)',
+    gap: '4px', zIndex: 10000, touchAction: 'none',
   };
   const btn = {
-    border: 'none', borderRadius: 14, fontSize: 26, fontWeight: 800, color: '#34507a',
-    background: 'linear-gradient(180deg,#ffffff,#e9f0fb)',
-    boxShadow: '0 4px 0 #b9cce4, inset 0 1px 0 #fff', touchAction: 'none', cursor: 'pointer',
+    border: 'none', borderRadius: 11, fontSize: 20, fontWeight: 800, color: '#2f4a72',
+    background: 'rgba(255,255,255,0.5)', WebkitBackdropFilter: 'blur(2px)', backdropFilter: 'blur(2px)',
+    boxShadow: '0 2px 0 rgba(120,150,190,.5)', touchAction: 'none', cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center', userSelect: 'none',
   };
 
