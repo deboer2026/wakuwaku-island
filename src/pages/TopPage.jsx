@@ -848,11 +848,17 @@ const SCHOOL_GAMES = [
     ko:{ name:'마법 빗자루 GP',   desc:'날아서 링을 통과해\n시간을 늘려요!' },
     es:{ name:'Escoba Mágica GP', desc:'¡Vuela y cruza aros\npara ganar tiempo!' } },
   { id:'g_usagi', route:'/usagi-carrot', icon:'🐰', num:12, color:'#ff7eb3', stars:4, isNew:true, category:'アクション',
-    ja:{ name:'うさぎとにんじん',  desc:'にげるにんじんを\nおいかけてつかまえよう！' },
-    en:{ name:'Bunny & Carrot',    desc:'Chase the running carrot\nand catch it!' },
-    zh:{ name:'兔子追胡萝卜',       desc:'追逐逃跑的胡萝卜\n把它抓住！' },
-    ko:{ name:'토끼와 당근',        desc:'도망가는 당근을\n쫓아가 잡아요!' },
-    es:{ name:'Conejo y Zanahoria', desc:'¡Persigue la zanahoria\ny atrápala!' } },
+    ja:{ name:'うさぎとにんじん',  desc:'うえからおちてくる\nにんじんをキャッチ！' },
+    en:{ name:'Bunny & Carrot',    desc:'Catch the carrots\nfalling from the sky!' },
+    zh:{ name:'兔子接胡萝卜',       desc:'接住从天上\n掉落的胡萝卜！' },
+    ko:{ name:'토끼와 당근',        desc:'위에서 떨어지는\n당근을 받아요!' },
+    es:{ name:'Conejo y Zanahoria', desc:'¡Atrapa las zanahorias\nque caen del cielo!' } },
+  { id:'g_neko', route:'/neko-chou', icon:'🐱', num:13, color:'#b39ddb', stars:4, isNew:true, category:'アクション',
+    ja:{ name:'ねことちょうちょ', desc:'とんでにげるちょうちょを\nねこでつかまえよう！' },
+    en:{ name:'Cat & Butterfly',  desc:'Chase the fluttering\nbutterflies with the cat!' },
+    zh:{ name:'猫咪抓蝴蝶',        desc:'用猫咪抓住\n飞舞的蝴蝶！' },
+    ko:{ name:'고양이와 나비',     desc:'날아다니는 나비를\n고양이로 잡아요!' },
+    es:{ name:'Gato y Mariposa',   desc:'¡Atrapa las mariposas\ncon el gato!' } },
 ];
 
 /* ════════════════════════════════════════════════════
