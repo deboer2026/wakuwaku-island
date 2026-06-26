@@ -651,6 +651,72 @@ const GAME_SVGS = {
       <rect x="181" y="38" width="8" height="8" fill="#222"/>
     </svg>
   ),
+  g_usagi: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="2" fill="#FFD700" opacity=".6"/>
+      <circle cx="86" cy="16" r="1.5" fill="#fff" opacity=".6"/>
+      <g transform="rotate(20 26 20)">
+        <path d="M22 14 L30 14 L26 31 Z" fill="#ff8a3d" stroke="#d96a1e" strokeWidth="1.5"/>
+        <path d="M23 13 l-1.5 -5 M26 13 l0 -6 M29 13 l1.5 -5" stroke="#5fb83f" strokeWidth="2.2" strokeLinecap="round"/>
+      </g>
+      <g transform="rotate(-16 64 22)">
+        <path d="M60 16 L68 16 L64 33 Z" fill="#ffae5c" stroke="#d96a1e" strokeWidth="1.5"/>
+        <path d="M61 15 l-1.5 -5 M64 15 l0 -6 M67 15 l1.5 -5" stroke="#5fb83f" strokeWidth="2.2" strokeLinecap="round"/>
+      </g>
+      <ellipse cx="40" cy="44" rx="4" ry="11" fill="#fff" stroke="#e7c9b0" strokeWidth="1.5" transform="rotate(-12 40 44)"/>
+      <ellipse cx="40" cy="44" rx="1.8" ry="7" fill="#ff9ec4" transform="rotate(-12 40 44)"/>
+      <ellipse cx="52" cy="44" rx="4" ry="11" fill="#fff" stroke="#e7c9b0" strokeWidth="1.5" transform="rotate(12 52 44)"/>
+      <ellipse cx="52" cy="44" rx="1.8" ry="7" fill="#ff9ec4" transform="rotate(12 52 44)"/>
+      <circle cx="46" cy="54" r="13" fill="#fff" stroke="#e7c9b0" strokeWidth="1.5"/>
+      <path d="M38 45 L38 38 L43 42 L46 36 L49 42 L54 38 L54 45 Z" fill="#ffd24d" stroke="#e0a800" strokeWidth="1"/>
+      <circle cx="42" cy="54" r="2" fill="#3a2a14"/>
+      <circle cx="50" cy="54" r="2" fill="#3a2a14"/>
+      <circle cx="46" cy="58" r="1.6" fill="#ff6fa8"/>
+      <ellipse cx="39" cy="58" rx="2.4" ry="1.6" fill="#ffb3d1" opacity=".7"/>
+      <ellipse cx="53" cy="58" rx="2.4" ry="1.6" fill="#ffb3d1" opacity=".7"/>
+      <rect x="30" y="62" width="40" height="18" rx="4" fill="#c98a4a" stroke="#8a5a28" strokeWidth="2"/>
+      <line x1="33" y1="68" x2="67" y2="68" stroke="#8a5a28" strokeWidth="1.3"/>
+      <line x1="35" y1="74" x2="65" y2="74" stroke="#8a5a28" strokeWidth="1.3"/>
+      <ellipse cx="50" cy="62" rx="20" ry="4" fill="#e0a463" stroke="#8a5a28" strokeWidth="1.5"/>
+    </svg>
+  ),
+  g_neko: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="2" fill="#FFD700" opacity=".6"/>
+      <circle cx="84" cy="12" r="1.5" fill="#fff" opacity=".6"/>
+      <g transform="translate(72 28)">
+        <ellipse cx="-4" cy="-3" rx="5" ry="6" fill="#ff7eb3" stroke="#e0558f" strokeWidth="1"/>
+        <ellipse cx="4" cy="-3" rx="5" ry="6" fill="#ff7eb3" stroke="#e0558f" strokeWidth="1"/>
+        <ellipse cx="-3" cy="4" rx="4" ry="4.5" fill="#ffd1e6" stroke="#e0558f" strokeWidth="1"/>
+        <ellipse cx="3" cy="4" rx="4" ry="4.5" fill="#ffd1e6" stroke="#e0558f" strokeWidth="1"/>
+        <rect x="-1" y="-6" width="2" height="12" rx="1" fill="#5a4326"/>
+      </g>
+      <g transform="translate(24 22) scale(.8)">
+        <ellipse cx="-4" cy="-3" rx="5" ry="6" fill="#9a86ff" stroke="#6a55cc" strokeWidth="1"/>
+        <ellipse cx="4" cy="-3" rx="5" ry="6" fill="#9a86ff" stroke="#6a55cc" strokeWidth="1"/>
+        <ellipse cx="-3" cy="4" rx="4" ry="4.5" fill="#ddd4ff" stroke="#6a55cc" strokeWidth="1"/>
+        <ellipse cx="3" cy="4" rx="4" ry="4.5" fill="#ddd4ff" stroke="#6a55cc" strokeWidth="1"/>
+        <rect x="-1" y="-6" width="2" height="12" rx="1" fill="#5a4326"/>
+      </g>
+      <path d="M35 71 q-11 -1 -9 -13" stroke="#f4ede1" strokeWidth="6" fill="none" strokeLinecap="round"/>
+      <ellipse cx="50" cy="67" rx="15" ry="13" fill="#f4ede1" stroke="#d9c9b2" strokeWidth="1.5"/>
+      <circle cx="50" cy="50" r="13" fill="#f4ede1" stroke="#d9c9b2" strokeWidth="1.5"/>
+      <path d="M41 43 L36 32 L47 40 Z" fill="#f4ede1" stroke="#d9c9b2" strokeWidth="1.5"/>
+      <path d="M59 43 L64 32 L53 40 Z" fill="#f4ede1" stroke="#d9c9b2" strokeWidth="1.5"/>
+      <path d="M41 41 L39 35 L45 39 Z" fill="#ff9ec4"/>
+      <path d="M59 41 L61 35 L55 39 Z" fill="#ff9ec4"/>
+      <path d="M42 38 L42 32 L46 36 L50 30 L54 36 L58 32 L58 38 Z" fill="#ffd24d" stroke="#e0a800" strokeWidth="1"/>
+      <circle cx="45" cy="50" r="2" fill="#3a2a14"/>
+      <circle cx="55" cy="50" r="2" fill="#3a2a14"/>
+      <path d="M48 54 L52 54 L50 57 Z" fill="#ff6fa8"/>
+      <line x1="40" y1="52" x2="30" y2="50" stroke="#bda985" strokeWidth="1"/>
+      <line x1="40" y1="55" x2="31" y2="57" stroke="#bda985" strokeWidth="1"/>
+      <line x1="60" y1="52" x2="70" y2="50" stroke="#bda985" strokeWidth="1"/>
+      <line x1="60" y1="55" x2="69" y2="57" stroke="#bda985" strokeWidth="1"/>
+      <ellipse cx="42" cy="54" rx="2.4" ry="1.6" fill="#ffb3d1" opacity=".6"/>
+      <ellipse cx="58" cy="54" rx="2.4" ry="1.6" fill="#ffb3d1" opacity=".6"/>
+    </svg>
+  ),
 };
 
 /* ════════════════════════════════════════════════════
