@@ -35,6 +35,20 @@ const CATEGORIES = [
   { key:'そうぞう',   icon:'🎨', label:{ja:'そうぞう',   en:'Create',   zh:'创造',   ko:'창작',   es:'Crear'   } },
 ];
 
+/* ── マスコットのセリフ ──────────────────────────── */
+const MASCOT_GREETING = {
+  morning:   { ja:'おはよう！☀️',   en:'Good morning! ☀️',  zh:'早上好！☀️',  ko:'좋은 아침! ☀️',   es:'¡Buenos días! ☀️' },
+  afternoon: { ja:'こんにちは！🌈', en:'Hello! 🌈',          zh:'你好！🌈',     ko:'안녕! 🌈',         es:'¡Hola! 🌈' },
+  evening:   { ja:'こんばんは！🌙', en:'Good evening! 🌙',   zh:'晚上好！🌙',   ko:'좋은 저녁! 🌙',   es:'¡Buenas noches! 🌙' },
+};
+const MASCOT_LINES = {
+  ja: ['きょうは なにして あそぶ？','いっしょに あそぼう！','タップすると キラキラ✨','🎲ルーレットも おしてみて！','きみが くるのを まってたよ！'],
+  en: ['What shall we play today?','Let\'s play together!','Tap me for sparkles ✨','Try the 🎲 roulette!','I was waiting for you!'],
+  zh: ['今天玩什么呢？','一起来玩吧！','点我有闪光✨','试试🎲轮盘吧！','我在等你哦！'],
+  ko: ['오늘은 뭐 하고 놀까?','같이 놀자!','탭하면 반짝반짝✨','🎲룰렛도 눌러봐!','너를 기다렸어!'],
+  es: ['¿A qué jugamos hoy?','¡Juguemos juntos!','¡Tócame y brillo! ✨','¡Prueba la 🎲 ruleta!','¡Te estaba esperando!'],
+};
+
 /* ════════════════════════════════════════════════════
    ゲームSVGイラスト（SNES風）
 ════════════════════════════════════════════════════ */
@@ -1124,6 +1138,66 @@ export default function TopPage() {
     setPanelOpen(true);
   }
 
+  /* ── マスコット吹き出し ── */
+  const [mascotText,   setMascotText]   = useState('');
+  const [mascotBounce, setMascotBounce] = useState(false);
+  const mascotIdxRef = useRef(-1);
+
+  function pickMascotLine(l) {
+    const lines = MASCOT_LINES[l] || MASCOT_LINES.ja;
+    let i;
+    do { i = Math.floor(Math.random() * lines.length); } while (i === mascotIdxRef.current && lines.length > 1);
+    mascotIdxRef.current = i;
+    return lines[i];
+  }
+
+  useEffect(() => {
+    const h = new Date().getHours();
+    const slot = h < 11 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+    setMascotText(MASCOT_GREETING[slot][lang] || MASCOT_GREETING[slot].ja);
+    const t = setInterval(() => setMascotText(pickMascotLine(lang)), 8000);
+    return () => clearInterval(t);
+  }, [lang]);
+
+  function handleMascotTap(e) {
+    spawnParticles(e.clientX, e.clientY);
+    setMascotText(pickMascotLine(lang));
+    setMascotBounce(true);
+    setTimeout(() => setMascotBounce(false), 600);
+  }
+
+  /* ── ゲームルーレット ── */
+  const [rouletteOpen, setRouletteOpen] = useState(false);
+  const [rouletteSpin, setRouletteSpin] = useState(false);
+  const [rouletteIdx,  setRouletteIdx]  = useState(0);
+  const rouletteTimer = useRef(null);
+
+  function startRoulette() {
+    const pool = activeTab === 'kids' ? GAMES : SCHOOL_GAMES;
+    setRouletteOpen(true);
+    setRouletteSpin(true);
+    let delay = 55;
+    const stopAt = Date.now() + 1800 + Math.random() * 800;
+    const tick = () => {
+      setRouletteIdx(prev => (prev + 1) % pool.length);
+      if (Date.now() < stopAt || delay < 320) {
+        delay = Date.now() > stopAt - 700 ? delay * 1.25 : delay;
+        rouletteTimer.current = setTimeout(tick, delay);
+      } else {
+        setRouletteSpin(false);
+      }
+    };
+    tick();
+  }
+
+  function closeRoulette() {
+    if (rouletteTimer.current) clearTimeout(rouletteTimer.current);
+    setRouletteOpen(false);
+    setRouletteSpin(false);
+  }
+
+  useEffect(() => () => { if (rouletteTimer.current) clearTimeout(rouletteTimer.current); }, []);
+
   function handleLoginBonusClaim() {
     claimLoginBonus();
     setCoins(getCoins());
@@ -1240,7 +1314,10 @@ export default function TopPage() {
         <div className="tp-park-badge">🏝️ GAME PARK ✦</div>
 
         <div className="ksk-title-zone">
-          <div className="tp-hero-chars" onClick={(e) => spawnParticles(e.clientX, e.clientY)}>
+          <div className="tp-mascot-bubble" key={mascotText} aria-live="polite">
+            {mascotText}
+          </div>
+          <div className={`tp-hero-chars${mascotBounce ? ' tp-hero-chars--bounce' : ''}`} onClick={handleMascotTap}>
             <KisekaeCharacters
               kisekaeState={kisekaeState}
               onOpen={openPanel}
@@ -1314,6 +1391,10 @@ export default function TopPage() {
           </button>
         </div>
 
+        {/* ── ゲームルーレット ボタン ── */}
+        <button className="tp-roulette-btn" onClick={startRoulette}>
+          🎲 {{ja:'きょうのゲームを えらんで！', en:'Pick a game for me!', zh:'帮我选个游戏！', ko:'게임 골라줘!', es:'¡Elige un juego!'}[lang] || 'きょうのゲームを えらんで！'}
+        </button>
 
         {/* ── タブコンテンツ ── */}
         <div className={`tp-tab-panel${activeTab === 'kids' ? ' tp-tab-panel--active' : ''}`}>
@@ -1377,6 +1458,40 @@ export default function TopPage() {
           <span style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>v{__APP_VERSION__}</span>
         </div>
       </div>
+
+      {/* ── ルーレットオーバーレイ ── */}
+      {rouletteOpen && (() => {
+        const pool = activeTab === 'kids' ? GAMES : SCHOOL_GAMES;
+        const g = pool[rouletteIdx % pool.length];
+        return (
+          <div className="tp-roulette-overlay" onClick={() => { if (!rouletteSpin) closeRoulette(); }}>
+            <div className="tp-roulette-box" onClick={(e) => e.stopPropagation()}>
+              <div className="tp-roulette-title">
+                {rouletteSpin
+                  ? ({ja:'えらんでるよ…🎲', en:'Picking… 🎲', zh:'选择中…🎲', ko:'고르는 중…🎲', es:'Eligiendo… 🎲'}[lang] || 'えらんでるよ…🎲')
+                  : ({ja:'きょうは これ！', en:'Today\'s pick!', zh:'今天玩这个！', ko:'오늘은 이거!', es:'¡Hoy toca este!'}[lang] || 'きょうは これ！')}
+              </div>
+              <div className={`tp-roulette-card${rouletteSpin ? ' tp-roulette-card--spin' : ' tp-roulette-card--win'}`}
+                   style={{ background: CARD_GRADIENTS[g.category] || DEFAULT_GRADIENT }}>
+                <div className="tp-roulette-art">{GAME_SVGS[g.id] || <span className="tp-roulette-icon">{g.icon}</span>}</div>
+                <div className="tp-roulette-name">{(g[lang] || g.ja).name}</div>
+              </div>
+              {!rouletteSpin && (
+                <div className="tp-roulette-actions">
+                  <button className="tp-roulette-play"
+                    onClick={(e) => { closeRoulette(); spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY); }}>
+                    ▶ {{ja:'これであそぶ！', en:'Play this!', zh:'就玩这个！', ko:'이걸로 놀기!', es:'¡Jugar!'}[lang] || 'これであそぶ！'}
+                  </button>
+                  <button className="tp-roulette-retry" onClick={startRoulette}>
+                    🎲 {{ja:'もういっかい', en:'Again', zh:'再来一次', ko:'다시', es:'Otra vez'}[lang] || 'もういっかい'}
+                  </button>
+                  <button className="tp-roulette-close" onClick={closeRoulette}>✕</button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── 着せ替えパネル ── */}
       <KisekaePanel
