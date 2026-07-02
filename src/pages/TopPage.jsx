@@ -1393,7 +1393,7 @@ export default function TopPage() {
 
         {/* ── ゲームルーレット ボタン ── */}
         <button className="tp-roulette-btn" onClick={startRoulette}>
-          🎲 {{ja:'きょうのゲームを えらんで！', en:'Pick a game for me!', zh:'帮我选个游戏！', ko:'게임 골라줘!', es:'¡Elige un juego!'}[lang] || 'きょうのゲームを えらんで！'}
+          🎲 {{ja:'きょうのゲームルーレット', en:'Game Roulette', zh:'今日游戏轮盘', ko:'오늘의 게임 룰렛', es:'Ruleta del día'}[lang] || 'きょうのゲームルーレット'}
         </button>
 
         {/* ── タブコンテンツ ── */}
