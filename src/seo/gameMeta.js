@@ -19,6 +19,7 @@ const GAME_META = {
   '/shooting':        { name: 'どうぶつシューティング',    desc: 'てきをたおしてボスをやっつけろ！',                            category: 'アクション' },
   '/sniper':          { name: 'どうぶつスナイパー',        desc: 'うごくどうぶつをタップでねらえ！フェイクに注意！',            category: 'アクション' },
   '/crossing':        { name: 'どうぶつクロッシング',      desc: 'みちをわたってどこまでいけるかな？くるまに気をつけて！',      category: 'レース' },
+  '/okashi-crossing': { name: 'おかしのくにクロッシング',  desc: 'グミのくるまとチョコのかわをこえて、おかしのくにをどこまでもすすもう！', category: 'アクション' },
   '/mori':            { name: 'もりのなかまたち',          desc: 'もりをとびこえてゴールをめざせ！',                            category: 'アクション' },
   '/sora':            { name: 'そらとびプリンセス',        desc: 'そらをとんでてきをたおそう！',                                category: 'アクション' },
   '/bike':            { name: 'わくわくバイク',            desc: 'バイクでコースをはしりぬけろ！',                              category: 'レース' },

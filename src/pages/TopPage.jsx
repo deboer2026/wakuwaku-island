@@ -56,6 +56,35 @@ const MASCOT_LINES = {
    ゲームSVGイラスト（SNES風）
 ════════════════════════════════════════════════════ */
 const GAME_SVGS = {
+  g_okashi: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="100" height="85" fill="#ffe3f0"/>
+      <rect x="0" y="52" width="100" height="16" fill="#8a5fc0"/>
+      <rect x="0" y="52" width="100" height="2" fill="#ffe07a"/>
+      <rect x="0" y="66" width="100" height="2" fill="#ffe07a"/>
+      <rect x="18" y="56" width="10" height="2" rx="1" fill="#fff" opacity=".7"/>
+      <rect x="58" y="56" width="10" height="2" rx="1" fill="#fff" opacity=".7"/>
+      <rect x="0" y="30" width="100" height="14" fill="#6e4228"/>
+      <rect x="20" y="33" width="22" height="8" rx="4" fill="#e8b76f" stroke="#c9964f" strokeWidth="1"/>
+      <g transform="translate(70 58)">
+        <rect x="-11" y="-6" width="22" height="12" rx="5" fill="#59d98c"/>
+        <rect x="-8" y="-4" width="16" height="4" rx="2" fill="#fff" opacity=".55"/>
+        <circle cx="5" cy="1" r="1.6" fill="#5a3a2a"/><circle cx="9" cy="1" r="1.6" fill="#5a3a2a"/>
+      </g>
+      <g transform="translate(38 68)">
+        <ellipse cx="-5" cy="-16" rx="2.6" ry="7.5" fill="#fff" transform="rotate(-9 -5 -16)"/>
+        <ellipse cx="5" cy="-16" rx="2.6" ry="7.5" fill="#fff" transform="rotate(9 5 -16)"/>
+        <ellipse cx="-5" cy="-16" rx="1.2" ry="4.5" fill="#ffc2d8" transform="rotate(-9 -5 -16)"/>
+        <ellipse cx="5" cy="-16" rx="1.2" ry="4.5" fill="#ffc2d8" transform="rotate(9 5 -16)"/>
+        <circle cx="0" cy="-2" r="8.5" fill="#fff"/>
+        <circle cx="-3" cy="-3" r="1.1" fill="#3a2a3a"/><circle cx="3" cy="-3" r="1.1" fill="#3a2a3a"/>
+        <circle cx="0" cy="0" r="1" fill="#ff8fb5"/>
+        <path d="M-4.5 -10 L-4.5 -13.5 L-2.2 -11 L0 -14 L2.2 -11 L4.5 -13.5 L4.5 -10 Z" fill="#ffd34d"/>
+      </g>
+      <text x="14" y="20" fontSize="11">🍬</text><text x="76" y="16" fontSize="10">🍭</text>
+    </svg>
+  ),
+
   g_kart: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -998,6 +1027,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'猫咪抓蝴蝶',        desc:'用猫咪抓住\n飞舞的蝴蝶！' },
     ko:{ name:'고양이와 나비',     desc:'날아다니는 나비를\n고양이로 잡아요!' },
     es:{ name:'Gato y Mariposa',   desc:'¡Atrapa las mariposas\ncon el gato!' } },
+  { id:'g_okashi', route:'/okashi-crossing', icon:'🍭', num:16, color:'#ff9ecb', stars:4, isNew:true, category:'アクション',
+    ja:{ name:'おかしのくにクロッシング', desc:'グミのくるまとチョコのかわ！\nどこまでもすすもう！' },
+    en:{ name:'Candy Land Crossing',  desc:'Cross gummy roads and\nchocolate rivers—go far!' },
+    zh:{ name:'糖果王国穿越',        desc:'越过软糖车和巧克力河，\n看你能走多远！' },
+    ko:{ name:'과자나라 크로싱',     desc:'젤리 자동차와 초콜릿 강을\n건너 멀리 가보자!' },
+    es:{ name:'Cruce del País Dulce', desc:'¡Cruza autos de gomita y\nríos de chocolate!' } },
   { id:'g_tokei', route:'/tokei-yomi', icon:'🕐', num:14, color:'#7986CB', stars:3, isNew:true, category:'がくしゅう',
     ja:{ name:'とけいよみ',         desc:'とけいの はりを よんだり\nあわせたり して あそぼう！' },
     en:{ name:'Clock Reading',      desc:'Read and match\nthe clock hands!' },
