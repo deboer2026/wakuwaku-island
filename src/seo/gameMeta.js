@@ -26,6 +26,7 @@ const GAME_META = {
   '/kart':            { name: 'アニマルカートGP',          desc: '6ひきのどうぶつでレース！スーファミ風の3Dカートゲーム。',    category: 'レース' },
   '/block':           { name: 'おしろブロックくずし',    desc: 'パドルでボールをはじいてブロックをぜんぶこわそう！',          category: 'アクション' },
   '/houki':           { name: 'まほうほうきGP',          desc: 'そらをとんでリングをくぐり、タイムをのばそう！Mode7のレース。', category: 'レース' },
+  '/mahou-meiro':     { name: 'まほうのめいろ',            desc: 'クリスタルをふんでまほうのとびらをひらき、3Dめいろをぬけだそう！', category: 'パズル' },
   '/usagi-carrot':    { name: 'うさぎとにんじん',          desc: 'うえからおちてくるにんじんをうさぎのカゴでキャッチしよう！',  category: 'アクション' },
   '/neko-chou':       { name: 'ねことちょうちょ',          desc: 'とんでにげるちょうちょをねこでおいかけてつかまえよう！',      category: 'アクション' },
   '/tokei-yomi':      { name: 'とけいよみ',                desc: 'とけいのはりをよんだりあわせたりしてあそぼう！',              category: 'がくしゅう' },

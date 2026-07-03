@@ -114,6 +114,36 @@ const GAME_SVGS = {
       <rect x="40" y="71" width="20" height="5" rx="2.5" fill="#19c6c6"/>
     </svg>
   ),
+  g_mahoumeiro: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="mmBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#2a1a4e"/><stop offset="1" stopColor="#140a2e"/></linearGradient>
+        <linearGradient id="mmGate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#81d4fa"/><stop offset="1" stopColor="#2962ff"/></linearGradient>
+        <linearGradient id="mmGem" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#f8bbd0"/><stop offset="1" stopColor="#c2185b"/></linearGradient>
+      </defs>
+      <rect width="100" height="85" fill="url(#mmBg)"/>
+      <circle cx="84" cy="12" r="7" fill="#fff59d" opacity="0.9"/>
+      <g fill="#4a3a7e">
+        <rect x="8" y="14" width="52" height="8" rx="2"/>
+        <rect x="8" y="14" width="8" height="34" rx="2"/>
+        <rect x="30" y="30" width="38" height="8" rx="2"/>
+        <rect x="84" y="26" width="8" height="38" rx="2"/>
+        <rect x="8" y="60" width="44" height="8" rx="2"/>
+        <rect x="62" y="46" width="8" height="22" rx="2"/>
+        <rect x="24" y="44" width="8" height="16" rx="2"/>
+      </g>
+      <g fill="#6a55b0" opacity="0.6">
+        <rect x="8" y="12" width="52" height="3" rx="1.5"/>
+        <rect x="30" y="28" width="38" height="3" rx="1.5"/>
+        <rect x="8" y="58" width="44" height="3" rx="1.5"/>
+      </g>
+      <rect x="42" y="42" width="12" height="18" rx="3" fill="url(#mmGate)" opacity="0.9"/>
+      <text x="48" y="55" fontSize="9" textAnchor="middle" fill="#fff">✦</text>
+      <rect x="16" y="68" width="10" height="10" rx="2" transform="rotate(45 21 73)" fill="url(#mmGem)"/>
+      <text x="76" y="78" fontSize="14" textAnchor="middle">🐱</text>
+      <text x="90" y="46" fontSize="12" textAnchor="middle">🏁</text>
+    </svg>
+  ),
   g_houki: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -1009,6 +1039,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'城堡打砖块',         desc:'弹球击碎\n所有砖块！' },
     ko:{ name:'성 벽돌깨기',        desc:'공을 튕겨서\n블록을 깨요!' },
     es:{ name:'Rompe Castillo',    desc:'¡Rebota la pelota\ny rompe los bloques!' } },
+  { id:'g_mahoumeiro', route:'/mahou-meiro', icon:'🔮', num:17, color:'#7e57c2', stars:4, isNew:true, category:'パズル',
+    ja:{ name:'まほうのめいろ', desc:'クリスタルでとびらをひらき\n3Dめいろをぬけだそう！' },
+    en:{ name:'Magic Maze',     desc:'Open gates with crystals\nand escape the 3D maze!' },
+    zh:{ name:'魔法迷宫',        desc:'用水晶打开魔法门\n逃出3D迷宫！' },
+    ko:{ name:'마법의 미로',     desc:'크리스탈로 문을 열고\n3D 미로를 탈출해요!' },
+    es:{ name:'Laberinto Mágico', desc:'¡Abre puertas con cristales\ny escapa del laberinto 3D!' } },
   { id:'g_houki', route:'/houki', icon:'🧹', num:11, color:'#ab47bc', stars:3, isNew:true, category:'レース',
     ja:{ name:'まほうほうきGP', desc:'そらをとんでリングをくぐり\nタイムをのばそう！' },
     en:{ name:'Magic Broom GP',  desc:'Fly and pass through rings\nto extend your time!' },
