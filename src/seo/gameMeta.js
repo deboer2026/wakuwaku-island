@@ -1,7 +1,6 @@
 const GAME_META = {
   '/shabondama':      { name: 'シャボンだまポン',         desc: 'とんでくるシャボン玉をタップして割ろう！',                    category: 'アクション' },
   '/kudamono-catch':  { name: 'くだものキャッチ',          desc: 'おちてくるくだものをキャッチしよう！',                        category: 'アクション' },
-  '/meiro':           { name: 'めいろあそび',              desc: 'めいろをとおってゴールをめざせ！',                            category: 'パズル' },
   '/doubutsu-puzzle': { name: 'どうぶつパズル',            desc: 'どうぶつをならべてパズルをとこう！',                          category: 'パズル' },
   '/kazu-asobi':      { name: 'かずあそび',                desc: 'かずをかぞえてたのしくまなぼう！',                            category: 'かずあそび' },
   '/animal-soccer':   { name: 'どうぶつサッカー',          desc: 'どうぶつたちとサッカーをしよう！',                            category: 'アクション' },
@@ -18,8 +17,7 @@ const GAME_META = {
   '/runner':          { name: 'どうぶつランナー',          desc: 'タップでジャンプ！2かいジャンプもできるよ！障害物をよけて走れ！', category: 'レース' },
   '/shooting':        { name: 'どうぶつシューティング',    desc: 'てきをたおしてボスをやっつけろ！',                            category: 'アクション' },
   '/sniper':          { name: 'どうぶつスナイパー',        desc: 'うごくどうぶつをタップでねらえ！フェイクに注意！',            category: 'アクション' },
-  '/crossing':        { name: 'どうぶつクロッシング',      desc: 'みちをわたってどこまでいけるかな？くるまに気をつけて！',      category: 'レース' },
-  '/okashi-crossing': { name: 'おかしのくにクロッシング',  desc: 'グミのくるまとチョコのかわをこえて、おかしのくにをどこまでもすすもう！', category: 'アクション' },
+  '/okashi-crossing': { name: 'おかしのくにたんけん',  desc: 'グミのくるまとチョコのかわをこえて、おかしのくにをどこまでもすすもう！', category: 'アクション' },
   '/mori':            { name: 'もりのなかまたち',          desc: 'もりをとびこえてゴールをめざせ！',                            category: 'アクション' },
   '/sora':            { name: 'そらとびプリンセス',        desc: 'そらをとんでてきをたおそう！',                                category: 'アクション' },
   '/bike':            { name: 'わくわくバイク',            desc: 'バイクでコースをはしりぬけろ！',                              category: 'レース' },

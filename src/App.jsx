@@ -5,7 +5,6 @@ import GAME_META from './seo/gameMeta'
 import TopPage from './pages/TopPage'
 import Shabondama from './games/Shabondama'
 import KudamonoCatch from './games/KudamonoCatch'
-import Meiro from './games/Meiro'
 import DoubutsuPuzzle from './games/DoubutsuPuzzle'
 import KazuAsobi from './games/KazuAsobi'
 import AnimalSoccer from './games/AnimalSoccer'
@@ -20,7 +19,6 @@ import DoubutsuBlock from './games/DoubutsuBlock'
 import DoubutsuRunner from './games/DoubutsuRunner'
 import DoubutsuShoot from './games/DoubutsuShoot'
 import DoubutsuSniper from './games/DoubutsuSniper'
-import DoubutsuCrossing from './games/DoubutsuCrossing'
 import KokkiQuiz from './games/KokkiQuiz'
 import JewelryMaster from './games/JewelryMaster'
 import DressUp from './games/DressUp'
@@ -55,11 +53,11 @@ function GameWithSEO({ route, children }) {
 
 // ゲームルートの一覧（トップ・プライバシー等は除外）
 const GAME_ROUTES = new Set([
-  '/shabondama', '/kudamono-catch', '/meiro', '/doubutsu-puzzle',
+  '/shabondama', '/kudamono-catch', '/doubutsu-puzzle',
   '/kazu-asobi', '/animal-soccer', '/sushi',
   '/ichigo', '/kakurenbo', '/moji', '/tashizan', '/iro', '/machi',
   '/kokki', '/jewelry-master', '/animal-block', '/runner', '/shooting',
-  '/sniper', '/crossing', '/dressup', '/okashi-crossing',
+  '/sniper', '/dressup', '/okashi-crossing',
   '/moji-asobi', '/iro-awase', '/flag-quiz', '/shoot',
   '/mori', '/sora', '/bike', '/kart', '/block', '/houki', '/usagi-carrot', '/usagi', '/neko-chou', '/neko', '/mahou-meiro',
   '/tokei-yomi', '/katakana-asobi', '/nurie',
@@ -87,7 +85,6 @@ export default function App() {
         <Route path="/" element={<TopPage />} />
         <Route path="/shabondama" element={<GameWithSEO route="/shabondama"><Shabondama /></GameWithSEO>} />
         <Route path="/kudamono-catch" element={<GameWithSEO route="/kudamono-catch"><KudamonoCatch /></GameWithSEO>} />
-        <Route path="/meiro" element={<GameWithSEO route="/meiro"><Meiro /></GameWithSEO>} />
         <Route path="/doubutsu-puzzle" element={<GameWithSEO route="/doubutsu-puzzle"><DoubutsuPuzzle /></GameWithSEO>} />
         <Route path="/kazu-asobi" element={<GameWithSEO route="/kazu-asobi"><KazuAsobi /></GameWithSEO>} />
         <Route path="/animal-soccer" element={<GameWithSEO route="/animal-soccer"><AnimalSoccer /></GameWithSEO>} />
@@ -111,7 +108,6 @@ export default function App() {
         <Route path="/runner"   element={<GameWithSEO route="/runner"><DoubutsuRunner /></GameWithSEO>} />
         <Route path="/shooting" element={<GameWithSEO route="/shooting"><DoubutsuShoot /></GameWithSEO>} />
         <Route path="/sniper"   element={<GameWithSEO route="/sniper"><DoubutsuSniper /></GameWithSEO>} />
-        <Route path="/crossing" element={<GameWithSEO route="/crossing"><DoubutsuCrossing /></GameWithSEO>} />
         <Route path="/okashi-crossing" element={<GameWithSEO route="/okashi-crossing"><OkashiCrossing /></GameWithSEO>} />
         <Route path="/kokki"          element={<GameWithSEO route="/kokki"><KokkiQuiz /></GameWithSEO>} />
         <Route path="/jewelry-master" element={<GameWithSEO route="/jewelry-master"><JewelryMaster /></GameWithSEO>} />

@@ -3,7 +3,6 @@
 export const ALL_GAMES = [
   { route:'/shabondama',      icon:'🫧', ja:'シャボンだまポン',       en:'Bubble Pop',          category:'アクション' },
   { route:'/kudamono-catch',  icon:'🍎', ja:'くだものキャッチ',       en:'Fruit Catch',          category:'アクション' },
-  { route:'/meiro',           icon:'🗺️', ja:'めいろあそび',           en:'Maze Play',            category:'パズル'     },
   { route:'/doubutsu-puzzle', icon:'🧩', ja:'どうぶつパズル',         en:'Animal Puzzle',        category:'パズル'     },
   { route:'/kazu-asobi',      icon:'🔢', ja:'かずあそび',             en:'Number Fun',           category:'かずあそび' },
   { route:'/animal-soccer',   icon:'⚽', ja:'どうぶつサッカー',       en:'Animal Soccer',        category:'アクション' },
@@ -20,7 +19,6 @@ export const ALL_GAMES = [
   { route:'/runner',          icon:'🏃', ja:'どうぶつランナー',       en:'Animal Runner',        category:'レース'     },
   { route:'/shooting',        icon:'🚀', ja:'どうぶつシューティング', en:'Animal Shooter',       category:'アクション' },
   { route:'/sniper',          icon:'🎯', ja:'どうぶつスナイパー',     en:'Animal Sniper',        category:'アクション' },
-  { route:'/crossing',        icon:'🐔', ja:'どうぶつクロッシング',   en:'Animal Crossing',      category:'レース'     },
   { route:'/mori',            icon:'🌲', ja:'もりのなかまたち',       en:'Forest Friends',       category:'アクション' },
   { route:'/sora',            icon:'👸', ja:'そらとびプリンセス',     en:'Sky Princess',         category:'アクション' },
   { route:'/bike',            icon:'🏍️', ja:'わくわくバイク',         en:'Wakuwaku Bike',        category:'レース'     },

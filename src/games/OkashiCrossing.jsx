@@ -43,7 +43,7 @@ export default function OkashiCrossing() {
         ref={iframeRef}
         src="/games/okashi_crossing.html"
         style={{ width: '100%', height: '100%', border: 'none', display: 'block', position: 'absolute', top: 0, left: 0 }}
-        title="おかしのくにクロッシング"
+        title="おかしのくにたんけん"
         allow="autoplay; fullscreen"
         allowFullScreen
         sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"

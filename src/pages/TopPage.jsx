@@ -196,29 +196,6 @@ const GAME_SVGS = {
       <ellipse cx="48" cy="36" rx="1.2" ry="1.8" fill="#FFCDD2" stroke="#B71C1C" strokeWidth=".6"/>
     </svg>
   ),
-  g3: (
-    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <rect x="8" y="6" width="84" height="76" rx="3" fill="rgba(0,0,0,.2)"/>
-      <path d="M15 22L55 22L55 38L35 38L35 54L75 54L75 38L88 38" stroke="rgba(255,255,255,.25)" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-      <circle cx="88" cy="38" r="8" fill="#FFD700" stroke="#B8860B" strokeWidth="1.5"/>
-      <text x="88" y="43" textAnchor="middle" fontSize="10" fill="white" fontWeight="bold">★</text>
-      <ellipse cx="24" cy="68" rx="9" ry="10" fill="#F8C8D4" stroke="#C2185B" strokeWidth="1.5"/>
-      <circle cx="24" cy="54" r="11" fill="#F8C8D4" stroke="#C2185B" strokeWidth="1.5"/>
-      <ellipse cx="18" cy="42" rx="3.5" ry="7.5" fill="#F8C8D4" stroke="#C2185B" strokeWidth="1.5"/>
-      <ellipse cx="18" cy="42" rx="2" ry="5" fill="#FFB6C1"/>
-      <ellipse cx="30" cy="42" rx="3.5" ry="7.5" fill="#F8C8D4" stroke="#C2185B" strokeWidth="1.5"/>
-      <ellipse cx="30" cy="42" rx="2" ry="5" fill="#FFB6C1"/>
-      <circle cx="20" cy="53" r="2.8" fill="#1a1a2e"/>
-      <circle cx="28" cy="53" r="2.8" fill="#1a1a2e"/>
-      <circle cx="20.7" cy="52" r="1.1" fill="white"/>
-      <circle cx="28.7" cy="52" r="1.1" fill="white"/>
-      <ellipse cx="17" cy="57" rx="3" ry="2" fill="#FFB6C1" opacity=".7"/>
-      <ellipse cx="31" cy="57" rx="3" ry="2" fill="#FFB6C1" opacity=".7"/>
-      <path d="M21 59Q24 62 27 59" stroke="#C2185B" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
-      <ellipse cx="18" cy="78" rx="5.5" ry="3.5" fill="#F8C8D4" stroke="#C2185B" strokeWidth="1.5"/>
-      <ellipse cx="30" cy="78" rx="5.5" ry="3.5" fill="#F8C8D4" stroke="#C2185B" strokeWidth="1.5"/>
-    </svg>
-  ),
   g4: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
       <circle cx="88" cy="10" r="2" fill="white" opacity=".4"/>
@@ -597,31 +574,6 @@ const GAME_SVGS = {
       <circle cx="80.5" cy="63" r="1.2" fill="#1a1a2e"/>
     </svg>
   ),
-  s5: (
-    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="88" cy="12" r="2" fill="#FFD700" opacity=".6"/>
-      <rect x="0" y="38" width="100" height="22" fill="#616161" stroke="#424242" strokeWidth="1"/>
-      <rect x="8" y="47" width="12" height="4" rx="1" fill="white" opacity=".8"/>
-      <rect x="30" y="47" width="12" height="4" rx="1" fill="white" opacity=".8"/>
-      <rect x="52" y="47" width="12" height="4" rx="1" fill="white" opacity=".8"/>
-      <rect x="74" y="47" width="12" height="4" rx="1" fill="white" opacity=".8"/>
-      <rect x="55" y="28" width="38" height="18" rx="4" fill="#E53935" stroke="#B71C1C" strokeWidth="1.5"/>
-      <rect x="60" y="20" width="26" height="10" rx="3" fill="#EF9A9A" stroke="#B71C1C" strokeWidth="1.2"/>
-      <rect x="62" y="22" width="10" height="7" rx="1" fill="#B2EBF2" opacity=".8"/>
-      <rect x="76" y="22" width="8" height="7" rx="1" fill="#B2EBF2" opacity=".8"/>
-      <circle cx="63" cy="46" r="5" fill="#424242" stroke="#212121" strokeWidth="1.5"/>
-      <circle cx="63" cy="46" r="2.5" fill="#9E9E9E"/>
-      <circle cx="84" cy="46" r="5" fill="#424242" stroke="#212121" strokeWidth="1.5"/>
-      <circle cx="84" cy="46" r="2.5" fill="#9E9E9E"/>
-      <ellipse cx="28" cy="32" rx="9" ry="7" fill="#FF8F00" stroke="#E65100" strokeWidth="1.5"/>
-      <circle cx="28" cy="22" r="7" fill="#FF8F00" stroke="#E65100" strokeWidth="1.5"/>
-      <polygon points="22,22 18,25 22,27" fill="#FFD700" stroke="#F57F17" strokeWidth="1"/>
-      <circle cx="25" cy="21" r="2.5" fill="white" stroke="#E65100" strokeWidth="1"/>
-      <circle cx="25.5" cy="21" r="1.3" fill="#1a1a2e"/>
-      <line x1="24" y1="38" x2="20" y2="55" stroke="#FFD700" strokeWidth="3" strokeLinecap="round"/>
-      <line x1="32" y1="38" x2="36" y2="55" stroke="#FFD700" strokeWidth="3" strokeLinecap="round"/>
-    </svg>
-  ),
   g_mori: (
     <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
       <rect width="200" height="140" fill="#87CEEB" rx="8"/>
@@ -889,12 +841,6 @@ const GAMES = [
     zh:{ name:'接水果',               desc:'接住掉落的水果！'                             },
     ko:{ name:'과일 캐치',             desc:'떨어지는 과일을\n잡아요!'                    },
     es:{ name:'Atrapa Frutas',         desc:'¡Atrapa las frutas\nantes de que caigan!'    } },
-  { id:'g3', route:'/meiro',           icon:'🗺️', num:3, color:'#7B68EE', stars:4, isNew:false, category:'パズル',
-    ja:{ name:'めいろあそび',       desc:'めいろを とおって\nゴールをめざせ！'           },
-    en:{ name:'Maze Play',            desc:'Navigate the maze\nto reach the goal!'        },
-    zh:{ name:'迷宫游戏',             desc:'穿过迷宫\n到达终点！'                         },
-    ko:{ name:'미로 게임',             desc:'미로를 통과해\n골인!'                         },
-    es:{ name:'Laberinto',             desc:'¡Navega el laberinto\nhasta la meta!'         } },
   { id:'g4', route:'/doubutsu-puzzle', icon:'🧩', num:4, color:'#2ECC71', stars:5, isNew:false, category:'パズル',
     ja:{ name:'どうぶつパズル',     desc:'どうぶつを ならべて\nパズルをとこう！'         },
     en:{ name:'Animal Puzzle',        desc:'Line up animals\nto solve the puzzle!'        },
@@ -1003,12 +949,6 @@ const SCHOOL_GAMES = [
     zh:{ name:'动物狙击手',       desc:'点击移动动物\n积累分数！'                              },
     ko:{ name:'동물 스나이퍼',     desc:'움직이는 동물을\n탭해서 맞혀요!'                      },
     es:{ name:'Francotirador',    desc:'¡Toca animales\nen movimiento!'                        } },
-  { id:'s5', route:'/crossing', icon:'🐔', num:5, color:'#e65100', stars:5, isNew:false, category:'レース',
-    ja:{ name:'どうぶつクロッシング', desc:'みちをわたって\nどこまでいけるかな？\nくるまに気をつけて！' },
-    en:{ name:'Animal Crossing', desc:'Cross the road\nand go as far as you can!\nWatch for cars!' },
-    zh:{ name:'动物过马路',       desc:'穿越马路\n走多远？'                                   },
-    ko:{ name:'동물 크로싱',       desc:'길을 건너\n얼마나 멀리 갈까요?'                        },
-    es:{ name:'Animal Crossing',  desc:'¡Cruza la calle\ny llega lejos!'                       } },
   { id:'g_mori', route:'/mori', icon:'🌲', num:6, color:'#2e7d32', stars:4, isNew:false, category:'アクション',
     ja:{ name:'もりのなかまたち', desc:'もりをとびこえて\nゴールをめざせ！' },
     en:{ name:'Forest Friends',  desc:'Jump through the forest\nand reach the goal!' },
@@ -1064,8 +1004,8 @@ const SCHOOL_GAMES = [
     ko:{ name:'고양이와 나비',     desc:'날아다니는 나비를\n고양이로 잡아요!' },
     es:{ name:'Gato y Mariposa',   desc:'¡Atrapa las mariposas\ncon el gato!' } },
   { id:'g_okashi', route:'/okashi-crossing', icon:'🍭', num:16, color:'#ff9ecb', stars:4, isNew:true, category:'アクション',
-    ja:{ name:'おかしのくにクロッシング', desc:'グミのくるまとチョコのかわ！\nどこまでもすすもう！' },
-    en:{ name:'Candy Land Crossing',  desc:'Cross gummy roads and\nchocolate rivers—go far!' },
+    ja:{ name:'おかしのくにたんけん', desc:'グミのくるまとチョコのかわ！\nどこまでもすすもう！' },
+    en:{ name:'Candy Land Explorer',  desc:'Cross gummy roads and\nchocolate rivers—go far!' },
     zh:{ name:'糖果王国穿越',        desc:'越过软糖车和巧克力河，\n看你能走多远！' },
     ko:{ name:'과자나라 크로싱',     desc:'젤리 자동차와 초콜릿 강을\n건너 멀리 가보자!' },
     es:{ name:'Cruce del País Dulce', desc:'¡Cruza autos de gomita y\nríos de chocolate!' } },
