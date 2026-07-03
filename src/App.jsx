@@ -32,6 +32,9 @@ import BlockKuzushi from './games/BlockKuzushi'
 import MahouHouki from './games/MahouHouki'
 import UsagiCarrot from './games/UsagiCarrot'
 import NekoChou from './games/NekoChou'
+import TokeiYomi from './games/TokeiYomi'
+import KatakanaAsobi from './games/KatakanaAsobi'
+import NurieOekaki from './games/NurieOekaki'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 import { recordRecentGame } from './utils/recentGames'
@@ -57,6 +60,7 @@ const GAME_ROUTES = new Set([
   '/sniper', '/crossing', '/dressup',
   '/moji-asobi', '/iro-awase', '/flag-quiz', '/shoot',
   '/mori', '/sora', '/bike', '/kart', '/block', '/houki', '/usagi-carrot', '/usagi', '/neko-chou', '/neko',
+  '/tokei-yomi', '/katakana-asobi', '/nurie',
   // 短縮URLエイリアスも記録
   '/kudamono', '/puzzle', '/kazu', '/soccer',
 ]);
@@ -119,6 +123,9 @@ export default function App() {
         <Route path="/usagi"        element={<GameWithSEO route="/usagi-carrot"><UsagiCarrot /></GameWithSEO>} />
         <Route path="/neko-chou" element={<GameWithSEO route="/neko-chou"><NekoChou /></GameWithSEO>} />
         <Route path="/neko"      element={<GameWithSEO route="/neko-chou"><NekoChou /></GameWithSEO>} />
+        <Route path="/tokei-yomi" element={<GameWithSEO route="/tokei-yomi"><TokeiYomi /></GameWithSEO>} />
+        <Route path="/katakana-asobi" element={<GameWithSEO route="/katakana-asobi"><KatakanaAsobi /></GameWithSEO>} />
+        <Route path="/nurie" element={<GameWithSEO route="/nurie"><NurieOekaki /></GameWithSEO>} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms"   element={<TermsPage />} />
       </Routes>

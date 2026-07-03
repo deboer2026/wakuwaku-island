@@ -27,6 +27,9 @@ const GAME_META = {
   '/houki':           { name: 'まほうほうきGP',          desc: 'そらをとんでリングをくぐり、タイムをのばそう！Mode7のレース。', category: 'レース' },
   '/usagi-carrot':    { name: 'うさぎとにんじん',          desc: 'うえからおちてくるにんじんをうさぎのカゴでキャッチしよう！',  category: 'アクション' },
   '/neko-chou':       { name: 'ねことちょうちょ',          desc: 'とんでにげるちょうちょをねこでおいかけてつかまえよう！',      category: 'アクション' },
+  '/tokei-yomi':      { name: 'とけいよみ',                desc: 'とけいのはりをよんだりあわせたりしてあそぼう！',              category: 'がくしゅう' },
+  '/katakana-asobi':  { name: 'カタカナあそび',            desc: 'えやひらがなをみてただしいカタカナをえらぼう！',              category: 'がくしゅう' },
+  '/nurie':           { name: 'ぬりえ・おえかき',          desc: 'すきないろでじゆうにぬったりかいたりしよう！',                category: 'そうぞう' },
 };
 
 export default GAME_META;

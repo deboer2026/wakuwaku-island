@@ -22,6 +22,7 @@ const CARD_GRADIENTS = {
   'クイズ':     'linear-gradient(145deg, #4FC3A1, #1A5C3A)',
   'そうぞう':   'linear-gradient(145deg, #C97FE0, #3D0D6B)',
   'レース':     'linear-gradient(145deg, #F9A825, #E53935)',
+  'がくしゅう': 'linear-gradient(145deg, #7986CB, #283593)',
 };
 const DEFAULT_GRADIENT = 'linear-gradient(145deg, #7B8FA1, #3D4A5C)';
 
@@ -34,6 +35,7 @@ const CATEGORIES = [
   { key:'レース',     icon:'🏁', label:{ja:'レース',     en:'Racing',   zh:'赛车',   ko:'레이싱', es:'Carreras'} },
   { key:'クイズ',     icon:'❓', label:{ja:'クイズ',     en:'Quiz',     zh:'问答',   ko:'퀴즈',   es:'Quiz'    } },
   { key:'そうぞう',   icon:'🎨', label:{ja:'そうぞう',   en:'Create',   zh:'创造',   ko:'창작',   es:'Crear'   } },
+  { key:'がくしゅう', icon:'📚', label:{ja:'がくしゅう', en:'Study',    zh:'学习',   ko:'학습',   es:'Estudio' } },
 ];
 
 /* ── マスコットのセリフ ──────────────────────────── */
@@ -732,6 +734,56 @@ const GAME_SVGS = {
       <ellipse cx="58" cy="54" rx="2.4" ry="1.6" fill="#ffb3d1" opacity=".6"/>
     </svg>
   ),
+  g_tokei: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="10" r="1.8" fill="#FFD700" opacity=".6"/>
+      <circle cx="90" cy="16" r="1.5" fill="white" opacity=".5"/>
+      <circle cx="50" cy="46" r="34" fill="#4a148c" stroke="#FFD700" strokeWidth="3.5"/>
+      <circle cx="50" cy="46" r="27" fill="#2a0a5c"/>
+      <line x1="50" y1="21" x2="50" y2="26" stroke="#FFD700" strokeWidth="2.4"/>
+      <line x1="50" y1="66" x2="50" y2="71" stroke="#FFD700" strokeWidth="2.4"/>
+      <line x1="25" y1="46" x2="30" y2="46" stroke="#FFD700" strokeWidth="2.4"/>
+      <line x1="70" y1="46" x2="75" y2="46" stroke="#FFD700" strokeWidth="2.4"/>
+      <line x1="50" y1="46" x2="50" y2="28" stroke="#FFD700" strokeWidth="3.5" strokeLinecap="round"/>
+      <line x1="50" y1="46" x2="66" y2="46" stroke="#40C4FF" strokeWidth="2.6" strokeLinecap="round"/>
+      <circle cx="50" cy="46" r="3.2" fill="#FFD700"/>
+      <circle cx="50" cy="10" r="9" fill="#FF9800" stroke="#E65100" strokeWidth="2"/>
+      <text x="50" y="14" textAnchor="middle" fontSize="11" fill="white" fontWeight="bold">★</text>
+    </svg>
+  ),
+  g_katakana: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="10" cy="12" r="1.8" fill="#FFD700" opacity=".6"/>
+      <circle cx="90" cy="18" r="1.5" fill="white" opacity=".5"/>
+      <rect x="8" y="34" width="34" height="38" rx="6" fill="#29B6F6" stroke="#01579B" strokeWidth="2.5"/>
+      <rect x="11" y="37" width="15" height="8" rx="2" fill="#B3E5FC" opacity=".5"/>
+      <text x="25" y="63" textAnchor="middle" fontSize="24" fontWeight="bold" fill="white">ア</text>
+      <rect x="58" y="34" width="34" height="38" rx="6" fill="#26A69A" stroke="#004D40" strokeWidth="2.5"/>
+      <rect x="61" y="37" width="15" height="8" rx="2" fill="#B2DFDB" opacity=".5"/>
+      <text x="75" y="63" textAnchor="middle" fontSize="24" fontWeight="bold" fill="white">カ</text>
+      <circle cx="50" cy="24" r="13" fill="#FFD700" stroke="#B8860B" strokeWidth="2"/>
+      <text x="50" y="30" textAnchor="middle" fontSize="15" fill="#5c3a00" fontWeight="bold">ナ</text>
+      <path d="M44 44 L50 38 L56 44" fill="none" stroke="#FFD700" strokeWidth="2.5" strokeLinecap="round"/>
+    </svg>
+  ),
+  g_nurie: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="10" r="1.8" fill="#FFD700" opacity=".6"/>
+      <circle cx="90" cy="14" r="1.5" fill="white" opacity=".5"/>
+      <ellipse cx="48" cy="48" rx="34" ry="27" fill="#FFF8E1" stroke="#8D6E63" strokeWidth="2.5"/>
+      <ellipse cx="48" cy="48" rx="34" ry="27" fill="none" stroke="#6D4C41" strokeWidth="1" opacity=".3"/>
+      <circle cx="34" cy="38" r="5.5" fill="#FF5252"/>
+      <circle cx="50" cy="33" r="5.5" fill="#FFEB3B"/>
+      <circle cx="64" cy="38" r="5.5" fill="#4CAF50"/>
+      <circle cx="66" cy="53" r="5.5" fill="#2196F3"/>
+      <circle cx="32" cy="53" r="5.5" fill="#AB47BC"/>
+      <ellipse cx="48" cy="60" rx="7" ry="5" fill="#FFF8E1" stroke="#8D6E63" strokeWidth="1.5"/>
+      <rect x="66" y="8" width="7" height="30" rx="2" fill="#FF9800" stroke="#E65100" strokeWidth="1.5" transform="rotate(35 70 23)"/>
+      <path d="M84 41 L88 48 L80 48 Z" fill="#5D4037" transform="rotate(35 84 44)"/>
+      <path d="M14 66 Q30 74 50 70 Q72 66 86 72" fill="none" stroke="#FF5252" strokeWidth="3" strokeLinecap="round"/>
+      <path d="M14 74 Q30 82 50 78 Q72 74 86 80" fill="none" stroke="#2196F3" strokeWidth="3" strokeLinecap="round"/>
+    </svg>
+  ),
 };
 
 /* ════════════════════════════════════════════════════
@@ -856,6 +908,12 @@ const GAMES = [
     zh:{ name:'珠宝大师',           desc:'根据客人的要求\n选择正确的宝石\n和饰品！'                      },
     ko:{ name:'주얼리 마스터',       desc:'손님의 요청에 맞는\n보석과 액세서리를\n골라요！'               },
     es:{ name:'Maestro Joyero',    desc:'¡Elige la joya\ny accesorio que\npide el cliente!'           } },
+  { id:'g_nurie', route:'/nurie', icon:'🖍️', num:17, color:'#FF8A65', stars:3, isNew:true, category:'そうぞう',
+    ja:{ name:'ぬりえ・おえかき', desc:'すきな いろで じゆうに\nぬったり かいたり しよう！' },
+    en:{ name:'Coloring & Drawing', desc:'Color pictures and\ndraw freely!' },
+    zh:{ name:'涂色和画画',         desc:'用喜欢的颜色\n自由涂色画画！' },
+    ko:{ name:'색칠·그림 그리기',   desc:'좋아하는 색으로\n자유롭게 색칠하고 그려요!' },
+    es:{ name:'Colorear y Dibujar', desc:'¡Colorea dibujos\ny dibuja libremente!' } },
 ];
 
 /* ════════════════════════════════════════════════════
@@ -940,6 +998,18 @@ const SCHOOL_GAMES = [
     zh:{ name:'猫咪抓蝴蝶',        desc:'用猫咪抓住\n飞舞的蝴蝶！' },
     ko:{ name:'고양이와 나비',     desc:'날아다니는 나비를\n고양이로 잡아요!' },
     es:{ name:'Gato y Mariposa',   desc:'¡Atrapa las mariposas\ncon el gato!' } },
+  { id:'g_tokei', route:'/tokei-yomi', icon:'🕐', num:14, color:'#7986CB', stars:3, isNew:true, category:'がくしゅう',
+    ja:{ name:'とけいよみ',         desc:'とけいの はりを よんだり\nあわせたり して あそぼう！' },
+    en:{ name:'Clock Reading',      desc:'Read and match\nthe clock hands!' },
+    zh:{ name:'认识时钟',           desc:'读时钟指针\n或对准时间！' },
+    ko:{ name:'시계 읽기',          desc:'시계 바늘을 읽고\n맞춰봐요!' },
+    es:{ name:'Lectura del Reloj',  desc:'¡Lee y ajusta\nlas manecillas!' } },
+  { id:'g_katakana', route:'/katakana-asobi', icon:'🔤', num:15, color:'#29B6F6', stars:3, isNew:true, category:'がくしゅう',
+    ja:{ name:'カタカナあそび',     desc:'えや ひらがなを みて\nただしい カタカナを えらぼう！' },
+    en:{ name:'Katakana Play',      desc:'Pick the right katakana\nfrom pictures & hiragana!' },
+    zh:{ name:'片假名游戏',         desc:'看图片和平假名\n选出正确的片假名！' },
+    ko:{ name:'가타카나 놀이',      desc:'그림과 히라가나를 보고\n맞는 가타카나를 골라요!' },
+    es:{ name:'Juego de Katakana',  desc:'¡Elige el katakana\ncorrecto con dibujos!' } },
 ];
 
 /* ════════════════════════════════════════════════════
