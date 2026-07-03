@@ -862,7 +862,7 @@ const GAMES = [
    🔥チャレンジ タブ ゲームリスト
 ════════════════════════════════════════════════════ */
 const SCHOOL_GAMES = [
-  { id:'s1', route:'/tetris',   icon:'🧱', num:1, color:'#4a90ff', stars:5, isNew:false, category:'パズル',
+  { id:'s1', route:'/animal-block', icon:'🧱', num:1, color:'#4a90ff', stars:5, isNew:false, category:'パズル',
     ja:{ name:'どうぶつブロック', desc:'おなじどうぶつを\n3つならべてけそう！\nれんさでフィーバー！' },
     en:{ name:'Animal Blocks',   desc:'Match 3 animals\nin a row to clear!\nChain for fever!' },
     zh:{ name:'动物方块',         desc:'相同动物\n三连消除！\n连锁进入狂热！' },

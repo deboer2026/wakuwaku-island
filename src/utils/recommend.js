@@ -16,7 +16,7 @@ export const ALL_GAMES = [
   { route:'/iro',             icon:'🎨', ja:'いろあわせ',             en:'Color Match',          category:'パズル'     },
   { route:'/machi',           icon:'🏙️', ja:'わくわくまちづくり',     en:'City Builder',         category:'そうぞう'   },
   { route:'/kokki',           icon:'🌍', ja:'こっきクイズ',           en:'Flag Quiz',            category:'クイズ'     },
-  { route:'/tetris',          icon:'🧱', ja:'どうぶつブロック',       en:'Animal Blocks',        category:'パズル'     },
+  { route:'/animal-block',    icon:'🧱', ja:'どうぶつブロック',       en:'Animal Blocks',        category:'パズル'     },
   { route:'/runner',          icon:'🏃', ja:'どうぶつランナー',       en:'Animal Runner',        category:'レース'     },
   { route:'/shooting',        icon:'🚀', ja:'どうぶつシューティング', en:'Animal Shooter',       category:'アクション' },
   { route:'/sniper',          icon:'🎯', ja:'どうぶつスナイパー',     en:'Animal Sniper',        category:'アクション' },

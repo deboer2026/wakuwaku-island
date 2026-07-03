@@ -53,7 +53,7 @@ const GAME_ROUTES = new Set([
   '/shabondama', '/kudamono-catch', '/meiro', '/doubutsu-puzzle',
   '/kazu-asobi', '/animal-soccer', '/sushi',
   '/ichigo', '/kakurenbo', '/moji', '/tashizan', '/iro', '/machi',
-  '/kokki', '/jewelry-master', '/tetris', '/runner', '/shooting',
+  '/kokki', '/jewelry-master', '/animal-block', '/runner', '/shooting',
   '/sniper', '/crossing', '/dressup',
   '/moji-asobi', '/iro-awase', '/flag-quiz', '/shoot',
   '/mori', '/sora', '/bike', '/kart', '/block', '/houki', '/usagi-carrot', '/usagi', '/neko-chou', '/neko',
@@ -101,7 +101,7 @@ export default function App() {
         <Route path="/iro-awase"  element={<GameWithSEO route="/iro"><IroAwase /></GameWithSEO>} />
         <Route path="/flag-quiz"  element={<GameWithSEO route="/kokki"><KokkiQuiz /></GameWithSEO>} />
         <Route path="/shoot"      element={<GameWithSEO route="/shooting"><DoubutsuShoot /></GameWithSEO>} />
-        <Route path="/tetris"   element={<GameWithSEO route="/tetris"><DoubutsuBlock /></GameWithSEO>} />
+        <Route path="/animal-block" element={<GameWithSEO route="/animal-block"><DoubutsuBlock /></GameWithSEO>} />
         <Route path="/runner"   element={<GameWithSEO route="/runner"><DoubutsuRunner /></GameWithSEO>} />
         <Route path="/shooting" element={<GameWithSEO route="/shooting"><DoubutsuShoot /></GameWithSEO>} />
         <Route path="/sniper"   element={<GameWithSEO route="/sniper"><DoubutsuSniper /></GameWithSEO>} />
