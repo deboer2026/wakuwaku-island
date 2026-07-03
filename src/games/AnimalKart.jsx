@@ -25,7 +25,7 @@ export default function AnimalKart() {
     }}>
       <iframe
         ref={iframeRef}
-        src="/games/animal_kart_v5.html"
+        src="/games/animal_kart_v6.html"
         style={{
           width: '100%',
           height: '100%',
