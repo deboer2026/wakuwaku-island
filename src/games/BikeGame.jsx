@@ -25,7 +25,7 @@ export default function BikeGame() {
     }}>
       <iframe
         ref={iframeRef}
-        src="/games/wakuwaku_bike_v2.html"
+        src="/games/wakuwaku_bike_v3.html"
         style={{
           width: '100%',
           height: '100%',
