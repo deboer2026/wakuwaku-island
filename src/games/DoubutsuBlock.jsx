@@ -21,7 +21,7 @@ export default function DoubutsuBlock() {
     <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:0, overflow:'hidden' }}>
       <iframe
         ref={iframeRef}
-        src="/games/tetris_v2.html"
+        src="/games/doubutsu_block_v3.html"
         style={{ width:'100%', height:'100%', border:'none', display:'block', position:'absolute', top:0, left:0 }}
         title="どうぶつブロック"
         allow="autoplay; fullscreen"

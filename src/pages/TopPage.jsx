@@ -863,11 +863,11 @@ const GAMES = [
 ════════════════════════════════════════════════════ */
 const SCHOOL_GAMES = [
   { id:'s1', route:'/tetris',   icon:'🧱', num:1, color:'#4a90ff', stars:5, isNew:false, category:'パズル',
-    ja:{ name:'どうぶつブロック', desc:'ブロックをならべて\nラインをけそう！\nテトリス風ゲーム！' },
-    en:{ name:'Animal Blocks',   desc:'Stack blocks and\nclear the lines!\nTetris-style game!' },
-    zh:{ name:'动物方块',         desc:'叠方块消行！\n俄罗斯方块！'                             },
-    ko:{ name:'동물 블록',         desc:'블록을 쌓아\n줄을 없애요!'                             },
-    es:{ name:'Bloques Animal',   desc:'¡Apila bloques y\nelimina líneas!'                      } },
+    ja:{ name:'どうぶつブロック', desc:'おなじどうぶつを\n3つならべてけそう！\nれんさでフィーバー！' },
+    en:{ name:'Animal Blocks',   desc:'Match 3 animals\nin a row to clear!\nChain for fever!' },
+    zh:{ name:'动物方块',         desc:'相同动物\n三连消除！\n连锁进入狂热！' },
+    ko:{ name:'동물 블록',         desc:'같은 동물을\n3개 모아 없애요!\n연쇄로 피버!' },
+    es:{ name:'Bloques Animal',   desc:'¡Junta 3 animales\niguales para borrar!\n¡Combos y fiebre!' } },
   { id:'s2', route:'/runner',   icon:'🏃', num:2, color:'#43A047', stars:4, isNew:false, category:'レース',
     ja:{ name:'どうぶつランナー', desc:'タップでジャンプ！\n2かいジャンプもできるよ！\n障害物をよけて走れ！' },
     en:{ name:'Animal Runner',   desc:'Tap to jump!\nDouble jump available!\nAvoid obstacles!' },
