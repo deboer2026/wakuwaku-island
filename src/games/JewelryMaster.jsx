@@ -25,7 +25,7 @@ export default function JewelryMaster() {
     }}>
       <iframe
         ref={iframeRef}
-        src="/games/jewelry_master_v6.html"
+        src="/games/jewelry_master_v7.html"
         style={{
           width: '100%',
           height: '100%',
