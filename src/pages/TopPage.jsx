@@ -9,6 +9,7 @@ import LoginBonus from '../components/LoginBonus';
 import Shop from '../components/Shop';
 import { getCoins, checkLoginBonus, claimLoginBonus } from '../utils/coins';
 import { getRecentGames } from '../utils/recentGames';
+import { getPlayHistory } from '../utils/playHistory';
 import { ALL_GAMES } from '../utils/recommend';
 import './TopPage.css';
 
@@ -1198,6 +1199,15 @@ export default function TopPage() {
 
   useEffect(() => () => { if (rouletteTimer.current) clearTimeout(rouletteTimer.current); }, []);
 
+  /* ── スタンプずかん ── */
+  const [zukanOpen, setZukanOpen] = useState(false);
+  const [playHist,  setPlayHist]  = useState({});
+
+  function openZukan() {
+    setPlayHist(getPlayHistory());
+    setZukanOpen(true);
+  }
+
   function handleLoginBonusClaim() {
     claimLoginBonus();
     setCoins(getCoins());
@@ -1391,10 +1401,15 @@ export default function TopPage() {
           </button>
         </div>
 
-        {/* ── ゲームルーレット ボタン ── */}
-        <button className="tp-roulette-btn" onClick={startRoulette}>
-          🎲 {{ja:'きょうのゲームルーレット', en:'Game Roulette', zh:'今日游戏轮盘', ko:'오늘의 게임 룰렛', es:'Ruleta del día'}[lang] || 'きょうのゲームルーレット'}
-        </button>
+        {/* ── アクションボタン行 ── */}
+        <div className="tp-action-row">
+          <button className="tp-roulette-btn" onClick={startRoulette}>
+            🎲 {{ja:'ゲームルーレット', en:'Game Roulette', zh:'游戏轮盘', ko:'게임 룰렛', es:'Ruleta'}[lang] || 'ゲームルーレット'}
+          </button>
+          <button className="tp-zukan-btn" onClick={openZukan}>
+            📖 {{ja:'スタンプずかん', en:'Stamp Book', zh:'印章图鉴', ko:'스탬프 도감', es:'Álbum'}[lang] || 'スタンプずかん'}
+          </button>
+        </div>
 
         {/* ── タブコンテンツ ── */}
         <div className={`tp-tab-panel${activeTab === 'kids' ? ' tp-tab-panel--active' : ''}`}>
@@ -1488,6 +1503,45 @@ export default function TopPage() {
                   <button className="tp-roulette-close" onClick={closeRoulette}>✕</button>
                 </div>
               )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── スタンプずかんオーバーレイ ── */}
+      {zukanOpen && (() => {
+        const all = [...GAMES, ...SCHOOL_GAMES];
+        const got = all.filter(g => playHist[g.route]).length;
+        const complete = got === all.length;
+        return (
+          <div className="tp-roulette-overlay" onClick={() => setZukanOpen(false)}>
+            <div className="tp-zukan-box" onClick={(e) => e.stopPropagation()}>
+              <div className="tp-roulette-title">
+                📖 {{ja:'スタンプずかん', en:'Stamp Book', zh:'印章图鉴', ko:'스탬프 도감', es:'Álbum de sellos'}[lang] || 'スタンプずかん'}
+              </div>
+              <div className="tp-zukan-progress">
+                {complete
+                  ? ({ja:'🎉 コンプリート！すごい！', en:'🎉 Complete! Amazing!', zh:'🎉 全部集齐！太棒了！', ko:'🎉 컴플리트! 대단해!', es:'🎉 ¡Completo! ¡Increíble!'}[lang] || '🎉 コンプリート！すごい！')
+                  : `⭐ ${got} / ${all.length}`}
+              </div>
+              <div className="tp-zukan-grid">
+                {all.map(g => {
+                  const played = !!playHist[g.route];
+                  return (
+                    <button key={g.route}
+                      className={`tp-zukan-cell${played ? ' tp-zukan-cell--got' : ''}`}
+                      style={played ? { background: CARD_GRADIENTS[g.category] || DEFAULT_GRADIENT } : undefined}
+                      onClick={(e) => { setZukanOpen(false); spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY); }}>
+                      <span className="tp-zukan-icon">{played ? g.icon : '❓'}</span>
+                      <span className="tp-zukan-name">{played ? (g[lang] || g.ja).name : '？？？'}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="tp-zukan-hint">
+                {{ja:'あそぶと スタンプが もらえるよ！', en:'Play games to collect stamps!', zh:'玩游戏就能收集印章！', ko:'게임하면 스탬프를 모을 수 있어!', es:'¡Juega para conseguir sellos!'}[lang] || 'あそぶと スタンプが もらえるよ！'}
+              </div>
+              <button className="tp-roulette-close" onClick={() => setZukanOpen(false)}>✕ {{ja:'とじる', en:'Close', zh:'关闭', ko:'닫기', es:'Cerrar'}[lang] || 'とじる'}</button>
             </div>
           </div>
         );

@@ -35,6 +35,7 @@ import NekoChou from './games/NekoChou'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 import { recordRecentGame } from './utils/recentGames'
+import { recordGamePlay } from './utils/playHistory'
 
 function GameWithSEO({ route, children }) {
   const meta = GAME_META[route];
@@ -66,6 +67,7 @@ function RouteTracker() {
   useEffect(() => {
     if (GAME_ROUTES.has(location.pathname)) {
       recordRecentGame(location.pathname);
+      recordGamePlay(location.pathname);
     }
   }, [location.pathname]);
   return null;
