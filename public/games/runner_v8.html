@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>どうぶつランナー</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;font-family:'M PLUS Rounded 1c',sans-serif;user-select:none;-webkit-tap-highlight-color:transparent;}
+body{background:#5EC8F2;display:flex;flex-direction:column;align-items:center;}
+:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);}
+
+#game-wrap{position:relative;width:100%;height:100vh;min-height:100vh;overflow:hidden;}
+
+/* ===== 背景レイヤー ===== */
+#sky{position:absolute;inset:0;z-index:0;transition:background 1.2s;}
+#celestial{position:absolute;z-index:1;pointer-events:none;transition:all 1.2s;}
+#stars-layer{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity 1.2s;}
+.bg-strip{position:absolute;left:0;right:0;bottom:0;z-index:2;pointer-events:none;background-repeat:repeat-x;background-position:0 bottom;transition:opacity .8s;}
+#strip-far{height:46%;z-index:2;}
+#strip-mid{height:38%;z-index:3;}
+#game-canvas{position:absolute;inset:0;z-index:4;}
+#dom-layer{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden;}
+
+.dom-obj{position:absolute;pointer-events:none;filter:drop-shadow(0 3px 5px rgba(0,0,0,0.35));}
+.dom-obj svg{display:block;overflow:visible;}
+.dom-player{z-index:10;}
+.powered{filter:drop-shadow(0 0 10px rgba(255,215,0,0.9)) drop-shadow(0 3px 5px rgba(0,0,0,0.35));}
+.p-inv{filter:drop-shadow(0 0 12px rgba(206,147,216,1)) drop-shadow(0 3px 5px rgba(0,0,0,0.35));}
+
+/* 走りアニメ（SVG脚） */
+@keyframes runF{0%,100%{transform:rotate(30deg)}50%{transform:rotate(-30deg)}}
+@keyframes runB{0%,100%{transform:rotate(-30deg)}50%{transform:rotate(30deg)}}
+.running .legF{animation:runF .28s linear infinite;transform-box:fill-box;transform-origin:50% 8%;}
+.running .legB{animation:runB .28s linear infinite;transform-box:fill-box;transform-origin:50% 8%;}
+@keyframes bodyBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+.running .charbody{animation:bodyBob .28s ease-in-out infinite;}
+.jumping .legF{transform:rotate(40deg);transform-box:fill-box;transform-origin:50% 8%;}
+.jumping .legB{transform:rotate(-45deg);transform-box:fill-box;transform-origin:50% 8%;}
+@keyframes tailWag{0%,100%{transform:rotate(8deg)}50%{transform:rotate(-10deg)}}
+.running .tail{animation:tailWag .4s ease-in-out infinite;transform-box:fill-box;transform-origin:100% 50%;}
+@keyframes coinSpin{0%{transform:scaleX(1)}50%{transform:scaleX(0.25)}100%{transform:scaleX(1)}}
+.coin-spin{animation:coinSpin 0.9s linear infinite;}
+@keyframes pwFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-6px) scale(1.08)}}
+.pw-float{animation:pwFloat 1.2s ease-in-out infinite;}
+@keyframes obsWobble{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+.obs-wobble{animation:obsWobble .8s ease-in-out infinite;transform-origin:bottom center;}
+@keyframes beeFly{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.bee-fly{animation:beeFly .6s ease-in-out infinite;}
+
+/* ===== HUD ===== */
+#hud{position:fixed;top:max(10px,var(--sat));left:10px;right:10px;display:flex;justify-content:space-between;align-items:center;z-index:100;}
+#back-btn{background:rgba(0,0,0,0.45);border:1.5px solid rgba(255,255,255,0.4);color:white;border-radius:20px;padding:7px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;touch-action:manipulation;}
+#ui-bgm-btn{width:40px;height:40px;background:rgba(0,0,0,0.45);border:1.5px solid rgba(255,255,255,0.4);border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent;flex-shrink:0;}
+#status-bar{position:fixed;top:max(10px,var(--sat));left:0;right:0;display:flex;justify-content:center;align-items:center;gap:12px;padding:4px 12px;z-index:99;pointer-events:none;}
+.hud-chip{background:rgba(0,0,0,0.45);border:1.5px solid rgba(255,255,255,0.25);border-radius:16px;padding:5px 13px;font-size:14px;font-weight:900;color:#fff;display:flex;align-items:center;gap:5px;}
+#lives-disp{letter-spacing:2px;}
+
+/* コンボ・パワー・ステージ表示 */
+#combo-display{position:fixed;top:calc(max(10px,var(--sat)) + 52px);left:50%;transform:translateX(-50%);font-size:17px;font-weight:900;color:#FF6D00;text-shadow:0 2px 0 #fff,0 0 12px rgba(255,109,0,0.5);z-index:98;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;}
+#combo-display.show{opacity:1;transform:translateX(-50%) scale(1.15);}
+#power-display{position:fixed;top:calc(max(10px,var(--sat)) + 84px);left:50%;transform:translateX(-50%);font-size:14px;font-weight:900;z-index:98;opacity:0;transition:opacity .3s;pointer-events:none;padding:4px 14px;border-radius:14px;background:rgba(0,0,0,0.5);}
+#power-display.show{opacity:1;}
+#stage-display{position:fixed;top:38%;left:50%;transform:translate(-50%,-50%) scale(0.6);font-size:30px;font-weight:900;color:#fff;text-shadow:0 3px 0 rgba(0,0,0,0.4),0 0 24px rgba(255,255,255,0.6);z-index:97;opacity:0;transition:all .5s;pointer-events:none;white-space:nowrap;}
+#stage-display.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
+#rail-display{position:fixed;top:30%;left:50%;transform:translateX(-50%);font-size:15px;font-weight:900;color:#FFD700;text-shadow:0 2px 0 rgba(0,0,0,0.5);z-index:97;opacity:0;transition:opacity .2s;pointer-events:none;}
+#rail-display.show{opacity:1;}
+
+/* スコアポップ */
+.score-pop{position:absolute;font-size:15px;font-weight:900;pointer-events:none;z-index:50;text-shadow:0 2px 0 rgba(0,0,0,0.35);animation:popUp .8s ease-out forwards;}
+@keyframes popUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-44px) scale(1.25)}}
+
+/* ===== タイトル画面 ===== */
+#title-screen{position:absolute;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+#title-bgwrap{position:absolute;inset:0;z-index:0;}
+#title-content{position:relative;z-index:10;display:flex;align-items:center;gap:18px;width:100%;max-width:760px;padding:12px 18px;justify-content:center;}
+#title-left{display:flex;flex-direction:column;align-items:center;flex-shrink:0;}
+@keyframes logoBounce{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-7px) rotate(1.5deg)}}
+#title-logo{animation:logoBounce 2.2s ease-in-out infinite;text-align:center;margin-bottom:6px;}
+.logo-line{font-size:42px;font-weight:900;background:linear-gradient(180deg,#FFFFFF 10%,#FFE066 45%,#FF8C00 90%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 3px 0 rgba(120,60,0,0.55)) drop-shadow(0 0 18px rgba(255,215,0,0.5));letter-spacing:3px;line-height:1.12;}
+.logo-sub{font-size:11px;font-weight:800;color:#fff;letter-spacing:5px;text-shadow:0 2px 4px rgba(0,0,0,0.4);margin-top:4px;}
+#title-card{background:linear-gradient(160deg,rgba(255,255,255,0.96),rgba(255,246,222,0.96));border:3px solid #FFB300;border-radius:22px;padding:12px 16px 14px;width:340px;max-width:92vw;box-shadow:0 16px 44px rgba(0,0,0,0.35);}
+.card-label{font-size:11px;font-weight:900;color:#E65100;letter-spacing:1px;margin-bottom:7px;text-align:center;}
+#char-select{display:flex;gap:7px;justify-content:center;margin-bottom:10px;flex-wrap:wrap;pointer-events:all;}
+.char-btn{width:52px;height:52px;border-radius:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;touch-action:manipulation;}
+.howto-row{display:flex;gap:6px;margin-bottom:10px;}
+.howto{flex:1;background:rgba(255,179,0,0.12);border-radius:10px;padding:7px 4px;text-align:center;}
+.howto .ic{height:26px;display:flex;align-items:center;justify-content:center;margin-bottom:3px;}
+.howto .tx{font-size:9.5px;font-weight:900;color:#7a4a00;line-height:1.3;}
+#hs-disp{font-size:11px;text-align:center;color:#c07a00;font-weight:800;margin-bottom:8px;min-height:14px;}
+#start-btn{width:100%;background:linear-gradient(135deg,#FF8F00,#FFD700,#FF8F00);background-size:200%;animation:shimmer 2.5s infinite linear;color:#5a2d00;border:none;border-radius:14px;padding:13px;font-size:18px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:2px;box-shadow:0 5px 0 #c46a00,0 8px 20px rgba(255,150,0,0.45);touch-action:manipulation;transition:transform .1s;}
+#start-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #c46a00;}
+@keyframes shimmer{0%{background-position:0%}100%{background-position:200%}}
+#demo-runner{position:absolute;z-index:5;pointer-events:none;}
+
+/* ===== オーバーレイ ===== */
+.overlay{position:absolute;inset:0;z-index:210;background:rgba(10,15,35,0.82);display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.overlay.show{display:flex;}
+.ov-box{background:linear-gradient(160deg,#fff,#fff3dd);border:3px solid #FFB300;border-radius:24px;padding:22px 30px;text-align:center;max-width:320px;width:88%;box-shadow:0 20px 60px rgba(0,0,0,0.6);animation:ovIn .35s cubic-bezier(.34,1.56,.64,1);}
+@keyframes ovIn{0%{transform:scale(0.6);opacity:0}100%{transform:scale(1);opacity:1}}
+.ov-emoji{font-size:46px;margin-bottom:6px;}
+.ov-title{font-size:23px;font-weight:900;color:#E65100;margin-bottom:6px;}
+.ov-sub{font-size:13px;color:#8a6a3a;font-weight:700;margin-bottom:8px;}
+.ov-score{font-size:17px;font-weight:900;color:#5a3a00;margin-bottom:6px;line-height:1.7;}
+.hs-badge{display:inline-block;font-size:12px;font-weight:900;color:#fff;background:linear-gradient(135deg,#FF6D00,#FFD700);padding:4px 14px;border-radius:12px;margin-bottom:12px;opacity:0;height:0;overflow:hidden;}
+.hs-badge.show{opacity:1;height:auto;margin-bottom:12px;animation:pwFloat 1s ease-in-out infinite;}
+.btn-gold{width:100%;background:linear-gradient(135deg,#FF8F00,#FFD700);color:#5a2d00;border:none;border-radius:13px;padding:12px;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;margin-bottom:8px;box-shadow:0 4px 0 #c46a00;touch-action:manipulation;}
+.btn-ghost{width:100%;background:rgba(120,80,0,0.1);color:#8a5a00;border:2px solid rgba(180,120,0,0.3);border-radius:13px;padding:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;touch-action:manipulation;}
+
+/* ===== 横向き対応 ===== */
+@media (orientation:landscape){
+  #hud{top:max(6px,var(--sat));}
+  #status-bar{top:max(6px,var(--sat));left:auto;right:60px;justify-content:flex-end;}
+}
+</style>
+<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/safe_area.js"></script>
+</head>
+<body>
+<div id="game-wrap">
+  <div id="sky"></div>
+  <div id="celestial"></div>
+  <div id="stars-layer"></div>
+  <div class="bg-strip" id="strip-far"></div>
+  <div class="bg-strip" id="strip-mid"></div>
+  <canvas id="game-canvas"></canvas>
+  <div id="dom-layer"></div>
+
+  <div id="hud">
+    <button id="back-btn" onclick="goBack()">🏠 もどる</button>
+    <button id="ui-bgm-btn" onclick="toggleCommonBGM()">🔊</button>
+  </div>
+  <div id="status-bar">
+    <div class="hud-chip" id="score-disp">⭐ 0</div>
+    <div class="hud-chip" id="coin-disp">🪙 0</div>
+    <div class="hud-chip" id="lives-disp">❤️❤️❤️</div>
+  </div>
+
+  <div id="combo-display"></div>
+  <div id="power-display"></div>
+  <div id="stage-display"></div>
+  <div id="rail-display">✨ レールグラインド！ ✨</div>
+
+  <!-- タイトル画面 -->
+  <div id="title-screen">
+    <div id="title-bgwrap"></div>
+    <div id="demo-runner"></div>
+    <div id="title-content">
+      <div id="title-left">
+        <div id="title-logo">
+          <div class="logo-line">どうぶつ</div>
+          <div class="logo-line">ランナー</div>
+          <div class="logo-sub">✦ ANIMAL RUNNER ✦</div>
+        </div>
+      </div>
+      <div id="title-card">
+        <div class="card-label">✦ キャラを えらんでね ✦</div>
+        <div id="char-select"></div>
+        <div class="howto-row">
+          <div class="howto"><div class="ic" id="ht1"></div><div class="tx">タップで<br>ジャンプ×2</div></div>
+          <div class="howto"><div class="ic" id="ht2"></div><div class="tx">コインで<br>コンボ！</div></div>
+          <div class="howto"><div class="ic" id="ht3"></div><div class="tx">きんの<br>レールにのろう</div></div>
+          <div class="howto"><div class="ic" id="ht4"></div><div class="tx">パワーアップ<br>げっと！</div></div>
+        </div>
+        <div id="hs-disp"></div>
+        <button id="start-btn">🏃 スタート！</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ゲームオーバー -->
+  <div class="overlay" id="go-screen">
+    <div class="ov-box">
+      <div class="ov-emoji" id="go-emoji">🌟</div>
+      <div class="ov-title">ゲームオーバー</div>
+      <div class="ov-sub" id="go-sub"></div>
+      <div class="ov-score" id="go-score"></div>
+      <div class="hs-badge" id="go-hs">🏆 ハイスコア こうしん！</div>
+      <button class="btn-gold" onclick="restartGame()">もういちど</button>
+      <button class="btn-ghost" onclick="showTitle()">タイトルへ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// どうぶつランナー v8 — フルSVG・パララックス・レールグラインド
+// ============================================================
+
+// ===== SVGキャラクター =====
+const CHAR_DEFS=[
+ {id:'cat',   name:'ねこ',   body:'#FFB74D',belly:'#FFE0B2',ear:'inner',earC:'#F48FB1',tail:'curl'},
+ {id:'rabbit',name:'うさぎ', body:'#FAFAFA',belly:'#FCE4EC',ear:'long', earC:'#F8BBD0',tail:'puff'},
+ {id:'fox',   name:'きつね', body:'#FF8A50',belly:'#FFF3E0',ear:'sharp',earC:'#FFF3E0',tail:'fox'},
+ {id:'frog',  name:'かえる', body:'#81C784',belly:'#DCEDC8',ear:'none', earC:'',      tail:'none'},
+ {id:'peng',  name:'ぺんぎん',body:'#4A6FA5',belly:'#FFFFFF',ear:'none',earC:'',      tail:'none'},
+ {id:'panda', name:'ぱんだ', body:'#FAFAFA',belly:'#FAFAFA',ear:'round',earC:'#333',  tail:'puff'},
+ {id:'dog',   name:'いぬ',   body:'#A1887F',belly:'#EFEBE9',ear:'flop', earC:'#8D6E63',tail:'wag'},
+];
+
+function charSVG(def,size){
+ const s=size;
+ let ears='',extra='',tail='';
+ if(def.ear==='inner')ears=`<path d="M28,22 L24,6 L38,14 Z" fill="${def.body}"/><path d="M30,19 L28,10 L35,14 Z" fill="${def.earC}"/><path d="M52,22 L50,5 L62,13 Z" fill="${def.body}"/><path d="M53,19 L52,9 L58,13 Z" fill="${def.earC}"/>`;
+ if(def.ear==='long')ears=`<ellipse cx="32" cy="8" rx="6" ry="16" fill="${def.body}" transform="rotate(-12 32 8)"/><ellipse cx="32" cy="9" rx="3" ry="11" fill="${def.earC}" transform="rotate(-12 32 8)"/><ellipse cx="50" cy="7" rx="6" ry="16" fill="${def.body}" transform="rotate(10 50 7)"/><ellipse cx="50" cy="8" rx="3" ry="11" fill="${def.earC}" transform="rotate(10 50 7)"/>`;
+ if(def.ear==='sharp')ears=`<path d="M26,24 L22,4 L40,13 Z" fill="${def.body}"/><path d="M28,20 L26,9 L36,14 Z" fill="${def.earC}"/><path d="M50,22 L50,3 L64,12 Z" fill="${def.body}"/><path d="M52,18 L52,8 L60,12 Z" fill="${def.earC}"/>`;
+ if(def.ear==='round')ears=`<circle cx="30" cy="12" r="8" fill="${def.earC}"/><circle cx="55" cy="11" r="8" fill="${def.earC}"/>`;
+ if(def.ear==='flop')ears=`<ellipse cx="26" cy="22" rx="7" ry="13" fill="${def.earC}" transform="rotate(18 26 22)"/><ellipse cx="58" cy="21" rx="7" ry="13" fill="${def.earC}" transform="rotate(-14 58 21)"/>`;
+ if(def.tail==='curl')tail=`<path class="tail" d="M8,46 Q0,38 6,32 Q12,27 10,34 Q8,39 14,44 Z" fill="${def.body}"/>`;
+ if(def.tail==='puff')tail=`<circle class="tail" cx="9" cy="45" r="7" fill="${def.belly}"/>`;
+ if(def.tail==='fox')tail=`<path class="tail" d="M12,48 Q-6,42 2,28 Q8,20 14,30 Q18,38 18,46 Z" fill="${def.body}"/><path class="tail" d="M4,32 Q2,26 8,25 Q12,26 10,32 Z" fill="#FFF3E0"/>`;
+ if(def.tail==='wag')tail=`<path class="tail" d="M10,44 Q0,36 6,30 Q11,26 12,34 Q12,40 16,44 Z" fill="${def.body}"/>`;
+ if(def.id==='frog')extra=`<circle cx="34" cy="14" r="8" fill="${def.body}"/><circle cx="34" cy="13" r="4.5" fill="#fff"/><circle cx="35" cy="13" r="2.2" fill="#333"/><circle cx="54" cy="13" r="8" fill="${def.body}"/><circle cx="54" cy="12" r="4.5" fill="#fff"/><circle cx="55" cy="12" r="2.2" fill="#333"/>`;
+ if(def.id==='peng')extra=`<path d="M58,34 L74,30 L60,42 Z" fill="#FFB300"/><ellipse cx="44" cy="52" rx="15" ry="17" fill="${def.belly}"/>`;
+ if(def.id==='panda')extra=`<ellipse cx="38" cy="30" rx="6" ry="7" fill="#333" transform="rotate(-15 38 30)"/><ellipse cx="56" cy="29" rx="6" ry="7" fill="#333" transform="rotate(15 56 29)"/>`;
+ let face='';
+ if(def.id==='frog'){face=`<path d="M46,26 Q50,30 54,26" stroke="#2a6a2a" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="40" cy="24" r="2.5" fill="#F48FB1" opacity="0.7"/>`;}
+ else if(def.id==='panda'){face=`<circle cx="39" cy="31" r="2.4" fill="#fff"/><circle cx="55" cy="30" r="2.4" fill="#fff"/><ellipse cx="47" cy="37" rx="3" ry="2.2" fill="#333"/><circle cx="35" cy="38" r="2.8" fill="#F8BBD0" opacity="0.8"/><circle cx="60" cy="37" r="2.8" fill="#F8BBD0" opacity="0.8"/>`;}
+ else if(def.id==='peng'){face=`<circle cx="42" cy="26" r="3" fill="#fff"/><circle cx="43" cy="26" r="1.8" fill="#222"/><circle cx="56" cy="25" r="3" fill="#fff"/><circle cx="57" cy="25" r="1.8" fill="#222"/>`;}
+ else{face=`<circle cx="41" cy="27" r="2.8" fill="#3a2a1a"/><circle cx="42" cy="26" r="1" fill="#fff"/><circle cx="56" cy="26" r="2.8" fill="#3a2a1a"/><circle cx="57" cy="25" r="1" fill="#fff"/><ellipse cx="49" cy="33" rx="2.6" ry="2" fill="${def.id==='dog'?'#4a3020':'#F06292'}"/><path d="M45,37 Q49,40 53,37" stroke="#7a5a3a" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="35" cy="34" r="3" fill="#F8BBD0" opacity="0.75"/><circle cx="61" cy="33" r="3" fill="#F8BBD0" opacity="0.75"/>`;}
+ return `<svg width="${s}" height="${s}" viewBox="0 0 80 80">
+  <g class="legB"><rect x="24" y="58" width="7" height="18" rx="3.5" fill="${def.body}" stroke="rgba(0,0,0,0.15)" stroke-width="1"/></g>
+  <g class="charbody">
+   ${tail}${ears}
+   <ellipse cx="34" cy="52" rx="21" ry="16" fill="${def.body}"/>
+   <ellipse cx="34" cy="56" rx="13" ry="9" fill="${def.belly}"/>
+   <circle cx="46" cy="26" r="18" fill="${def.body}"/>
+   ${extra}${face}
+  </g>
+  <g class="legF"><rect x="40" y="58" width="7" height="18" rx="3.5" fill="${def.body}" stroke="rgba(0,0,0,0.15)" stroke-width="1"/></g>
+ </svg>`;
+}
+
+// ===== SVG障害物 =====
+const OBS_SVGS={
+ cactus:(s)=>`<svg width="${s}" height="${s}" viewBox="0 0 60 60"><g class="obs-wobble"><rect x="24" y="12" width="13" height="46" rx="6.5" fill="#5CAE5C"/><rect x="8" y="22" width="9" height="18" rx="4.5" fill="#4E9E4E"/><rect x="8" y="34" width="18" height="8" rx="4" fill="#4E9E4E"/><rect x="43" y="16" width="9" height="16" rx="4.5" fill="#4E9E4E"/><rect x="34" y="26" width="18" height="8" rx="4" fill="#4E9E4E"/><circle cx="30" cy="20" r="1.5" fill="#2E6E2E"/><circle cx="27" cy="32" r="1.5" fill="#2E6E2E"/><circle cx="33" cy="44" r="1.5" fill="#2E6E2E"/><path d="M26,26 Q30,29 34,26" stroke="#2E6E2E" stroke-width="1.5" fill="none"/></g></svg>`,
+ rock:(s)=>`<svg width="${s}" height="${s}" viewBox="0 0 60 60"><path d="M8,56 L12,30 L24,18 L42,16 L54,32 L52,56 Z" fill="#9E9E9E"/><path d="M12,30 L24,18 L42,16 L38,34 L16,40 Z" fill="#BDBDBD"/><path d="M38,34 L54,32 L52,56 L30,56 Z" fill="#8A8A8A"/><circle cx="22" cy="46" r="2" fill="#7a7a7a"/><circle cx="42" cy="44" r="2.5" fill="#7a7a7a"/></svg>`,
+ log:(s)=>`<svg width="${s}" height="${s}" viewBox="0 0 60 60"><rect x="4" y="30" width="52" height="24" rx="12" fill="#8D6E63"/><ellipse cx="52" cy="42" rx="7" ry="12" fill="#A1887F"/><ellipse cx="52" cy="42" rx="4" ry="7" fill="#D7CCC8"/><ellipse cx="52" cy="42" rx="1.8" ry="3" fill="#8D6E63"/><path d="M10,36 Q20,38 28,36 M12,48 Q24,46 34,48" stroke="#6D4C41" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`,
+ spike:(s)=>`<svg width="${s}" height="${s}" viewBox="0 0 60 60"><g class="obs-wobble"><circle cx="30" cy="42" r="16" fill="#7E57C2"/><path d="M30,10 L34,28 L26,28 Z M8,26 L24,32 L18,40 Z M52,26 L36,32 L42,40 Z M14,56 L24,46 L30,54 Z M46,56 L36,46 L30,54 Z" fill="#5E35B1"/><circle cx="25" cy="39" r="3" fill="#fff"/><circle cx="26" cy="39" r="1.6" fill="#333"/><circle cx="36" cy="39" r="3" fill="#fff"/><circle cx="37" cy="39" r="1.6" fill="#333"/><path d="M25,48 Q30,45 35,48" stroke="#40275e" stroke-width="2" fill="none" stroke-linecap="round"/></g></svg>`,
+ bee:(s)=>`<svg width="${s}" height="${s}" viewBox="0 0 60 60"><g class="bee-fly"><ellipse cx="20" cy="18" rx="11" ry="7" fill="#B3E5FC" opacity="0.85" transform="rotate(-25 20 18)"/><ellipse cx="38" cy="16" rx="11" ry="7" fill="#B3E5FC" opacity="0.85" transform="rotate(25 38 16)"/><ellipse cx="30" cy="34" rx="17" ry="13" fill="#FFD54F"/><path d="M22,23 L22,45 M32,21 L32,47 M41,25 L41,43" stroke="#5D4037" stroke-width="5" stroke-linecap="round"/><circle cx="14" cy="30" r="8" fill="#5D4037"/><circle cx="12" cy="28" r="2" fill="#fff"/><path d="M46,34 L54,32 L48,38 Z" fill="#8D6E63"/></g></svg>`,
+};
+const OBS_TYPES=['cactus','rock','log','spike'];
+
+// ===== SVGコイン・アイテム =====
+function coinSVG(s,star){
+ if(star)return `<svg width="${s}" height="${s}" viewBox="0 0 50 50" class="coin-spin"><path d="M25,3 L31,18 L47,18 L34,28 L39,44 L25,34 L11,44 L16,28 L3,18 L19,18 Z" fill="#FFD600" stroke="#FF8F00" stroke-width="2.5" stroke-linejoin="round"/><path d="M25,10 L28,19 L37,19 L30,25 L32,34 L25,29 Z" fill="#FFF59D"/></svg>`;
+ return `<svg width="${s}" height="${s}" viewBox="0 0 50 50" class="coin-spin"><circle cx="25" cy="25" r="21" fill="#FFC107" stroke="#FF8F00" stroke-width="3"/><circle cx="25" cy="25" r="14" fill="#FFD54F"/><path d="M25,14 L28,21 L35,21 L29,26 L31,33 L25,29 L19,33 L21,26 L15,21 L22,21 Z" fill="#FF9800"/><ellipse cx="19" cy="17" rx="5" ry="3" fill="#FFF8E1" opacity="0.8" transform="rotate(-30 19 17)"/></svg>`;
+}
+const PW_SVGS={
+ invincible:(s)=>`<svg width="${s}" height="${s}" viewBox="0 0 50 50" class="pw-float"><path d="M25,4 L42,16 L36,42 L14,42 L8,16 Z" fill="#CE93D8" stroke="#8E24AA" stroke-width="2.5" stroke-linejoin="round"/><path d="M25,4 L42,16 L25,24 Z" fill="#E1BEE7"/><path d="M25,4 L8,16 L25,24 Z" fill="#BA68C8"/><path d="M14,42 L25,24 L36,42 Z" fill="#AB47BC"/><circle cx="20" cy="14" r="3" fill="#fff" opacity="0.85"/></svg>`,
+ double:(s)=>`<svg width="${s}" height="${s}" viewBox="0 0 50 50" class="pw-float"><circle cx="25" cy="25" r="20" fill="#FFD600" stroke="#F57F17" stroke-width="2.5"/><text x="25" y="33" text-anchor="middle" font-size="21" font-weight="900" fill="#E65100" font-family="sans-serif">x2</text><circle cx="17" cy="15" r="4" fill="#FFF59D"/></svg>`,
+ slow:(s)=>`<svg width="${s}" height="${s}" viewBox="0 0 50 50" class="pw-float"><circle cx="25" cy="25" r="20" fill="#B3E5FC" stroke="#0288D1" stroke-width="2.5"/><circle cx="25" cy="25" r="15" fill="#E1F5FE"/><rect x="23.5" y="13" width="3" height="13" rx="1.5" fill="#0277BD"/><rect x="25" y="23.5" width="10" height="3" rx="1.5" fill="#0277BD"/><circle cx="25" cy="25" r="2.5" fill="#01579B"/></svg>`,
+};
+const POWERUPS=[
+ {type:'invincible',label:'むてき！',color:'#CE93D8'},
+ {type:'double',label:'コイン2ばい！',color:'#FFD700'},
+ {type:'slow',label:'スロー！',color:'#81D4FA'},
+];
+
+// ===== ステージ定義 =====
+const STAGES=[
+ {name:'🌞 ひるま',skyTop:'#4FC3F7',skyBot:'#B3E5FC',far:'#7CB98A',farB:'#93CBA0',mid:'#4E9E5E',ground:'#7CC24E',groundD:'#5CA23E',road:'#E8D5A3',roadLine:'#ffffff',celestial:'sun',stars:0},
+ {name:'🌅 ゆうがた',skyTop:'#FF8A65',skyBot:'#FFD180',far:'#8a5a7a',farB:'#a06a8a',mid:'#5a3a5a',ground:'#C98A4B',groundD:'#A96A35',road:'#D9B380',roadLine:'#fff3d0',celestial:'sunset',stars:0.25},
+ {name:'🌙 よる',skyTop:'#1A237E',skyBot:'#4A5AA8',far:'#26315e',farB:'#303d70',mid:'#1a2340',ground:'#3E5A3E',groundD:'#2E452E',road:'#6a7a8a',roadLine:'#b0c4de',celestial:'moon',stars:1},
+ {name:'🚀 うちゅう',skyTop:'#0D0221',skyBot:'#2A1A5E',far:'#1e1348',farB:'#291a5e',mid:'#140b33',ground:'#4A3A6E',groundD:'#382a55',road:'#7E57C2',roadLine:'#D1C4E9',celestial:'planet',stars:1},
+];
+
+// ===== パララックス帯SVG生成 =====
+function stripURI(svg){return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;}
+function farStrip(st){
+ return stripURI(`<svg xmlns="http://www.w3.org/2000/svg" width="480" height="200" viewBox="0 0 480 200"><path d="M0,200 L0,120 Q60,50 130,110 Q180,60 250,115 Q310,40 380,105 Q430,70 480,110 L480,200 Z" fill="${st.far}"/><path d="M0,200 L0,150 Q80,95 160,140 Q220,95 300,140 Q360,105 480,135 L480,200 Z" fill="${st.farB}"/></svg>`);
+}
+function midStrip(st,idx){
+ if(idx===3){
+  return stripURI(`<svg xmlns="http://www.w3.org/2000/svg" width="480" height="160" viewBox="0 0 480 160"><path d="M40,160 L48,70 L60,64 L72,74 L78,160 Z" fill="${st.mid}"/><path d="M150,160 L156,95 L166,90 L174,98 L178,160 Z" fill="${st.mid}"/><path d="M290,160 L300,55 L314,48 L326,60 L332,160 Z" fill="${st.mid}"/><path d="M410,160 L416,100 L426,95 L434,104 L438,160 Z" fill="${st.mid}"/><circle cx="60" cy="66" r="4" fill="#B39DDB" opacity="0.8"/><circle cx="314" cy="52" r="5" fill="#90CAF9" opacity="0.8"/></svg>`);
+ }
+ return stripURI(`<svg xmlns="http://www.w3.org/2000/svg" width="480" height="160" viewBox="0 0 480 160"><rect x="52" y="96" width="12" height="64" rx="4" fill="#6D4C41"/><ellipse cx="58" cy="82" rx="30" ry="34" fill="${st.mid}"/><rect x="180" y="110" width="10" height="50" rx="3" fill="#6D4C41"/><ellipse cx="185" cy="98" rx="24" ry="27" fill="${st.mid}"/><rect x="310" y="90" width="13" height="70" rx="4" fill="#6D4C41"/><ellipse cx="316" cy="74" rx="33" ry="38" fill="${st.mid}"/><rect x="425" y="115" width="9" height="45" rx="3" fill="#6D4C41"/><ellipse cx="429" cy="104" rx="21" ry="24" fill="${st.mid}"/></svg>`);
+}
+
+// ===== 状態 =====
+let selChar=parseInt(localStorage.getItem('runner_char')||'0');
+if(isNaN(selChar)||selChar<0||selChar>=CHAR_DEFS.length)selChar=0;
+let score=0,coinCount=0,lives=3;
+let combo=0,comboTimer=null;
+let stageIdx=0,stageScore=0;
+let powerType=null,powerTimer=null;
+let gameRunning=false,gameOver=false;
+let raf=null;
+
+// 物理
+const GRAVITY=0.44;
+const JUMP_V=-9.0;
+const GROUND_RATIO=0.86;
+let groundY=0;
+let playerX=110,playerY=0;
+let velY=0,jumpCount=0;
+let isOnGround=false;
+let onRail=false,curRail=null;
+
+// スピード
+let speed=4.5;
+const SPEED_MAX=11;
+const SPEED_INC=0.0015;
+
+// エンティティ
+let obstacles=[],coins=[],powers=[],rails=[],particles=[];
+let obstacleTimer=0,obstacleInterval=130;
+let coinTimer=0,coinInterval=70;
+let powerTimer2=0,powerInterval=420;
+let railTimer=0,railInterval=520;
+let parallaxX=0;
+
+let canvas,ctx,domLayer,playerEl;
+let playerSize=0;
+
+// ===== 初期化 =====
+function init(){
+ canvas=document.getElementById('game-canvas');
+ ctx=canvas.getContext('2d');
+ domLayer=document.getElementById('dom-layer');
+ onResize();
+ window.addEventListener('resize',onResize);
+ buildCharSelect();
+ buildHowtoIcons();
+ buildTitleBg();
+ updateHsDisp();
+ applyStage(0,true);
+ setupInput();
+ document.getElementById('start-btn').addEventListener('click',startGame);
+ requestAnimationFrame(titleLoop);
+}
+
+function onResize(){
+ canvas.width=window.innerWidth;
+ canvas.height=window.innerHeight;
+ groundY=canvas.height*GROUND_RATIO;
+ playerSize=Math.max(56,Math.min(84,canvas.height*0.16));
+ if(playerEl)updatePlayerPos();
+}
+
+// ===== タイトル画面 =====
+let demoX=-120,titleActive=true;
+function buildTitleBg(){
+ const st=STAGES[0];
+ const w=document.getElementById('title-bgwrap');
+ w.innerHTML=`<div style="position:absolute;inset:0;background:linear-gradient(180deg,${st.skyTop},${st.skyBot} 58%,${st.ground} 58%,${st.groundD});"></div>
+ <div style="position:absolute;right:8%;top:8%;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FFF176,#FFD600 60%,#FFA000);box-shadow:0 0 50px rgba(255,214,0,0.7);"></div>
+ <div class="bg-strip" style="height:32%;background-image:${farStrip(st)};background-size:auto 100%;opacity:0.9;bottom:42%;" id="tbg-far"></div>
+ <div class="bg-strip" style="height:26%;background-image:${midStrip(st,0)};background-size:auto 100%;bottom:40%;" id="tbg-mid"></div>
+ <div style="position:absolute;left:0;right:0;bottom:37%;height:16px;background:${st.road};border-top:3px solid rgba(255,255,255,0.55);box-shadow:0 4px 8px rgba(0,0,0,0.15);"></div>`;
+ const d=document.getElementById('demo-runner');
+ d.className='running';
+ d.innerHTML=charSVG(CHAR_DEFS[selChar],90);
+}
+function titleLoop(){
+ if(!titleActive)return;
+ demoX+=3.2;
+ const w=window.innerWidth;
+ if(demoX>w+120)demoX=-140;
+ const d=document.getElementById('demo-runner');
+ d.style.left=demoX+'px';
+ d.style.bottom='calc(37% - 6px)';
+ const f=document.getElementById('tbg-far'),m=document.getElementById('tbg-mid');
+ if(f){f.style.backgroundPositionX=(-demoX*0.25)+'px';m.style.backgroundPositionX=(-demoX*0.55)+'px';}
+ requestAnimationFrame(titleLoop);
+}
+function buildCharSelect(){
+ const wrap=document.getElementById('char-select');
+ wrap.innerHTML='';
+ CHAR_DEFS.forEach((c,i)=>{
+  const b=document.createElement('div');
+  b.className='char-btn';
+  b.style.cssText=`background:${i===selChar?'linear-gradient(135deg,#FFE082,#FFCA28)':'rgba(255,179,0,0.1)'};border:2.5px solid ${i===selChar?'#FF8F00':'rgba(200,140,0,0.25)'};box-shadow:${i===selChar?'0 0 12px rgba(255,180,0,0.5)':'none'};transform:${i===selChar?'scale(1.1)':'scale(1)'};`;
+  b.innerHTML=charSVG(c,42);
+  b.addEventListener('click',()=>{
+   selChar=i;localStorage.setItem('runner_char',i);buildCharSelect();
+   const d=document.getElementById('demo-runner');d.innerHTML=charSVG(CHAR_DEFS[selChar],90);
+   sfx('coin');
+  });
+  wrap.appendChild(b);
+ });
+}
+function buildHowtoIcons(){
+ document.getElementById('ht1').innerHTML=`<svg width="24" height="24" viewBox="0 0 50 50"><path d="M25,42 L25,12 M13,24 L25,10 L37,24" stroke="#FF8F00" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+ document.getElementById('ht2').innerHTML=coinSVG(24,false);
+ document.getElementById('ht3').innerHTML=`<svg width="30" height="24" viewBox="0 0 60 40"><rect x="2" y="16" width="56" height="8" rx="4" fill="#FFD600" stroke="#FF8F00" stroke-width="2"/><path d="M12,24 L12,34 M30,24 L30,34 M48,24 L48,34" stroke="#FF8F00" stroke-width="4" stroke-linecap="round"/><circle cx="30" cy="8" r="4" fill="#FFF176"/></svg>`;
+ document.getElementById('ht4').innerHTML=PW_SVGS.invincible(24);
+}
+
+// ===== ゲーム開始 =====
+function startGame(){
+ titleActive=false;
+ document.getElementById('title-screen').style.display='none';
+ document.getElementById('go-screen').classList.remove('show');
+ score=0;coinCount=0;lives=3;combo=0;stageIdx=0;stageScore=0;
+ speed=4.5;powerType=null;
+ clearTimeout(powerTimer);hidePower();hideCombo();
+ obstacles=[];coins=[];powers=[];rails=[];particles=[];
+ obstacleTimer=0;coinTimer=0;powerTimer2=0;railTimer=300;
+ gameRunning=true;gameOver=false;onRail=false;curRail=null;
+ parallaxX=0;
+ domLayer.innerHTML='';
+ spawnPlayer();
+ applyStage(0,true);
+ updateHUD();
+ cancelAnimationFrame(raf);
+ raf=requestAnimationFrame(loop);
+}
+function restartGame(){startGame();}
+function showTitle(){
+ cancelAnimationFrame(raf);gameRunning=false;
+ document.getElementById('go-screen').classList.remove('show');
+ document.getElementById('title-screen').style.display='flex';
+ titleActive=true;demoX=-120;
+ buildTitleBg();updateHsDisp();
+ requestAnimationFrame(titleLoop);
+}
+
+function spawnPlayer(){
+ playerEl=document.createElement('div');
+ playerEl.className='dom-obj dom-player running';
+ playerEl.innerHTML=charSVG(CHAR_DEFS[selChar],playerSize);
+ domLayer.appendChild(playerEl);
+ playerY=groundY;velY=0;jumpCount=0;isOnGround=true;
+ updatePlayerPos();
+}
+function updatePlayerPos(){
+ playerEl.style.left=(playerX-playerSize/2)+'px';
+ playerEl.style.top=(playerY-playerSize+6)+'px';
+}
+
+// ===== ステージ適用 =====
+function applyStage(idx,instant){
+ const st=STAGES[idx];
+ document.getElementById('sky').style.background=`linear-gradient(180deg,${st.skyTop},${st.skyBot})`;
+ const sf=document.getElementById('strip-far');
+ sf.style.backgroundImage=farStrip(st);
+ sf.style.backgroundSize='auto 100%';
+ sf.style.height='34%';
+ sf.style.bottom=(canvas.height-groundY-4)+'px';
+ const sm=document.getElementById('strip-mid');
+ sm.style.backgroundImage=midStrip(st,idx);
+ sm.style.backgroundSize='auto 100%';
+ sm.style.height='26%';
+ sm.style.bottom=(canvas.height-groundY-6)+'px';
+ const cel=document.getElementById('celestial');
+ if(st.celestial==='sun')cel.style.cssText='right:8%;top:8%;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FFF176,#FFD600 60%,#FFA000);box-shadow:0 0 44px rgba(255,214,0,0.7);position:absolute;z-index:1;';
+ if(st.celestial==='sunset')cel.style.cssText='right:14%;top:30%;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#FFE0B2,#FF7043 65%,#E64A19);box-shadow:0 0 60px rgba(255,112,67,0.8);position:absolute;z-index:1;';
+ if(st.celestial==='moon')cel.style.cssText='right:10%;top:9%;width:56px;height:56px;border-radius:50%;background:radial-gradient(circle at 38% 38%,#FFFDE7,#FFF59D 65%,#F9E79F);box-shadow:0 0 36px rgba(255,245,157,0.6);position:absolute;z-index:1;';
+ if(st.celestial==='planet')cel.style.cssText='right:12%;top:10%;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#CE93D8,#7E57C2 60%,#4527A0);box-shadow:0 0 40px rgba(126,87,194,0.7);position:absolute;z-index:1;';
+ const sl=document.getElementById('stars-layer');
+ sl.style.opacity=st.stars;
+ if(st.stars>0&&!sl.dataset.built){
+  let html='';
+  for(let i=0;i<40;i++){html+=`<div style="position:absolute;left:${Math.random()*100}%;top:${Math.random()*55}%;width:${2+Math.random()*2}px;height:${2+Math.random()*2}px;border-radius:50%;background:#fff;opacity:${0.4+Math.random()*0.6};"></div>`;}
+  sl.innerHTML=html;sl.dataset.built='1';
+ }
+}
+
+// ===== 入力 =====
+function jump(){
+ if(!gameRunning||gameOver)return;
+ if(onRail){onRail=false;curRail=null;isOnGround=false;}
+ if(jumpCount<2){
+  velY=JUMP_V*(jumpCount===1?0.85:1);
+  jumpCount++;isOnGround=false;
+  playerEl.classList.remove('running');playerEl.classList.add('jumping');
+  addParticles(playerX,playerY,'jump');
+  sfx('jump',jumpCount);
+ }
+}
+function setupInput(){
+ const h=(e)=>{
+  if(e.target.closest('button')||e.target.closest('.char-btn')||e.target.closest('.overlay')||e.target.closest('#title-screen'))return;
+  e.preventDefault();jump();
+ };
+ document.addEventListener('touchstart',h,{passive:false});
+ document.addEventListener('mousedown',h);
+ document.addEventListener('keydown',(e)=>{if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();jump();}});
+}
+
+// ===== メインループ =====
+function loop(){
+ if(!gameRunning)return;
+ update();
+ draw();
+ raf=requestAnimationFrame(loop);
+}
+
+function update(){
+ if(gameOver)return;
+ if(powerType!=='slow')speed=Math.min(SPEED_MAX,speed+SPEED_INC);
+ stageScore+=speed;
+ const spd=powerType==='slow'?speed*0.55:speed;
+ parallaxX+=spd;
+
+ // ステージ遷移
+ const newStage=Math.min(STAGES.length-1,Math.floor(stageScore/3000));
+ if(newStage>stageIdx){
+  stageIdx=newStage;
+  applyStage(stageIdx);
+  showStageLabel(STAGES[stageIdx].name);
+  sfx('stage');
+ }
+
+ // パララックス
+ document.getElementById('strip-far').style.backgroundPositionX=(-parallaxX*0.22)+'px';
+ document.getElementById('strip-mid').style.backgroundPositionX=(-parallaxX*0.5)+'px';
+
+ // プレイヤー物理
+ if(onRail&&curRail){
+  if(curRail.x>playerX||curRail.x+curRail.len<playerX){
+   onRail=false;curRail=null;isOnGround=false;
+  }else{
+   playerY=curRail.y;velY=0;
+   stageScore+=2; // グラインドボーナス
+   if(Math.random()<0.5)addParticles(playerX-playerSize*0.3,playerY,'rail');
+  }
+ }
+ if(!onRail){
+  const prevY=playerY;
+  const peakGravity=velY<0&&velY>-4?GRAVITY*0.6:GRAVITY;
+  velY+=peakGravity;
+  playerY+=velY;
+  // レール着地判定（落下中のみ）
+  if(velY>0){
+   for(const r of rails){
+    if(r.x<=playerX&&playerX<=r.x+r.len&&prevY<=r.y+4&&playerY>=r.y-4){
+     playerY=r.y;velY=0;jumpCount=0;
+     onRail=true;curRail=r;isOnGround=true;
+     playerEl.classList.remove('jumping');playerEl.classList.add('running');
+     addParticles(playerX,playerY,'rail');
+     showRailLabel();
+     sfx('rail');
+     break;
+    }
+   }
+  }
+  // 地面
+  if(!onRail&&playerY>=groundY){
+   playerY=groundY;velY=0;jumpCount=0;
+   if(!isOnGround){playerEl.classList.remove('jumping');playerEl.classList.add('running');}
+   isOnGround=true;
+  }
+  // 天井
+  if(playerY<canvas.height*0.14){playerY=canvas.height*0.14;velY=Math.max(0,velY);}
+ }
+ updatePlayerPos();
+
+ // ===== スポーン =====
+ obstacleTimer++;
+ if(obstacleTimer>=obstacleInterval){
+  obstacleTimer=0;
+  obstacleInterval=Math.max(65,95-stageIdx*8)+Math.random()*45;
+  const isHigh=Math.random()<0.28;
+  const type=isHigh?'bee':OBS_TYPES[Math.floor(Math.random()*OBS_TYPES.length)];
+  const w=canvas.height*0.1;
+  obstacles.push({x:canvas.width+40,y:isHigh?groundY-canvas.height*0.15:groundY,type,w,el:null});
+ }
+ coinTimer++;
+ if(coinTimer>=coinInterval){
+  coinTimer=0;
+  coinInterval=90+Math.random()*70;
+  spawnCoinPattern();
+ }
+ powerTimer2++;
+ if(powerTimer2>=powerInterval){
+  powerTimer2=0;
+  powerInterval=380+Math.random()*220;
+  const pw=POWERUPS[Math.floor(Math.random()*POWERUPS.length)];
+  powers.push({x:canvas.width+30,y:groundY-canvas.height*0.11,type:pw.type,label:pw.label,color:pw.color,w:canvas.height*0.08,el:null});
+ }
+ railTimer++;
+ if(railTimer>=railInterval){
+  railTimer=0;
+  railInterval=480+Math.random()*260;
+  spawnRail();
+ }
+
+ // ===== 更新 =====
+ obstacles.forEach(o=>{o.x-=spd;});
+ obstacles=obstacles.filter(o=>{if(o.x<=-80){if(o.el)o.el.remove();return false;}return true;});
+ coins.forEach(c=>{c.x-=spd;c.phase+=0.1;});
+ coins=coins.filter(c=>{if(c.x<=-50){if(c.el)c.el.remove();return false;}return true;});
+ powers.forEach(p=>{p.x-=spd;});
+ powers=powers.filter(p=>{if(p.x<=-50){if(p.el)p.el.remove();return false;}return true;});
+ rails.forEach(r=>{r.x-=spd;});
+ rails=rails.filter(r=>r.x+r.len>-40);
+
+ // ===== 当たり判定 =====
+ const hitR=canvas.height*0.055;
+ if(powerType!=='invincible'){
+  for(const o of obstacles){
+   if(Math.abs(playerX-o.x)<hitR*1.2&&Math.abs(playerY-o.y)<hitR*1.3){hitObstacle(o);break;}
+  }
+ }
+ coins=coins.filter(c=>{
+  if(Math.abs(playerX-c.x)<hitR*1.5&&Math.abs(playerY-(c.y-canvas.height*0.02))<hitR*1.7){
+   collectCoin(c);if(c.el)c.el.remove();return false;
+  }
+  return true;
+ });
+ powers=powers.filter(p=>{
+  if(Math.abs(playerX-p.x)<hitR*1.6&&Math.abs(playerY-p.y)<hitR*1.8){
+   activatePower(p);if(p.el)p.el.remove();return false;
+  }
+  return true;
+ });
+
+ // パーティクル
+ particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.18;p.life--;p.alpha=p.life/p.maxLife;});
+ particles=particles.filter(p=>p.life>0);
+
+ score=Math.max(score,Math.floor(stageScore/10)+coinCount*10);
+ document.getElementById('score-disp').textContent=`⭐ ${score}`;
+
+ updateEntityDOM();
+}
+
+// ===== コインパターン =====
+function spawnCoinPattern(){
+ const kind=Math.random();
+ const baseX=canvas.width+40;
+ const gap=canvas.height*0.09;
+ if(kind<0.4){
+  for(let i=0;i<5;i++)pushCoin(baseX+i*gap,groundY-canvas.height*0.05,i===4);
+ }else if(kind<0.75){
+  const peak=canvas.height*0.2;
+  for(let i=0;i<7;i++){
+   const t=i/6;
+   pushCoin(baseX+i*gap,groundY-canvas.height*0.05-Math.sin(t*Math.PI)*peak,i===3);
+  }
+ }else{
+  const h=canvas.height*0.3;
+  for(let i=0;i<5;i++)pushCoin(baseX+i*gap,groundY-h+Math.sin(i*1.2)*10,i===2);
+ }
+}
+function pushCoin(x,y,star){
+ coins.push({x,y,star,w:canvas.height*(star?0.075:0.062),phase:Math.random()*Math.PI*2,el:null});
+}
+
+// ===== レール =====
+function spawnRail(){
+ const len=canvas.width*(0.5+Math.random()*0.35);
+ const y=groundY-canvas.height*(0.16+Math.random()*0.06);
+ const rail={x:canvas.width+60,y,len};
+ rails.push(rail);
+ // レール上コイン
+ const n=Math.max(3,Math.floor(len/(canvas.height*0.12)));
+ for(let i=1;i<n;i++){
+  pushCoin(rail.x+i*(len/n),y-canvas.height*0.05,i===Math.floor(n/2));
+ }
+ // 導入：レール手前の上りアーチ
+ const rise=groundY-y;
+ for(let i=1;i<=3;i++){
+  pushCoin(rail.x-canvas.height*0.1*(4-i),groundY-canvas.height*0.05-rise*(i/4),false);
+ }
+}
+
+// ===== DOM同期 =====
+function updateEntityDOM(){
+ obstacles.forEach(o=>{
+  if(!o.el){
+   o.el=document.createElement('div');
+   o.el.className='dom-obj';
+   o.el.innerHTML=OBS_SVGS[o.type](o.w);
+   domLayer.appendChild(o.el);
+  }
+  o.el.style.left=(o.x-o.w/2)+'px';
+  o.el.style.top=(o.y-o.w+4)+'px';
+ });
+ coins.forEach(c=>{
+  if(!c.el){
+   c.el=document.createElement('div');
+   c.el.className='dom-obj';
+   c.el.innerHTML=coinSVG(c.w,c.star);
+   domLayer.appendChild(c.el);
+  }
+  const bobY=Math.sin(c.phase)*4;
+  c.el.style.left=(c.x-c.w/2)+'px';
+  c.el.style.top=(c.y-c.w+bobY)+'px';
+ });
+ powers.forEach(p=>{
+  if(!p.el){
+   p.el=document.createElement('div');
+   p.el.className='dom-obj';
+   p.el.innerHTML=PW_SVGS[p.type](p.w);
+   domLayer.appendChild(p.el);
+  }
+  p.el.style.left=(p.x-p.w/2)+'px';
+  p.el.style.top=(p.y-p.w)+'px';
+ });
+}
+
+// ===== 判定処理 =====
+function hitObstacle(o){
+ o.x=-999;if(o.el)o.el.remove();
+ lives--;updateHUD();
+ combo=0;hideCombo();
+ addParticles(playerX,playerY-playerSize/2,'hit');
+ sfx('hit');
+ if(lives<=0){endGame();return;}
+ // 被弾後の無敵時間
+ playerEl.style.opacity='0.5';
+ powerType='invincible';
+ clearTimeout(powerTimer);
+ powerTimer=setTimeout(()=>{powerType=null;playerEl.style.opacity='1';},1500);
+}
+function collectCoin(c){
+ const base=c.star?50:10;
+ const mult=powerType==='double'?2:1;
+ combo++;
+ clearTimeout(comboTimer);
+ comboTimer=setTimeout(()=>{combo=0;hideCombo();},1800);
+ const bonus=Math.min(combo,10);
+ const pts=(base+bonus*2)*mult;
+ score+=pts;coinCount++;
+ if(combo>=3){
+  const el=document.getElementById('combo-display');
+  el.textContent=`🔥 ${combo}コンボ！`;
+  el.classList.add('show');
+ }
+ showScorePop(`+${pts}`,c.x,c.y-20,c.star?'#FFD600':'#FFF176');
+ addParticles(c.x,c.y,c.star?'star':'coin');
+ sfx(c.star?'star':'coin');
+ updateHUD();
+}
+function hideCombo(){document.getElementById('combo-display').classList.remove('show');}
+function activatePower(p){
+ powerType=p.type;
+ const el=document.getElementById('power-display');
+ el.textContent=p.label;
+ el.style.color=p.color;
+ el.classList.add('show');
+ playerEl.classList.remove('p-inv','powered');
+ playerEl.classList.add(p.type==='invincible'?'p-inv':'powered');
+ addParticles(p.x,p.y,'power');
+ sfx('power');
+ clearTimeout(powerTimer);
+ powerTimer=setTimeout(()=>{
+  powerType=null;hidePower();
+  playerEl.classList.remove('p-inv','powered');
+ },6000);
+ showScorePop(p.label,p.x,p.y-24,p.color);
+}
+function hidePower(){document.getElementById('power-display').classList.remove('show');}
+
+// ===== 描画（canvas：地面・レール・パーティクル） =====
+function draw(){
+ const st=STAGES[stageIdx];
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ // 地面
+ ctx.fillStyle=st.ground;
+ ctx.fillRect(0,groundY+6,canvas.width,canvas.height-groundY);
+ ctx.fillStyle=st.groundD;
+ ctx.fillRect(0,groundY+canvas.height*0.06,canvas.width,canvas.height);
+ // 道
+ ctx.fillStyle=st.road;
+ ctx.fillRect(0,groundY+2,canvas.width,canvas.height*0.048);
+ // 道の破線
+ ctx.fillStyle=st.roadLine;
+ const dashW=34,gapW=30,off=parallaxX%(dashW+gapW);
+ for(let x=-off;x<canvas.width;x+=dashW+gapW){
+  ctx.fillRect(x,groundY+canvas.height*0.024,dashW,3);
+ }
+ // 草パッチ
+ ctx.fillStyle='rgba(255,255,255,0.08)';
+ const patchOff=(parallaxX*0.9)%160;
+ for(let x=-patchOff;x<canvas.width+160;x+=160){
+  ctx.beginPath();ctx.ellipse(x+40,groundY+canvas.height*0.1,26,7,0,0,Math.PI*2);ctx.fill();
+ }
+ // レール
+ rails.forEach(r=>drawRail(r));
+ // パーティクル
+ particles.forEach(p=>{
+  ctx.globalAlpha=p.alpha;
+  ctx.fillStyle=p.color;
+  if(p.shape==='star'){drawStar(p.x,p.y,p.size);}
+  else{ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();}
+ });
+ ctx.globalAlpha=1;
+}
+function drawRail(r){
+ const y=r.y;
+ const grad=ctx.createLinearGradient(0,y-4,0,y+9);
+ grad.addColorStop(0,'#FFF176');grad.addColorStop(0.5,'#FFD600');grad.addColorStop(1,'#FF8F00');
+ ctx.save();
+ ctx.shadowColor='rgba(255,214,0,0.8)';ctx.shadowBlur=12;
+ ctx.fillStyle=grad;
+ roundRect(r.x,y,r.len,9,4.5);
+ ctx.fill();
+ ctx.restore();
+ // 浮遊スター（支柱がわり）
+ ctx.fillStyle='rgba(255,241,118,0.85)';
+ for(let x=r.x+40;x<r.x+r.len-20;x+=90){
+  drawStar(x,y+22,6);
+ }
+ // ハイライト
+ ctx.fillStyle='rgba(255,255,255,0.7)';
+ roundRect(r.x+3,y+1.5,r.len-6,2.5,1.2);
+ ctx.fill();
+}
+function roundRect(x,y,w,h,r){
+ ctx.beginPath();
+ ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
+}
+function drawStar(cx,cy,r){
+ ctx.beginPath();
+ for(let i=0;i<10;i++){
+  const ang=Math.PI/5*i-Math.PI/2;
+  const rad=i%2===0?r:r*0.45;
+  const x=cx+Math.cos(ang)*rad,y=cy+Math.sin(ang)*rad;
+  i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+ }
+ ctx.closePath();ctx.fill();
+}
+
+// ===== パーティクル =====
+function addParticles(x,y,type){
+ const cfg={
+  jump:{n:6,colors:['#ffffff','#B3E5FC'],size:[2,4],shape:'circle'},
+  coin:{n:7,colors:['#FFD600','#FFF176','#FFA000'],size:[2,5],shape:'star'},
+  star:{n:12,colors:['#FFD600','#FFF9C4','#FF8F00'],size:[3,6],shape:'star'},
+  hit:{n:12,colors:['#FF5252','#FF8A80','#ffffff'],size:[3,6],shape:'circle'},
+  power:{n:14,colors:['#CE93D8','#FFFFFF','#FFD600'],size:[3,6],shape:'star'},
+  rail:{n:3,colors:['#FFD600','#FFF176','#ffffff'],size:[2,4],shape:'star'},
+ }[type];
+ if(!cfg)return;
+ for(let i=0;i<cfg.n;i++){
+  const life=22+Math.random()*16;
+  particles.push({
+   x:x+(Math.random()-0.5)*16,y:y+(Math.random()-0.5)*12,
+   vx:(Math.random()-0.5)*4.5,vy:-Math.random()*4-1,
+   size:cfg.size[0]+Math.random()*(cfg.size[1]-cfg.size[0]),
+   color:cfg.colors[Math.floor(Math.random()*cfg.colors.length)],
+   shape:cfg.shape,life,maxLife:life,alpha:1,
+  });
+ }
+}
+
+// ===== UI表示 =====
+function showScorePop(text,x,y,color){
+ const el=document.createElement('div');
+ el.className='score-pop';
+ el.textContent=text;
+ el.style.left=x+'px';el.style.top=y+'px';el.style.color=color||'#FFD700';
+ domLayer.appendChild(el);
+ setTimeout(()=>el.remove(),850);
+}
+function showStageLabel(name){
+ const el=document.getElementById('stage-display');
+ el.textContent=name;
+ el.classList.add('show');
+ setTimeout(()=>el.classList.remove('show'),2000);
+}
+let railLabelT=null;
+function showRailLabel(){
+ const el=document.getElementById('rail-display');
+ el.classList.add('show');
+ clearTimeout(railLabelT);
+ railLabelT=setTimeout(()=>el.classList.remove('show'),1200);
+}
+function updateHUD(){
+ document.getElementById('coin-disp').textContent=`🪙 ${coinCount}`;
+ document.getElementById('lives-disp').textContent='❤️'.repeat(Math.max(0,lives))+'🖤'.repeat(Math.max(0,3-lives));
+}
+
+// ===== ゲームオーバー =====
+function endGame(){
+ gameOver=true;gameRunning=false;
+ cancelAnimationFrame(raf);
+ sfx('gameover');
+ const hs=getHs();
+ const isNew=score>hs;
+ if(isNew)localStorage.setItem('runner_hs',score);
+ const stars=score>=2000?'⭐⭐⭐':score>=800?'⭐⭐':'⭐';
+ document.getElementById('go-emoji').textContent=isNew?'🏆':'🌟';
+ document.getElementById('go-sub').textContent=`${STAGES[stageIdx].name} まで はしったよ！`;
+ document.getElementById('go-score').innerHTML=`${stars}<br>スコア：⭐${score}　コイン：🪙${coinCount}`;
+ document.getElementById('go-hs').classList.toggle('show',isNew);
+ setTimeout(()=>document.getElementById('go-screen').classList.add('show'),500);
+}
+function getHs(){return parseInt(localStorage.getItem('runner_hs')||'0');}
+function updateHsDisp(){
+ const hs=getHs();
+ document.getElementById('hs-disp').textContent=hs>0?`🏆 ハイスコア：⭐${hs}`:'';
+}
+
+// ===== SFX (Web Audio) =====
+let actx=null;
+function _ac(){if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();return actx;}
+function tone(freq,dur,type,vol,delay){
+ type=type||'sine';vol=vol||0.15;delay=delay||0;
+ try{
+  const ac=_ac();
+  const o=ac.createOscillator(),g=ac.createGain();
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,ac.currentTime+delay);
+  g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+delay+dur);
+  o.connect(g);g.connect(ac.destination);
+  o.start(ac.currentTime+delay);o.stop(ac.currentTime+delay+dur);
+ }catch(e){}
+}
+let lastCoinSfx=0;
+function sfx(name,arg){
+ if(name==='coin'){
+  const now=Date.now();
+  if(now-lastCoinSfx<70)return;
+  lastCoinSfx=now;
+ }
+ if(name==='jump'){tone(arg===2?520:420,0.12,'square',0.08);tone(arg===2?780:640,0.1,'square',0.06,0.05);}
+ if(name==='coin'){tone(880,0.08,'square',0.09);tone(1320,0.12,'square',0.07,0.06);}
+ if(name==='star'){[880,1100,1320,1760].forEach((f,i)=>tone(f,0.1,'square',0.08,i*0.06));}
+ if(name==='power'){[520,660,880,1040].forEach((f,i)=>tone(f,0.14,'triangle',0.1,i*0.07));}
+ if(name==='hit'){tone(180,0.22,'sawtooth',0.12);tone(120,0.3,'sawtooth',0.1,0.08);}
+ if(name==='rail'){tone(660,0.1,'triangle',0.09);tone(990,0.14,'triangle',0.08,0.06);}
+ if(name==='stage'){[660,880,1100].forEach((f,i)=>tone(f,0.16,'triangle',0.09,i*0.09));}
+ if(name==='gameover'){[520,440,350,260].forEach((f,i)=>tone(f,0.22,'triangle',0.1,i*0.14));}
+}
+
+// ===== ナビ =====
+function goBack(){
+ cancelAnimationFrame(raf);gameRunning=false;
+ if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');
+ else history.back();
+}
+function goHome(){
+ if(window.parent!==window){window.parent.postMessage({type:'goHome'},'*');}
+ else{window.location.href='/';}
+}
+
+init();
+
+// ── BGM (WakuwakuBGM library) ──────────────────────
+let _bgm=null;
+function _startBGM(){
+ if(_bgm)return;
+ _bgm=new WakuwakuBGM('adventure');
+ const on=WakuwakuBGM.loadState();
+ _bgm.setEnabled(on);
+ if(on)_bgm.start();
+ _syncBgmBtn();
+}
+function toggleCommonBGM(){
+ if(!_bgm){_startBGM();return;}
+ const on=_bgm.toggle();
+ WakuwakuBGM.saveState(on);
+ _syncBgmBtn();
+}
+function _syncBgmBtn(){
+ const on=_bgm?_bgm.enabled:WakuwakuBGM.loadState();
+ document.querySelectorAll('#bgm-btn,#ui-bgm-btn,#bgm-toggle,#sound-btn,.bgm-btn').forEach(b=>{b.textContent=on?'🔊':'🔇';});
+}
+(function(){
+ function _first(){_startBGM();}
+ document.addEventListener('click',_first,{once:true});
+ document.addEventListener('touchstart',_first,{once:true});
+})();
+// ── End BGM ────────────────────────────────────────
+</script>
+
+<style id="rh-style">
+#rotate-hint{position:fixed;inset:0;z-index:99999;background:#0e1424;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;font-family:"M PLUS Rounded 1c",sans-serif;}
+#rotate-hint .ic{font-size:58px;animation:rh-sp 1.6s ease-in-out infinite;}
+#rotate-hint .t{font-size:22px;font-weight:800;}
+#rotate-hint .s{font-size:14px;opacity:.8;margin-top:4px;}
+@keyframes rh-sp{0%,100%{transform:rotate(0)}50%{transform:rotate(90deg)}}
+@media (orientation: portrait){#rotate-hint{display:flex;}}
+</style>
+<div id="rotate-hint"><div class="ic">📱</div><div><div class="t">よこむきに してね</div><div class="s">よこにすると あそべるよ</div></div></div>
+</body>
+</html>

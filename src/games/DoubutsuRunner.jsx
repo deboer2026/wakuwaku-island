@@ -25,7 +25,7 @@ export default function DoubutsuRunner() {
     }}>
       <iframe
         ref={iframeRef}
-        src="/games/runner_v7.html"
+        src="/games/runner_v8.html"
         style={{
           width: '100%',
           height: '100%',
