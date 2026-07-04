@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 
-const BASE = 'https://wakuwaku-island.pages.dev';
+const BASE = 'https://wakuwakuislands.com';
 
 export default function GameSEO({ route, name, desc, category, intro, faq, ageMin = 4, ageMax = 12 }) {
   const url = `${BASE}${route}`;

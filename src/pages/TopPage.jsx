@@ -1322,7 +1322,7 @@ export default function TopPage() {
       <Helmet>
         <title>わくわくアイランド｜こども向け無料ブラウザゲーム</title>
         <meta name="description" content="幼児・小学生向けの無料ミニゲームが20種類以上。かず・もじ・パズル・アクション・レースなどを登録不要・インストール不要でブラウザですぐ遊べます。" />
-        <link rel="canonical" href="https://wakuwaku-island.pages.dev/" />
+        <link rel="canonical" href="https://wakuwakuislands.com/" />
       </Helmet>
 
       {/* ── 空の雲 ── */}
