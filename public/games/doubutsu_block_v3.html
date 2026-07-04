@@ -343,10 +343,15 @@ function stopBGM(){if(bgmTimer){clearInterval(bgmTimer);bgmTimer=null;}}
 function newGrid(){grid=Array.from({length:ROWS},()=>Array(COLS).fill(-1));}
 function randStack(){return [rt(),rt(),rt()];function rt(){return Math.floor(Math.random()*TYPES);}}
 function spawn(){
-  piece={x:3,y:-1,orient:0,stack:nextStack||randStack()};
+  const sx=3;
+  // 生成列が塞がっている、または最上段がほぼ埋まっていたら詰み→ゲームオーバー
+  if(grid[HIDDEN][sx]!==-1||grid[HIDDEN+1][sx]!==-1)return false;
+  let topFilled=0;
+  for(let x=0;x<COLS;x++)if(grid[HIDDEN][x]!==-1)topFilled++;
+  if(topFilled>=COLS-1)return false;
+  piece={x:sx,y:-1,orient:0,stack:nextStack||randStack()};
   nextStack=randStack();
   drawNext();
-  if(!canPlace(piece.x,Math.ceil(piece.y),piece.orient))return false;
   return true;
 }
 // orient 0=たて, 1=よこ
