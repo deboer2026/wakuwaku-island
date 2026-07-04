@@ -1,45 +1,30 @@
-﻿import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIframeBridge } from '../hooks/useIframeBridge';
+import { useGameNav } from '../hooks/useGameNav';
+import GameContent from '../seo/GameContent';
+import HomeChip from '../components/HomeChip';
 
 export default function KudamonoCatch() {
   const navigate = useNavigate();
   const iframeRef = useRef(null);
+  useGameNav(navigate);
   useIframeBridge(iframeRef);
 
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.data?.type === 'goBack') navigate(-1);
-      if (e.data?.type === 'goHome') navigate('/');
-    };
-    window.addEventListener('message', handler);
-    return () => window.removeEventListener('message', handler);
-  }, [navigate]);
-
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0, left: 0, right: 0, bottom: 0,
-      zIndex: 0,
-      overflow: 'hidden'
-    }}>
-      <iframe
-        ref={iframeRef}
-        src="/games/kudamono_v2.html"
-        style={{
-          width: '100%',
-          height: '100%',
-          border: 'none',
-          display: 'block',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-        }}
-        title="くだものキャッチ"
-        allow="autoplay; fullscreen"
-        allowFullScreen
-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
-      />
+    <div className="game-page">
+      <div className="game-frame">
+        <HomeChip />
+        <iframe
+          ref={iframeRef}
+          src="/games/kudamono_v2.html"
+          title="くだものキャッチ"
+          allow="autoplay; fullscreen"
+          allowFullScreen
+          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+        />
+      </div>
+      <GameContent route="/kudamono-catch" />
     </div>
   );
 }

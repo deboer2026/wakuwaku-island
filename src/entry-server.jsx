@@ -12,5 +12,5 @@ export function render(url) {
       </StaticRouter>
     </HelmetProvider>
   )
-  return { html }
+  return { html, helmet: helmetContext.helmet }
 }

@@ -1,5 +1,5 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import GameSEO from './seo/GameSEO'
 import GAME_META from './seo/gameMeta'
 import TopPage from './pages/TopPage'
@@ -68,7 +68,13 @@ const GAME_ROUTES = new Set([
 // ルート変更を監視して localStorage に記録するコンポーネント
 function RouteTracker() {
   const location = useLocation();
+  const navCount = useRef(0);
   useEffect(() => {
+    navCount.current += 1;
+    // 着地の初回では立てず、サイト内で動いた2回目以降にフラグを立てる
+    if (navCount.current >= 2) {
+      try { sessionStorage.setItem('ww_nav_internal', '1'); } catch {}
+    }
     if (GAME_ROUTES.has(location.pathname)) {
       recordRecentGame(location.pathname);
       recordGamePlay(location.pathname);

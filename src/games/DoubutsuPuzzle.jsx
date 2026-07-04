@@ -1,33 +1,30 @@
-﻿import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIframeBridge } from '../hooks/useIframeBridge';
+import { useGameNav } from '../hooks/useGameNav';
+import GameContent from '../seo/GameContent';
+import HomeChip from '../components/HomeChip';
 
 export default function DoubutsuPuzzle() {
   const navigate = useNavigate();
   const iframeRef = useRef(null);
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.data?.type === 'goBack') navigate(-1);
-      if (e.data?.type === 'goHome') navigate('/');
-    };
-    window.addEventListener('message', handler);
-    return () => window.removeEventListener('message', handler);
-  }, [navigate]);
-
+  useGameNav(navigate);
   useIframeBridge(iframeRef);
 
   return (
-    <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:0, overflow:'hidden' }}>
-      <iframe
-        ref={iframeRef}
-        src="/games/doubutsu_puzzle_v2.html"
-        style={{ width:'100%', height:'100%', border:'none', display:'block', position:'absolute', top:0, left:0 }}
-        title="どうぶつパズル"
-        allow="autoplay; fullscreen"
-        allowFullScreen
-        sandbox="allow-scripts allow-same-origin allow-popups"
-      />
+    <div className="game-page">
+      <div className="game-frame">
+        <HomeChip />
+        <iframe
+          ref={iframeRef}
+          src="/games/doubutsu_puzzle_v2.html"
+          title="どうぶつパズル"
+          allow="autoplay; fullscreen"
+          allowFullScreen
+          sandbox="allow-scripts allow-same-origin allow-popups"
+        />
+      </div>
+      <GameContent route="/doubutsu-puzzle" />
     </div>
   );
 }

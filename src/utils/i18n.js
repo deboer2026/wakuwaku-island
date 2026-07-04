@@ -38,5 +38,6 @@ export function t(lang, key) {
 }
 
 export function getLang() {
+  if (typeof localStorage === 'undefined') return 'ja'
   return localStorage.getItem('wakuwaku_lang') || 'ja'
 }

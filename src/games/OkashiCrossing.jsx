@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIframeBridge } from '../hooks/useIframeBridge';
+import GameContent from '../seo/GameContent';
+import HomeChip from '../components/HomeChip';
 
 export default function OkashiCrossing() {
   const navigate = useNavigate();
@@ -10,8 +12,13 @@ export default function OkashiCrossing() {
 
   useEffect(() => {
     const handler = (e) => {
-      if (e.data?.type === 'goBack') navigate(-1);
-      if (e.data?.type === 'goHome') navigate('/');
+      if (e.data?.type === 'goHome') { navigate('/'); return; }
+      if (e.data?.type === 'goBack') {
+        let internal = false;
+        try { internal = sessionStorage.getItem('ww_nav_internal') === '1'; } catch {}
+        navigate(internal ? -1 : '/');
+        return;
+      }
       if (e.data?.type === 'okashi-crossing-running') setShowPad(!!e.data.running);
     };
     window.addEventListener('message', handler);
@@ -38,24 +45,27 @@ export default function OkashiCrossing() {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden' }}>
-      <iframe
-        ref={iframeRef}
-        src="/games/okashi_crossing.html"
-        style={{ width: '100%', height: '100%', border: 'none', display: 'block', position: 'absolute', top: 0, left: 0 }}
-        title="おかしのくにたんけん"
-        allow="autoplay; fullscreen"
-        allowFullScreen
-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
-      />
-      {showPad && (
-        <div style={pad}>
-          <button style={{ ...btn, gridColumn: 2, gridRow: 1 }} onPointerDown={press('up')} aria-label="まえ">▲</button>
-          <button style={{ ...btn, gridColumn: 1, gridRow: 2 }} onPointerDown={press('left')} aria-label="ひだり">◀</button>
-          <button style={{ ...btn, gridColumn: 3, gridRow: 2 }} onPointerDown={press('right')} aria-label="みぎ">▶</button>
-          <button style={{ ...btn, gridColumn: 2, gridRow: 3 }} onPointerDown={press('down')} aria-label="うしろ">▼</button>
-        </div>
-      )}
+    <div className="game-page">
+      <div className="game-frame">
+        <HomeChip />
+        <iframe
+          ref={iframeRef}
+          src="/games/okashi_crossing.html"
+          title="おかしのくにたんけん"
+          allow="autoplay; fullscreen"
+          allowFullScreen
+          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+        />
+        {showPad && (
+          <div style={pad}>
+            <button style={{ ...btn, gridColumn: 2, gridRow: 1 }} onPointerDown={press('up')} aria-label="まえ">▲</button>
+            <button style={{ ...btn, gridColumn: 1, gridRow: 2 }} onPointerDown={press('left')} aria-label="ひだり">◀</button>
+            <button style={{ ...btn, gridColumn: 3, gridRow: 2 }} onPointerDown={press('right')} aria-label="みぎ">▶</button>
+            <button style={{ ...btn, gridColumn: 2, gridRow: 3 }} onPointerDown={press('down')} aria-label="うしろ">▼</button>
+          </div>
+        )}
+      </div>
+      <GameContent route="/okashi-crossing" />
     </div>
   );
 }
