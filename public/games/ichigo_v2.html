@@ -210,14 +210,14 @@ function updateHiBadge(){document.getElementById('hi-title').textContent='🏆 �
 function resize(){
   W=wrap.clientWidth;H=wrap.clientHeight;
   bgcv.width=W;bgcv.height=H;cv.width=W;cv.height=H;
-  // Build background flowers
+  // Build background bokeh (soft glows, no emoji)
   bgFlowers=[];
-  const flowerEmojis=['🌸','🌺','🌼','💮','🌷'];
-  for(let i=0;i<18;i++) bgFlowers.push({
-    emoji:flowerEmojis[i%flowerEmojis.length],
-    x:Math.random()*W, y:H*.4+Math.random()*H*.6,
-    size:W*.055+Math.random()*W*.025,
-    ph:Math.random()*Math.PI*2, sp:.2+Math.random()*.4, alpha:.1+Math.random()*.15
+  for(let i=0;i<14;i++) bgFlowers.push({
+    x:Math.random()*W, y:H*.35+Math.random()*H*.6,
+    r:W*.05+Math.random()*W*.07,
+    ph:Math.random()*Math.PI*2, sp:.2+Math.random()*.4,
+    alpha:.05+Math.random()*.07,
+    hue:Math.random()<0.5?'255,120,170':'190,120,255'
   });
 }
 
@@ -337,6 +337,46 @@ function update(){
   items=items.filter(i=>i.alive||i.popping);
 }
 
+// Vector strawberry (emoji-free, crisp on every device)
+function drawStrawberry(ctx,s,gold){
+  const c = gold
+    ? {hi:'#fff2b0',mid:'#ffcf3f',low:'#e39a00',seed:'#8a5b00',leaf:'#8fd873',leafHi:'#bff29a'}
+    : {hi:'#ff8fa0',mid:'#f5334f',low:'#bd0c2c',seed:'#ffe9a8',leaf:'#3fae4f',leafHi:'#69c96b'};
+  // Body (heart-shouldered, pointed bottom)
+  ctx.beginPath();
+  ctx.moveTo(0,s);
+  ctx.bezierCurveTo(-s*1.08,s*0.52,-s*1.02,-s*0.30,-s*0.44,-s*0.52);
+  ctx.bezierCurveTo(-s*0.20,-s*0.66,-s*0.06,-s*0.52,0,-s*0.38);
+  ctx.bezierCurveTo(s*0.06,-s*0.52,s*0.20,-s*0.66,s*0.44,-s*0.52);
+  ctx.bezierCurveTo(s*1.02,-s*0.30,s*1.08,s*0.52,0,s);
+  ctx.closePath();
+  const g=ctx.createRadialGradient(-s*0.30,-s*0.25,s*0.12,0,s*0.10,s*1.25);
+  g.addColorStop(0,c.hi);g.addColorStop(0.55,c.mid);g.addColorStop(1,c.low);
+  ctx.fillStyle=g;ctx.fill();
+  // Seeds
+  ctx.fillStyle=c.seed;
+  const seeds=[[-.36,-.14],[.33,-.12],[0,-.04],[-.52,.18],[.5,.16],[-.22,.28],[.24,.30],[0,.5],[-.34,.5],[.34,.5]];
+  seeds.forEach(([sx,sy])=>{ctx.save();ctx.translate(sx*s,sy*s);ctx.rotate(sy*0.7);
+    ctx.beginPath();ctx.ellipse(0,0,s*0.055,s*0.10,0,0,Math.PI*2);ctx.fill();ctx.restore();});
+  // Highlight
+  ctx.beginPath();ctx.ellipse(-s*0.34,-s*0.18,s*0.26,s*0.40,-0.4,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,0.22)';ctx.fill();
+  // Calyx / leaves
+  ctx.save();ctx.translate(0,-s*0.48);
+  const lg=ctx.createLinearGradient(0,-s*0.18,0,s*0.18);
+  lg.addColorStop(0,c.leafHi);lg.addColorStop(1,c.leaf);
+  ctx.fillStyle=lg;
+  const n=5;
+  for(let i=0;i<n;i++){const a=(-Math.PI/2)+(i-(n-1)/2)*0.6;
+    const lx=Math.cos(a)*s*0.55,ly=Math.sin(a)*s*0.34+s*0.05;
+    ctx.beginPath();ctx.moveTo(0,s*0.04);
+    ctx.quadraticCurveTo(lx*0.5,ly-s*0.13,lx,ly);
+    ctx.quadraticCurveTo(lx*0.5,ly+s*0.03,0,s*0.04);ctx.fill();}
+  ctx.fillStyle=c.leaf;
+  ctx.beginPath();ctx.roundRect(-s*0.06,-s*0.24,s*0.12,s*0.24,s*0.05);ctx.fill();
+  ctx.restore();
+}
+
 function drawBg(t){
   bgctx.clearRect(0,0,W,H);
   // Rich dark garden background
@@ -347,15 +387,15 @@ function drawBg(t){
   const groundG=bgctx.createLinearGradient(0,H*.75,0,H);
   groundG.addColorStop(0,'rgba(20,0,10,0)');groundG.addColorStop(1,'rgba(10,30,5,0.4)');
   bgctx.fillStyle=groundG;bgctx.fillRect(0,H*.75,W,H*.25);
-  // Flowers
-  bgctx.textAlign='center';bgctx.textBaseline='middle';
+  // Bokeh glows
   bgFlowers.forEach(f=>{
-    const bob=Math.sin(t*f.sp+f.ph)*6;
-    bgctx.globalAlpha=f.alpha;
-    bgctx.font=`${Math.round(f.size)}px serif`;
-    bgctx.fillText(f.emoji,f.x,f.y+bob);
+    const bob=Math.sin(t*f.sp+f.ph)*6, cy=f.y+bob;
+    const rg=bgctx.createRadialGradient(f.x,cy,0,f.x,cy,f.r);
+    rg.addColorStop(0,`rgba(${f.hue},${f.alpha})`);
+    rg.addColorStop(1,`rgba(${f.hue},0)`);
+    bgctx.fillStyle=rg;
+    bgctx.beginPath();bgctx.arc(f.x,cy,f.r,0,Math.PI*2);bgctx.fill();
   });
-  bgctx.globalAlpha=1;
   // Sparkles
   for(let i=0;i<12;i++){
     const tw=(Math.sin(t*(0.5+i*.15)+i*1.3)+1)/2;
@@ -400,17 +440,14 @@ function draw(){
       tG.addColorStop(0,'rgba(100,50,0,0.7)');tG.addColorStop(1,'rgba(60,20,0,0.5)');
       ctx.fillStyle=tG;ctx.fill();
       ctx.strokeStyle='rgba(255,100,50,0.5)';ctx.lineWidth=2;ctx.stroke();
-    } else if(!item.special){
-      // Strawberry glow circle
-      const sG=ctx.createRadialGradient(0,-item.size*.2,0,0,0,item.size*1.1);
-      sG.addColorStop(0,'rgba(255,80,80,0.35)');sG.addColorStop(1,'rgba(255,0,60,0)');
-      ctx.beginPath();ctx.arc(0,0,item.size*1.1,0,Math.PI*2);
-      ctx.fillStyle=sG;ctx.fill();
+      // Animal emoji
+      ctx.font=`${Math.round(item.size*2)}px serif`;
+      ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(item.emoji,0,0);
+    } else {
+      // Vector strawberry (red) or golden strawberry (special)
+      drawStrawberry(ctx,item.size,!!item.special);
     }
-
-    // Emoji
-    ctx.font=`${Math.round(item.size*2)}px serif`;
-    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(item.emoji,0,0);
+    ctx.shadowBlur=0;
 
     // Points badge
     if(!item.isTrap&&!item.popping){
