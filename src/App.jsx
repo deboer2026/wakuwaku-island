@@ -70,6 +70,13 @@ function RouteTracker() {
   const location = useLocation();
   const navCount = useRef(0);
   useEffect(() => {
+    // ブラウザの自動スクロール復元を無効化（bfcache 戻り対策）
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    // ルート遷移ごとに最上部へ戻す（ゲームは必ず開始画面から見せる）
+    window.scrollTo(0, 0);
+
     navCount.current += 1;
     // 着地の初回では立てず、サイト内で動いた2回目以降にフラグを立てる
     if (navCount.current >= 2) {
