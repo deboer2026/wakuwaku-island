@@ -1402,8 +1402,6 @@ export default function TopPage() {
 
       {/* ── ヘッダー ── */}
       <div className="tp-header" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="tp-park-badge">🏝️ GAME PARK ✦</div>
-
         <div className="ksk-title-zone">
           <div className="tp-mascot-bubble" key={mascotText} aria-live="polite">
             {mascotText}
@@ -1425,10 +1423,6 @@ export default function TopPage() {
                 {{ja:'アイランド', en:'Island', zh:'岛', ko:'아일랜드', es:'Island'}[lang] || 'アイランド'}
               </span>
             </h1>
-          </div>
-
-          <div className="tp-subtitle">
-            {{ja:'🏝️ たのしい あそびじま！', en:'🏝️ Fun Play Island!', zh:'🏝️ 快乐游戏岛！', ko:'🏝️ 즐거운 놀이섬!', es:'🏝️ ¡Isla de diversión!'}[lang] || '🏝️ たのしい あそびじま！'}
           </div>
         </div>
 
