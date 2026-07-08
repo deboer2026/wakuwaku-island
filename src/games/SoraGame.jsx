@@ -17,7 +17,7 @@ export default function SoraGame() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/sora_v2.html"
+          src="/games/sora_v3.html"
           title="そらとびプリンセス"
           allow="autoplay; fullscreen"
           allowFullScreen
