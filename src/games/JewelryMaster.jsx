@@ -17,7 +17,7 @@ export default function JewelryMaster() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/jewelry_master_v7.html"
+          src="/games/jewelry_master_v8.html"
           title="ジュエリーマスター"
           allow="autoplay; fullscreen"
           allowFullScreen
