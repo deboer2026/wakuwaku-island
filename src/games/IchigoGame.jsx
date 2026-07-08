@@ -17,7 +17,7 @@ export default function IchigoGame() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/ichigo_v2.html"
+          src="/games/ichigo_v3.html"
           title="いちごゲーム"
           allow="autoplay; fullscreen"
           allowFullScreen
