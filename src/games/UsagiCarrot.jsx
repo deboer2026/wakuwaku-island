@@ -17,7 +17,7 @@ export default function UsagiCarrot() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/usagi_carrot_v1.html"
+          src="/games/usagi_carrot_v2.html"
           title="うさぎとにんじん"
           allow="autoplay; fullscreen"
           allowFullScreen
