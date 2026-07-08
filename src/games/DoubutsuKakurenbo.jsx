@@ -17,7 +17,7 @@ export default function DoubutsuKakurenbo() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/kakurenbo_v1.html"
+          src="/games/kakurenbo_v2.html"
           title="どうぶつかくれんぼ"
           allow="autoplay; fullscreen"
           allowFullScreen
