@@ -17,7 +17,7 @@ export default function IroAwase() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/iro_awase_v2.html"
+          src="/games/iro_awase_v3.html"
           title="いろあわせ"
           allow="autoplay; fullscreen"
           allowFullScreen
