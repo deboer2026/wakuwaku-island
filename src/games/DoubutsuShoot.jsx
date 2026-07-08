@@ -17,7 +17,7 @@ export default function DoubutsuShoot() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/shoot2.html"
+          src="/games/shoot3.html"
           title="どうぶつシューティング"
           allow="autoplay; fullscreen"
           allowFullScreen
