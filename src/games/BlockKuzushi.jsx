@@ -17,7 +17,7 @@ export default function BlockKuzushi() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/block_kuzushi_v3.html"
+          src="/games/block_kuzushi_v4.html"
           title="おしろブロックくずし"
           allow="autoplay; fullscreen"
           allowFullScreen
