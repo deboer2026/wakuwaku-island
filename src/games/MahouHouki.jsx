@@ -17,7 +17,7 @@ export default function MahouHouki() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/mahou_houki_gp_v4.html"
+          src="/games/mahou_houki_gp_v5.html"
           title="まほうほうきGP"
           allow="autoplay; fullscreen"
           allowFullScreen
