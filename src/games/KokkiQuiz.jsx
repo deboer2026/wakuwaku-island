@@ -17,7 +17,7 @@ export default function KokkiQuiz() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/flag_quiz.html"
+          src="/games/flag_quiz_v2.html"
           title="こっきクイズ"
           allow="autoplay; fullscreen"
           allowFullScreen

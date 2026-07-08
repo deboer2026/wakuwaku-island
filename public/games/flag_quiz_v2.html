@@ -1,0 +1,1086 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>こっきクイズ せかいのたび</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:'M PLUS Rounded 1c',sans-serif;user-select:none;}
+body{background:#0a1628;display:flex;flex-direction:column;align-items:center;}
+#app{width:100%;max-width:480px;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+:root{
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;}
+.screen.active{display:flex;}
+
+/* ===== 共通ボタン ===== */
+.btn-gold{background:linear-gradient(135deg,#FF8F00,#FFD700);color:#0d0025;border:none;border-radius:14px;padding:13px 28px;font-size:16px;font-weight:900;cursor:pointer;font-family:inherit;margin:4px;box-shadow:0 4px 14px rgba(255,215,0,0.4);transition:transform 0.12s;}
+.btn-gold:active{transform:scale(0.95);}
+.btn-ghost{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:13px;padding:10px 20px;font-size:13px;font-weight:700;color:rgba(255,255,255,0.7);cursor:pointer;font-family:inherit;margin:4px;}
+.hud-back{background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.25);border-radius:10px;padding:6px 12px;color:rgba(255,255,255,0.75);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;}
+#ui-bgm-btn{
+  width:40px;height:40px;
+  background:rgba(0,0,0,0.5);
+  border:1.5px solid rgba(255,255,255,0.4);
+  border-radius:50%;font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  touch-action:manipulation;flex-shrink:0;color:white;font-family:inherit;
+}
+
+/* ===== タイトル ===== */
+#title-screen{
+  background:linear-gradient(160deg,#050d1e,#0a1a35,#050d1e);
+  align-items:center;justify-content:flex-end;
+}
+#title-globe{
+  position:absolute;top:0;left:0;right:0;height:52%;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:10px;overflow:hidden;
+}
+.title-flag-row{display:flex;gap:10px;animation:marquee 14s linear infinite;white-space:nowrap;}
+.title-flag-row:nth-child(2){animation-duration:18s;animation-direction:reverse;}
+.title-flag-row:nth-child(3){animation-duration:11s;}
+@keyframes marquee{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+.tflag{font-size:36px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5));}
+#title-plane{
+  position:absolute;top:12%;left:-60px;font-size:38px;z-index:5;
+  animation:planeFly 7s linear infinite;
+  filter:drop-shadow(0 3px 8px rgba(0,0,0,0.5));
+}
+@keyframes planeFly{
+  0%{left:-70px;top:14%;transform:rotate(-8deg);}
+  50%{top:6%;}
+  100%{left:110%;top:12%;transform:rotate(6deg);}
+}
+#title-card{
+  position:relative;z-index:10;width:100%;
+  display:flex;flex-direction:column;align-items:center;
+  padding-bottom:calc(24px + var(--sab));
+}
+#title-logo-wrap{text-align:center;padding:0 20px 14px;background:linear-gradient(0deg,rgba(5,13,30,0.97) 55%,transparent);width:100%;}
+#title-logo{
+  font-size:36px;font-weight:900;
+  background:linear-gradient(180deg,#fff,#FFE066 35%,#FF8C00);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 18px rgba(255,215,0,0.5));
+  letter-spacing:2px;line-height:1.25;
+}
+#title-sub{font-family:'DotGothic16',monospace;font-size:12px;color:rgba(255,215,0,0.6);letter-spacing:5px;margin-top:2px;}
+#title-panel{
+  background:linear-gradient(160deg,rgba(13,31,58,0.97),rgba(5,13,30,0.98));
+  border:1.5px solid rgba(255,215,0,0.28);border-radius:22px;
+  padding:18px 20px 20px;max-width:320px;width:90%;
+  box-shadow:0 20px 60px rgba(0,0,0,0.7);
+  text-align:center;
+}
+#title-hs{font-size:11px;color:rgba(255,215,0,0.55);margin-top:10px;}
+#title-total-stars{font-size:12px;font-weight:800;color:#FFD700;margin-top:6px;}
+
+/* ===== キャラ選択 ===== */
+#char-screen{
+  background:linear-gradient(160deg,#0a1a35,#12264a,#0a1a35);
+  align-items:center;justify-content:center;padding:20px;
+}
+.screen-title{
+  font-size:20px;font-weight:900;color:#FFD700;text-align:center;
+  margin-bottom:4px;letter-spacing:1px;
+  filter:drop-shadow(0 2px 8px rgba(255,215,0,0.3));
+}
+.screen-sub{font-size:11px;color:rgba(255,255,255,0.5);text-align:center;margin-bottom:16px;}
+#char-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:340px;}
+.char-card{
+  background:linear-gradient(160deg,rgba(255,255,255,0.1),rgba(255,255,255,0.04));
+  border:2px solid rgba(255,255,255,0.2);border-radius:20px;
+  padding:16px 10px 12px;text-align:center;cursor:pointer;
+  transition:transform 0.15s, border-color 0.15s;font-family:inherit;color:white;
+}
+.char-card:active{transform:scale(0.95);}
+.char-card.selected{border-color:#FFD700;background:linear-gradient(160deg,rgba(255,215,0,0.18),rgba(255,215,0,0.06));box-shadow:0 0 20px rgba(255,215,0,0.25);}
+.char-emoji{font-size:46px;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.4));animation:charBob 2.2s ease-in-out infinite;display:inline-block;}
+@keyframes charBob{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+.char-name{font-size:14px;font-weight:900;margin-top:6px;}
+.char-role{font-size:9px;color:rgba(255,255,255,0.55);font-weight:700;margin-top:2px;}
+
+/* ===== マップ(ステージ選択) ===== */
+#map-screen{
+  background:linear-gradient(180deg,#0a1a35 0%,#0d2247 60%,#0a1a35 100%);
+}
+#map-hud{
+  flex-shrink:0;display:flex;justify-content:space-between;align-items:center;
+  padding:calc(max(10px,var(--sat)) ) 12px 8px;
+}
+#map-body{flex:1;overflow-y:auto;padding:6px 16px calc(20px + var(--sab));-webkit-overflow-scrolling:touch;}
+#map-guide-bar{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+  border-radius:16px;padding:8px 12px;margin-bottom:12px;
+}
+#map-guide-emoji{font-size:32px;animation:charBob 2.2s ease-in-out infinite;}
+#map-guide-text{font-size:11px;font-weight:800;color:rgba(255,255,255,0.85);line-height:1.5;flex:1;}
+.region-card{
+  border-radius:20px;padding:14px 14px 12px;margin-bottom:12px;
+  border:2px solid rgba(255,255,255,0.2);
+  position:relative;overflow:hidden;
+}
+.region-card.locked{filter:grayscale(0.85) brightness(0.55);}
+.region-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.region-emoji{font-size:34px;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.4));}
+.region-name{font-size:17px;font-weight:900;color:white;text-shadow:0 2px 4px rgba(0,0,0,0.4);}
+.region-count{font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);}
+.lock-badge{
+  position:absolute;top:12px;right:14px;font-size:22px;
+}
+.diff-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+.diff-cell{
+  background:rgba(0,0,0,0.3);border:1.5px solid rgba(255,255,255,0.25);
+  border-radius:13px;padding:8px 4px;text-align:center;cursor:pointer;
+  font-family:inherit;color:white;transition:transform 0.12s;
+}
+.diff-cell:active{transform:scale(0.94);}
+.diff-cell .d-name{font-size:11px;font-weight:900;}
+.diff-cell .d-stars{font-size:11px;margin-top:3px;letter-spacing:1px;}
+.star-on{color:#FFD700;text-shadow:0 0 6px rgba(255,215,0,0.6);}
+.star-off{color:rgba(255,255,255,0.25);}
+#world-card{
+  border:2px solid rgba(255,215,0,0.5);
+  background:linear-gradient(135deg,#3a2a00,#5c4400,#3a2a00);
+}
+#world-card.locked{filter:grayscale(0.85) brightness(0.5);}
+
+/* ===== ゲーム画面 ===== */
+#game-screen{
+  background:linear-gradient(180deg,#050d1e 0%,#0a1a35 100%);
+}
+#hud{
+  flex-shrink:0;z-index:100;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:max(10px,var(--sat)) 12px 6px;
+  gap:8px;
+}
+#status-bar{
+  flex-shrink:0;display:flex;justify-content:center;align-items:center;
+  gap:8px;padding:2px 12px 6px;flex-wrap:wrap;
+}
+.hud-box{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:9px;padding:4px 10px;font-size:12px;font-weight:800;color:white;}
+#hud-score{color:#FFD700;}
+#hud-combo{color:#FF8A65;display:none;}
+#hud-lives{color:#FF6B81;letter-spacing:2px;}
+#progress-wrap{flex-shrink:0;padding:0 14px 4px;}
+#progress-bg{height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;}
+#progress-fill{height:100%;border-radius:3px;transition:width 0.4s ease;background:linear-gradient(90deg,#4CAF50,#FFD700);}
+
+/* ガイドキャラ吹き出し */
+#guide-bar{
+  flex-shrink:0;display:flex;align-items:flex-end;gap:8px;
+  padding:2px 14px 4px;min-height:44px;
+}
+#guide-emoji{font-size:34px;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.5));transition:transform 0.2s;}
+#guide-emoji.jump{animation:guideJump 0.5s ease;}
+@keyframes guideJump{0%,100%{transform:translateY(0);}40%{transform:translateY(-12px) rotate(-8deg);}}
+#guide-bubble{
+  background:rgba(255,255,255,0.95);color:#1a2b4a;
+  border-radius:14px;border-bottom-left-radius:4px;
+  padding:6px 12px;font-size:12px;font-weight:800;
+  max-width:75%;line-height:1.45;
+  box-shadow:0 3px 10px rgba(0,0,0,0.3);
+  opacity:0;transform:translateY(4px);transition:opacity 0.25s, transform 0.25s;
+}
+#guide-bubble.show{opacity:1;transform:translateY(0);}
+
+/* 問題エリア */
+#question-area{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:0 16px calc(10px + var(--sab));min-height:0;
+}
+#flag-card{
+  width:100%;max-width:340px;
+  background:linear-gradient(160deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04));
+  border:1.5px solid rgba(255,255,255,0.15);
+  border-radius:22px;
+  padding:14px 16px 12px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  margin-bottom:12px;text-align:center;position:relative;overflow:hidden;
+}
+#flag-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(255,255,255,0.08),transparent 70%);pointer-events:none;}
+#question-label{font-size:10px;font-weight:800;color:rgba(255,215,0,0.7);letter-spacing:1px;position:relative;z-index:1;}
+#question-text{font-size:14px;font-weight:900;color:white;margin:6px 0 8px;position:relative;z-index:1;}
+#flag-display{
+  line-height:1;margin-bottom:8px;
+  display:flex;justify-content:center;align-items:center;
+  min-height:80px;position:relative;z-index:1;
+}
+#flag-display img{width:150px;height:auto;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.4);display:block;}
+#country-hints{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1;}
+.hint-item{padding:2px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.hint-emoji{font-size:26px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));}
+.hint-label{font-size:8px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.5px;}
+#answer-badge{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:50;pointer-events:none;display:none;font-size:52px;
+}
+@keyframes badgePop{0%{transform:translate(-50%,-50%) scale(0.3);opacity:0;}60%{transform:translate(-50%,-50%) scale(1.2);}100%{transform:translate(-50%,-50%) scale(1);opacity:1;}}
+
+/* 選択肢 */
+#choices{width:100%;max-width:340px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.choice-btn{
+  background:linear-gradient(160deg,rgba(255,255,255,0.13),rgba(255,255,255,0.06));
+  border:2px solid rgba(255,255,255,0.28);
+  border-radius:16px;padding:12px 8px;
+  font-size:14px;font-weight:900;color:white;
+  cursor:pointer;transition:all 0.12s;
+  font-family:inherit;text-align:center;line-height:1.3;
+  box-shadow:0 3px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+  display:flex;align-items:center;justify-content:center;min-height:52px;
+}
+.choice-btn img{width:88px;height:auto;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.4);pointer-events:none;}
+.choice-btn:active{transform:scale(0.94);}
+.choice-btn.correct{background:rgba(76,175,80,0.35);border-color:#4CAF50;color:#A5D6A7;}
+.choice-btn.wrong{background:rgba(244,67,54,0.3);border-color:#F44336;color:#EF9A9A;}
+.choice-btn.reveal{background:rgba(76,175,80,0.2);border-color:rgba(76,175,80,0.5);}
+.choice-btn:disabled{cursor:default;}
+
+/* スコアポップ */
+@keyframes scoreFloat{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(-55px);opacity:0;}}
+.score-pop{position:absolute;font-size:18px;font-weight:900;pointer-events:none;z-index:60;animation:scoreFloat 0.8s ease-out forwards;white-space:nowrap;color:#FFD700;}
+
+/* ===== オーバーレイ ===== */
+.ov{
+  position:absolute;inset:0;z-index:200;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(5,13,30,0.92);backdrop-filter:blur(10px);
+  opacity:0;pointer-events:none;transition:opacity 0.3s;
+}
+.ov.show{opacity:1;pointer-events:all;}
+.ov-box{
+  background:linear-gradient(160deg,#0d1f3a,#050d1e);
+  border:1.5px solid rgba(255,215,0,0.35);border-radius:24px;
+  padding:22px 26px;text-align:center;max-width:300px;width:88%;
+  box-shadow:0 20px 60px rgba(0,0,0,0.7);
+}
+.ov-emoji{font-size:44px;margin-bottom:6px;}
+.ov-title{font-size:21px;font-weight:900;color:#FFD700;margin-bottom:6px;}
+.ov-sub{font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:10px;line-height:1.8;}
+.ov-score{font-size:32px;font-weight:900;color:#FFD700;margin:4px 0;}
+.ov-stars{font-size:32px;letter-spacing:4px;margin:6px 0 4px;}
+@keyframes starIn{0%{transform:scale(0) rotate(-120deg);opacity:0;}70%{transform:scale(1.3);}100%{transform:scale(1) rotate(0);opacity:1;}}
+.ov-stars .star-on{display:inline-block;animation:starIn 0.5s ease-out backwards;}
+.ov-stars .star-on:nth-child(2){animation-delay:0.2s;}
+.ov-stars .star-on:nth-child(3){animation-delay:0.4s;}
+.ov-guide{display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:8px;}
+.ov-guide-emoji{font-size:30px;}
+.ov-guide-text{font-size:11px;font-weight:800;color:rgba(255,255,255,0.8);text-align:left;line-height:1.5;}
+
+/* ===== 横向き対応 ===== */
+@media (orientation: landscape){
+  body{overflow-y:auto;}
+}
+@media (orientation: landscape) and (max-height: 500px){
+  #guide-bar{display:none;}
+  #flag-display{min-height:60px;}
+  #flag-display img{width:110px;}
+  .hint-emoji{font-size:20px;}
+  .choice-btn{min-height:42px;padding:8px;}
+}
+</style>
+<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/safe_area.js"></script>
+</head>
+<body>
+
+<div id="app">
+
+<!-- ===== タイトル ===== -->
+<div class="screen active" id="title-screen">
+  <div id="title-globe">
+    <div class="title-flag-row" id="flagrow1"></div>
+    <div class="title-flag-row" id="flagrow2"></div>
+    <div class="title-flag-row" id="flagrow3"></div>
+  </div>
+  <div id="title-plane">✈️</div>
+  <div id="title-card">
+    <div id="title-logo-wrap">
+      <div id="title-logo">こっきクイズ<br>せかいのたび</div>
+      <div id="title-sub">✦ WORLD FLAG TOUR ✦</div>
+    </div>
+    <div id="title-panel">
+      <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.6);line-height:1.8;margin-bottom:12px;">
+        どうぶつガイドと いっしょに<br>せかいいっしゅうの たびに でよう！
+      </div>
+      <button class="btn-gold" style="width:100%;font-size:17px;" onclick="goCharSelect()">🌍 ぼうけんに でる！</button>
+      <div id="title-total-stars"></div>
+      <div id="title-hs"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== キャラ選択 ===== -->
+<div class="screen" id="char-screen">
+  <div class="screen-title">✦ ガイドを えらんでね ✦</div>
+  <div class="screen-sub">いっしょに たびする なかまだよ</div>
+  <div id="char-grid"></div>
+  <div style="display:flex;gap:8px;margin-top:18px;">
+    <button class="btn-ghost" onclick="showScreen('title-screen')">← もどる</button>
+    <button class="btn-gold" id="char-go-btn" onclick="goMap()">しゅっぱつ！ ▶</button>
+  </div>
+</div>
+
+<!-- ===== マップ ===== -->
+<div class="screen" id="map-screen">
+  <div id="map-hud">
+    <button class="hud-back" onclick="showScreen('title-screen')">← タイトル</button>
+    <div class="hud-box" id="map-stars">⭐ 0</div>
+    <button id="ui-bgm-btn" onclick="toggleCommonBGM()">🔊</button>
+  </div>
+  <div id="map-body">
+    <div id="map-guide-bar">
+      <div id="map-guide-emoji">🐧</div>
+      <div id="map-guide-text">どのちいきに いく？</div>
+    </div>
+    <div id="region-list"></div>
+  </div>
+</div>
+
+<!-- ===== ゲーム画面 ===== -->
+<div class="screen" id="game-screen">
+  <div id="hud">
+    <button class="hud-back" onclick="quitToMap()">← マップ</button>
+    <button id="ui-bgm-btn2" class="hud-back" style="border-radius:50%;width:36px;height:36px;padding:0;font-size:16px;" onclick="toggleCommonBGM()">🔊</button>
+  </div>
+  <div id="status-bar">
+    <div class="hud-box" id="hud-stage">アジア</div>
+    <div class="hud-box" id="hud-lives">❤️❤️❤️</div>
+    <div class="hud-box" id="hud-score">⭐ 0</div>
+    <div class="hud-box" id="hud-combo">🔥 コンボ</div>
+  </div>
+  <div id="progress-wrap">
+    <div id="progress-bg"><div id="progress-fill" style="width:0%"></div></div>
+  </div>
+  <div id="guide-bar">
+    <div id="guide-emoji">🐧</div>
+    <div id="guide-bubble">がんばろう！</div>
+  </div>
+  <div id="question-area">
+    <div id="flag-card">
+      <div id="question-label"></div>
+      <div id="question-text"></div>
+      <div id="flag-display"></div>
+      <div id="country-hints"></div>
+      <div id="answer-badge"></div>
+    </div>
+    <div id="choices"></div>
+  </div>
+</div>
+
+<!-- ===== ステージクリア ===== -->
+<div class="ov" id="stage-clear-ov">
+  <div class="ov-box">
+    <div class="ov-emoji" id="sc-emoji">🎉</div>
+    <div class="ov-title" id="sc-title">クリア！</div>
+    <div class="ov-stars" id="sc-stars"></div>
+    <div class="ov-guide">
+      <div class="ov-guide-emoji" id="sc-guide-emoji">🐧</div>
+      <div class="ov-guide-text" id="sc-guide-text"></div>
+    </div>
+    <div class="ov-score" id="sc-score"></div>
+    <div>
+      <button class="btn-gold" onclick="closeOvToMap()">マップへ ▶</button>
+      <button class="btn-ghost" onclick="retryStage()">もういちど</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ゲームオーバー ===== -->
+<div class="ov" id="gameover-ov">
+  <div class="ov-box">
+    <div class="ov-emoji">😢</div>
+    <div class="ov-title">ざんねん！</div>
+    <div class="ov-guide">
+      <div class="ov-guide-emoji" id="go-guide-emoji">🐧</div>
+      <div class="ov-guide-text" id="go-guide-text">つぎは きっと できるよ！</div>
+    </div>
+    <div class="ov-sub" id="go-sub"></div>
+    <div class="ov-score" id="go-score"></div>
+    <div>
+      <button class="btn-gold" onclick="retryStage()">もういちど</button>
+      <button class="btn-ghost" onclick="closeOvToMap()">マップへ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== せかいいっしゅう達成 ===== -->
+<div class="ov" id="world-clear-ov">
+  <div class="ov-box">
+    <div class="ov-emoji">🏆</div>
+    <div class="ov-title">せかいいっしゅう<br>たっせい！！</div>
+    <div class="ov-sub">きみは りっぱな<br>こっきマスターだ！</div>
+    <div class="ov-stars"><span class="star-on">🌏</span><span class="star-on">✈️</span><span class="star-on">🏆</span></div>
+    <div class="ov-score" id="wc-score"></div>
+    <div>
+      <button class="btn-gold" onclick="closeOvToMap()">マップへ ▶</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// =====================================================
+// こっきクイズ せかいのたび v2
+// =====================================================
+
+// ===== ガイドキャラ =====
+const GUIDES=[
+  {id:'pen',  emoji:'🐧', name:'ペンタ',   role:'パイロット',
+   cheer:['ナイスフライト！','せいかい！さすが！','すごいよ！','かんぺき！'],
+   miss:['おしい！つぎいこう！','だいじょうぶ、つぎつぎ！','ドンマイ！']},
+  {id:'fox',  emoji:'🦊', name:'コンさん', role:'ツアーガイド',
+   cheer:['おみごと！','せいかい〜！','ものしりだね！','その ちょうし！'],
+   miss:['おしい〜！','きにしない きにしない！','つぎは あてよう！']},
+  {id:'rabbit',emoji:'🐰',name:'みみちゃん',role:'トラベラー',
+   cheer:['ぴょんぴょん！せいかい！','やった〜！','てんさい！','すご〜い！'],
+   miss:['ざんねん…つぎがんば！','ドンマイだよ！','おしかった〜！']},
+  {id:'panda',emoji:'🐼', name:'パオくん', role:'ものしりはかせ',
+   cheer:['さすがじゃ！','せいかいじゃよ！','よく しっとるのう！','うむ、みごと！'],
+   miss:['おしいのう！','つぎは できるぞい！','きにするでない！']},
+];
+
+// ===== 地域 =====
+const REGIONS=[
+  {id:'asia',   name:'アジア',    emoji:'🏯', grad:'linear-gradient(135deg,#7B1FA2,#4A148C)'},
+  {id:'europe', name:'ヨーロッパ',emoji:'🏰', grad:'linear-gradient(135deg,#1565C0,#0D47A1)'},
+  {id:'africa', name:'アフリカ',  emoji:'🦁', grad:'linear-gradient(135deg,#E65100,#BF360C)'},
+  {id:'america',name:'アメリカ',  emoji:'🗽', grad:'linear-gradient(135deg,#2E7D32,#1B5E20)'},
+  {id:'oceania',name:'オセアニア',emoji:'🏝️', grad:'linear-gradient(135deg,#00838F,#006064)'},
+];
+const WORLD_ID='world';
+const DIFFS=[
+  {id:'easy', name:'かんたん', q:6,  hints:4},
+  {id:'mid',  name:'ふつう',   q:8,  hints:2},
+  {id:'hard', name:'むずかしい',q:10, hints:0},
+];
+
+// ===== 国データ =====
+// iso, name, region, lv(1=有名/2=中/3=マニア), hints
+const COUNTRIES=[
+  // --- アジア ---
+  {iso:'JP',name:'にほん',region:'asia',lv:1,hints:[{e:'🗼',l:'とうきょうタワー'},{e:'🍣',l:'すし'},{e:'🌸',l:'さくら'},{e:'🏔️',l:'ふじさん'}]},
+  {iso:'CN',name:'ちゅうごく',region:'asia',lv:1,hints:[{e:'🐼',l:'パンダ'},{e:'🏯',l:'ばんりのちょうじょう'},{e:'🥟',l:'ぎょうざ'},{e:'🐉',l:'りゅう'}]},
+  {iso:'KR',name:'かんこく',region:'asia',lv:1,hints:[{e:'🥘',l:'キムチ'},{e:'🎵',l:'K-POP'},{e:'🏯',l:'きゅうでん'},{e:'🥢',l:'ビビンバ'}]},
+  {iso:'IN',name:'インド',region:'asia',lv:1,hints:[{e:'🕌',l:'タージマハル'},{e:'🍛',l:'カレー'},{e:'🐘',l:'ゾウ'},{e:'🧘',l:'ヨガ'}]},
+  {iso:'TH',name:'タイ',region:'asia',lv:1,hints:[{e:'🐘',l:'ゾウ'},{e:'🍜',l:'トムヤムクン'},{e:'🛕',l:'おてら'},{e:'🏝️',l:'リゾート'}]},
+  {iso:'SA',name:'サウジアラビア',region:'asia',lv:2,hints:[{e:'🕌',l:'モスク'},{e:'🐪',l:'ラクダ'},{e:'🛢️',l:'せきゆ'},{e:'🌵',l:'さばく'}]},
+  {iso:'ID',name:'インドネシア',region:'asia',lv:2,hints:[{e:'🏝️',l:'バリとう'},{e:'🦎',l:'コモドドラゴン'},{e:'🌋',l:'かざん'},{e:'🍚',l:'ナシゴレン'}]},
+  {iso:'VN',name:'ベトナム',region:'asia',lv:2,hints:[{e:'🍜',l:'フォー'},{e:'⛵',l:'ハロンわん'},{e:'🛵',l:'バイク'},{e:'🎋',l:'たけ'}]},
+  {iso:'PH',name:'フィリピン',region:'asia',lv:2,hints:[{e:'🌴',l:'ヤシのしま'},{e:'🌺',l:'サンパギタ'},{e:'🐚',l:'うみ'},{e:'🎤',l:'カラオケ'}]},
+  {iso:'TR',name:'トルコ',region:'asia',lv:2,hints:[{e:'🕌',l:'モスク'},{e:'🎈',l:'ききゅう'},{e:'🍢',l:'ケバブ'},{e:'🍦',l:'のびるアイス'}]},
+  {iso:'IL',name:'イスラエル',region:'asia',lv:2,hints:[{e:'🕍',l:'エルサレム'},{e:'🌊',l:'しにかい'},{e:'🫒',l:'オリーブ'},{e:'🏜️',l:'さばく'}]},
+  {iso:'KZ',name:'カザフスタン',region:'asia',lv:3,hints:[{e:'🦅',l:'タカ'},{e:'🐎',l:'ウマ'},{e:'🏔️',l:'てんざんさんみゃく'},{e:'🛢️',l:'せきゆ'}]},
+  {iso:'NP',name:'ネパール',region:'asia',lv:3,hints:[{e:'🏔️',l:'エベレスト'},{e:'🙏',l:'ぶっきょう'},{e:'🦏',l:'サイ'},{e:'⛰️',l:'ヒマラヤ'}]},
+  {iso:'MN',name:'モンゴル',region:'asia',lv:3,hints:[{e:'🏕️',l:'ゲル'},{e:'🐎',l:'ウマ'},{e:'🏹',l:'ゆみや'},{e:'🌾',l:'だいそうげん'}]},
+  {iso:'KH',name:'カンボジア',region:'asia',lv:3,hints:[{e:'🏛️',l:'アンコールワット'},{e:'🐊',l:'ワニ'},{e:'🌴',l:'ヤシのき'},{e:'🍲',l:'アモック'}]},
+  {iso:'MM',name:'ミャンマー',region:'asia',lv:3,hints:[{e:'🏯',l:'パゴダ'},{e:'🐘',l:'ゾウ'},{e:'💎',l:'ルビー'},{e:'🛕',l:'おてら'}]},
+  {iso:'MV',name:'モルディブ',region:'asia',lv:3,hints:[{e:'🏝️',l:'サンゴのしま'},{e:'🐟',l:'さかな'},{e:'🤿',l:'ダイビング'},{e:'🌊',l:'インドよう'}]},
+  {iso:'BD',name:'バングラデシュ',region:'asia',lv:3,hints:[{e:'🌊',l:'ガンジスがわ'},{e:'🐅',l:'ベンガルトラ'},{e:'🌾',l:'こめ'},{e:'☔',l:'あめのくに'}]},
+  {iso:'LK',name:'スリランカ',region:'asia',lv:3,hints:[{e:'🐘',l:'ゾウ'},{e:'🍵',l:'セイロンちゃ'},{e:'🏝️',l:'しま'},{e:'💎',l:'サファイア'}]},
+  {iso:'UZ',name:'ウズベキスタン',region:'asia',lv:3,hints:[{e:'🕌',l:'サマルカンド'},{e:'🍑',l:'もも'},{e:'🛤️',l:'シルクロード'},{e:'🏺',l:'とうき'}]},
+  {iso:'TM',name:'トルクメニスタン',region:'asia',lv:3,hints:[{e:'🔥',l:'もえるあな'},{e:'🐎',l:'めいばのくに'},{e:'🌵',l:'さばく'},{e:'🕌',l:'モスク'}]},
+  {iso:'AZ',name:'アゼルバイジャン',region:'asia',lv:3,hints:[{e:'🔥',l:'ひのくに'},{e:'🛢️',l:'せきゆ'},{e:'🏔️',l:'コーカサス'},{e:'🎻',l:'おんがく'}]},
+  {iso:'GE',name:'ジョージア',region:'asia',lv:3,hints:[{e:'🍷',l:'ワインはっしょうち'},{e:'🏔️',l:'コーカサス'},{e:'⛪',l:'きょうかい'},{e:'🐺',l:'おおかみ'}]},
+  {iso:'AM',name:'アルメニア',region:'asia',lv:3,hints:[{e:'🏔️',l:'アララトさん'},{e:'⛪',l:'きょうかい'},{e:'🍑',l:'アンズ'},{e:'🎻',l:'おんがく'}]},
+
+  // --- ヨーロッパ ---
+  {iso:'FR',name:'フランス',region:'europe',lv:1,hints:[{e:'🗼',l:'エッフェルとう'},{e:'🥐',l:'クロワッサン'},{e:'🎨',l:'びじゅつかん'},{e:'🧀',l:'チーズ'}]},
+  {iso:'GB',name:'イギリス',region:'europe',lv:1,hints:[{e:'🕰️',l:'ビッグベン'},{e:'☂️',l:'あめのまち'},{e:'👑',l:'おうしつ'},{e:'🚌',l:'2かいだてバス'}]},
+  {iso:'DE',name:'ドイツ',region:'europe',lv:1,hints:[{e:'🏰',l:'ノイシュバンシュタインじょう'},{e:'🥨',l:'プレッツェル'},{e:'🚗',l:'くるまづくり'},{e:'🌭',l:'ソーセージ'}]},
+  {iso:'IT',name:'イタリア',region:'europe',lv:1,hints:[{e:'🍕',l:'ピザ'},{e:'🍝',l:'パスタ'},{e:'🏛️',l:'コロッセオ'},{e:'🛶',l:'ベネチア'}]},
+  {iso:'ES',name:'スペイン',region:'europe',lv:1,hints:[{e:'💃',l:'フラメンコ'},{e:'🥘',l:'パエリア'},{e:'⛪',l:'サグラダファミリア'},{e:'🐂',l:'とうぎゅう'}]},
+  {iso:'RU',name:'ロシア',region:'europe',lv:2,hints:[{e:'⛪',l:'たまねぎやね'},{e:'🪆',l:'マトリョーシカ'},{e:'❄️',l:'さむいくに'},{e:'🐻',l:'クマ'}]},
+  {iso:'GR',name:'ギリシャ',region:'europe',lv:2,hints:[{e:'🏛️',l:'パルテノンしんでん'},{e:'🫒',l:'オリーブ'},{e:'🌊',l:'エーゲかい'},{e:'📖',l:'しんわ'}]},
+  {iso:'PT',name:'ポルトガル',region:'europe',lv:2,hints:[{e:'🥧',l:'エッグタルト'},{e:'⚽',l:'サッカー'},{e:'🚋',l:'トラム'},{e:'🌊',l:'たいせいよう'}]},
+  {iso:'CH',name:'スイス',region:'europe',lv:2,hints:[{e:'🏔️',l:'アルプス'},{e:'🧀',l:'チーズ'},{e:'🍫',l:'チョコレート'},{e:'⌚',l:'とけい'}]},
+  {iso:'NL',name:'オランダ',region:'europe',lv:2,hints:[{e:'🌷',l:'チューリップ'},{e:'🌬️',l:'ふうしゃ'},{e:'🚲',l:'じてんしゃ'},{e:'🧀',l:'ゴーダチーズ'}]},
+  {iso:'SE',name:'スウェーデン',region:'europe',lv:2,hints:[{e:'🦌',l:'トナカイ'},{e:'🏠',l:'かぐ'},{e:'❄️',l:'オーロラ'},{e:'🧁',l:'フィーカ'}]},
+  {iso:'NO',name:'ノルウェー',region:'europe',lv:2,hints:[{e:'⛰️',l:'フィヨルド'},{e:'🐟',l:'サーモン'},{e:'🌌',l:'オーロラ'},{e:'⛷️',l:'スキー'}]},
+  {iso:'PL',name:'ポーランド',region:'europe',lv:3,hints:[{e:'🦅',l:'ワシ'},{e:'🥟',l:'ピエロギ'},{e:'🏰',l:'ふるいまちなみ'},{e:'🎹',l:'ショパン'}]},
+  {iso:'AT',name:'オーストリア',region:'europe',lv:3,hints:[{e:'🎼',l:'モーツァルト'},{e:'🎡',l:'かんらんしゃ'},{e:'🏔️',l:'アルプス'},{e:'☕',l:'カフェ'}]},
+  {iso:'IS',name:'アイスランド',region:'europe',lv:3,hints:[{e:'🌋',l:'かざん'},{e:'🌌',l:'オーロラ'},{e:'♨️',l:'おんせん'},{e:'🐳',l:'クジラ'}]},
+  {iso:'UA',name:'ウクライナ',region:'europe',lv:3,hints:[{e:'🌻',l:'ひまわり'},{e:'🌾',l:'むぎばたけ'},{e:'🥚',l:'ピサンカ'},{e:'⛪',l:'きんいろのやね'}]},
+
+  // --- アフリカ ---
+  {iso:'EG',name:'エジプト',region:'africa',lv:1,hints:[{e:'🐪',l:'ラクダ'},{e:'🔺',l:'ピラミッド'},{e:'🏜️',l:'さばく'},{e:'🐈',l:'スフィンクス'}]},
+  {iso:'ZA',name:'みなみアフリカ',region:'africa',lv:1,hints:[{e:'🦁',l:'ライオン'},{e:'💎',l:'ダイヤモンド'},{e:'🐧',l:'ペンギン'},{e:'⚽',l:'サッカー'}]},
+  {iso:'KE',name:'ケニア',region:'africa',lv:1,hints:[{e:'🦒',l:'キリン'},{e:'🦓',l:'シマウマ'},{e:'🏃',l:'マラソン'},{e:'🌄',l:'サバンナ'}]},
+  {iso:'MA',name:'モロッコ',region:'africa',lv:2,hints:[{e:'🕌',l:'モスク'},{e:'🐪',l:'ラクダ'},{e:'🏺',l:'タジンなべ'},{e:'🏜️',l:'サハラさばく'}]},
+  {iso:'ET',name:'エチオピア',region:'africa',lv:2,hints:[{e:'☕',l:'コーヒーはっしょうち'},{e:'🦁',l:'ライオン'},{e:'🏛️',l:'いわのきょうかい'},{e:'🌄',l:'こうち'}]},
+  {iso:'GH',name:'ガーナ',region:'africa',lv:2,hints:[{e:'🍫',l:'カカオ'},{e:'🥁',l:'たいこ'},{e:'🧵',l:'ケンテぬの'},{e:'⚽',l:'サッカー'}]},
+  {iso:'NG',name:'ナイジェリア',region:'africa',lv:2,hints:[{e:'🎬',l:'えいがのくに'},{e:'🛢️',l:'せきゆ'},{e:'🥁',l:'アフロビート'},{e:'🌊',l:'ギニアわん'}]},
+  {iso:'RW',name:'ルワンダ',region:'africa',lv:3,hints:[{e:'🦍',l:'ゴリラ'},{e:'☕',l:'コーヒー'},{e:'🌄',l:'せんのおか'},{e:'🌿',l:'もり'}]},
+  {iso:'TZ',name:'タンザニア',region:'africa',lv:3,hints:[{e:'🦒',l:'キリン'},{e:'🏔️',l:'キリマンジャロ'},{e:'🏝️',l:'ザンジバルとう'},{e:'🐘',l:'ゾウ'}]},
+  {iso:'SN',name:'セネガル',region:'africa',lv:3,hints:[{e:'🦁',l:'ライオン'},{e:'🥜',l:'ピーナッツ'},{e:'⚽',l:'サッカー'},{e:'🌊',l:'たいせいよう'}]},
+  {iso:'MG',name:'マダガスカル',region:'africa',lv:3,hints:[{e:'🦎',l:'カメレオン'},{e:'🐒',l:'キツネザル'},{e:'🌳',l:'バオバブ'},{e:'🏝️',l:'おおきなしま'}]},
+  {iso:'MZ',name:'モザンビーク',region:'africa',lv:3,hints:[{e:'🐘',l:'ゾウ'},{e:'🌊',l:'インドよう'},{e:'🦐',l:'エビ'},{e:'🎵',l:'マラビ'}]},
+  {iso:'MW',name:'マラウイ',region:'africa',lv:3,hints:[{e:'🌊',l:'マラウイこ'},{e:'🐟',l:'さかな'},{e:'🌄',l:'こうち'},{e:'🌺',l:'はな'}]},
+
+  // --- アメリカ ---
+  {iso:'US',name:'アメリカ',region:'america',lv:1,hints:[{e:'🗽',l:'じゆうのめがみ'},{e:'🍔',l:'ハンバーガー'},{e:'🦅',l:'ハクトウワシ'},{e:'🎬',l:'ハリウッド'}]},
+  {iso:'BR',name:'ブラジル',region:'america',lv:1,hints:[{e:'⚽',l:'サッカー'},{e:'🎭',l:'カーニバル'},{e:'🌳',l:'アマゾン'},{e:'🦜',l:'オウム'}]},
+  {iso:'MX',name:'メキシコ',region:'america',lv:1,hints:[{e:'🌮',l:'タコス'},{e:'🌵',l:'サボテン'},{e:'🎸',l:'マリアッチ'},{e:'🔺',l:'ピラミッド'}]},
+  {iso:'CA',name:'カナダ',region:'america',lv:1,hints:[{e:'🍁',l:'メープル'},{e:'🐻',l:'クマ'},{e:'💧',l:'ナイアガラのたき'},{e:'🏒',l:'アイスホッケー'}]},
+  {iso:'AR',name:'アルゼンチン',region:'america',lv:2,hints:[{e:'⚽',l:'サッカー'},{e:'💃',l:'タンゴ'},{e:'🥩',l:'おにく'},{e:'⛰️',l:'アンデス'}]},
+  {iso:'PE',name:'ペルー',region:'america',lv:2,hints:[{e:'🦙',l:'ラマ'},{e:'🏔️',l:'マチュピチュ'},{e:'🌽',l:'トウモロコシ'},{e:'🏺',l:'インカぶんめい'}]},
+  {iso:'CO',name:'コロンビア',region:'america',lv:2,hints:[{e:'☕',l:'コーヒー'},{e:'🌺',l:'はな'},{e:'💛',l:'おうごんでんせつ'},{e:'🦜',l:'オウム'}]},
+  {iso:'CU',name:'キューバ',region:'america',lv:2,hints:[{e:'🎺',l:'サルサ'},{e:'🚗',l:'クラシックカー'},{e:'🌴',l:'カリブかい'},{e:'🏖️',l:'ビーチ'}]},
+  {iso:'JM',name:'ジャマイカ',region:'america',lv:2,hints:[{e:'🎵',l:'レゲエ'},{e:'🏃',l:'はやいランナー'},{e:'🌴',l:'カリブかい'},{e:'☕',l:'コーヒー'}]},
+  {iso:'CL',name:'チリ',region:'america',lv:3,hints:[{e:'🗿',l:'モアイ'},{e:'🏜️',l:'アタカマさばく'},{e:'🐧',l:'ペンギン'},{e:'🍇',l:'ぶどう'}]},
+  {iso:'BO',name:'ボリビア',region:'america',lv:3,hints:[{e:'🦙',l:'ラマ'},{e:'🧂',l:'ウユニしおこ'},{e:'🏔️',l:'アンデス'},{e:'🌊',l:'チチカカこ'}]},
+  {iso:'EC',name:'エクアドル',region:'america',lv:3,hints:[{e:'🐢',l:'ガラパゴス'},{e:'🍌',l:'バナナ'},{e:'🌋',l:'かざん'},{e:'🌎',l:'せきどう'}]},
+  {iso:'VE',name:'ベネズエラ',region:'america',lv:3,hints:[{e:'💧',l:'せかいいちたかいたき'},{e:'🛢️',l:'せきゆ'},{e:'🌺',l:'ラン'},{e:'🏖️',l:'かいがん'}]},
+  {iso:'PA',name:'パナマ',region:'america',lv:3,hints:[{e:'🚢',l:'パナマうんが'},{e:'🎩',l:'パナマハット'},{e:'🌴',l:'もり'},{e:'🐸',l:'カエル'}]},
+
+  // --- オセアニア ---
+  {iso:'AU',name:'オーストラリア',region:'oceania',lv:1,hints:[{e:'🦘',l:'カンガルー'},{e:'🐨',l:'コアラ'},{e:'🏄',l:'サーフィン'},{e:'🎭',l:'オペラハウス'}]},
+  {iso:'NZ',name:'ニュージーランド',region:'oceania',lv:1,hints:[{e:'🐑',l:'ヒツジ'},{e:'🥝',l:'キウイ'},{e:'🏉',l:'ラグビー'},{e:'🌋',l:'おんせん'}]},
+  {iso:'FJ',name:'フィジー',region:'oceania',lv:2,hints:[{e:'🏝️',l:'しま'},{e:'🏉',l:'ラグビー'},{e:'🌺',l:'はな'},{e:'🤿',l:'ダイビング'}]},
+  {iso:'PG',name:'パプアニューギニア',region:'oceania',lv:2,hints:[{e:'🦜',l:'ごくらくちょう'},{e:'🌴',l:'ジャングル'},{e:'🥁',l:'たいこ'},{e:'🐊',l:'ワニ'}]},
+  {iso:'WS',name:'サモア',region:'oceania',lv:3,hints:[{e:'🏝️',l:'しま'},{e:'🏉',l:'ラグビー'},{e:'🌺',l:'はな'},{e:'🥥',l:'ココナッツ'}]},
+  {iso:'TO',name:'トンガ',region:'oceania',lv:3,hints:[{e:'🐋',l:'クジラ'},{e:'🏝️',l:'しま'},{e:'🥥',l:'ココナッツ'},{e:'👑',l:'おうさまのくに'}]},
+  {iso:'PW',name:'パラオ',region:'oceania',lv:3,hints:[{e:'🤿',l:'ダイビング'},{e:'🪼',l:'クラゲのみずうみ'},{e:'🏝️',l:'しま'},{e:'🐠',l:'ねったいぎょ'}]},
+  {iso:'VU',name:'バヌアツ',region:'oceania',lv:3,hints:[{e:'🌋',l:'かざん'},{e:'🏝️',l:'しま'},{e:'🤿',l:'サンゴのうみ'},{e:'🥁',l:'たいこ'}]},
+];
+
+// ISO→絵文字国旗（タイトルのマーキー用）
+function isoToFlagEmoji(iso){
+  return iso.split('').map(c=>String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)).join('');
+}
+
+// ===== セーブデータ =====
+const SAVE_KEY='kokki_quiz_v2_progress';
+let save={stars:{},hiscore:0,guide:'pen'};
+function loadSave(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(raw){const p=JSON.parse(raw);if(p&&typeof p==='object')save=Object.assign(save,p);}
+  }catch(e){}
+  if(!save.stars||typeof save.stars!=='object')save.stars={};
+}
+function persist(){
+  try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){}
+}
+function getStars(regionId,diffId){
+  return (save.stars[regionId]&&save.stars[regionId][diffId])||0;
+}
+function setStars(regionId,diffId,n){
+  if(!save.stars[regionId])save.stars[regionId]={};
+  if(n>getStars(regionId,diffId)){save.stars[regionId][diffId]=n;persist();}
+}
+function regionCleared(regionId){
+  const s=save.stars[regionId];
+  if(!s)return false;
+  return Object.values(s).some(v=>v>0);
+}
+function totalStars(){
+  let t=0;
+  Object.values(save.stars).forEach(r=>Object.values(r).forEach(v=>t+=v));
+  return t;
+}
+function allRegionsCleared(){
+  return REGIONS.every(r=>regionCleared(r.id));
+}
+function currentGuide(){
+  return GUIDES.find(g=>g.id===save.guide)||GUIDES[0];
+}
+
+// ===== 画面遷移 =====
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goCharSelect(){
+  renderCharGrid();
+  showScreen('char-screen');
+}
+function goMap(){
+  renderMap();
+  showScreen('map-screen');
+}
+function quitToMap(){
+  hideAllOv();
+  goMap();
+}
+function closeOvToMap(){
+  hideAllOv();
+  goMap();
+}
+function hideAllOv(){
+  ['stage-clear-ov','gameover-ov','world-clear-ov'].forEach(id=>document.getElementById(id).classList.remove('show'));
+}
+
+// ===== タイトル =====
+function initTitle(){
+  const allFlags=COUNTRIES.map(c=>isoToFlagEmoji(c.iso));
+  for(let row=1;row<=3;row++){
+    const el=document.getElementById('flagrow'+row);
+    const shuffled=[...allFlags].sort(()=>Math.random()-0.5);
+    el.innerHTML=[...shuffled,...shuffled].map(f=>'<span class="tflag">'+f+'</span>').join('');
+  }
+  refreshTitleInfo();
+}
+function refreshTitleInfo(){
+  const t=totalStars();
+  const max=REGIONS.length*DIFFS.length*3+3; // 地域15枠+ワールド1枠
+  document.getElementById('title-total-stars').textContent=t>0?('あつめたほし ⭐ '+t+' / '+max):'';
+  document.getElementById('title-hs').textContent=save.hiscore>0?('ハイスコア：⭐'+save.hiscore):'';
+}
+
+// ===== キャラ選択 =====
+function renderCharGrid(){
+  const grid=document.getElementById('char-grid');
+  grid.innerHTML='';
+  GUIDES.forEach(g=>{
+    const btn=document.createElement('button');
+    btn.className='char-card'+(g.id===save.guide?' selected':'');
+    btn.innerHTML='<span class="char-emoji">'+g.emoji+'</span>'+
+      '<div class="char-name">'+g.name+'</div>'+
+      '<div class="char-role">'+g.role+'</div>';
+    btn.onclick=()=>{
+      save.guide=g.id;persist();
+      grid.querySelectorAll('.char-card').forEach(c=>c.classList.remove('selected'));
+      btn.classList.add('selected');
+      sfx('select');
+    };
+    grid.appendChild(btn);
+  });
+}
+
+// ===== マップ =====
+function renderMap(){
+  const g=currentGuide();
+  document.getElementById('map-guide-emoji').textContent=g.emoji;
+  const cleared=REGIONS.filter(r=>regionCleared(r.id)).length;
+  let msg;
+  if(cleared===0)msg='まずは アジアから しゅっぱつだ！';
+  else if(cleared<REGIONS.length)msg='つぎは どこに いこうか？ あと'+(REGIONS.length-cleared)+'ちいき！';
+  else msg='ぜんぶ まわったね！「せかいいっしゅう」に ちょうせんだ！';
+  document.getElementById('map-guide-text').textContent=g.name+'「'+msg+'」';
+  document.getElementById('map-stars').textContent='⭐ '+totalStars();
+
+  const list=document.getElementById('region-list');
+  list.innerHTML='';
+
+  REGIONS.forEach((r,i)=>{
+    const unlocked=(i===0)||regionCleared(REGIONS[i-1].id);
+    const card=document.createElement('div');
+    card.className='region-card'+(unlocked?'':' locked');
+    card.style.background=r.grad;
+    const count=COUNTRIES.filter(c=>c.region===r.id).length;
+    let inner='<div class="region-head">'+
+      '<span class="region-emoji">'+r.emoji+'</span>'+
+      '<div><div class="region-name">'+r.name+'</div>'+
+      '<div class="region-count">'+count+'カ国</div></div></div>';
+    if(!unlocked){
+      inner+='<div class="lock-badge">🔒</div>'+
+        '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.8);">まえの ちいきを クリアすると あそべるよ</div>';
+      card.innerHTML=inner;
+    }else{
+      inner+='<div class="diff-row"></div>';
+      card.innerHTML=inner;
+      const row=card.querySelector('.diff-row');
+      DIFFS.forEach(d=>{
+        const cell=document.createElement('button');
+        cell.className='diff-cell';
+        const st=getStars(r.id,d.id);
+        let stars='';
+        for(let k=1;k<=3;k++)stars+='<span class="'+(k<=st?'star-on':'star-off')+'">★</span>';
+        cell.innerHTML='<div class="d-name">'+d.name+'</div><div class="d-stars">'+stars+'</div>';
+        cell.onclick=()=>startStage(r.id,d.id);
+        row.appendChild(cell);
+      });
+    }
+    list.appendChild(card);
+  });
+
+  // せかいいっしゅうステージ
+  const worldUnlocked=allRegionsCleared();
+  const wcard=document.createElement('div');
+  wcard.className='region-card'+(worldUnlocked?'':' locked');
+  wcard.id='world-card';
+  let winner='<div class="region-head">'+
+    '<span class="region-emoji">🌏</span>'+
+    '<div><div class="region-name">せかいいっしゅう</div>'+
+    '<div class="region-count">ぜんぶの くにから しゅつだい！</div></div></div>';
+  if(!worldUnlocked){
+    winner+='<div class="lock-badge">🔒</div>'+
+      '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.8);">5つの ちいきを ぜんぶクリアで かいほう！</div>';
+    wcard.innerHTML=winner;
+  }else{
+    const st=getStars(WORLD_ID,'world');
+    let stars='';
+    for(let k=1;k<=3;k++)stars+='<span class="'+(k<=st?'star-on':'star-off')+'">★</span>';
+    winner+='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">'+
+      '<div class="d-stars" style="font-size:16px;letter-spacing:2px;">'+stars+'</div>'+
+      '<button class="btn-gold" style="padding:9px 18px;font-size:13px;" id="world-go">ちょうせん！ ▶</button></div>';
+    wcard.innerHTML=winner;
+    wcard.querySelector('#world-go').onclick=()=>startStage(WORLD_ID,'world');
+  }
+  list.appendChild(wcard);
+}
+
+// ===== ゲーム状態 =====
+let stage={regionId:'asia',diffId:'easy'};
+let stageQuestions=[];
+let currentQ=0;
+let score=0;
+let combo=0;
+let lives=3;
+let missCount=0;
+let answered=false;
+
+// ===== ステージ開始 =====
+function startStage(regionId,diffId){
+  stage={regionId,diffId};
+  score=0;combo=0;lives=3;missCount=0;currentQ=0;
+
+  if(regionId===WORLD_ID){
+    // 全地域から12問（有名〜マニアまでミックス）
+    stageQuestions=[...COUNTRIES].sort(()=>Math.random()-0.5).slice(0,12);
+  }else{
+    const diff=DIFFS.find(d=>d.id===diffId);
+    const pool=COUNTRIES.filter(c=>c.region===regionId);
+    let primary,fill;
+    if(diffId==='easy'){primary=pool.filter(c=>c.lv===1);fill=pool.filter(c=>c.lv===2);}
+    else if(diffId==='mid'){primary=pool.filter(c=>c.lv<=2);fill=pool.filter(c=>c.lv===3);}
+    else{primary=pool.filter(c=>c.lv===3);fill=pool.filter(c=>c.lv<=2);}
+    const qs=[...primary].sort(()=>Math.random()-0.5);
+    const extra=[...fill].sort(()=>Math.random()-0.5);
+    while(qs.length<diff.q&&extra.length)qs.push(extra.shift());
+    // それでも足りなければプール全体から重複補充
+    let guard=0;
+    while(qs.length<diff.q&&guard<50){
+      qs.push(pool[Math.floor(Math.random()*pool.length)]);guard++;
+    }
+    stageQuestions=qs.slice(0,diff.q);
+  }
+
+  const rname=regionId===WORLD_ID?'せかいいっしゅう':REGIONS.find(r=>r.id===regionId).name;
+  document.getElementById('hud-stage').textContent=rname;
+  hideAllOv();
+  showScreen('game-screen');
+  guideSay(currentGuide().name+'「'+rname+'の たびに しゅっぱつ！」');
+  updateHUD();
+  showQuestion();
+}
+
+function retryStage(){
+  startStage(stage.regionId,stage.diffId);
+}
+
+// ===== 出題 =====
+function pickFormat(){
+  // easy: 国旗→国名 / ヒント→国名, mid以上: 国名→国旗も追加
+  const r=Math.random();
+  if(stage.diffId==='easy'){
+    return r<0.7?'flag2name':'hint2name';
+  }
+  if(r<0.45)return 'flag2name';
+  if(r<0.75)return 'name2flag';
+  return 'hint2name';
+}
+
+function flagImgTag(iso,w){
+  const lo=iso.toLowerCase();
+  const emoji=isoToFlagEmoji(iso);
+  const size=w?Math.round(w*0.55):80;
+  // CDN1 → CDN2 → 絵文字国旗 の3段フォールバック
+  return '<img src="https://flagicons.lipis.dev/flags/4x3/'+lo+'.svg" alt="" '+
+    (w?('style="width:'+w+'px;"'):'')+
+    ' onerror="if(!this.dataset.f){this.dataset.f=1;this.src=\'https://purecatamphetamine.github.io/country-flag-icons/3x2/'+iso+'.svg\';}'+
+    'else{var s=document.createElement(\'span\');s.style.fontSize=\''+size+'px\';s.style.lineHeight=\'1\';s.textContent=\''+emoji+'\';this.replaceWith(s);}">';
+}
+
+function wrongChoicePool(q){
+  // 同じ地域から優先して不正解を選ぶ（教育的に近い国どうし）
+  let pool=COUNTRIES.filter(c=>c.region===q.region&&c.iso!==q.iso);
+  if(pool.length<3)pool=COUNTRIES.filter(c=>c.iso!==q.iso);
+  return [...pool].sort(()=>Math.random()-0.5).slice(0,3);
+}
+
+function showQuestion(){
+  if(currentQ>=stageQuestions.length){stageClear();return;}
+  answered=false;
+  const q=stageQuestions[currentQ];
+  const total=stageQuestions.length;
+  const format=pickFormat();
+  const diff=DIFFS.find(d=>d.id===stage.diffId);
+  const hintCount=diff?diff.hints:0;
+
+  document.getElementById('progress-fill').style.width=((currentQ/total)*100)+'%';
+  document.getElementById('question-label').textContent=(currentQ+1)+'もんめ ／ '+total+'もん';
+  document.getElementById('answer-badge').style.display='none';
+
+  const flagEl=document.getElementById('flag-display');
+  const hintsEl=document.getElementById('country-hints');
+  const qtext=document.getElementById('question-text');
+  const choicesEl=document.getElementById('choices');
+  choicesEl.innerHTML='';
+
+  if(format==='flag2name'){
+    qtext.textContent='このこっきは どこのくに？';
+    flagEl.innerHTML=flagImgTag(q.iso,150);
+    flagEl.style.display='flex';
+    const hs=q.hints.slice(0,hintCount);
+    hintsEl.innerHTML=hs.map(h=>'<div class="hint-item"><div class="hint-emoji">'+h.e+'</div><div class="hint-label">'+h.l+'</div></div>').join('');
+    const wrong=wrongChoicePool(q);
+    const choices=[q,...wrong].sort(()=>Math.random()-0.5);
+    choices.forEach(c=>{
+      const btn=document.createElement('button');
+      btn.className='choice-btn';
+      btn.textContent=c.name;
+      btn.dataset.iso=c.iso;
+      btn.onclick=()=>onAnswer(c.iso===q.iso,btn,q,choicesEl);
+      choicesEl.appendChild(btn);
+    });
+  }else if(format==='name2flag'){
+    qtext.innerHTML='「<span style="color:#FFD700;">'+q.name+'</span>」のこっきは どれ？';
+    flagEl.innerHTML='<div style="font-size:56px;">🤔</div>';
+    hintsEl.innerHTML='';
+    const wrong=wrongChoicePool(q);
+    const choices=[q,...wrong].sort(()=>Math.random()-0.5);
+    choices.forEach(c=>{
+      const btn=document.createElement('button');
+      btn.className='choice-btn';
+      btn.innerHTML=flagImgTag(c.iso,88);
+      btn.dataset.iso=c.iso;
+      btn.onclick=()=>onAnswer(c.iso===q.iso,btn,q,choicesEl);
+      choicesEl.appendChild(btn);
+    });
+  }else{ // hint2name
+    qtext.textContent='ヒントをみて どこのくにか あてよう！';
+    flagEl.innerHTML='';
+    flagEl.style.display='none';
+    hintsEl.innerHTML=q.hints.map(h=>'<div class="hint-item"><div class="hint-emoji">'+h.e+'</div><div class="hint-label">'+h.l+'</div></div>').join('');
+    const wrong=wrongChoicePool(q);
+    const choices=[q,...wrong].sort(()=>Math.random()-0.5);
+    choices.forEach(c=>{
+      const btn=document.createElement('button');
+      btn.className='choice-btn';
+      btn.textContent=c.name;
+      btn.dataset.iso=c.iso;
+      btn.onclick=()=>onAnswer(c.iso===q.iso,btn,q,choicesEl);
+      choicesEl.appendChild(btn);
+    });
+  }
+  if(format!=='hint2name')flagEl.style.display='flex';
+  updateHUD();
+}
+
+// ===== 回答 =====
+function onAnswer(correct,btn,q,choicesEl){
+  if(answered)return;
+  answered=true;
+  const g=currentGuide();
+
+  if(correct){
+    combo++;
+    const bonus=combo>=3?50:combo>=2?20:0;
+    const pts=100+bonus;
+    score+=pts;
+    btn.classList.add('correct');
+    showAnswerBadge('⭕');
+    showScorePop('+'+pts+(bonus>0?' 🔥コンボ！':''),btn);
+    guideSay(g.name+'「'+g.cheer[Math.floor(Math.random()*g.cheer.length)]+'」',true);
+    sfx('correct');
+  }else{
+    combo=0;
+    missCount++;
+    lives--;
+    btn.classList.add('wrong');
+    Array.from(choicesEl.children).forEach(b=>{
+      if(b.dataset.iso===q.iso)b.classList.add('reveal');
+    });
+    showAnswerBadge('❌');
+    guideSay(g.name+'「'+g.miss[Math.floor(Math.random()*g.miss.length)]+' せいかいは '+q.name+'！」');
+    sfx('wrong');
+    updateHUD();
+    if(lives<=0){
+      Array.from(choicesEl.children).forEach(b=>b.disabled=true);
+      setTimeout(()=>gameOver(),1300);
+      return;
+    }
+  }
+  updateComboHud();
+  updateHUD();
+  Array.from(choicesEl.children).forEach(b=>b.disabled=true);
+  setTimeout(()=>{currentQ++;showQuestion();},1300);
+}
+
+// ===== 演出 =====
+function showAnswerBadge(emoji){
+  const el=document.getElementById('answer-badge');
+  el.textContent=emoji;
+  el.style.display='block';
+  el.style.animation='none';el.offsetHeight;
+  el.style.animation='badgePop 0.4s ease-out forwards';
+  setTimeout(()=>{el.style.display='none';},1100);
+}
+function showScorePop(text,refEl){
+  const el=document.createElement('div');
+  el.className='score-pop';
+  el.textContent=text;
+  const rect=refEl.getBoundingClientRect();
+  const appRect=document.getElementById('app').getBoundingClientRect();
+  el.style.left=(rect.left-appRect.left)+'px';
+  el.style.top=(rect.top-appRect.top-10)+'px';
+  document.getElementById('app').appendChild(el);
+  setTimeout(()=>el.remove(),850);
+}
+let guideTimer=null;
+function guideSay(text,jump){
+  const bubble=document.getElementById('guide-bubble');
+  const emoji=document.getElementById('guide-emoji');
+  emoji.textContent=currentGuide().emoji;
+  bubble.textContent=text;
+  bubble.classList.add('show');
+  if(jump){
+    emoji.classList.remove('jump');emoji.offsetHeight;
+    emoji.classList.add('jump');
+  }
+  if(guideTimer)clearTimeout(guideTimer);
+  guideTimer=setTimeout(()=>bubble.classList.remove('show'),2600);
+}
+function updateComboHud(){
+  const el=document.getElementById('hud-combo');
+  if(combo>=2){el.style.display='';el.textContent='🔥 '+combo+'コンボ';}
+  else el.style.display='none';
+}
+function updateHUD(){
+  document.getElementById('hud-score').textContent='⭐ '+score;
+  let h='';
+  for(let i=0;i<3;i++)h+=(i<lives)?'❤️':'🤍';
+  document.getElementById('hud-lives').textContent=h;
+}
+
+// ===== クリア/ゲームオーバー =====
+function calcStars(){
+  if(missCount===0)return 3;
+  if(missCount===1)return 2;
+  return 1;
+}
+function stageClear(){
+  document.getElementById('progress-fill').style.width='100%';
+  const stars=calcStars();
+  const g=currentGuide();
+  const isWorld=stage.regionId===WORLD_ID;
+
+  if(isWorld)setStars(WORLD_ID,'world',stars);
+  else setStars(stage.regionId,stage.diffId,stars);
+
+  if(score>save.hiscore){save.hiscore=score;persist();}
+
+  if(isWorld){
+    document.getElementById('wc-score').textContent='⭐ '+score+' てん';
+    document.getElementById('world-clear-ov').classList.add('show');
+    sfx('fanfare');
+    return;
+  }
+
+  const rname=REGIONS.find(r=>r.id===stage.regionId).name;
+  const dname=DIFFS.find(d=>d.id===stage.diffId).name;
+  document.getElementById('sc-emoji').textContent=stars===3?'🌟':'🎉';
+  document.getElementById('sc-title').textContent=rname+' クリア！';
+  let starHtml='';
+  for(let k=1;k<=3;k++)starHtml+='<span class="'+(k<=stars?'star-on':'star-off')+'">★</span>';
+  document.getElementById('sc-stars').innerHTML=starHtml;
+  document.getElementById('sc-guide-emoji').textContent=g.emoji;
+  document.getElementById('sc-guide-text').textContent=g.name+'「'+
+    (stars===3?'ノーミス！かんぺきだ！':stars===2?'あと すこしで パーフェクト！':'クリア おめでとう！')+'」'+
+    '（'+dname+'）';
+  document.getElementById('sc-score').textContent='⭐ '+score+' てん';
+  document.getElementById('stage-clear-ov').classList.add('show');
+  sfx('fanfare');
+}
+function gameOver(){
+  const g=currentGuide();
+  if(score>save.hiscore){save.hiscore=score;persist();}
+  document.getElementById('go-guide-emoji').textContent=g.emoji;
+  document.getElementById('go-guide-text').textContent=g.name+'「つぎは きっと できるよ！」';
+  document.getElementById('go-sub').textContent=(currentQ+1)+'もんめで ハートが なくなっちゃった…';
+  document.getElementById('go-score').textContent='⭐ '+score+' てん';
+  document.getElementById('gameover-ov').classList.add('show');
+}
+
+// ===== 効果音（WebAudio・軽量） =====
+let _actx=null;
+function sfx(type){
+  try{
+    if(!_actx)_actx=new (window.AudioContext||window.webkitAudioContext)();
+    const ctx=_actx;
+    const now=ctx.currentTime;
+    function tone(freq,start,dur,vol,typ){
+      const o=ctx.createOscillator();const gn=ctx.createGain();
+      o.type=typ||'square';o.frequency.value=freq;
+      gn.gain.setValueAtTime(vol,now+start);
+      gn.gain.exponentialRampToValueAtTime(0.001,now+start+dur);
+      o.connect(gn);gn.connect(ctx.destination);
+      o.start(now+start);o.stop(now+start+dur);
+    }
+    if(type==='correct'){tone(660,0,0.1,0.12);tone(880,0.09,0.16,0.12);}
+    else if(type==='wrong'){tone(220,0,0.16,0.1,'sawtooth');tone(160,0.13,0.22,0.1,'sawtooth');}
+    else if(type==='select'){tone(520,0,0.07,0.08);}
+    else if(type==='fanfare'){tone(523,0,0.12,0.1);tone(659,0.12,0.12,0.1);tone(784,0.24,0.12,0.1);tone(1047,0.36,0.3,0.12);}
+  }catch(e){}
+}
+
+// ===== 国旗プリロード =====
+(function preloadFlags(){
+  COUNTRIES.forEach(c=>{
+    const img=new Image();
+    img.src='https://flagicons.lipis.dev/flags/4x3/'+c.iso.toLowerCase()+'.svg';
+  });
+})();
+
+// ===== 初期化 =====
+loadSave();
+initTitle();
+
+// === 共通UI ===
+function goHome(){
+  if(window.parent!==window){window.parent.postMessage({type:'goHome'},'*');}
+  else{window.location.href='/';}
+}
+// ── BGM (WakuwakuBGM library / preview環境ガード付き) ──
+let _bgm=null;
+function _startBGM(){
+  if(typeof WakuwakuBGM==='undefined')return;
+  if(_bgm)return;
+  _bgm=new WakuwakuBGM('japanese');
+  const on=WakuwakuBGM.loadState();
+  _bgm.setEnabled(on);
+  if(on)_bgm.start();
+  _syncBgmBtn();
+}
+function toggleCommonBGM(){
+  if(typeof WakuwakuBGM==='undefined')return;
+  if(!_bgm){_startBGM();return;}
+  const on=_bgm.toggle();
+  WakuwakuBGM.saveState(on);
+  _syncBgmBtn();
+}
+function _syncBgmBtn(){
+  if(typeof WakuwakuBGM==='undefined')return;
+  const on=_bgm?_bgm.enabled:WakuwakuBGM.loadState();
+  document.querySelectorAll('#ui-bgm-btn,#ui-bgm-btn2').forEach(b=>{b.textContent=on?'🔊':'🔇';});
+}
+(function(){
+  function _first(){_startBGM();}
+  document.addEventListener('click',_first,{once:true});
+  document.addEventListener('touchstart',_first,{once:true});
+})();
+// ── End BGM ──
+</script>
+
+</body>
+</html>
