@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>まわるおすし〜さーもんをとろう〜</title>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html,body { height: 100%; }
+body { font-family: 'M PLUS Rounded 1c', sans-serif; overflow: hidden; background: #1a0d05; user-select: none; -webkit-user-select: none; }
+#game-wrap { width: 100vw; height: 100svh; max-width: 480px; margin: 0 auto; position: relative; overflow: hidden; background: #241206; }
+canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+canvas#bg { z-index: 0; pointer-events: none; }
+canvas#cv { z-index: 2; }
+
+/* ===== HUD ===== */
+#hud {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 40;
+  padding: 8px 10px; padding-top: max(8px, var(--sat, 0px));
+  background: linear-gradient(180deg, rgba(40,15,5,0.92) 0%, rgba(40,15,5,0.45) 75%, transparent);
+  display: none;
+}
+.hud-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+#back-btn { background: rgba(0,0,0,0.5); color:#fff; border:1.5px solid rgba(255,255,255,0.3); border-radius:20px; padding:5px 13px; font-size:12px; font-weight:800; font-family:inherit; }
+#ui-bgm-btn { background: rgba(0,0,0,0.5); color:#fff; border:1.5px solid rgba(255,255,255,0.3); border-radius:50%; width:34px; height:34px; font-size:16px; display:flex; align-items:center; justify-content:center; }
+#status-bar { display:flex; justify-content:center; gap:8px; pointer-events:none; }
+.hud-chip { background:rgba(0,0,0,0.55); border:1.5px solid rgba(255,120,90,0.45); border-radius:12px; padding:3px 11px; text-align:center; min-width:56px; }
+.hud-chip-label { font-size:8.5px; color:rgba(255,255,255,0.55); font-weight:800; letter-spacing:.5px; }
+.hud-chip-val { font-size:15px; font-weight:900; color:#FFB74D; line-height:1.1; }
+#hearts { letter-spacing:1px; font-size:14px; }
+
+/* order banner (belt goal / boss order) */
+#order-banner {
+  position:absolute; left:50%; transform:translateX(-50%);
+  top:90px; z-index:41;
+  background:rgba(30,10,4,0.9); border:2px solid #FFB74D; border-radius:14px;
+  padding:4px 16px; text-align:center; display:none; pointer-events:none;
+  box-shadow:0 4px 14px rgba(0,0,0,.5); white-space:nowrap;
+  opacity:1; transition:opacity .45s ease;
+}
+#order-banner .ob-t { font-size:9px; color:#FFCC80; font-weight:800; letter-spacing:1px; }
+#order-banner .ob-m { font-size:15px; color:#fff; font-weight:900; font-family:'DotGothic16',sans-serif; }
+#combo-tag { position:absolute; right:12px; top:90px; z-index:41; font-family:'DotGothic16'; font-weight:900; font-size:20px; color:#FFEB3B; text-shadow:0 2px 0 #E65100, 0 0 12px rgba(255,200,0,.6); opacity:0; transition:opacity .15s; pointer-events:none; }
+
+/* ===== SCREENS ===== */
+.screen { position:absolute; inset:0; z-index:30; display:none; flex-direction:column; align-items:center; justify-content:center; padding:16px; overflow-y:auto; }
+.screen.show { display:flex; }
+
+.panel {
+  background:linear-gradient(160deg, rgba(60,25,10,0.97), rgba(40,15,6,0.99));
+  border:4px solid #FF8A50; border-radius:26px; padding:22px 22px; text-align:center;
+  width:100%; max-width:360px;
+  box-shadow:0 0 0 2px #7a2e00, 0 0 40px rgba(255,138,80,.16), 0 14px 40px rgba(0,0,0,.6);
+}
+.kanban { font-family:'DotGothic16',sans-serif; }
+.title-badge { font-size:11px; font-weight:900; color:rgba(255,180,120,.7); letter-spacing:5px; margin-bottom:6px; }
+.title-text {
+  font-family:'DotGothic16',sans-serif; font-size:30px; font-weight:400; line-height:1.15;
+  background:linear-gradient(180deg,#FFCC80,#FF7043); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  filter:drop-shadow(2px 3px 0 rgba(0,0,0,.55)); margin-bottom:8px;
+}
+.title-sub { font-size:12.5px; color:rgba(255,255,255,.72); line-height:1.85; margin-bottom:14px; }
+.hi-badge { background:rgba(255,138,80,.12); border:1.5px solid rgba(255,138,80,.4); color:#FFB74D; font-size:12px; font-weight:800; padding:5px 16px; border-radius:20px; margin-bottom:14px; display:inline-block; }
+
+.big-btn {
+  background:linear-gradient(145deg,#FF7043,#D84315); color:#fff; border:none; border-radius:18px;
+  padding:14px 20px; font-size:19px; font-weight:900; font-family:inherit; width:100%; cursor:pointer;
+  box-shadow:0 5px 0 #8d2b0b, 0 8px 18px rgba(0,0,0,.4); letter-spacing:1px;
+}
+.big-btn:active { transform:translateY(4px); box-shadow:0 1px 0 #8d2b0b; }
+.sub-btn { background:rgba(255,255,255,.08); color:#fff; border:1.5px solid rgba(255,255,255,.25); border-radius:14px; padding:10px 16px; font-size:14px; font-weight:800; font-family:inherit; width:100%; margin-top:9px; cursor:pointer; }
+
+/* parade of plates on title */
+.parade { display:flex; justify-content:center; gap:6px; margin-bottom:12px; }
+.parade canvas { position:static; width:44px; height:44px; }
+
+/* char select */
+.char-grid { display:grid; grid-template-columns:1fr 1fr; gap:11px; margin:10px 0 6px; }
+.char-card { background:rgba(255,255,255,.06); border:2.5px solid rgba(255,255,255,.16); border-radius:18px; padding:10px 6px 8px; cursor:pointer; transition:.12s; }
+.char-card.sel { border-color:#FFD54F; background:rgba(255,213,79,.14); transform:translateY(-2px); box-shadow:0 6px 16px rgba(255,180,0,.2); }
+.char-card canvas { position:static; width:66px; height:66px; }
+.char-name { font-size:13px; font-weight:900; color:#fff; margin-top:2px; }
+.char-perk { font-size:9.5px; color:#FFCC80; font-weight:700; line-height:1.35; margin-top:2px; }
+
+/* stage map */
+#map-scroll { width:100%; max-width:380px; }
+.map-title { font-family:'DotGothic16'; font-size:20px; color:#FFCC80; text-align:center; margin-bottom:12px; filter:drop-shadow(1px 2px 0 rgba(0,0,0,.5)); }
+.stage-row { display:flex; flex-wrap:wrap; justify-content:center; gap:11px; margin-bottom:6px; }
+.stage-node { width:82px; background:rgba(255,255,255,.05); border:2.5px solid rgba(255,255,255,.14); border-radius:16px; padding:9px 4px 7px; text-align:center; cursor:pointer; position:relative; transition:.12s; }
+.stage-node.unlocked { border-color:#FF8A50; background:rgba(255,138,80,.1); }
+.stage-node.unlocked:active { transform:scale(.95); }
+.stage-node.locked { opacity:.45; filter:grayscale(.6); }
+.stage-node.boss { width:100%; max-width:280px; border-color:#FFD54F; background:rgba(255,80,80,.12); }
+.sn-num { font-family:'DotGothic16'; font-size:15px; color:#fff; }
+.sn-name { font-size:10.5px; color:rgba(255,255,255,.8); font-weight:800; margin:1px 0 3px; }
+.sn-stars { font-size:13px; letter-spacing:1px; height:16px; }
+.sn-lock { font-size:18px; }
+.boss-inner { display:flex; align-items:center; justify-content:center; gap:10px; }
+.boss-inner canvas { position:static; width:52px; height:52px; }
+
+/* result */
+.result-stars { font-size:40px; letter-spacing:4px; margin:6px 0 10px; }
+.result-line { font-size:14px; color:rgba(255,255,255,.85); font-weight:700; margin:3px 0; }
+.result-line b { color:#FFB74D; }
+
+/* countdown */
+#countdown { position:absolute; inset:0; z-index:60; display:none; align-items:center; justify-content:center; pointer-events:none; }
+#countdown span { font-family:'DotGothic16'; font-size:88px; color:#fff; text-shadow:0 0 30px #FF7043, 0 4px 0 #B71C1C; }
+
+/* boss meter */
+#boss-hud { position:absolute; left:50%; transform:translateX(-50%); bottom: calc(max(10px,var(--sab,0px)) + 8px); z-index:41; width:88%; max-width:400px; display:none; }
+.bh-label { font-family:'DotGothic16'; font-size:11px; color:#FFCC80; text-align:center; margin-bottom:3px; }
+.bh-bar { height:16px; background:rgba(0,0,0,.5); border:2px solid #FFD54F; border-radius:10px; overflow:hidden; }
+.bh-fill { height:100%; width:100%; background:linear-gradient(90deg,#FF5252,#FF8A50); transition:width .25s; }
+.timer-bar { height:6px; background:rgba(0,0,0,.4); border-radius:4px; overflow:hidden; margin-top:5px; }
+.timer-fill { height:100%; width:100%; background:linear-gradient(90deg,#4FC3F7,#FFF176); transition:width .1s linear; }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+  <canvas id="bg"></canvas>
+  <canvas id="cv"></canvas>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-nav">
+      <button id="back-btn" onclick="goBack()">🏠 もどる</button>
+      <button id="ui-bgm-btn" onclick="toggleCommonBGM()">🔊</button>
+    </div>
+    <div id="status-bar">
+      <div class="hud-chip"><div class="hud-chip-label">スコア</div><div class="hud-chip-val" id="hud-score">0</div></div>
+      <div class="hud-chip"><div class="hud-chip-label">のこり</div><div class="hud-chip-val" id="hud-goal">0</div></div>
+      <div class="hud-chip"><div class="hud-chip-label">ライフ</div><div class="hud-chip-val" id="hearts">❤️❤️❤️</div></div>
+    </div>
+  </div>
+  <div id="order-banner"><div class="ob-t" id="ob-t">おだい</div><div class="ob-m" id="ob-m"></div></div>
+  <div id="combo-tag"></div>
+  <div id="boss-hud">
+    <div class="bh-label" id="bh-label">たいしょうの ちゅうもん</div>
+    <div class="bh-bar"><div class="bh-fill" id="bh-fill"></div></div>
+    <div class="timer-bar"><div class="timer-fill" id="timer-fill"></div></div>
+  </div>
+
+  <!-- TITLE -->
+  <div class="screen show" id="scr-title">
+    <div class="panel">
+      <div class="parade" id="title-parade"></div>
+      <div class="title-badge">かいてん ずし</div>
+      <div class="title-text">まわるおすし</div>
+      <div class="title-sub">ベルトを ながれる おすしから<br><b style="color:#FFB74D">さーもん</b> だけを タップ！<br>まちがえや おじゃまネコに ちゅうい🐱</div>
+      <div class="hi-badge" id="hi-title">🏆 ハイスコア: 0てん</div>
+      <button class="big-btn" onclick="goCharSelect()">はじめる</button>
+    </div>
+  </div>
+
+  <!-- CHARACTER SELECT -->
+  <div class="screen" id="scr-char">
+    <div class="panel">
+      <div class="map-title kanban">しょくにんを えらぶ</div>
+      <div class="char-grid" id="char-grid"></div>
+      <button class="big-btn" id="char-go" onclick="goMap()">この しょくにんで！</button>
+      <button class="sub-btn" onclick="showScreen('scr-title')">もどる</button>
+    </div>
+  </div>
+
+  <!-- STAGE MAP -->
+  <div class="screen" id="scr-map">
+    <div id="map-scroll">
+      <div class="map-title kanban">ステージを えらぶ</div>
+      <div id="map-nodes"></div>
+      <button class="sub-btn" style="max-width:280px;margin:14px auto 0;" onclick="goCharSelect()">しょくにん へんこう</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="scr-result">
+    <div class="panel">
+      <div class="title-text kanban" id="res-title" style="font-size:26px">ステージ クリア！</div>
+      <div class="result-stars" id="res-stars">⭐⭐⭐</div>
+      <div class="result-line">スコア <b id="res-score">0</b> てん</div>
+      <div class="result-line" id="res-detail"></div>
+      <button class="big-btn" id="res-next" onclick="nextStage()" style="margin-top:14px">つぎへ</button>
+      <button class="sub-btn" onclick="goMap()">マップへ</button>
+    </div>
+  </div>
+
+  <!-- GAMEOVER -->
+  <div class="screen" id="scr-over">
+    <div class="panel">
+      <div class="title-text kanban" style="font-size:26px;background:linear-gradient(180deg,#EF9A9A,#C62828);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">ざんねん…</div>
+      <div class="title-sub" id="over-msg">ライフが なくなっちゃった</div>
+      <div class="result-line">スコア <b id="over-score">0</b> てん</div>
+      <button class="big-btn" onclick="retryStage()" style="margin-top:14px">もういちど</button>
+      <button class="sub-btn" onclick="goMap()">マップへ</button>
+    </div>
+  </div>
+
+  <!-- ALL CLEAR -->
+  <div class="screen" id="scr-allclear">
+    <div class="panel">
+      <div class="parade" id="clear-parade"></div>
+      <div class="title-text kanban" style="font-size:24px">ぜんステージ<br>クリア！</div>
+      <div class="title-sub">きみは いちにんまえの<br>おすし しょくにんだ！🍣✨</div>
+      <div class="result-line">ごうけい <b id="ac-score">0</b> てん</div>
+      <button class="big-btn" onclick="goMap()" style="margin-top:14px">マップへ</button>
+    </div>
+  </div>
+
+  <div id="countdown"><span id="cd-num">3</span></div>
+</div>
+
+<script src="/games/safe_area.js"></script>
+<script src="/games/rotate_hint.js"></script>
+<script src="/games/wakuwaku_bgm.js"></script>
+<script>
+'use strict';
+// ================= CONSTANTS =================
+const bg=document.getElementById('bg'), bgctx=bg.getContext('2d');
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+let W=0,H=0,DPR=1;
+const LANE_COUNT=3;
+let LANE_H=0, LANE_Y=[], ITEM=0, BELT_TOP=0, BELT_BOT=0;
+
+// neta types (canvas vector). target = salmon.
+const NETA={
+  salmon:  {rice:true, top:'#FF8A50', top2:'#FF7043', stripe:'#FFE0B2', name:'サーモン'},
+  golden:  {rice:true, top:'#FFD54F', top2:'#FFA000', stripe:'#FFF9C4', name:'きんサーモン', gold:true},
+  tamago:  {rice:true, top:'#FFE082', top2:'#FDD835', band:true, name:'たまご'},
+  maguro:  {rice:true, top:'#E53935', top2:'#B71C1C', stripe:'#EF9A9A', name:'まぐろ'},
+  ika:     {rice:true, top:'#F5F5F5', top2:'#E0E0E0', stripe:'#FAFAFA', name:'いか'},
+  ebi:     {rice:true, top:'#FFAB91', top2:'#FF7043', stripe:'#FFCCBC', ebi:true, name:'えび'},
+  cat:     {cat:true, name:'おじゃまネコ'}
+};
+const DISTRACT=['tamago','maguro','ika','ebi'];
+
+// characters (animal sushi chefs)
+const CHARS=[
+  {id:'neko', name:'ねこ職人', fur:'#F5A623', ear:'#E8890B', perk:'バランスがた', life:3, comboMul:1.0},
+  {id:'inu',  name:'いぬ職人', fur:'#C69C6D', ear:'#8D6E63', perk:'ライフ +1', life:4, comboMul:1.0},
+  {id:'panda',name:'ぱんだ職人',fur:'#FAFAFA', ear:'#333',   perk:'コンボ とくい', life:3, comboMul:1.25},
+  {id:'kitsune',name:'きつね職人',fur:'#FF8A50',ear:'#E65100',perk:'ベルト ゆっくり', life:3, comboMul:1.0, slow:0.85}
+];
+
+// stage configs (1..6 belt, 7 = boss)
+const STAGES=[
+  {n:1, name:'のれん', speed:1.9, spawn:900, catOn:false, goal:8,  bgColorA:'#3E2723', bgColorB:'#5D4037', accent:'#FF8A50'},
+  {n:2, name:'ひるどき',speed:2.3, spawn:820, catOn:false, goal:10, bgColorA:'#4E342E', bgColorB:'#6D4C41', accent:'#FFB74D'},
+  {n:3, name:'にぎわい',speed:2.7, spawn:740, catOn:true,  goal:12, bgColorA:'#3E2723', bgColorB:'#795548', accent:'#FF7043'},
+  {n:4, name:'ゆうぐれ',speed:3.1, spawn:680, catOn:true,  goal:14, bgColorA:'#4A148C', bgColorB:'#6A1B9A', accent:'#CE93D8'},
+  {n:5, name:'よまつり',speed:3.5, spawn:620, catOn:true,  goal:16, bgColorA:'#1A237E', bgColorB:'#283593', accent:'#7986CB'},
+  {n:6, name:'たかきゅう',speed:3.9,spawn:560, catOn:true,  goal:18, bgColorA:'#0D2818', bgColorB:'#1B5E20', accent:'#81C784'},
+  {n:7, name:'大将対決', boss:true, speed:3.4, spawn:560, catOn:true, bgColorA:'#3E0A0A', bgColorB:'#7f1010', accent:'#FFD54F',
+    orders:[3,4,5], orderTime:11000}
+];
+
+// ================= STATE =================
+let selChar=CHARS[0];
+let progress={}; // {stageNum: stars}
+let cur=null;    // current stage config
+let score=0, totalScore=0, hp=3, maxHp=3, goalLeft=0, caught=0, misses=0, wrongTaps=0;
+let combo=0, running=false, beltOffset=0;
+let lanes=[[],[],[]];
+let spawnTimer=0, spawnInterval=900, curSpeed=2, catActive=false;
+let animId=null, lastT=0;
+let popups=[];
+// boss
+let bossActive=false, bossOrders=[], bossOrderIdx=0, bossNeed=0, bossGot=0, bossTimeLeft=0, bossTotalOrders=0;
+
+// ================= STORAGE =================
+const SAFE_LS=(function(){
+  let ok=true;
+  try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); }catch(e){ ok=false; }
+  const mem={};
+  return {
+    get(k){ if(ok){ try{ return localStorage.getItem(k); }catch(e){} } return (k in mem)?mem[k]:null; },
+    set(k,v){ if(ok){ try{ localStorage.setItem(k,String(v)); return; }catch(e){} } mem[k]=String(v); }
+  };
+})();
+function getHi(){ return parseInt(SAFE_LS.get('sushi3_hi')||'0'); }
+function saveHi(v){ SAFE_LS.set('sushi3_hi', v); }
+function loadProgress(){
+  try{ progress=JSON.parse(SAFE_LS.get('sushi_v3_progress')||'{}')||{}; }catch(e){ progress={}; }
+}
+function saveProgress(){ SAFE_LS.set('sushi_v3_progress', JSON.stringify(progress)); }
+function stageUnlocked(n){ if(n===1) return true; return (progress[n-1]||0)>0; }
+
+// ================= RESIZE =================
+function resize(){
+  const r=document.getElementById('game-wrap').getBoundingClientRect();
+  W=r.width; H=r.height; DPR=Math.min(window.devicePixelRatio||1, 2.5);
+  [bg,cv].forEach(c=>{ c.width=W*DPR; c.height=H*DPR; });
+  bgctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  BELT_TOP=H*0.30; BELT_BOT=H*0.86;
+  const band=BELT_BOT-BELT_TOP;
+  LANE_H=band/LANE_COUNT;
+  LANE_Y=[]; for(let i=0;i<LANE_COUNT;i++) LANE_Y.push(BELT_TOP+LANE_H*(i+0.5));
+  ITEM=Math.min(LANE_H*0.78, W*0.20);
+  positionOverlays();
+  if(cur) drawBG();
+}
+function positionOverlays(){
+  // place order banner + combo tag in the empty band above the belt (never crossing it)
+  const obY=Math.max(84, BELT_TOP-70);
+  const ctY=Math.max(84, BELT_TOP-52);
+  const ob=document.getElementById('order-banner');
+  const ct=document.getElementById('combo-tag');
+  if(ob) ob.style.top=obY+'px';
+  if(ct) ct.style.top=ctY+'px';
+}
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', ()=>setTimeout(resize,120));
+
+// ================= VECTOR DRAWING =================
+// draw a nigiri sushi at (x,y) size s, type key, into given context
+function drawNeta(c,x,y,s,type,t){
+  const d=NETA[type];
+  if(!d){ return; }
+  if(d.cat){ drawCat(c,x,y,s,t); return; }
+  c.save(); c.translate(x,y);
+  const rw=s*0.92, rh=s*0.52;
+  // rice base (rounded)
+  c.fillStyle='#FFFDF7';
+  roundRect(c,-rw/2, rh*0.05, rw, rh, s*0.20); c.fill();
+  // rice shading
+  c.fillStyle='rgba(0,0,0,0.06)';
+  roundRect(c,-rw/2, rh*0.05+rh*0.62, rw, rh*0.38, s*0.16); c.fill();
+  // rice grains speckle
+  c.fillStyle='rgba(0,0,0,0.05)';
+  for(let i=0;i<5;i++){ c.beginPath(); c.arc(-rw*0.3+i*rw*0.16, rh*0.42+((i%2)*rh*0.18), s*0.03,0,7); c.fill(); }
+  // topping (neta) on top
+  const tw=s*0.98, th=s*0.42, ty=-s*0.16;
+  const g=c.createLinearGradient(0,ty-th/2,0,ty+th/2);
+  g.addColorStop(0,d.top); g.addColorStop(1,d.top2);
+  c.fillStyle=g;
+  roundRect(c,-tw/2, ty-th/2, tw, th, s*0.16); c.fill();
+  // stripes / bands
+  if(d.stripe){
+    c.strokeStyle=d.stripe; c.lineWidth=s*0.055; c.globalAlpha=.85;
+    for(let i=0;i<3;i++){ c.beginPath(); c.moveTo(-tw*0.36+i*tw*0.30, ty-th*0.3); c.lineTo(-tw*0.28+i*tw*0.30, ty+th*0.32); c.stroke(); }
+    c.globalAlpha=1;
+  }
+  if(d.band){ // tamago nori band
+    c.fillStyle='#2E2E2E'; roundRect(c,-tw*0.12, ty-th*0.55, tw*0.24, th*1.5, s*0.03); c.fill();
+  }
+  if(d.ebi){ // ebi tail hint
+    c.fillStyle='#E53935'; c.beginPath(); c.moveTo(tw*0.42,ty); c.lineTo(tw*0.56,ty-th*0.3); c.lineTo(tw*0.56,ty+th*0.3); c.closePath(); c.fill();
+  }
+  if(d.gold){ // sparkle
+    c.fillStyle='rgba(255,255,255,0.9)';
+    const sp=Math.abs(Math.sin(t*0.006));
+    star(c, -tw*0.2, ty-th*0.1, s*0.10*(0.6+sp*0.6)); c.fill();
+    star(c, tw*0.24, ty+th*0.08, s*0.07); c.fill();
+  }
+  // shine
+  c.fillStyle='rgba(255,255,255,0.28)';
+  roundRect(c,-tw*0.42, ty-th*0.4, tw*0.5, th*0.28, s*0.1); c.fill();
+  c.restore();
+}
+function drawCat(c,x,y,s,t){
+  c.save(); c.translate(x,y);
+  const wob=Math.sin(t*0.008)*s*0.04; c.translate(0,wob);
+  // body
+  c.fillStyle='#9E9E9E';
+  roundRect(c,-s*0.42, -s*0.05, s*0.84, s*0.62, s*0.24); c.fill();
+  // head
+  c.beginPath(); c.arc(0,-s*0.18,s*0.40,0,7); c.fillStyle='#BDBDBD'; c.fill();
+  // ears
+  c.fillStyle='#9E9E9E';
+  c.beginPath(); c.moveTo(-s*0.36,-s*0.42); c.lineTo(-s*0.18,-s*0.28); c.lineTo(-s*0.40,-s*0.14); c.closePath(); c.fill();
+  c.beginPath(); c.moveTo(s*0.36,-s*0.42); c.lineTo(s*0.18,-s*0.28); c.lineTo(s*0.40,-s*0.14); c.closePath(); c.fill();
+  // sneaky eyes
+  c.fillStyle='#333';
+  c.beginPath(); c.ellipse(-s*0.14,-s*0.20,s*0.05,s*0.08,0,0,7); c.fill();
+  c.beginPath(); c.ellipse(s*0.14,-s*0.20,s*0.05,s*0.08,0,0,7); c.fill();
+  // grin
+  c.strokeStyle='#333'; c.lineWidth=s*0.03; c.beginPath(); c.arc(0,-s*0.02,s*0.12,0.1,Math.PI-0.1); c.stroke();
+  // whiskers
+  c.lineWidth=s*0.02;
+  c.beginPath(); c.moveTo(-s*0.2,-s*0.05); c.lineTo(-s*0.45,-s*0.09); c.moveTo(s*0.2,-s*0.05); c.lineTo(s*0.45,-s*0.09); c.stroke();
+  // "!" bubble
+  c.fillStyle='#FFEB3B'; c.beginPath(); c.arc(s*0.42,-s*0.5,s*0.16,0,7); c.fill();
+  c.fillStyle='#C62828'; c.font='900 '+(s*0.22)+'px M PLUS Rounded 1c'; c.textAlign='center'; c.textBaseline='middle'; c.fillText('!',s*0.42,-s*0.5);
+  c.restore();
+}
+function drawChef(c,x,y,s,ch,t){
+  c.save(); c.translate(x,y);
+  const bob=(t?Math.sin(t*0.004)*s*0.03:0); c.translate(0,bob);
+  // body (chef coat)
+  c.fillStyle='#FFFFFF';
+  roundRect(c,-s*0.38, s*0.18, s*0.76, s*0.55, s*0.16); c.fill();
+  c.fillStyle='rgba(0,0,0,0.06)'; roundRect(c,-s*0.05,s*0.18,s*0.10,s*0.55,s*0.04); c.fill();
+  // head
+  c.fillStyle=ch.fur; c.beginPath(); c.arc(0,-s*0.10,s*0.40,0,7); c.fill();
+  // ears
+  c.fillStyle=ch.ear;
+  c.beginPath(); c.arc(-s*0.30,-s*0.38,s*0.16,0,7); c.fill();
+  c.beginPath(); c.arc(s*0.30,-s*0.38,s*0.16,0,7); c.fill();
+  c.fillStyle=ch.fur;
+  c.beginPath(); c.arc(-s*0.30,-s*0.36,s*0.09,0,7); c.fill();
+  c.beginPath(); c.arc(s*0.30,-s*0.36,s*0.09,0,7); c.fill();
+  // hachimaki (headband)
+  c.fillStyle='#FFFFFF'; roundRect(c,-s*0.42,-s*0.30,s*0.84,s*0.14,s*0.05); c.fill();
+  c.fillStyle='#E53935'; c.fillRect(-s*0.42,-s*0.28,s*0.84,s*0.05);
+  c.fillStyle='#E53935'; c.beginPath(); c.arc(s*0.40,-s*0.23,s*0.05,0,7); c.fill();
+  // eyes
+  c.fillStyle='#2b2b2b';
+  c.beginPath(); c.arc(-s*0.14,-s*0.06,s*0.055,0,7); c.fill();
+  c.beginPath(); c.arc(s*0.14,-s*0.06,s*0.055,0,7); c.fill();
+  // blush
+  c.fillStyle='rgba(255,120,80,0.35)';
+  c.beginPath(); c.arc(-s*0.22,s*0.04,s*0.06,0,7); c.fill();
+  c.beginPath(); c.arc(s*0.22,s*0.04,s*0.06,0,7); c.fill();
+  // smile
+  c.strokeStyle='#2b2b2b'; c.lineWidth=s*0.03; c.lineCap='round';
+  c.beginPath(); c.arc(0,s*0.02,s*0.09,0.15,Math.PI-0.15); c.stroke();
+  c.restore();
+}
+// boss "大将" — big proud chef bear
+function drawBoss(c,x,y,s,t){
+  c.save(); c.translate(x,y);
+  const bob=Math.sin(t*0.003)*s*0.03; c.translate(0,bob);
+  c.fillStyle='#5D4037'; c.beginPath(); c.arc(0,s*0.35,s*0.55,0,7); c.fill(); // body
+  c.fillStyle='#8D6E63'; c.beginPath(); c.arc(0,-s*0.15,s*0.5,0,7); c.fill(); // head
+  c.beginPath(); c.arc(-s*0.42,-s*0.45,s*0.18,0,7); c.fill();
+  c.beginPath(); c.arc(s*0.42,-s*0.45,s*0.18,0,7); c.fill();
+  // hat (tall chef hat)
+  c.fillStyle='#fff'; roundRect(c,-s*0.4,-s*0.95,s*0.8,s*0.45,s*0.1); c.fill();
+  c.beginPath(); c.arc(-s*0.28,-s*0.9,s*0.16,0,7); c.arc(0,-s*0.98,s*0.18,0,7); c.arc(s*0.28,-s*0.9,s*0.16,0,7); c.fill();
+  c.fillStyle='#E53935'; c.fillRect(-s*0.4,-s*0.55,s*0.8,s*0.07);
+  // face
+  c.fillStyle='#2b2b2b';
+  c.beginPath(); c.arc(-s*0.16,-s*0.14,s*0.06,0,7); c.fill();
+  c.beginPath(); c.arc(s*0.16,-s*0.14,s*0.06,0,7); c.fill();
+  c.fillStyle='#4E342E'; c.beginPath(); c.arc(0,-s*0.02,s*0.09,0,7); c.fill(); // nose
+  c.strokeStyle='#2b2b2b'; c.lineWidth=s*0.035; c.beginPath(); c.arc(0,s*0.02,s*0.14,0.2,Math.PI-0.2); c.stroke();
+  c.restore();
+}
+// helpers
+function roundRect(c,x,y,w,h,r){ r=Math.min(r,w/2,h/2); c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+function star(c,x,y,r){ c.beginPath(); for(let i=0;i<10;i++){ const a=Math.PI/5*i-Math.PI/2; const rr=(i%2===0)?r:r*0.45; c.lineTo(x+Math.cos(a)*rr, y+Math.sin(a)*rr);} c.closePath(); }
+
+// ================= BACKGROUND =================
+function drawBG(){
+  const s=cur||STAGES[0];
+  const g=bgctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,s.bgColorA); g.addColorStop(1,s.bgColorB);
+  bgctx.fillStyle=g; bgctx.fillRect(0,0,W,H);
+  // top noren banner
+  bgctx.fillStyle='rgba(0,0,0,0.25)'; bgctx.fillRect(0,0,W,H*0.16);
+  bgctx.fillStyle=s.accent;
+  for(let i=0;i<6;i++){ bgctx.globalAlpha=.35; bgctx.fillRect(W/6*i+2, 0, W/6-4, H*0.10); }
+  bgctx.globalAlpha=1;
+  // conveyor belt band
+  const bt=BELT_TOP, bb=BELT_BOT;
+  bgctx.fillStyle='#263238'; bgctx.fillRect(0,bt-6,W,(bb-bt)+12);
+  // belt lane surfaces
+  for(let i=0;i<LANE_COUNT;i++){
+    const y=bt+LANE_H*i;
+    bgctx.fillStyle=(i%2===0)?'#37474F':'#455A64';
+    bgctx.fillRect(0,y,W,LANE_H);
+    // lane rim
+    bgctx.strokeStyle='rgba(255,255,255,0.08)'; bgctx.lineWidth=2;
+    bgctx.beginPath(); bgctx.moveTo(0,y); bgctx.lineTo(W,y); bgctx.stroke();
+  }
+  bgctx.strokeStyle=s.accent; bgctx.lineWidth=4; bgctx.globalAlpha=.5;
+  bgctx.beginPath(); bgctx.moveTo(0,bt-4); bgctx.lineTo(W,bt-4); bgctx.moveTo(0,bb+4); bgctx.lineTo(W,bb+4); bgctx.stroke();
+  bgctx.globalAlpha=1;
+}
+// moving belt segments drawn on main canvas each frame
+function drawBeltMotion(){
+  const seg=28;
+  ctx.save(); ctx.globalAlpha=.18;
+  for(let i=0;i<LANE_COUNT;i++){
+    const y=BELT_TOP+LANE_H*i+LANE_H-4;
+    ctx.fillStyle='#000';
+    for(let x=(-beltOffset%seg)-seg; x<W+seg; x+=seg){ ctx.fillRect(x, y, seg*0.5, 3); }
+  }
+  ctx.restore();
+}
+
+// ================= AUDIO SFX =================
+let actx=null;
+function ac(){ if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
+function sfx(type){
+  const a=ac(); if(!a) return; const t=a.currentTime;
+  const o=a.createOscillator(), g=a.createGain(); o.connect(g); g.connect(a.destination);
+  if(type==='catch'){ o.type='triangle'; o.frequency.setValueAtTime(660,t); o.frequency.exponentialRampToValueAtTime(1046,t+0.08); g.gain.setValueAtTime(0.18,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.18); o.start(t); o.stop(t+0.2); }
+  else if(type==='gold'){ o.type='sine'; [784,1046,1318].forEach((f,i)=>{ const oo=a.createOscillator(),gg=a.createGain(); oo.connect(gg); gg.connect(a.destination); oo.frequency.setValueAtTime(f,t+i*0.06); gg.gain.setValueAtTime(0.16,t+i*0.06); gg.gain.exponentialRampToValueAtTime(0.001,t+i*0.06+0.14); oo.start(t+i*0.06); oo.stop(t+i*0.06+0.16); }); }
+  else if(type==='wrong'){ o.type='sawtooth'; o.frequency.setValueAtTime(180,t); o.frequency.exponentialRampToValueAtTime(80,t+0.2); g.gain.setValueAtTime(0.2,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.25); o.start(t); o.stop(t+0.26); }
+  else if(type==='clear'){ [523,659,784,1046].forEach((f,i)=>{ const oo=a.createOscillator(),gg=a.createGain(); oo.connect(gg); gg.connect(a.destination); oo.type='triangle'; oo.frequency.setValueAtTime(f,t+i*0.11); gg.gain.setValueAtTime(0.16,t+i*0.11); gg.gain.exponentialRampToValueAtTime(0.001,t+i*0.11+0.3); oo.start(t+i*0.11); oo.stop(t+i*0.11+0.32); }); }
+}
+
+// ================= SCREENS =================
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('show'));
+  if(id) document.getElementById(id).classList.add('show');
+  const play=(id===null);
+  document.getElementById('hud').style.display=play?'block':'none';
+  document.getElementById('order-banner').style.display=(play&&!bossActive)?'block':'none';
+  document.getElementById('boss-hud').style.display=(play&&bossActive)?'block':'none';
+}
+
+function initTitle(){
+  document.getElementById('hi-title').textContent='🏆 ハイスコア: '+getHi()+'てん';
+  // parade
+  const p=document.getElementById('title-parade'); p.innerHTML='';
+  const kinds=['salmon','tamago','salmon','maguro','golden'];
+  kinds.forEach((k,i)=>{ const cc=document.createElement('canvas'); cc.width=88; cc.height=88; p.appendChild(cc); const cx=cc.getContext('2d'); drawNeta(cx,44,50,40,k,i*400); });
+}
+
+function goCharSelect(){
+  buildCharGrid(); showScreen('scr-char');
+}
+function buildCharGrid(){
+  const grid=document.getElementById('char-grid'); grid.innerHTML='';
+  CHARS.forEach((ch,i)=>{
+    const card=document.createElement('div'); card.className='char-card'+(ch.id===selChar.id?' sel':'');
+    const cc=document.createElement('canvas'); cc.width=132; cc.height=132; card.appendChild(cc);
+    drawChef(cc.getContext('2d'),66,64,58,ch,0);
+    const nm=document.createElement('div'); nm.className='char-name'; nm.textContent=ch.name; card.appendChild(nm);
+    const pk=document.createElement('div'); pk.className='char-perk'; pk.textContent=ch.perk; card.appendChild(pk);
+    card.onclick=()=>{ selChar=ch; buildCharGrid(); };
+    grid.appendChild(card);
+  });
+}
+
+function goMap(){ buildMap(); showScreen('scr-map'); }
+function buildMap(){
+  const wrap=document.getElementById('map-nodes'); wrap.innerHTML='';
+  let row=document.createElement('div'); row.className='stage-row';
+  STAGES.forEach((s,idx)=>{
+    if(s.boss){
+      if(row.children.length){ wrap.appendChild(row); row=document.createElement('div'); row.className='stage-row'; }
+      const node=document.createElement('div'); const unlocked=stageUnlocked(s.n);
+      node.className='stage-node boss '+(unlocked?'unlocked':'locked');
+      const cc=document.createElement('canvas'); cc.width=110; cc.height=110;
+      const inner=document.createElement('div'); inner.className='boss-inner';
+      inner.appendChild(cc);
+      const txt=document.createElement('div');
+      txt.innerHTML='<div class="sn-num">大将対決</div><div class="sn-stars">'+starStr(progress[s.n]||0)+'</div>'+(unlocked?'':'<div class="sn-lock">🔒</div>');
+      inner.appendChild(txt); node.appendChild(inner);
+      drawBoss(cc.getContext('2d'),55,60,34,0);
+      if(unlocked) node.onclick=()=>startStage(s);
+      wrap.appendChild(node);
+      return;
+    }
+    const node=document.createElement('div'); const unlocked=stageUnlocked(s.n);
+    node.className='stage-node '+(unlocked?'unlocked':'locked');
+    if(unlocked){
+      node.innerHTML='<div class="sn-num">'+s.n+'</div><div class="sn-name">'+s.name+'</div><div class="sn-stars">'+starStr(progress[s.n]||0)+'</div>';
+      node.onclick=()=>startStage(s);
+    } else {
+      node.innerHTML='<div class="sn-num">'+s.n+'</div><div class="sn-name">'+s.name+'</div><div class="sn-lock">🔒</div>';
+    }
+    row.appendChild(node);
+    if(row.children.length===3){ wrap.appendChild(row); row=document.createElement('div'); row.className='stage-row'; }
+  });
+  if(row.children.length) wrap.appendChild(row);
+}
+function starStr(n){ let s=''; for(let i=0;i<3;i++) s+=(i<n?'⭐':'☆'); return s; }
+
+// ================= GAME FLOW =================
+function startStage(s){
+  cur=s; bossActive=!!s.boss;
+  maxHp=selChar.life; hp=maxHp;
+  score=0; caught=0; misses=0; wrongTaps=0; combo=0; beltOffset=0;
+  lanes=[[],[],[]]; popups=[];
+  curSpeed=s.speed*(selChar.slow||1);
+  spawnInterval=s.spawn; spawnTimer=0; catActive=s.catOn;
+  running=false;
+  if(bossActive){
+    bossOrders=s.orders.slice(); bossTotalOrders=bossOrders.length; bossOrderIdx=0;
+    goalLeft=0;
+    startBossOrder();
+  } else {
+    goalLeft=s.goal;
+    document.getElementById('ob-t').textContent='おだい';
+    document.getElementById('ob-m').textContent='🍣 サーモンを とろう！';
+    document.getElementById('order-banner').style.opacity='1';
+  }
+  drawBG();
+  positionOverlays();
+  updateHUD();
+  showScreen(null);
+  runCountdown(()=>{ running=true; lastT=performance.now(); if(!animId) animId=requestAnimationFrame(loop);
+    if(!bossActive){ setTimeout(()=>{ const ob=document.getElementById('order-banner'); if(ob) ob.style.opacity='0'; }, 1600); }
+  });
+}
+function runCountdown(cb){
+  const el=document.getElementById('countdown'), num=document.getElementById('cd-num');
+  let n=3; el.style.display='flex'; num.textContent=n;
+  const iv=setInterval(()=>{ n--; if(n<=0){ num.textContent='どうぞ!'; setTimeout(()=>{ el.style.display='none'; cb&&cb(); },500); clearInterval(iv);} else num.textContent=n; },700);
+}
+
+function startBossOrder(){
+  bossNeed=bossOrders[bossOrderIdx]; bossGot=0; bossTimeLeft=cur.orderTime;
+  document.getElementById('bh-label').textContent='ちゅうもん '+(bossOrderIdx+1)+'/'+bossTotalOrders+'：さーもん '+bossNeed+'かん！';
+  document.getElementById('ob-m').textContent='';
+  updateBossHUD();
+}
+function updateBossHUD(){
+  document.getElementById('bh-fill').style.width=Math.max(0,(1-bossGot/bossNeed))*100+'%';
+  document.getElementById('timer-fill').style.width=Math.max(0,bossTimeLeft/cur.orderTime)*100+'%';
+}
+
+// spawn one row of items across lanes
+function spawn(){
+  // choose which lane(s) get salmon vs distractors
+  const startX=W+ITEM*0.7;
+  for(let l=0;l<LANE_COUNT;l++){
+    // 45% salmon, small gold chance, rest distract/cat
+    let type;
+    const r=Math.random();
+    if(r<0.42) type='salmon';
+    else if(r<0.48) type='golden';
+    else if(catActive && r<0.60) type='cat';
+    else type=DISTRACT[Math.floor(Math.random()*DISTRACT.length)];
+    // avoid all-empty; keep density moderate: 30% chance lane empty
+    if(Math.random()<0.28) continue;
+    lanes[l].push({ x:startX+Math.random()*ITEM*0.5, lane:l, type, alive:true, pop:0, shake:0, born:performance.now() });
+  }
+}
+
+// ================= LOOP =================
+function loop(now){
+  const dt=Math.min(40, now-lastT); lastT=now;
+  if(running){ update(dt, now); }
+  render(now);
+  animId=requestAnimationFrame(loop);
+}
+function update(dt, now){
+  beltOffset+=curSpeed*dt*0.06;
+  spawnTimer+=dt;
+  if(spawnTimer>=spawnInterval){ spawnTimer=0; spawn(); }
+  const vx=curSpeed*dt*0.06*2.2;
+  for(let l=0;l<LANE_COUNT;l++){
+    const arr=lanes[l];
+    for(let i=arr.length-1;i>=0;i--){
+      const it=arr[i];
+      if(it.pop>0){ it.pop+=dt; if(it.pop>260){ arr.splice(i,1);} continue; }
+      if(it.shake>0) it.shake-=dt;
+      it.x-=vx;
+      if(it.x<-ITEM){
+        // left screen
+        if(it.type==='salmon'||it.type==='golden'){ if(!bossActive){ misses++; combo=0; } }
+        arr.splice(i,1);
+      }
+    }
+  }
+  // boss timer
+  if(bossActive){
+    bossTimeLeft-=dt;
+    if(bossTimeLeft<=0){
+      // failed order -> lose life, restart same order
+      loseLife();
+      if(hp>0) startBossOrder();
+    }
+    updateBossHUD();
+  }
+  // popups
+  for(let i=popups.length-1;i>=0;i--){ const p=popups[i]; p.life-=dt; p.y-=dt*0.03; if(p.life<=0) popups.splice(i,1); }
+}
+
+function render(now){
+  ctx.clearRect(0,0,W,H);
+  drawBeltMotion();
+  // items
+  for(let l=0;l<LANE_COUNT;l++){
+    for(const it of lanes[l]){
+      let s=ITEM; let y=LANE_Y[l];
+      if(it.pop>0){ const k=1+it.pop/260*0.6; s=ITEM*k; ctx.globalAlpha=Math.max(0,1-it.pop/260); }
+      let x=it.x;
+      if(it.shake>0){ x+=Math.sin(now*0.05)*4; }
+      drawNeta(ctx,x,y,s,it.type,now);
+      ctx.globalAlpha=1;
+    }
+  }
+  // popups
+  for(const p of popups){
+    ctx.save(); ctx.globalAlpha=Math.max(0,p.life/p.max);
+    ctx.font='900 '+p.size+'px M PLUS Rounded 1c'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle=p.color; ctx.strokeStyle='rgba(0,0,0,0.4)'; ctx.lineWidth=4;
+    ctx.strokeText(p.txt,p.x,p.y); ctx.fillText(p.txt,p.x,p.y); ctx.restore();
+  }
+}
+
+function pushPop(x,y,txt,color,size){ popups.push({x,y,txt,color,size:size||22,life:700,max:700}); }
+
+// ================= INPUT =================
+function tapAt(cx,cy){
+  if(!running) return;
+  // find nearest tappable item under point
+  let best=null, bestD=1e9, bl=-1, bi=-1;
+  for(let l=0;l<LANE_COUNT;l++){
+    if(Math.abs(cy-LANE_Y[l])>LANE_H*0.62) continue;
+    const arr=lanes[l];
+    for(let i=arr.length-1;i>=0;i--){
+      const it=arr[i]; if(!it.alive||it.pop>0) continue;
+      const dx=Math.abs(it.x-cx);
+      if(dx<ITEM*0.85 && dx<bestD){ bestD=dx; best=it; bl=l; bi=i; }
+    }
+  }
+  if(!best) return;
+  const it=best;
+  if(it.type==='salmon'||it.type==='golden'){
+    it.pop=1; it.alive=false;
+    combo++;
+    const base=it.type==='golden'?300:100;
+    const mul=selChar.comboMul;
+    const gain=Math.round(base*(1+Math.min(combo,10)*0.12)*mul);
+    score+=gain;
+    sfx(it.type==='golden'?'gold':'catch');
+    pushPop(it.x, LANE_Y[bl]-ITEM*0.5, '+'+gain, it.type==='golden'?'#FFD54F':'#FFCC80', it.type==='golden'?26:22);
+    if(bossActive){
+      bossGot++;
+      if(bossGot>=bossNeed){ bossOrderIdx++; if(bossOrderIdx>=bossTotalOrders){ stageClear(); return; } else { pushPop(W/2,H*0.5,'ちゅうもん クリア!','#8BC34A',24); startBossOrder(); } }
+      else updateBossHUD();
+    } else {
+      caught++; goalLeft=Math.max(0,cur.goal-caught);
+      if(caught>=cur.goal){ stageClear(); return; }
+    }
+    if(combo>=3) showCombo(combo);
+  } else if(it.type==='cat'){
+    it.shake=300; sfx('wrong'); combo=0;
+    wrongTaps++; pushPop(it.x, LANE_Y[bl]-ITEM*0.5, 'ネコ!','#EF5350',24);
+    loseLife();
+  } else {
+    it.shake=300; sfx('wrong'); combo=0; wrongTaps++;
+    pushPop(it.x, LANE_Y[bl]-ITEM*0.5,'ちがう!','#EF5350',22);
+    loseLife();
+  }
+  updateHUD();
+}
+function loseLife(){
+  hp--; updateHUD();
+  navigator.vibrate&&navigator.vibrate(60);
+  if(hp<=0){ gameOver(); }
+}
+function showCombo(n){
+  const el=document.getElementById('combo-tag'); el.textContent=n+' コンボ!'; el.style.opacity='1';
+  clearTimeout(el._t); el._t=setTimeout(()=>{ el.style.opacity='0'; },700);
+}
+function updateHUD(){
+  document.getElementById('hud-score').textContent=score;
+  let hs=''; for(let i=0;i<maxHp;i++) hs+=(i<hp?'❤️':'🤍'); document.getElementById('hearts').textContent=hs;
+  if(bossActive){ document.getElementById('hud-goal').textContent=(bossTotalOrders-bossOrderIdx); }
+  else document.getElementById('hud-goal').textContent=goalLeft;
+}
+
+const cvEl=document.getElementById('cv');
+function evtXY(e){ const r=cvEl.getBoundingClientRect(); const p=(e.touches&&e.touches[0])||(e.changedTouches&&e.changedTouches[0])||e; return {x:p.clientX-r.left, y:p.clientY-r.top}; }
+cvEl.addEventListener('pointerdown', e=>{ e.preventDefault(); const {x,y}=evtXY(e); tapAt(x,y); }, {passive:false});
+cvEl.addEventListener('touchstart', e=>{ if(e.cancelable)e.preventDefault(); const {x,y}=evtXY(e); tapAt(x,y); }, {passive:false});
+
+// ================= END STATES =================
+function stageClear(){
+  running=false;
+  sfx('clear');
+  totalScore+=score;
+  // stars
+  let stars=1;
+  if(bossActive){ stars=(hp>=maxHp?3:(hp>=2?2:1)); }
+  else { if(hp>=maxHp && misses<=1) stars=3; else if(hp>=Math.max(2,maxHp-1)) stars=2; else stars=1; }
+  const prev=progress[cur.n]||0; if(stars>prev){ progress[cur.n]=stars; saveProgress(); }
+  else if(!progress[cur.n]){ progress[cur.n]=stars; saveProgress(); }
+  if(score>getHi()) saveHi(score);
+  // result screen
+  document.getElementById('res-title').textContent=bossActive?'大将 なっとく！':'ステージ クリア！';
+  document.getElementById('res-stars').textContent=starStr(stars);
+  document.getElementById('res-score').textContent=score;
+  document.getElementById('res-detail').textContent=bossActive?('たいしょうを まんぞくさせた！'):('とった さーもん '+caught+'かん / みのがし '+misses);
+  document.getElementById('res-next').style.display = isLast(cur.n)?'none':'block';
+  showScreen('scr-result');
+}
+function isLast(n){ return n===STAGES[STAGES.length-1].n; }
+function gameOver(){
+  running=false; if(animId){ cancelAnimationFrame(animId); animId=null; }
+  document.getElementById('over-score').textContent=score;
+  if(score>getHi()) saveHi(score);
+  showScreen('scr-over');
+}
+function nextStage(){
+  const idx=STAGES.findIndex(s=>s.n===cur.n);
+  if(idx>=0 && idx<STAGES.length-1){ startStage(STAGES[idx+1]); }
+  else { document.getElementById('ac-score').textContent=totalScore; showScreen('scr-allclear'); }
+}
+function retryStage(){ if(animId){cancelAnimationFrame(animId);animId=null;} startStage(cur); }
+
+// pause loop when leaving play
+function stopLoop(){ if(animId){ cancelAnimationFrame(animId); animId=null; } running=false; }
+document.getElementById('scr-result'); // noop
+
+// wrap goMap/goCharSelect to stop loop
+const _goMap=goMap; goMap=function(){ stopLoop(); _goMap(); };
+const _goChar=goCharSelect; goCharSelect=function(){ stopLoop(); _goChar(); };
+
+// ================= NAV / BGM =================
+function goBack(){ if(window.parent!==window) window.parent.postMessage({type:'goBack'},'*'); else history.back(); }
+
+let _bgm=null;
+function _startBGM(){
+  if(_bgm) return;
+  if(typeof WakuwakuBGM==='undefined'){ _bgm={enabled:false,start(){},stop(){},toggle(){return false;},setEnabled(){}}; _syncBgmBtn(); return; }
+  _bgm=new WakuwakuBGM('japanese');
+  const on=WakuwakuBGM.loadState();
+  _bgm.setEnabled&&_bgm.setEnabled(on);
+  if(on) _bgm.start();
+  _syncBgmBtn();
+}
+function toggleCommonBGM(){
+  if(!_bgm){ _startBGM(); if(_bgm&&_bgm.start&&_bgm.enabled!==false) _bgm.start(); _syncBgmBtn(); return; }
+  if(typeof WakuwakuBGM==='undefined') return;
+  const on=_bgm.toggle(); WakuwakuBGM.saveState&&WakuwakuBGM.saveState(on); _syncBgmBtn();
+}
+function _syncBgmBtn(){
+  const on=_bgm?_bgm.enabled:(typeof WakuwakuBGM!=='undefined'&&WakuwakuBGM.loadState());
+  document.querySelectorAll('#ui-bgm-btn').forEach(b=>b.textContent=on?'🔊':'🔇');
+}
+(function(){ function f(){ ac(); _startBGM(); } document.addEventListener('click',f,{once:true}); document.addEventListener('touchstart',f,{once:true}); })();
+
+// ================= INIT =================
+loadProgress();
+resize();
+setTimeout(resize,80);
+initTitle();
+</script>
+</body>
+</html>

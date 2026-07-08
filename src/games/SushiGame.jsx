@@ -17,7 +17,7 @@ export default function SushiGame() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/sushi_v2.html"
+          src="/games/sushi_v3.html"
           title="さーもんをとろう"
           allow="autoplay; fullscreen"
           allowFullScreen
