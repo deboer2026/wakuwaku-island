@@ -17,7 +17,7 @@ export default function DoubutsuPuzzle() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/doubutsu_puzzle_v2.html"
+          src="/games/doubutsu_puzzle_v3.html"
           title="どうぶつパズル"
           allow="autoplay; fullscreen"
           allowFullScreen

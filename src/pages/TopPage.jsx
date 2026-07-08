@@ -841,7 +841,7 @@ const GAMES = [
     zh:{ name:'接水果',               desc:'接住掉落的水果！'                             },
     ko:{ name:'과일 캐치',             desc:'떨어지는 과일을\n잡아요!'                    },
     es:{ name:'Atrapa Frutas',         desc:'¡Atrapa las frutas\nantes de que caigan!'    } },
-  { id:'g4', route:'/doubutsu-puzzle', icon:'🧩', num:4, color:'#2ECC71', stars:5, isNew:false, category:'パズル',
+  { id:'g4', route:'/doubutsu-puzzle', icon:'🧩', num:4, color:'#2ECC71', stars:5, isNew:true, category:'パズル',
     ja:{ name:'どうぶつパズル',     desc:'どうぶつを ならべて\nパズルをとこう！'         },
     en:{ name:'Animal Puzzle',        desc:'Line up animals\nto solve the puzzle!'        },
     zh:{ name:'动物拼图',             desc:'排列动物\n解开拼图！'                         },
