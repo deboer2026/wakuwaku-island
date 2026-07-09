@@ -1023,6 +1023,35 @@ const SCHOOL_GAMES = [
     es:{ name:'Juego de Katakana',  desc:'¡Elige el katakana\ncorrecto con dibujos!' } },
 ];
 
+/* ── 全ゲーム統合(チャレンジ系は🔥マーク) ── */
+const ALL_SHELF_GAMES = [
+  ...GAMES,
+  ...SCHOOL_GAMES.map(g => ({ ...g, hard: true })),
+];
+const SHELF_ORDER = ['アクション','パズル','レース','かずあそび','もじあそび','クイズ','そうぞう','がくしゅう'];
+const SHELF_CATEGORIES = SHELF_ORDER
+  .map(k => CATEGORIES.find(c => c.key === k))
+  .filter(Boolean);
+
+/* ── 棚用コンパクトカード ── */
+function ShelfCard({ game, lang, onClick }) {
+  const t = game[lang] || game.ja;
+  return (
+    <button
+      className="tp-shelf-card"
+      style={{ background: CARD_GRADIENTS[game.category] || DEFAULT_GRADIENT }}
+      onClick={onClick}
+    >
+      {game.isNew && <span className="tp-shelf-new">NEW</span>}
+      {game.hard && <span className="tp-shelf-hard">🔥</span>}
+      <div className="tp-shelf-art">
+        {GAME_SVGS[game.id] || <span className="tp-shelf-icon-fb">{game.icon}</span>}
+      </div>
+      <div className="tp-shelf-name">{t.name}</div>
+    </button>
+  );
+}
+
 /* ════════════════════════════════════════════════════
    雲データ（空に浮かぶ雲）
 ════════════════════════════════════════════════════ */
@@ -1163,19 +1192,11 @@ export default function TopPage() {
   const [shopOpen,    setShopOpen]    = useState(false);
   const [coins,       setCoins]       = useState(() => typeof localStorage !== 'undefined' ? getCoins() : 0);
   const [loginBonus,  setLoginBonus]  = useState(null);
-  const [activeTab,      setActiveTab]      = useState(() => (typeof localStorage !== 'undefined' ? localStorage.getItem('wakuwaku_tab') : null) || 'kids');
-  const [categoryFilter, setCategoryFilter] = useState('すべて');
   const [recentRoutes,   setRecentRoutes]   = useState(() => typeof localStorage !== 'undefined' ? getRecentGames() : []);
 
   const season    = getSeason();
   const daysSince = getDaysSinceUpdate();
-  const todayIdx  = getTodayIndex(GAMES.length);
 
-  function switchTab(tab) {
-    setActiveTab(tab);
-    localStorage.setItem('wakuwaku_tab', tab);
-    setCategoryFilter('すべて');
-  }
 
   // 最近遊んだゲームを可視化用データに変換
   const recentGames = recentRoutes
@@ -1255,7 +1276,7 @@ export default function TopPage() {
   const rouletteTimer = useRef(null);
 
   function startRoulette() {
-    const pool = activeTab === 'kids' ? GAMES : SCHOOL_GAMES;
+    const pool = ALL_SHELF_GAMES;
     setRouletteOpen(true);
     setRouletteSpin(true);
     let delay = 55;
@@ -1460,22 +1481,6 @@ export default function TopPage() {
           </div>
         )}
 
-        {/* ── 年齢別タブ ── */}
-        <div className="tp-tabs">
-          <button
-            className={`tp-tab${activeTab === 'kids' ? ' tp-tab--active' : ''}`}
-            onClick={() => switchTab('kids')}
-          >
-            🌸 {{ja:'かんたん', en:'Easy', zh:'简单', ko:'쉬움', es:'Fácil'}[lang] || 'かんたん'}
-          </button>
-          <button
-            className={`tp-tab${activeTab === 'school' ? ' tp-tab--active' : ''}`}
-            onClick={() => switchTab('school')}
-          >
-            🔥 {{ja:'チャレンジ', en:'Challenge', zh:'挑战', ko:'도전', es:'Desafío'}[lang] || 'チャレンジ'}
-          </button>
-        </div>
-
         {/* ── アクションボタン行 ── */}
         <div className="tp-action-row">
           <button className="tp-roulette-btn" onClick={startRoulette}>
@@ -1486,40 +1491,28 @@ export default function TopPage() {
           </button>
         </div>
 
-        {/* ── タブコンテンツ ── */}
-        <div className={`tp-tab-panel${activeTab === 'kids' ? ' tp-tab-panel--active' : ''}`}>
-          <div className="tp-grid">
-            {GAMES
-              .filter(g => categoryFilter === 'すべて' || g.category === categoryFilter)
-              .map((game, i) => (
-                <GameCard
-                  key={game.id}
-                  game={game}
-                  lang={lang}
-                  isRecommended={GAMES.indexOf(game) === todayIdx && categoryFilter === 'すべて'}
-                  animIndex={i}
-                  onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY); }}
-                />
-              ))}
-          </div>
-        </div>
-
-        <div className={`tp-tab-panel${activeTab === 'school' ? ' tp-tab-panel--active' : ''}`}>
-          <div className="tp-grid">
-            {SCHOOL_GAMES
-              .filter(g => categoryFilter === 'すべて' || g.category === categoryFilter)
-              .map((game, i) => (
-              <GameCard
-                key={game.id}
-                game={game}
-                lang={lang}
-                isRecommended={false}
-                animIndex={i}
-                onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY); }}
-              />
-            ))}
-          </div>
-        </div>
+        {/* ── カテゴリ別ゲーム棚 ── */}
+        {SHELF_CATEGORIES.map(cat => {
+          const items = ALL_SHELF_GAMES.filter(g => g.category === cat.key);
+          if (items.length === 0) return null;
+          return (
+            <div className="tp-shelf" key={cat.key}>
+              <div className="tp-shelf-title">
+                {cat.icon} {cat.label[lang] || cat.label.ja}
+              </div>
+              <div className="tp-shelf-scroll">
+                {items.map(game => (
+                  <ShelfCard
+                    key={game.id}
+                    game={game}
+                    lang={lang}
+                    onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY); }}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* ── フッターパレード ── */}
@@ -1551,7 +1544,7 @@ export default function TopPage() {
 
       {/* ── ルーレットオーバーレイ ── */}
       {rouletteOpen && (() => {
-        const pool = activeTab === 'kids' ? GAMES : SCHOOL_GAMES;
+        const pool = ALL_SHELF_GAMES;
         const g = pool[rouletteIdx % pool.length];
         return (
           <div className="tp-roulette-overlay" onClick={() => { if (!rouletteSpin) closeRoulette(); }}>
