@@ -11,6 +11,7 @@ import { getCoins, checkLoginBonus, claimLoginBonus } from '../utils/coins';
 import { getRecentGames } from '../utils/recentGames';
 import { getPlayHistory } from '../utils/playHistory';
 import { ALL_GAMES } from '../utils/recommend';
+import { detectLang } from '../utils/i18n';
 import './TopPage.css';
 
 /* ── カテゴリ別グラデーション ──────────────────────────── */
@@ -1209,6 +1210,16 @@ export default function TopPage() {
     const bonus = checkLoginBonus();
     if (bonus) setLoginBonus(bonus);
     return () => stopBGM();
+  }, []);
+
+  // 初回訪問時のみ、ブラウザ言語から自動で表示言語を決定する。
+  // 手動選択(wakuwaku_lang)がある場合は常にそちらを優先。
+  // マウント後に実行することでSSR/prerenderとのハイドレーション不一致を防ぐ。
+  useEffect(() => {
+    if (localStorage.getItem('wakuwaku_lang')) return;
+    const detected = detectLang();
+    localStorage.setItem('wakuwaku_lang', detected);
+    if (detected !== lang) setLang(detected);
   }, []);
 
   function handleMuteToggle() {

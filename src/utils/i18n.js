@@ -41,3 +41,18 @@ export function getLang() {
   if (typeof localStorage === 'undefined') return 'ja'
   return localStorage.getItem('wakuwaku_lang') || 'ja'
 }
+
+// ブラウザの言語設定から対応言語(ja/en/zh/ko/es)を判定する。
+// SSR/prerender時は navigator が無いため 'ja' を返す（ハイドレーション不一致を防ぐ）。
+export function detectLang() {
+  if (typeof navigator === 'undefined') return 'ja'
+  const supported = ['ja', 'en', 'zh', 'ko', 'es']
+  const prefs = (navigator.languages && navigator.languages.length)
+    ? navigator.languages
+    : [navigator.language || 'ja']
+  for (const p of prefs) {
+    const code = String(p).toLowerCase().split('-')[0]
+    if (supported.includes(code)) return code
+  }
+  return 'ja'
+}
