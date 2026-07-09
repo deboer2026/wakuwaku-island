@@ -1028,10 +1028,22 @@ const ALL_SHELF_GAMES = [
   ...GAMES,
   ...SCHOOL_GAMES.map(g => ({ ...g, hard: true })),
 ];
-const SHELF_ORDER = ['アクション','パズル','レース','かずあそび','もじあそび','クイズ','そうぞう','がくしゅう'];
-const SHELF_CATEGORIES = SHELF_ORDER
-  .map(k => CATEGORIES.find(c => c.key === k))
-  .filter(Boolean);
+/* ── 棚グループ定義(6棚)。アクションはゲーム性で2分割 ── */
+const SHELF_SHOOT_JUMP = ['s3','s4','g_sora','g_mori','g_block']; // ねらう・とぶ系
+const SHELF_GROUPS = [
+  { key:'asobu',    icon:'⚡', match:g => g.category==='アクション' && !SHELF_SHOOT_JUMP.includes(g.id),
+    label:{ja:'あそぶ',       en:'Play',        zh:'玩耍',   ko:'놀기',       es:'Jugar'    } },
+  { key:'nerau',    icon:'🎯', match:g => SHELF_SHOOT_JUMP.includes(g.id),
+    label:{ja:'ねらう・とぶ', en:'Aim & Jump',  zh:'瞄准・跳跃', ko:'조준・점프', es:'Apunta y salta' } },
+  { key:'race',     icon:'🏁', match:g => g.category==='レース',
+    label:{ja:'レース',       en:'Racing',      zh:'赛车',   ko:'레이싱',     es:'Carreras' } },
+  { key:'kangaeru', icon:'🧩', match:g => ['パズル','かずあそび','もじあそび','クイズ'].includes(g.category),
+    label:{ja:'かんがえる',   en:'Think',       zh:'思考',   ko:'생각하기',   es:'Pensar'   } },
+  { key:'tsukuru',  icon:'🎨', match:g => g.category==='そうぞう',
+    label:{ja:'つくる',       en:'Create',      zh:'创造',   ko:'만들기',     es:'Crear'    } },
+  { key:'manabu',   icon:'📚', match:g => g.category==='がくしゅう',
+    label:{ja:'まなぶ',       en:'Learn',       zh:'学习',   ko:'배우기',     es:'Aprender' } },
+];
 
 /* ── 棚用コンパクトカード ── */
 function ShelfCard({ game, lang, onClick }) {
@@ -1501,14 +1513,14 @@ export default function TopPage() {
           </button>
         </div>
 
-        {/* ── カテゴリ別ゲーム棚 ── */}
-        {SHELF_CATEGORIES.map(cat => {
-          const items = ALL_SHELF_GAMES.filter(g => g.category === cat.key);
+        {/* ── ジャンルグループ別ゲーム棚(6棚) ── */}
+        {SHELF_GROUPS.map(grp => {
+          const items = ALL_SHELF_GAMES.filter(grp.match);
           if (items.length === 0) return null;
           return (
-            <div className="tp-shelf" key={cat.key}>
+            <div className="tp-shelf" key={grp.key}>
               <div className="tp-shelf-title">
-                {cat.icon} {cat.label[lang] || cat.label.ja}
+                {grp.icon} {grp.label[lang] || grp.label.ja}
               </div>
               <div className="tp-shelf-scroll">
                 {items.map(game => (
