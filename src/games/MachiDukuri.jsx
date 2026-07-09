@@ -17,7 +17,7 @@ export default function MachiDukuri() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/machi_v6.html"
+          src="/games/machi_v7.html"
           title="わくわくまちづくり"
           allow="autoplay; fullscreen"
           allowFullScreen
