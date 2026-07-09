@@ -10,7 +10,6 @@ import Shop from '../components/Shop';
 import { getCoins, checkLoginBonus, claimLoginBonus } from '../utils/coins';
 import { getRecentGames } from '../utils/recentGames';
 import { getPlayHistory } from '../utils/playHistory';
-import { ALL_GAMES } from '../utils/recommend';
 import { detectLang } from '../utils/i18n';
 import './TopPage.css';
 
@@ -1201,7 +1200,7 @@ export default function TopPage() {
 
   // 最近遊んだゲームを可視化用データに変換
   const recentGames = recentRoutes
-    .map(route => ALL_GAMES.find(g => g.route === route))
+    .map(route => GAMES.find(g => g.route === route))
     .filter(Boolean);
 
   useEffect(() => {
@@ -1485,7 +1484,7 @@ export default function TopPage() {
                   onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY); }}
                 >
                   <span className="tp-recent-icon">{g.icon}</span>
-                  <span className="tp-recent-name">{g.ja}</span>
+                  <span className="tp-recent-name">{(g[lang] || g.ja).name}</span>
                 </button>
               ))}
             </div>
