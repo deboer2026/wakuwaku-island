@@ -57,6 +57,41 @@ const MASCOT_LINES = {
    ゲームSVGイラスト（SNES風）
 ════════════════════════════════════════════════════ */
 const GAME_SVGS = {
+  g_mahounakama: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="100" height="85" fill="#d9ecff"/>
+      <circle cx="18" cy="14" r="6" fill="#fff" opacity=".8"/>
+      <circle cx="26" cy="16" r="8" fill="#fff" opacity=".8"/>
+      <circle cx="78" cy="10" r="7" fill="#fff" opacity=".7"/>
+      <rect x="0" y="56" width="100" height="29" fill="#9fdc7a"/>
+      <ellipse cx="20" cy="64" rx="12" ry="3" fill="#8ccb68"/>
+      <ellipse cx="72" cy="72" rx="14" ry="3" fill="#8ccb68"/>
+      <g transform="translate(32 52)">
+        <ellipse cx="0" cy="14" rx="9" ry="3" fill="#3c5078" opacity=".18"/>
+        <ellipse cx="0" cy="2" rx="8" ry="9" fill="#ffd9a0"/>
+        <circle cx="0" cy="-10" r="8" fill="#ffd9a0"/>
+        <path d="M -7 -14 L -10 -22 L -3 -16 Z" fill="#ffd9a0"/>
+        <path d="M 7 -14 L 10 -22 L 3 -16 Z" fill="#ffd9a0"/>
+        <circle cx="-2.5" cy="-11" r="1.4" fill="#3a3a4a"/>
+        <circle cx="3" cy="-11" r="1.4" fill="#3a3a4a"/>
+        <path d="M -1 -7 Q 0.5 -5.5 2 -7" stroke="#c9506a" strokeWidth="1.2" fill="none"/>
+        <rect x="-6" y="-3" width="12" height="3.5" rx="1.7" fill="#ff8fb5"/>
+        <line x1="6" y1="-4" x2="18" y2="-12" stroke="#b58643" strokeWidth="2"/>
+      </g>
+      <path d="M 50 38 L 51.8 42.4 L 56.5 42.7 L 52.9 45.7 L 54 50.3 L 50 47.8 L 46 50.3 L 47.1 45.7 L 43.5 42.7 L 48.2 42.4 Z" fill="#ffd84a" stroke="#e8a900" strokeWidth=".8"/>
+      <g transform="translate(70 56)">
+        <ellipse cx="0" cy="12" rx="9" ry="3" fill="#3c5078" opacity=".18"/>
+        <ellipse cx="0" cy="0" rx="10" ry="9" fill="#8fd8ff"/>
+        <path d="M -3.4 -2 Q -2 -4 -0.6 -2" stroke="#4a4a5a" strokeWidth="1.3" fill="none"/>
+        <path d="M 0.6 -2 Q 2 -4 3.4 -2" stroke="#4a4a5a" strokeWidth="1.3" fill="none"/>
+        <path d="M -2.5 3 Q 0 5.5 2.5 3" stroke="#4a4a5a" strokeWidth="1.3" fill="none"/>
+        <path d="M -4 -9 L -1 -12 L -1 -7 Z" fill="#ff8fb5"/>
+        <path d="M 4 -9 L 1 -12 L 1 -7 Z" fill="#ff8fb5"/>
+      </g>
+      <circle cx="88" cy="40" r="2" fill="#ffd84a"/>
+      <circle cx="10" cy="44" r="2" fill="#ffd84a"/>
+    </svg>
+  ),
   g_okashi: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
       <rect x="0" y="0" width="100" height="85" fill="#ffe3f0"/>
@@ -1004,6 +1039,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'猫咪抓蝴蝶',        desc:'用猫咪抓住\n飞舞的蝴蝶！' },
     ko:{ name:'고양이와 나비',     desc:'날아다니는 나비를\n고양이로 잡아요!' },
     es:{ name:'Gato y Mariposa',   desc:'¡Atrapa las mariposas\ncon el gato!' } },
+  { id:'g_mahounakama', route:'/mahou-nakama', icon:'🪄', num:18, color:'#7fa8ff', stars:4, isNew:true, category:'アクション',
+    ja:{ name:'まほうのなかまたい', desc:'ステッキでポン！モンスターを\nなかまにして すすもう！' },
+    en:{ name:'Magic Friend Squad',  desc:'Tap monsters with your wand\nand make them your friends!' },
+    zh:{ name:'魔法伙伴小队',        desc:'用魔法棒轻轻一点，\n把怪物变成伙伴！' },
+    ko:{ name:'마법 친구 부대',      desc:'마법 지팡이로 콩!\n몬스터를 친구로 만들자!' },
+    es:{ name:'Escuadrón Mágico',    desc:'¡Toca monstruos con tu varita\ny hazlos tus amigos!' } },
   { id:'g_okashi', route:'/okashi-crossing', icon:'🍭', num:16, color:'#ff9ecb', stars:4, isNew:true, category:'アクション',
     ja:{ name:'おかしのくにたんけん', desc:'グミのくるまとチョコのかわ！\nどこまでもすすもう！' },
     en:{ name:'Candy Land Explorer',  desc:'Cross gummy roads and\nchocolate rivers—go far!' },
