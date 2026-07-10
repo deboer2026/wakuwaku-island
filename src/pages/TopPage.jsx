@@ -831,6 +831,25 @@ const GAME_SVGS = {
       <path d="M14 74 Q30 82 50 78 Q72 74 86 80" fill="none" stroke="#2196F3" strokeWidth="3" strokeLinecap="round"/>
     </svg>
   ),
+  g_katachi: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="100" height="85" fill="#141042"/>
+      <circle cx="12" cy="10" r="1.6" fill="white" opacity=".7"/>
+      <circle cx="88" cy="14" r="1.3" fill="#FFD700" opacity=".6"/>
+      <circle cx="72" cy="6" r="1.2" fill="white" opacity=".5"/>
+      <circle cx="24" cy="72" r="1.4" fill="white" opacity=".5"/>
+      <ellipse cx="50" cy="40" rx="30" ry="11" fill="#B39DDB" stroke="#7E57C2" strokeWidth="2"/>
+      <path d="M34 33 A18 12 0 0 1 66 33" fill="#B3E5FC" opacity=".55" stroke="#81D4FA" strokeWidth="1.5"/>
+      <rect x="26" y="40" width="48" height="26" rx="9" fill="#D1C4E9" stroke="#9575CD" strokeWidth="2"/>
+      <circle cx="38" cy="53" r="6.5" fill="#0b0524" stroke="white" strokeWidth="1.5" strokeDasharray="3 2"/>
+      <path d="M50 46.5 L56.2 57.5 L43.8 57.5 Z" fill="#66BB6A" stroke="#1B5E20" strokeWidth="1.5"/>
+      <rect x="57" y="47" width="12" height="12" rx="2" fill="#0b0524" stroke="white" strokeWidth="1.5" strokeDasharray="3 2"/>
+      <circle cx="18" cy="74" r="7" fill="#EF5350" stroke="#B71C1C" strokeWidth="1.8"/>
+      <path d="M50 68 L52.6 74.2 L59.3 74.6 L54.1 79 L55.8 85.4 L50 81.8 L44.2 85.4 L45.9 79 L40.7 74.6 L47.4 74.2 Z" fill="#FFD54F" stroke="#B8860B" strokeWidth="1.5"/>
+      <rect x="74" y="67" width="14" height="14" rx="2.5" fill="#42A5F5" stroke="#0D47A1" strokeWidth="1.8"/>
+      <path d="M35 20 L38 26 L32 26 Z" fill="#F48FB1" opacity=".85"/>
+    </svg>
+  ),
 };
 
 /* ════════════════════════════════════════════════════
@@ -1063,6 +1082,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'片假名游戏',         desc:'看图片和平假名\n选出正确的片假名！' },
     ko:{ name:'가타카나 놀이',      desc:'그림과 히라가나를 보고\n맞는 가타카나를 골라요!' },
     es:{ name:'Juego de Katakana',  desc:'¡Elige el katakana\ncorrecto con dibujos!' } },
+  { id:'g_katachi', route:'/katachi', icon:'🔷', num:18, color:'#7C7CE8', stars:3, isNew:true, category:'がくしゅう',
+    ja:{ name:'かたちあわせ',       desc:'うちゅうで かたちを\nはめたり しわけたり しよう！' },
+    en:{ name:'Shape Match',        desc:'Fit and sort shapes\nin outer space!' },
+    zh:{ name:'形状配对',           desc:'在宇宙中拼合\n和分类形状！' },
+    ko:{ name:'모양 맞추기',        desc:'우주에서 모양을\n끼우고 분류해요!' },
+    es:{ name:'Formas Espaciales',  desc:'¡Encaja y clasifica\nformas en el espacio!' } },
 ];
 
 /* ── 全ゲーム統合(チャレンジ系は🔥マーク) ── */

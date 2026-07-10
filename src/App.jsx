@@ -36,6 +36,7 @@ import TokeiYomi from './games/TokeiYomi'
 import KatakanaAsobi from './games/KatakanaAsobi'
 import NurieOekaki from './games/NurieOekaki'
 import MahouNakama from './games/MahouNakama'
+import KatachiAwase from './games/KatachiAwase'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 import { recordRecentGame } from './utils/recentGames'
@@ -61,7 +62,7 @@ const GAME_ROUTES = new Set([
   '/sniper', '/dressup', '/okashi-crossing',
   '/moji-asobi', '/iro-awase', '/flag-quiz', '/shoot',
   '/mori', '/sora', '/bike', '/kart', '/block', '/houki', '/usagi-carrot', '/usagi', '/neko-chou', '/neko', '/mahou-meiro',
-  '/tokei-yomi', '/katakana-asobi', '/nurie', '/mahou-nakama',
+  '/tokei-yomi', '/katakana-asobi', '/nurie', '/mahou-nakama', '/katachi', '/katachi-awase',
   // 短縮URLエイリアスも記録
   '/kudamono', '/puzzle', '/kazu', '/soccer',
 ]);
@@ -109,7 +110,9 @@ export default function App() {
         <Route path="/tashizan" element={<GameWithSEO route="/tashizan"><TashizanGame /></GameWithSEO>} />
         <Route path="/iro" element={<GameWithSEO route="/iro"><IroAwase /></GameWithSEO>} />
         <Route path="/machi" element={<GameWithSEO route="/machi"><MachiDukuri /></GameWithSEO>} />
+        <Route path="/katachi" element={<GameWithSEO route="/katachi"><KatachiAwase /></GameWithSEO>} />
         {/* ── URL エイリアス ── */}
+        <Route path="/katachi-awase" element={<GameWithSEO route="/katachi"><KatachiAwase /></GameWithSEO>} />
         <Route path="/kudamono"   element={<GameWithSEO route="/kudamono-catch"><KudamonoCatch /></GameWithSEO>} />
         <Route path="/puzzle"     element={<GameWithSEO route="/doubutsu-puzzle"><DoubutsuPuzzle /></GameWithSEO>} />
         <Route path="/kazu"       element={<GameWithSEO route="/kazu-asobi"><KazuAsobi /></GameWithSEO>} />
