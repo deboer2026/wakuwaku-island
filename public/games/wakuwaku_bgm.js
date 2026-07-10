@@ -101,6 +101,15 @@
         { b:N.G3, c:[N.G4,N.B4,N.D5],      d:2 },
         { b:N.E3, c:[N.E4,N.Ab4,N.B4],     d:2 }
       ]
+    },
+    sky: {
+      bpm: 104, wave: 'sine',
+      steps: [
+        { b:N.C3, c:[N.G4,N.C5,N.E5],      d:4 },
+        { b:N.G3, c:[N.D4,N.G4,N.B4,N.D5], d:4 },
+        { b:N.A3, c:[N.E4,N.A4,N.C5,N.E5], d:4 },
+        { b:N.F3, c:[N.C4,N.F4,N.A4,N.F5], d:4 }
+      ]
     }
   };
 

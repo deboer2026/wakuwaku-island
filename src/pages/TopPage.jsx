@@ -57,6 +57,31 @@ const MASCOT_LINES = {
    ゲームSVGイラスト（SNES風）
 ════════════════════════════════════════════════════ */
 const GAME_SVGS = {
+  g_kyoshitsu: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="100" height="85" rx="12" fill="#bfe9ff"/>
+      <circle cx="16" cy="14" r="2" fill="#fff" opacity=".8"/>
+      <circle cx="86" cy="12" r="1.6" fill="#fff" opacity=".8"/>
+      <ellipse cx="24" cy="26" rx="10" ry="5" fill="#fff" opacity=".85"/>
+      <ellipse cx="78" cy="60" rx="12" ry="6" fill="#fff" opacity=".85"/>
+      <ellipse cx="72" cy="34" rx="7" ry="15" fill="none" stroke="#ffc93c" strokeWidth="5"/>
+      <g transform="translate(38 40)">
+        <path d="M-6 -2 Q-20 -12 -22 2 Q-14 4 -6 4 Z" fill="#fff" stroke="#a9c4e6" strokeWidth="1"/>
+        <path d="M6 -2 Q20 -12 22 2 Q14 4 6 4 Z" fill="#fff" stroke="#a9c4e6" strokeWidth="1"/>
+        <ellipse cx="0" cy="8" rx="11" ry="10" fill="#b9b3c9"/>
+        <ellipse cx="0" cy="10" rx="6" ry="6" fill="#e5e1f0"/>
+        <circle cx="0" cy="-4" r="10" fill="#b9b3c9"/>
+        <path d="M-9 -9 L-13 -18 L-4 -12 Z" fill="#b9b3c9"/>
+        <path d="M9 -9 L13 -18 L4 -12 Z" fill="#b9b3c9"/>
+        <path d="M-7 -9 L-9 -14 L-4 -11 Z" fill="#ff9ec4"/>
+        <path d="M7 -9 L9 -14 L4 -11 Z" fill="#ff9ec4"/>
+        <circle cx="-4" cy="-4" r="1.8" fill="#2a2440"/>
+        <circle cx="4" cy="-4" r="1.8" fill="#2a2440"/>
+        <path d="M-1.5 -1 L1.5 -1 L0 1.5 Z" fill="#ff7eb3"/>
+      </g>
+      <path d="M50 70 l3 6 l6 .8 l-4.5 4.2 l1.2 6 l-5.7 -3 l-5.7 3 l1.2 -6 l-4.5 -4.2 l6 -.8 Z" fill="#ffd24d" stroke="#e0a800" strokeWidth="1"/>
+    </svg>
+  ),
   g_otakara: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
       <rect x="0" y="0" width="100" height="85" fill="#aee9ff"/>
@@ -1101,6 +1126,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'魔法伙伴小队',        desc:'用魔法棒轻轻一点，\n把怪物变成伙伴！' },
     ko:{ name:'마법 친구 부대',      desc:'마법 지팡이로 콩!\n몬스터를 친구로 만들자!' },
     es:{ name:'Escuadrón Mágico',    desc:'¡Toca monstruos con tu varita\ny hazlos tus amigos!' } },
+  { id:'g_kyoshitsu', route:'/sora-kyoshitsu', icon:'🎈', num:20, color:'#5ecbf7', stars:4, isNew:true, category:'アクション',
+    ja:{ name:'そらのきょうしつ',   desc:'リングをくぐって\nマットにちゃくりく！' },
+    en:{ name:'Sky Class',          desc:'Fly through rings and\nland on the mat!' },
+    zh:{ name:'天空教室',            desc:'穿过圆环，\n降落在垫子上！' },
+    ko:{ name:'하늘 교실',          desc:'링을 통과해서\n매트에 착륙하자!' },
+    es:{ name:'Clase del Cielo',     desc:'¡Cruza los aros\ny aterriza en la colchoneta!' } },
   { id:'g_otakara', route:'/otakara-horihori', icon:'⛏️', num:19, color:'#b06a3b', stars:4, isNew:true, category:'アクション',
     ja:{ name:'おたからほりほり', desc:'じめんをほって おたからを\nあつめよう！' },
     en:{ name:'Treasure Digger',   desc:'Dig the ground and\ncollect the treasures!' },
