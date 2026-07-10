@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { startBGM, stopBGM, toggleBGM } from '../utils/audio';
 import { transitionTo } from '../utils/transition';
 import { getPlayCount } from '../utils/playCounter';
+import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { KisekaeCharacters, KisekaePanel, DEFAULT_KISEKAE } from '../components/Kisekae';
 import LoginBonus from '../components/LoginBonus';
 import Shop from '../components/Shop';
@@ -1209,6 +1210,9 @@ export default function TopPage() {
   const season    = getSeason();
   const daysSince = getDaysSinceUpdate();
 
+  // 引っ張って更新(フルスクリーンPWA向け)
+  const { pull, ready } = usePullToRefresh(() => window.location.reload());
+
 
   // 最近遊んだゲームを可視化用データに変換
   const recentGames = recentRoutes
@@ -1361,7 +1365,13 @@ export default function TopPage() {
     (daysSince === 0 ? 'きょう！' : `${daysSince}にちまえ`);
 
   return (
-    <div className="tp-wrap">
+    <div className="tp-wrap" style={{ transform: pull ? `translateY(${pull}px)` : undefined, transition: pull ? 'none' : 'transform .25s ease' }}>
+      {/* ── 引っ張って更新インジケーター ── */}
+      <div className="tp-ptr" aria-hidden="true" style={{ top: `${pull - 46}px`, opacity: pull > 6 ? 1 : 0 }}>
+        <span className={`tp-ptr-spin${ready ? ' tp-ptr-spin--ready' : ''}`} style={{ transform: `rotate(${pull * 3}deg)` }}>
+          {ready ? '↻' : '↓'}
+        </span>
+      </div>
       <Helmet>
         <title>わくわくアイランド｜こども向け無料ブラウザゲーム</title>
         <meta name="description" content="幼児・小学生向けの無料ミニゲームが20種類以上。かず・もじ・パズル・アクション・レースなどを登録不要・インストール不要でブラウザですぐ遊べます。" />
