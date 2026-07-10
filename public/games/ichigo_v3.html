@@ -166,12 +166,12 @@ const CHARS = [
 
 // ripen: growth per second. Ripe window(sec) = 0.30 / ripen.
 const STAGES = [
-  { id:1, name:'いちごばたけ',  theme:'field',   time:35, goal:10, sprout:1050, max:5, ripen:0.30, gold:0.05 },
-  { id:2, name:'もりのはたけ',  theme:'forest',  time:35, goal:13, sprout:950,  max:6, ripen:0.36, gold:0.06 },
-  { id:3, name:'ゆうやけばたけ',theme:'sunset',  time:40, goal:16, sprout:840,  max:7, ripen:0.44, gold:0.08 },
-  { id:4, name:'ほしぞらばたけ',theme:'night',   time:40, goal:19, sprout:740,  max:8, ripen:0.52, gold:0.10 },
-  { id:5, name:'にじのはたけ',  theme:'rainbow', time:45, goal:23, sprout:660,  max:9, ripen:0.60, gold:0.12 },
-  { id:6, name:'いちごの王さま',theme:'boss',    time:50, goal:28, sprout:640,  max:9, ripen:0.60, gold:0.13, boss:true },
+  { id:1, name:'いちごばたけ',  theme:'field',   time:35, goal:10, sprout:1050, max:5, ripen:0.15, gold:0.05 },
+  { id:2, name:'もりのはたけ',  theme:'forest',  time:35, goal:13, sprout:950,  max:6, ripen:0.18, gold:0.06 },
+  { id:3, name:'ゆうやけばたけ',theme:'sunset',  time:40, goal:16, sprout:840,  max:7, ripen:0.21, gold:0.08 },
+  { id:4, name:'ほしぞらばたけ',theme:'night',   time:40, goal:19, sprout:740,  max:8, ripen:0.24, gold:0.10 },
+  { id:5, name:'にじのはたけ',  theme:'rainbow', time:45, goal:23, sprout:660,  max:9, ripen:0.27, gold:0.12 },
+  { id:6, name:'いちごの王さま',theme:'boss',    time:50, goal:28, sprout:640,  max:9, ripen:0.29, gold:0.13, boss:true },
 ];
 
 const THEMES = {
@@ -184,7 +184,7 @@ const THEMES = {
 };
 
 // ripeness thresholds
-const G_PINK=0.35, G_RIPE=0.55, G_RIPE_END=0.85, G_ROT=1.12, G_PERFECT=G_RIPE+(G_RIPE_END-G_RIPE)*0.35;
+const G_PINK=0.32, G_RIPE=0.50, G_RIPE_END=1.00, G_ROT=1.45, G_PERFECT=G_RIPE+(G_RIPE_END-G_RIPE)*0.35;
 function phase(g){ if(g<G_PINK) return 'bud'; if(g<G_RIPE) return 'pink'; if(g<G_RIPE_END) return 'ripe'; if(g<G_ROT) return 'over'; return 'rot'; }
 
 /* ========================= State ========================= */
@@ -252,14 +252,14 @@ function buildMap(){
 /* ========================= Game start ========================= */
 function startStage(st){
   initBGM();
-  if(st){ stage=st; } else { stage={ id:0, name:'エンドレス', theme:'rainbow', time:0, goal:99999, sprout:720, max:8, ripen:0.48, gold:0.10 }; }
+  if(st){ stage=st; } else { stage={ id:0, name:'エンドレス', theme:'rainbow', time:0, goal:99999, sprout:820, max:7, ripen:0.20, gold:0.10 }; }
   show(null);
   document.getElementById('hud').style.display='block';
   score=0; collected=0; misses=0; combo=1; comboT=0; berries=[]; pops=[]; sparks=[];
   life=3; timeLeft=stage.time; running=true; sproutAcc=0; kingAcc=0;
   const endless=(mode==='endless');
   document.getElementById('chip-time').style.display=endless?'none':'block';
-  document.getElementById('chip-life').style.display='block';
+  document.getElementById('chip-life').style.display=endless?'block':'none';
   document.getElementById('goalbar-wrap').style.display=endless?'none':'block';
   resize();
   // seed a few berries
@@ -324,8 +324,8 @@ function rotBerry(b, idx){
   for(let i=0;i<8;i++) sparks.push(mkSpark(b.x,b.y,'110,80,40'));
   showPop(b.x,b.y,'くさっちゃった','#b08050',17);
   berries.splice(idx,1);
-  life--; updateHud();
-  if(life<=0){ endGame(false); }
+  if(mode==='endless'){ life--; updateHud(); if(life<=0){ endGame(false); } }
+  else { updateHud(); }
 }
 
 /* ========================= Input ========================= */
