@@ -110,6 +110,57 @@
         { b:N.A3, c:[N.E4,N.A4,N.C5,N.E5], d:4 },
         { b:N.F3, c:[N.C4,N.F4,N.A4,N.F5], d:4 }
       ]
+    },
+    racing: {
+      bpm: 152, wave: 'square',
+      steps: [
+        { b:N.C3, c:[N.C4,N.E4,N.G4],      d:2 },
+        { b:N.C3, c:[N.C4,N.E4,N.G4,N.C5], d:2 },
+        { b:N.F3, c:[N.F4,N.A4,N.C5],      d:2 },
+        { b:N.G3, c:[N.G4,N.B4,N.D5],      d:2 },
+        { b:N.C3, c:[N.C4,N.E4,N.G4],      d:2 },
+        { b:N.A3, c:[N.A4,N.C5,N.E5],      d:2 },
+        { b:N.F3, c:[N.F4,N.A4,N.C5],      d:2 },
+        { b:N.G3, c:[N.G4,N.B4,N.D5],      d:2 }
+      ]
+    },
+    ocean: {
+      bpm: 100, wave: 'sine',
+      steps: [
+        { b:N.F3, c:[N.F4,N.A4,N.C5,N.E5], d:4 },
+        { b:N.G3, c:[N.G4,N.B4,N.D5],      d:4 },
+        { b:N.E3, c:[N.E4,N.G4,N.B4],      d:4 },
+        { b:N.A3, c:[N.A4,N.C5,N.E5],      d:4 }
+      ]
+    },
+    sweets: {
+      bpm: 134, wave: 'triangle',
+      steps: [
+        { b:N.C3, c:[N.C4,N.E4,N.G4,N.C5], d:2 },
+        { b:N.F3, c:[N.F4,N.A4,N.C5],      d:2 },
+        { b:N.C3, c:[N.C4,N.E4,N.G4],      d:2 },
+        { b:N.A3, c:[N.A4,N.C5,N.E5],      d:2 },
+        { b:N.F3, c:[N.F4,N.A4,N.C5],      d:2 },
+        { b:N.G3, c:[N.G4,N.B4,N.D5],      d:4 }
+      ]
+    },
+    quiz: {
+      bpm: 120, wave: 'square',
+      steps: [
+        { b:N.C3, c:[N.C4,N.E4,N.G4],      d:4 },
+        { b:N.E3, c:[N.E4,N.Ab4,N.B4],     d:4 },
+        { b:N.F3, c:[N.F4,N.A4,N.C5],      d:4 },
+        { b:N.G3, c:[N.G4,N.B4,N.D5],      d:4 }
+      ]
+    },
+    forest: {
+      bpm: 108, wave: 'sine',
+      steps: [
+        { b:N.G3, c:[N.G4,N.B4,N.D5],      d:4 },
+        { b:N.C3, c:[N.C4,N.E4,N.G4],      d:4 },
+        { b:N.A3, c:[N.A4,N.C5,N.E5],      d:4 },
+        { b:N.D3, c:[N.D4,N.Gb4,N.A4],     d:4 }
+      ]
     }
   };
 
