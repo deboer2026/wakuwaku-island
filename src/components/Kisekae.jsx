@@ -174,55 +174,121 @@ export function PrincessSVG({ state }) {
 
   return (
     <svg className="ksk-svg" viewBox="0 0 72 114" xmlns="http://www.w3.org/2000/svg">
-      {/* スカート */}
-      <ellipse cx="36" cy="93" rx="27" ry="21" fill={dress.c1}/>
-      <polygon points="36,60 11,104 61,104" fill={dress.c2}/>
-      <ellipse cx="28" cy="81" rx="6" ry="12" fill="rgba(255,255,255,0.2)"/>
-      {/* リボン */}
-      <circle cx="36" cy="60" r="3" fill={dress.c2}/>
-      <path d="M33,58 Q36,54 39,58" fill={dress.c2} stroke="none"/>
-      {/* ボディ */}
-      <rect x="28" y="53" width="16" height="15" rx="5" fill="#FFCCBC"/>
-      {/* 首 */}
-      <rect x="33" y="47" width="6" height="10" rx="3" fill="#FFCCBC"/>
-      {/* 顔 */}
+      <defs>
+        <linearGradient id="psSkirt" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stopColor={dress.c2}/>
+          <stop offset="55%" stopColor={dress.c1}/>
+          <stop offset="100%" stopColor={dress.c1}/>
+        </linearGradient>
+        <linearGradient id="psDrape" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%"  stopColor="#ffffff" stopOpacity="0.5"/>
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0.05"/>
+        </linearGradient>
+        <linearGradient id="psHair" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stopColor={dress.hair}/>
+          <stop offset="100%" stopColor={dress.hair} stopOpacity="0.82"/>
+        </linearGradient>
+        <linearGradient id="psGold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFE58A"/>
+          <stop offset="100%" stopColor="#E6A700"/>
+        </linearGradient>
+        <radialGradient id="psIris" cx="0.4" cy="0.35" r="0.8">
+          <stop offset="0%" stopColor="#7A5238"/>
+          <stop offset="100%" stopColor="#3B2416"/>
+        </radialGradient>
+      </defs>
+
+      {/* ── ボールガウン(釣鐘型スカート) ── */}
+      <path d="M36,58 C25,64 13,79 11,102 Q13,106 18,105 Q22,108 28,106 Q32,109 36,107 Q40,109 44,106 Q50,108 54,105 Q59,106 61,102 C59,79 47,64 36,58 Z" fill="url(#psSkirt)"/>
+      {/* オーバースカートのドレープ */}
+      <path d="M36,60 C29,66 21,78 19,99 Q30,88 36,86 Q42,88 53,99 C51,78 43,66 36,60 Z" fill="url(#psDrape)"/>
+      {/* 裾レース(スカラップ) */}
+      <path d="M12,101 Q15,97 18,101 Q21,97 25,101 Q28,97 32,101 Q35,97 39,101 Q43,97 46,101 Q50,97 53,101 Q56,97 60,101 L61,104 Q48,108 36,108 Q24,108 11,104 Z" fill="#fff" opacity="0.85"/>
+      {/* スカートのきらめき */}
+      <circle cx="25" cy="84" r="1.1" fill="#fff" opacity="0.8"/>
+      <circle cx="45" cy="90" r="1.3" fill="#fff" opacity="0.7"/>
+      <circle cx="33" cy="96" r="1"   fill="#fff" opacity="0.75"/>
+      <circle cx="51" cy="78" r="0.9" fill="#fff" opacity="0.65"/>
+
+      {/* ── ウエストとサッシュリボン ── */}
+      <path d="M28,58 Q36,62 44,58 L44,62 Q36,66 28,62 Z" fill="url(#psGold)"/>
+      <path d="M33,61 Q30,55 26,58 Q29,63 33,63 Z" fill={dress.c2}/>
+      <path d="M39,61 Q42,55 46,58 Q43,63 39,63 Z" fill={dress.c2}/>
+      <circle cx="36" cy="61" r="2.4" fill="url(#psGold)" stroke="#C98F00" strokeWidth="0.5"/>
+
+      {/* ── ボディス(上身頃) ── */}
+      <path d="M28,50 Q36,47 44,50 L44,59 Q36,63 28,59 Z" fill={dress.c1}/>
+      <path d="M29,50 L36,58 L43,50" stroke="rgba(255,255,255,0.45)" strokeWidth="1" fill="none"/>
+      {/* パフスリーブ+腕(グローブ) */}
+      <ellipse cx="25" cy="53" rx="4.5" ry="5" fill={dress.c2}/>
+      <ellipse cx="47" cy="53" rx="4.5" ry="5" fill={dress.c2}/>
+      <path d="M23,57 Q19,64 21,71" stroke="#fff" strokeWidth="4.2" fill="none" strokeLinecap="round"/>
+      <path d="M49,57 Q53,64 51,71" stroke="#fff" strokeWidth="4.2" fill="none" strokeLinecap="round"/>
+
+      {/* ── 首・ネックレス ── */}
+      <rect x="33" y="46" width="6" height="8" rx="3" fill="#FFCCBC"/>
+      <path d="M31,51 Q36,55 41,51" stroke="url(#psGold)" strokeWidth="1.2" fill="none"/>
+      <circle cx="36" cy="54.5" r="1.6" fill="#FF6FA5" stroke="#C98F00" strokeWidth="0.5"/>
+
+      {/* ── 顔 ── */}
       <circle cx="36" cy="37" r="17" fill="#FFE0B2"/>
-      {/* 髪(後ろ) */}
-      <ellipse cx="36" cy="27" rx="18" ry="14" fill={dress.hair}/>
-      <ellipse cx="19" cy="39" rx="7.5" ry="12" fill={dress.hair}/>
-      <ellipse cx="53" cy="39" rx="7.5" ry="12" fill={dress.hair}/>
-      {/* かんむり */}
+      {/* 髪(後ろ+サイドの巻き髪) */}
+      <ellipse cx="36" cy="27" rx="18" ry="14" fill="url(#psHair)"/>
+      <path d="M18,32 C14,42 17,50 21,53 C24,49 24,40 23,34 Z" fill="url(#psHair)"/>
+      <path d="M54,32 C58,42 55,50 51,53 C48,49 48,40 49,34 Z" fill="url(#psHair)"/>
+      <circle cx="21.5" cy="50" r="3.4" fill="url(#psHair)"/>
+      <circle cx="50.5" cy="50" r="3.4" fill="url(#psHair)"/>
+      {/* 前髪ハイライト */}
+      <path d="M25,22 Q30,17 36,17" stroke="rgba(255,255,255,0.5)" strokeWidth="1.6" fill="none" strokeLinecap="round"/>
+
+      {/* ── ティアラ ── */}
       {crown?.emoji
         ? <text x="36" y="20" fontSize="15" textAnchor="middle" dominantBaseline="middle">{crown.emoji}</text>
         : <>
-            <polygon points="21,24 27,15 32,22 36,13 40,22 45,15 51,24" fill="#FFD700" stroke="#FFA000" strokeWidth="1"/>
-            <circle cx="36" cy="14" r="3.5" fill="#FF1744"/>
-            <circle cx="22" cy="24" r="1.5" fill="#FFAB40"/>
-            <circle cx="50" cy="24" r="1.5" fill="#FFAB40"/>
+            <path d="M24,22 Q36,17 48,22 L47,25 Q36,21 25,25 Z" fill="url(#psGold)" stroke="#C98F00" strokeWidth="0.6"/>
+            <path d="M30,21 L31.5,15 L34,20 Z" fill="url(#psGold)" stroke="#C98F00" strokeWidth="0.5"/>
+            <path d="M34.5,19.5 L36,12 L37.5,19.5 Z" fill="url(#psGold)" stroke="#C98F00" strokeWidth="0.5"/>
+            <path d="M38,20 L40.5,15 L42,21 Z" fill="url(#psGold)" stroke="#C98F00" strokeWidth="0.5"/>
+            <circle cx="36" cy="13.5" r="2.2" fill="#FF4E8B"/>
+            <circle cx="35.4" cy="12.9" r="0.7" fill="#fff" opacity="0.9"/>
+            <circle cx="31.5" cy="16.5" r="1.2" fill="#69D2FF"/>
+            <circle cx="40.5" cy="16.5" r="1.2" fill="#69D2FF"/>
+            <circle cx="27" cy="22.5" r="0.9" fill="#fff"/>
+            <circle cx="45" cy="22.5" r="0.9" fill="#fff"/>
           </>
       }
-      {/* 目 */}
-      <circle cx="29.5" cy="36" r="4.2" fill="#4A2E20"/>
-      <circle cx="42.5" cy="36" r="4.2" fill="#4A2E20"/>
-      <circle cx="31"   cy="34.5" r="1.6" fill="#fff"/>
-      <circle cx="44"   cy="34.5" r="1.6" fill="#fff"/>
-      {/* まつ毛 */}
-      <path d="M26.5,32 L25,30" stroke="#4A2E20" strokeWidth="1.1" strokeLinecap="round"/>
-      <path d="M29,31 L28,29" stroke="#4A2E20" strokeWidth="1.1" strokeLinecap="round"/>
-      <path d="M44,31 L43,29" stroke="#4A2E20" strokeWidth="1.1" strokeLinecap="round"/>
-      <path d="M46.5,32 L48,30" stroke="#4A2E20" strokeWidth="1.1" strokeLinecap="round"/>
+
+      {/* ── 目(グラデ虹彩+二重ハイライト) ── */}
+      <ellipse cx="29.5" cy="36" rx="4.2" ry="4.6" fill="url(#psIris)"/>
+      <ellipse cx="42.5" cy="36" rx="4.2" ry="4.6" fill="url(#psIris)"/>
+      <circle cx="31"   cy="34.2" r="1.7" fill="#fff"/>
+      <circle cx="44"   cy="34.2" r="1.7" fill="#fff"/>
+      <circle cx="28.3" cy="37.5" r="0.8" fill="#fff" opacity="0.8"/>
+      <circle cx="41.3" cy="37.5" r="0.8" fill="#fff" opacity="0.8"/>
+      {/* まつ毛(長め) */}
+      <path d="M25.8,32.5 L23.8,30.2" stroke="#4A2E20" strokeWidth="1.2" strokeLinecap="round"/>
+      <path d="M28.2,31.2 L27,28.8"   stroke="#4A2E20" strokeWidth="1.2" strokeLinecap="round"/>
+      <path d="M31.2,30.8 L30.8,28.4" stroke="#4A2E20" strokeWidth="1.1" strokeLinecap="round"/>
+      <path d="M40.8,30.8 L41.2,28.4" stroke="#4A2E20" strokeWidth="1.1" strokeLinecap="round"/>
+      <path d="M43.8,31.2 L45,28.8"   stroke="#4A2E20" strokeWidth="1.2" strokeLinecap="round"/>
+      <path d="M46.2,32.5 L48.2,30.2" stroke="#4A2E20" strokeWidth="1.2" strokeLinecap="round"/>
       {/* 口 */}
-      <path d="M30.5,44 Q36,49.5 41.5,44" stroke="#E91E63" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+      <path d="M31.5,44 Q36,48.8 40.5,44" stroke="#E91E63" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
       {/* 頬 */}
-      <ellipse cx="22" cy="41" rx="5.5" ry="3.5" fill="#FFB3C1" opacity="0.55"/>
-      <ellipse cx="50" cy="41" rx="5.5" ry="3.5" fill="#FFB3C1" opacity="0.55"/>
+      <ellipse cx="22.5" cy="41" rx="5" ry="3.2" fill="#FFB3C1" opacity="0.6"/>
+      <ellipse cx="49.5" cy="41" rx="5" ry="3.2" fill="#FFB3C1" opacity="0.6"/>
+      {/* イヤリング */}
+      <circle cx="19.5" cy="42.5" r="1.4" fill="url(#psGold)"/>
+      <circle cx="52.5" cy="42.5" r="1.4" fill="url(#psGold)"/>
+
       {/* アクセサリ */}
       {acc?.emoji && <text x="36" y="52" fontSize="9" textAnchor="middle" dominantBaseline="middle">{acc.emoji}</text>}
       {/* こもの */}
       {item?.emoji && <text x="63" y="71" fontSize="12" textAnchor="middle" dominantBaseline="middle">{item.emoji}</text>}
-      {/* くつ */}
-      <ellipse cx="29" cy="110" rx="6" ry="3.2" fill={dress.c2}/>
-      <ellipse cx="43" cy="110" rx="6" ry="3.2" fill={dress.c2}/>
+
+      {/* きらめき */}
+      <path d="M12,60 l1.2,2.6 2.6,1.2 -2.6,1.2 -1.2,2.6 -1.2,-2.6 -2.6,-1.2 2.6,-1.2 Z" fill="#fff" opacity="0.85"/>
+      <path d="M60,66 l0.9,2 2,0.9 -2,0.9 -0.9,2 -0.9,-2 -2,-0.9 2,-0.9 Z" fill="#FFE58A" opacity="0.9"/>
     </svg>
   );
 }
@@ -239,59 +305,121 @@ export function PrinceSVG({ state }) {
 
   return (
     <svg className="ksk-svg" viewBox="0 0 72 114" xmlns="http://www.w3.org/2000/svg">
-      {/* マント */}
-      <path d="M18,55 Q7,74 11,97" stroke={dress.c2} strokeWidth="5" fill="none" strokeLinecap="round" opacity="0.65"/>
-      <path d="M54,55 Q65,74 61,97" stroke={dress.c2} strokeWidth="5" fill="none" strokeLinecap="round" opacity="0.65"/>
-      {/* ズボン */}
-      <rect x="23" y="74" width="11" height="29" rx="4" fill={dress.c2}/>
-      <rect x="38" y="74" width="11" height="29" rx="4" fill={dress.c2}/>
-      {/* 上着 */}
-      <rect x="18" y="52" width="36" height="27" rx="7" fill={dress.c1}/>
-      <rect x="20" y="54" width="13" height="17" rx="5" fill="rgba(255,255,255,0.15)"/>
-      {/* ボタン */}
-      <circle cx="36" cy="57" r="1.3" fill="rgba(255,255,255,0.7)"/>
-      <circle cx="36" cy="62" r="1.3" fill="rgba(255,255,255,0.7)"/>
-      <circle cx="36" cy="67" r="1.3" fill="rgba(255,255,255,0.7)"/>
-      {/* ボディ */}
-      <rect x="28" y="50" width="16" height="10" rx="3" fill="#FFCCBC"/>
-      {/* 首 */}
-      <rect x="33" y="43" width="6" height="11" rx="3" fill="#FFCCBC"/>
-      {/* 顔 */}
+      <defs>
+        <linearGradient id="prCape" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stopColor={dress.c2}/>
+          <stop offset="100%" stopColor={dress.c2} stopOpacity="0.78"/>
+        </linearGradient>
+        <linearGradient id="prCoat" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stopColor={dress.c1}/>
+          <stop offset="100%" stopColor={dress.c1} stopOpacity="0.85"/>
+        </linearGradient>
+        <linearGradient id="prHair" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stopColor={dress.hair}/>
+          <stop offset="100%" stopColor={dress.hair} stopOpacity="0.85"/>
+        </linearGradient>
+        <linearGradient id="prGold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFE58A"/>
+          <stop offset="100%" stopColor="#E6A700"/>
+        </linearGradient>
+        <radialGradient id="prIris" cx="0.4" cy="0.35" r="0.8">
+          <stop offset="0%" stopColor="#553B22"/>
+          <stop offset="100%" stopColor="#241708"/>
+        </radialGradient>
+      </defs>
+
+      {/* ── マント(流れる形+金縁) ── */}
+      <path d="M20,52 C10,64 6,84 9,100 Q17,104 24,100 L24,74 Q21,62 24,54 Z" fill="url(#prCape)"/>
+      <path d="M52,52 C62,64 66,84 63,100 Q55,104 48,100 L48,74 Q51,62 48,54 Z" fill="url(#prCape)"/>
+      <path d="M9,100 Q17,104 24,100" stroke="url(#prGold)" strokeWidth="1.6" fill="none"/>
+      <path d="M63,100 Q55,104 48,100" stroke="url(#prGold)" strokeWidth="1.6" fill="none"/>
+
+      {/* ── ズボン ── */}
+      <rect x="23" y="74" width="11" height="28" rx="4" fill={dress.c2}/>
+      <rect x="38" y="74" width="11" height="28" rx="4" fill={dress.c2}/>
+      <path d="M28.5,76 L28.5,98" stroke="rgba(255,255,255,0.25)" strokeWidth="1.2"/>
+      <path d="M43.5,76 L43.5,98" stroke="rgba(255,255,255,0.25)" strokeWidth="1.2"/>
+
+      {/* ── 上着(ロイヤルコート) ── */}
+      <path d="M20,54 Q36,49 52,54 L52,76 Q36,80 20,76 Z" fill="url(#prCoat)"/>
+      {/* 金トリム縁取り */}
+      <path d="M20,54 Q36,49 52,54" stroke="url(#prGold)" strokeWidth="1.4" fill="none"/>
+      <path d="M36,52 L36,78" stroke="url(#prGold)" strokeWidth="1.2"/>
+      {/* エポーレット(肩章)+フリンジ */}
+      <ellipse cx="21" cy="54.5" rx="5" ry="3" fill="url(#prGold)" stroke="#C98F00" strokeWidth="0.5"/>
+      <ellipse cx="51" cy="54.5" rx="5" ry="3" fill="url(#prGold)" stroke="#C98F00" strokeWidth="0.5"/>
+      <path d="M17,56 L17,60 M19.5,57 L19.5,61 M22.5,57 L22.5,61" stroke="#E6A700" strokeWidth="1" strokeLinecap="round"/>
+      <path d="M49.5,57 L49.5,61 M52.5,57 L52.5,61 M55,56 L55,60" stroke="#E6A700" strokeWidth="1" strokeLinecap="round"/>
+      {/* サッシュ(斜めたすき)+勲章 */}
+      <path d="M23,55 L47,74 L44,77 L20,58 Z" fill="#fff" opacity="0.85"/>
+      <path d="M23,55 L47,74" stroke="url(#prGold)" strokeWidth="0.8" opacity="0.7"/>
+      <circle cx="42" cy="70" r="2.6" fill="url(#prGold)" stroke="#C98F00" strokeWidth="0.6"/>
+      <path d="M42,68 l0.6,1.2 1.3,0.2 -0.95,0.9 0.25,1.3 -1.2,-0.6 -1.2,0.6 0.25,-1.3 -0.95,-0.9 1.3,-0.2 Z" fill="#fff" opacity="0.9"/>
+      {/* 金ボタン */}
+      <circle cx="31" cy="60" r="1.4" fill="url(#prGold)"/>
+      <circle cx="31" cy="66" r="1.4" fill="url(#prGold)"/>
+      <circle cx="31" cy="72" r="1.4" fill="url(#prGold)"/>
+      {/* 立ち襟 */}
+      <path d="M28,51 L33,54 L33,49 Z" fill={dress.c2}/>
+      <path d="M44,51 L39,54 L39,49 Z" fill={dress.c2}/>
+
+      {/* ── 首 ── */}
+      <rect x="33" y="43" width="6" height="10" rx="3" fill="#FFCCBC"/>
+
+      {/* ── 顔 ── */}
       <circle cx="36" cy="33" r="17" fill="#FFE0B2"/>
       {/* 髪 */}
-      <ellipse cx="36" cy="23" rx="18" ry="13" fill={dress.hair}/>
-      <ellipse cx="19" cy="33" rx="6"  ry="10" fill={dress.hair}/>
-      <ellipse cx="53" cy="33" rx="6"  ry="10" fill={dress.hair}/>
-      {/* かんむり */}
+      <ellipse cx="36" cy="23" rx="18" ry="13" fill="url(#prHair)"/>
+      <path d="M18,28 C16,36 18,41 21,44 C23,40 23,33 22,29 Z" fill="url(#prHair)"/>
+      <path d="M54,28 C56,36 54,41 51,44 C49,40 49,33 50,29 Z" fill="url(#prHair)"/>
+      {/* 前髪の流れ */}
+      <path d="M26,18 Q31,14 37,15" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+      <path d="M40,15 Q45,15 48,18" stroke="rgba(255,255,255,0.25)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+
+      {/* ── 王冠 ── */}
       {crown?.emoji
         ? <text x="36" y="16" fontSize="15" textAnchor="middle" dominantBaseline="middle">{crown.emoji}</text>
         : <>
-            <polygon points="21,21 27,12 32,19 36,10 40,19 45,12 51,21" fill="#FFD700" stroke="#FFA000" strokeWidth="1"/>
-            <circle cx="36" cy="11" r="3.5" fill="#2196F3"/>
-            <circle cx="22" cy="21" r="1.5" fill="#FFAB40"/>
-            <circle cx="50" cy="21" r="1.5" fill="#FFAB40"/>
+            <path d="M24,21 L26,11 L31,17 L36,9 L41,17 L46,11 L48,21 Q36,17.5 24,21 Z" fill="url(#prGold)" stroke="#C98F00" strokeWidth="0.7"/>
+            <path d="M24.5,21 Q36,17.5 47.5,21 L47.5,23.5 Q36,20 24.5,23.5 Z" fill="url(#prGold)" stroke="#C98F00" strokeWidth="0.5"/>
+            <circle cx="36" cy="10.5" r="2.4" fill="#2196F3"/>
+            <circle cx="35.3" cy="9.8" r="0.8" fill="#fff" opacity="0.9"/>
+            <circle cx="26.5" cy="12.5" r="1.2" fill="#FF4E8B"/>
+            <circle cx="45.5" cy="12.5" r="1.2" fill="#FF4E8B"/>
+            <circle cx="30" cy="21" r="0.9" fill="#fff"/>
+            <circle cx="42" cy="21" r="0.9" fill="#fff"/>
           </>
       }
-      {/* 目 */}
-      <circle cx="29.5" cy="32" r="4.2" fill="#2E1F0E"/>
-      <circle cx="42.5" cy="32" r="4.2" fill="#2E1F0E"/>
-      <circle cx="31"   cy="30.5" r="1.6" fill="#fff"/>
-      <circle cx="44"   cy="30.5" r="1.6" fill="#fff"/>
-      {/* 眉 */}
-      <path d="M26,27 Q29.5,24.5 33,27" stroke={eyebrowColor} strokeWidth="1.8" fill="none" strokeLinecap="round"/>
-      <path d="M39,27 Q42.5,24.5 46,27" stroke={eyebrowColor} strokeWidth="1.8" fill="none" strokeLinecap="round"/>
-      {/* 口 */}
-      <path d="M30.5,40 Q36,44 41.5,40" stroke="#BF8A7A" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+
+      {/* ── 目 ── */}
+      <ellipse cx="29.5" cy="32" rx="4" ry="4.4" fill="url(#prIris)"/>
+      <ellipse cx="42.5" cy="32" rx="4" ry="4.4" fill="url(#prIris)"/>
+      <circle cx="31"   cy="30.3" r="1.6" fill="#fff"/>
+      <circle cx="44"   cy="30.3" r="1.6" fill="#fff"/>
+      <circle cx="28.4" cy="33.4" r="0.7" fill="#fff" opacity="0.8"/>
+      <circle cx="41.4" cy="33.4" r="0.7" fill="#fff" opacity="0.8"/>
+      {/* 眉(凛々しく) */}
+      <path d="M25.5,27 Q29.5,24.8 33.5,26.8" stroke={eyebrowColor} strokeWidth="2" fill="none" strokeLinecap="round"/>
+      <path d="M38.5,26.8 Q42.5,24.8 46.5,27" stroke={eyebrowColor} strokeWidth="2" fill="none" strokeLinecap="round"/>
+      {/* 口(にこやか) */}
+      <path d="M31,40 Q36,44.5 41,40" stroke="#BF8A7A" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
       {/* 頬 */}
-      <ellipse cx="22" cy="36" rx="5" ry="3.2" fill="#FFB3C1" opacity="0.3"/>
-      <ellipse cx="50" cy="36" rx="5" ry="3.2" fill="#FFB3C1" opacity="0.3"/>
+      <ellipse cx="22.5" cy="36" rx="4.6" ry="3" fill="#FFB3C1" opacity="0.35"/>
+      <ellipse cx="49.5" cy="36" rx="4.6" ry="3" fill="#FFB3C1" opacity="0.35"/>
+
       {/* アクセサリ */}
       {acc?.emoji && <text x="36" y="47" fontSize="9" textAnchor="middle" dominantBaseline="middle">{acc.emoji}</text>}
       {/* こもの */}
       {item?.emoji && <text x="9" y="67" fontSize="12" textAnchor="middle" dominantBaseline="middle">{item.emoji}</text>}
-      {/* くつ */}
-      <rect x="20" y="101" width="14" height="7" rx="3.5" fill={dress.c2}/>
-      <rect x="38" y="101" width="14" height="7" rx="3.5" fill={dress.c2}/>
+
+      {/* ── ブーツ(金カフ付き) ── */}
+      <rect x="20" y="100" width="14" height="8" rx="3.5" fill={dress.c2}/>
+      <rect x="38" y="100" width="14" height="8" rx="3.5" fill={dress.c2}/>
+      <rect x="20" y="100" width="14" height="2.4" rx="1.2" fill="url(#prGold)"/>
+      <rect x="38" y="100" width="14" height="2.4" rx="1.2" fill="url(#prGold)"/>
+
+      {/* きらめき */}
+      <path d="M60,56 l1,2.2 2.2,1 -2.2,1 -1,2.2 -1,-2.2 -2.2,-1 2.2,-1 Z" fill="#FFE58A" opacity="0.9"/>
     </svg>
   );
 }
