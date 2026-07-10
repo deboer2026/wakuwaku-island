@@ -57,6 +57,43 @@ const MASCOT_LINES = {
    ゲームSVGイラスト（SNES風）
 ════════════════════════════════════════════════════ */
 const GAME_SVGS = {
+  g_otakara: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="100" height="85" fill="#aee9ff"/>
+      <circle cx="20" cy="14" r="6" fill="#fff" opacity=".8"/>
+      <circle cx="28" cy="16" r="8" fill="#fff" opacity=".8"/>
+      <rect x="0" y="34" width="100" height="51" fill="#8a5a30"/>
+      <rect x="0" y="34" width="100" height="6" fill="#a06c3c"/>
+      <rect x="8" y="46" width="20" height="30" rx="3" fill="#151c2b"/>
+      <g stroke="#e6b84c" strokeWidth="2" strokeLinecap="round">
+        <line x1="60" y1="40" x2="60" y2="80"/>
+        <line x1="70" y1="40" x2="70" y2="80"/>
+        <line x1="60" y1="48" x2="70" y2="48"/>
+        <line x1="60" y1="58" x2="70" y2="58"/>
+        <line x1="60" y1="68" x2="70" y2="68"/>
+      </g>
+      <g transform="translate(84 58)">
+        <path d="M 0 -9 L 7 -2 L 0 10 L -7 -2 Z" fill="#3fc9dc"/>
+        <path d="M 0 -9 L 7 -2 L 0 -0.5 L -7 -2 Z" fill="#a8f0f8"/>
+      </g>
+      <g transform="translate(38 56)">
+        <circle cx="-6" cy="-8" r="4" fill="#f2d4a0"/>
+        <circle cx="6" cy="-8" r="4" fill="#f2d4a0"/>
+        <circle cx="-6" cy="-8" r="2" fill="#e79aa0"/>
+        <circle cx="6" cy="-8" r="2" fill="#e79aa0"/>
+        <circle cx="0" cy="0" r="11" fill="#f2d4a0"/>
+        <circle cx="-5" cy="4" r="5" fill="#f9edd2"/>
+        <circle cx="5" cy="4" r="5" fill="#f9edd2"/>
+        <circle cx="-4" cy="-1" r="1.6" fill="#3a2a1a"/>
+        <circle cx="4" cy="-1" r="1.6" fill="#3a2a1a"/>
+        <circle cx="0" cy="3" r="1.5" fill="#c96a6a"/>
+      </g>
+      <g transform="translate(56 40) rotate(20)">
+        <line x1="0" y1="0" x2="0" y2="14" stroke="#8a5a30" strokeWidth="2.4"/>
+        <path d="M -9 -2 Q 0 -6 9 -2" stroke="#c9d1dc" strokeWidth="3" fill="none" strokeLinecap="round"/>
+      </g>
+    </svg>
+  ),
   g_mahounakama: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
       <rect x="0" y="0" width="100" height="85" fill="#d9ecff"/>
@@ -1064,6 +1101,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'魔法伙伴小队',        desc:'用魔法棒轻轻一点，\n把怪物变成伙伴！' },
     ko:{ name:'마법 친구 부대',      desc:'마법 지팡이로 콩!\n몬스터를 친구로 만들자!' },
     es:{ name:'Escuadrón Mágico',    desc:'¡Toca monstruos con tu varita\ny hazlos tus amigos!' } },
+  { id:'g_otakara', route:'/otakara-horihori', icon:'⛏️', num:19, color:'#b06a3b', stars:4, isNew:true, category:'アクション',
+    ja:{ name:'おたからほりほり', desc:'じめんをほって おたからを\nあつめよう！' },
+    en:{ name:'Treasure Digger',   desc:'Dig the ground and\ncollect the treasures!' },
+    zh:{ name:'挖挖小宝藏',        desc:'挖开地面，\n收集所有宝藏！' },
+    ko:{ name:'보물 파기',          desc:'땅을 파서\n보물을 모아요!' },
+    es:{ name:'Cava Tesoros',      desc:'¡Cava la tierra y\nrecoge los tesoros!' } },
   { id:'g_okashi', route:'/okashi-crossing', icon:'🍭', num:16, color:'#ff9ecb', stars:4, isNew:true, category:'アクション',
     ja:{ name:'おかしのくにたんけん', desc:'グミのくるまとチョコのかわ！\nどこまでもすすもう！' },
     en:{ name:'Candy Land Explorer',  desc:'Cross gummy roads and\nchocolate rivers—go far!' },

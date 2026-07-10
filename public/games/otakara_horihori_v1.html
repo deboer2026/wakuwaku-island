@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>おたからほりほり｜わくわくアイランド</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/safe_area.js"></script>
+<style>
+  :root{
+    --sky1:#5ecbf7; --sky2:#aee9ff;
+    --night:#1b2550;
+    --card:#ffffff;
+    --accent:#b06a3b;
+    --accent-dark:#7d4623;
+    --good:#4caf50;
+    --bad:#ef5350;
+    --star:#ffc93c;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none;}
+  html,body{margin:0; padding:0;}
+  body{
+    font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN",sans-serif;
+    background:linear-gradient(180deg,var(--sky1),var(--sky2) 55%,#e8d9b8);
+    min-height:100vh;
+    color:var(--night);
+    display:flex; flex-direction:column; align-items:center;
+    overflow-x:hidden;
+    touch-action:manipulation;
+  }
+  .cloud{position:fixed; font-size:40px; opacity:.85; animation:drift 50s linear infinite; pointer-events:none; z-index:0;}
+  @keyframes drift{from{transform:translateX(-15vw);}to{transform:translateX(115vw);}}
+  @media (prefers-reduced-motion: reduce){.cloud{animation:none;}}
+
+  .wrap{width:100%; max-width:480px; padding:max(12px,var(--sat,0px)) 14px max(12px,var(--sab,0px)); position:relative; z-index:1;}
+  /* トップバー（もどる・BGM） */
+  .topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;}
+  .icon-btn{background:rgba(27,37,80,.12); border:none; border-radius:50%; width:38px; height:38px; font-size:18px; font-weight:900; color:var(--night); display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .icon-btn:active{transform:translateY(2px);}
+  header{text-align:center; margin:4px 0;}
+  header .badge{display:inline-block; background:var(--night); color:#fff; border-radius:999px; padding:3px 14px; font-size:12px; font-weight:700; letter-spacing:.1em;}
+  h1{margin:4px 0 0; font-size:26px; font-weight:900; text-shadow:0 2px 0 rgba(255,255,255,.6);}
+  h1 .em{color:var(--accent);}
+  .sub{font-size:12px; font-weight:700; margin:2px 0 0; opacity:.8;}
+
+  .panel{background:var(--card); border-radius:22px; padding:16px; box-shadow:0 8px 0 rgba(27,37,80,.15); margin-top:10px;}
+  .hidden{display:none !important;}
+  button{font-family:inherit; cursor:pointer; border:none;}
+  button:focus-visible{outline:4px solid #1b63ff; outline-offset:2px;}
+
+  /* スタート */
+  .start{text-align:center;}
+  .start .hero{font-size:56px; margin:4px 0;}
+  .start p{font-size:14px; font-weight:700; line-height:1.8; margin:6px 0;}
+  .rule{background:#fdf2e3; border:2px dashed var(--accent); border-radius:14px; padding:10px 12px; font-size:13px; font-weight:700; text-align:left; margin-top:8px; line-height:1.9;}
+  .big-btn{display:block; width:100%; margin-top:14px; background:var(--accent); color:#fff; border:3px solid var(--accent-dark); border-radius:18px; padding:15px 0; font-size:19px; font-weight:900; box-shadow:0 5px 0 var(--accent-dark);}
+  .big-btn:active{transform:translateY(3px); box-shadow:0 2px 0 var(--accent-dark);}
+
+  /* ゲーム */
+  #screen-game{padding:12px;}
+  .hud{display:flex; justify-content:space-between; align-items:center; font-weight:900; font-size:14px; margin-bottom:8px;}
+  .hud .gold{color:#b8860b;}
+  canvas{display:block; margin:0 auto; border-radius:14px; background:#243043; box-shadow:inset 0 0 0 3px rgba(0,0,0,.25);}
+  .msg-layer{position:relative; height:0;}
+  .msg{
+    position:absolute; left:50%; transform:translate(-50%,-50%); top:-140px;
+    background:rgba(27,37,80,.92); color:#fff; font-weight:900; font-size:22px;
+    padding:14px 26px; border-radius:16px; white-space:nowrap; pointer-events:none;
+    opacity:0; transition:opacity .25s;
+  }
+  .msg.show{opacity:1;}
+
+  /* コントローラ */
+  .controls{display:flex; justify-content:space-between; align-items:center; margin-top:12px; gap:8px;}
+  .dpad{display:grid; grid-template-columns:repeat(3,52px); grid-template-rows:repeat(2,52px); gap:6px;}
+  .ctl{
+    background:#eef4ff; border:3px solid var(--night); border-radius:14px;
+    font-size:22px; font-weight:900; color:var(--night);
+    box-shadow:0 4px 0 var(--night);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ctl:active,.ctl.on{transform:translateY(3px); box-shadow:0 1px 0 var(--night); background:#dbe7ff;}
+  .digs{display:flex; flex-direction:column; gap:8px;}
+  .dig-btn{
+    background:#fdf2e3; border:3px solid var(--accent); color:var(--accent-dark);
+    border-radius:14px; font-size:15px; font-weight:900; padding:12px 10px;
+    box-shadow:0 4px 0 var(--accent-dark); white-space:nowrap;
+  }
+  .dig-btn:active{transform:translateY(3px); box-shadow:0 1px 0 var(--accent-dark);}
+  .u-up{grid-column:2;}
+  .u-left{grid-column:1; grid-row:2;}
+  .u-down{grid-column:2; grid-row:2;}
+  .u-right{grid-column:3; grid-row:2;}
+
+  /* けっか */
+  .result{text-align:center;}
+  .label{font-size:14px; font-weight:900; text-align:center;}
+  .result .stars{font-size:52px; letter-spacing:.1em; margin:10px 0;}
+  .result .stars .on{color:var(--star); text-shadow:0 2px 0 rgba(0,0,0,.1);}
+  .result .stars .off{color:#dfe4f0;}
+  .result .msg2{font-size:20px; font-weight:900;}
+  .result .detail{font-size:14px; font-weight:700; opacity:.75; margin-top:6px;}
+  footer{font-size:11px; font-weight:700; opacity:.6; text-align:center; margin:14px 0;}
+</style>
+</head>
+<body>
+<div class="cloud" style="top:5%; animation-duration:60s;">☁️</div>
+<div class="cloud" style="top:14%; animation-duration:42s; animation-delay:-15s;">☁️</div>
+
+<div class="wrap">
+  <div class="topbar">
+    <button class="icon-btn" id="backBtn" aria-label="もどる">◀</button>
+    <button class="icon-btn" id="bgmBtn" aria-label="BGM">🔊</button>
+  </div>
+  <header>
+    <span class="badge">パズルアクション</span>
+    <h1>⛏️ おたから<span class="em">ほりほり</span></h1>
+    <p class="sub">じめんをほって おたからを あつめよう！</p>
+  </header>
+
+  <!-- スタート -->
+  <section class="panel start" id="screen-start">
+    <div class="hero">🐹💎🦊</div>
+    <p>ハムスターの ほりほりくんが<br>ちかの おたからを あつめるよ！</p>
+    <div class="rule">
+      💎 おたからを ぜんぶ あつめたら クリア！<br>
+      ⛏️ ほりボタンで となりの じめんに あなを ほれるよ<br>
+      🦊 キツネを あなに おとして にげよう！<br>
+      ⏳ あなは しばらくすると もとに もどるよ
+    </div>
+    <button class="big-btn" id="startBtn">🚀 ぼうけんスタート！</button>
+  </section>
+
+  <!-- ゲーム -->
+  <section class="panel hidden" id="screen-game">
+    <div class="hud">
+      <span id="lvLabel">レベル 1</span>
+      <span class="gold">💎 <span id="goldNow">0</span>/<span id="goldAll">0</span></span>
+      <span id="lives">❤️❤️❤️</span>
+    </div>
+    <canvas id="cv"></canvas>
+    <div class="msg-layer"><div class="msg" id="msg"></div></div>
+    <div class="controls">
+      <div class="dpad">
+        <button class="ctl u-up"    data-dir="up"    aria-label="うえ">▲</button>
+        <button class="ctl u-left"  data-dir="left"  aria-label="ひだり">◀</button>
+        <button class="ctl u-down"  data-dir="down"  aria-label="した">▼</button>
+        <button class="ctl u-right" data-dir="right" aria-label="みぎ">▶</button>
+      </div>
+      <div class="digs">
+        <button class="dig-btn" id="digL">⛏️ ひだりを ほる</button>
+        <button class="dig-btn" id="digR">みぎを ほる ⛏️</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- けっか -->
+  <section class="panel hidden result" id="screen-result">
+    <p class="label">🏁 けっかはっぴょう！</p>
+    <div class="stars" id="stars"></div>
+    <p class="msg2" id="resultMsg"></p>
+    <p class="detail" id="resultDetail"></p>
+    <button class="big-btn" id="retryBtn">🔁 もういちど あそぶ</button>
+  </section>
+
+  <footer>わくわくアイランド｜おたからほりほり</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ========== レベルデータ ==========
+     '=' こわせない岩 / '#' ほれる土 / 'H' はしご
+     'G' おたから / 'P' プレイヤー / 'E' てき / '.' なにもない */
+  const LEVELS = [
+    { speed: 300, map: [
+      "============",
+      "=..........=",
+      "=.G......G.=",
+      "=#####H####=",
+      "=.....H....=",
+      "=.G...H..G.=",
+      "=###H######=",
+      "=...H......=",
+      "=.P.H...E.G=",
+      "=##########=",
+      "============"
+    ]},
+    { speed: 270, map: [
+      "============",
+      "=G........G=",
+      "=####H#####=",
+      "=....H.....=",
+      "=.G..H...G.=",
+      "=######H###=",
+      "=......H...=",
+      "=.E....H.P.=",
+      "=###H######=",
+      "=.G.H..E...=",
+      "============"
+    ]},
+    { speed: 240, map: [
+      "============",
+      "=..G.....G.=",
+      "=####H##=##=",
+      "=....H.....=",
+      "=.E..H..G..=",
+      "=#H########=",
+      "=.H........=",
+      "=.H..G...E.=",
+      "=######H###=",
+      "=..G...H.P.=",
+      "============"
+    ]}
+  ];
+
+  const COLS = 12, ROWS = 11;
+  const HOLE_MS = 4500;        // あなが もどるまで
+  const PLAYER_STEP = 150;     // プレイヤー1マスの間隔(ms)
+  const HIT_INVULN = 2500;
+
+  const $ = (id) => document.getElementById(id);
+  const cv = $("cv");
+  const ctx = cv.getContext("2d");
+
+  let TILE = 32;
+  let grid = [];           // 2次元配列（'=','#','H','.'）
+  let golds = new Set();   // "x,y"
+  let holes = new Map();   // "x,y" -> refill time
+  let player = null, enemies = [];
+  let level = 0, lives = 3, goldTotal = 0;
+  let running = false, lastPlayerMove = 0, invulnUntil = 0, enemyFreezeUntil = 0;
+  let held = { left:false, right:false, up:false, down:false };
+  let audioCtx = null;
+
+  /* ---------- localStorage（安全シム） ---------- */
+  const SAFE_LS = (function(){
+    try{ const t="__ww_t"; localStorage.setItem(t,t); localStorage.removeItem(t); return localStorage; }
+    catch(e){ const m={}; return {
+      getItem:(k)=> (k in m ? m[k] : null),
+      setItem:(k,v)=>{ m[k]=String(v); },
+      removeItem:(k)=>{ delete m[k]; }
+    }; }
+  })();
+  const BEST_KEY = "otakara_v1_best";
+  function loadBest(){ const v = parseInt(SAFE_LS.getItem(BEST_KEY), 10); return isNaN(v) ? 0 : v; }
+  function saveBest(s){ if(s > loadBest()) SAFE_LS.setItem(BEST_KEY, String(s)); }
+
+  /* ---------- BGM（共有ライブラリ） ---------- */
+  let _bgm = null;
+  function initBgm(){
+    if(_bgm) return;
+    if(typeof WakuwakuBGM !== "undefined"){
+      _bgm = new WakuwakuBGM("adventure");
+      const on = WakuwakuBGM.loadState(); _bgm.setEnabled(on); if(on) _bgm.start();
+    } else {
+      _bgm = { enabled:false, toggle(){return false;}, start(){}, stop(){}, setEnabled(){} };
+    }
+    syncBgm();
+  }
+  function toggleBgm(){
+    if(!_bgm){ initBgm(); return; }
+    const on = _bgm.toggle();
+    if(typeof WakuwakuBGM !== "undefined") WakuwakuBGM.saveState(on);
+    syncBgm();
+  }
+  function syncBgm(){ $("bgmBtn").textContent = (_bgm && _bgm.enabled) ? "🔊" : "🔇"; }
+  $("bgmBtn").addEventListener("click", toggleBgm);
+  $("backBtn").addEventListener("click", () => { try{ parent.postMessage({type:"goBack"}, "*"); }catch(e){} });
+
+  /* ---------- 効果音（単音合成） ---------- */
+  function beep(freq, dur, type, when, vol){
+    if(!audioCtx) return;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type || "sine";
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(vol || 0.13, audioCtx.currentTime + when);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + when + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(audioCtx.currentTime + when);
+    o.stop(audioCtx.currentTime + when + dur + 0.05);
+  }
+  function ensureAudio(){
+    if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  }
+  const seDig    = () => { beep(140,.12,"square",0,.1); beep(100,.15,"square",.05,.08); };
+  const seCoin   = () => { beep(880,.09,"sine",0); beep(1320,.14,"sine",.07); };
+  const seHurt   = () => { beep(200,.2,"sawtooth",0,.09); beep(140,.25,"sawtooth",.1,.09); };
+  const seTrap   = () => { beep(300,.1,"triangle",0,.1); beep(220,.15,"triangle",.08,.1); };
+  const seClear  = () => { [523,659,784,1047].forEach((f,i)=>beep(f,.2,"triangle",i*.12)); };
+  const seTap    = () => { beep(520,.06,"sine",0,.08); };
+
+  /* ---------- ユーティリティ ---------- */
+  const key = (x,y) => x + "," + y;
+  const cellAt = (x,y) => (grid[y] && grid[y][x]) || "=";
+  const isDug = (x,y) => holes.has(key(x,y));
+  function passable(x,y){
+    const c = cellAt(x,y);
+    if(c === "." || c === "H") return true;
+    if(c === "#" && isDug(x,y)) return true;
+    return false;
+  }
+  function supported(e){
+    if(cellAt(e.x, e.y) === "H") return true;
+    if(isDug(e.x, e.y)) return true;              // あなの中では下が土
+    const c = cellAt(e.x, e.y + 1);
+    if((c === "#" && !isDug(e.x, e.y+1)) || c === "=" || c === "H") return true;
+    return false;
+  }
+
+  /* ---------- レベル初期化 ---------- */
+  function loadLevel(idx){
+    const data = LEVELS[idx];
+    grid = []; golds = new Set(); holes = new Map(); enemies = [];
+    data.map.forEach((row, y) => {
+      const arr = [];
+      for(let x = 0; x < COLS; x++){
+        let c = row[x];
+        if(c === "G"){ golds.add(key(x,y)); c = "."; }
+        else if(c === "P"){ player = mkEntity(x,y); c = "."; }
+        else if(c === "E"){ enemies.push(mkEntity(x,y)); c = "."; }
+        arr.push(c);
+      }
+      grid.push(arr);
+    });
+    enemies.forEach(e => { e.sx = e.x; e.sy = e.y; e.step = data.speed; e.last = 0; });
+    goldTotal = golds.size;
+    enemyFreezeUntil = performance.now() + 1800;   // はじめは キツネが ちょっとまつ
+    $("goldAll").textContent = goldTotal;
+    $("goldNow").textContent = 0;
+    $("lvLabel").textContent = "レベル " + (idx+1);
+    updateLives();
+    flashMsg("レベル " + (idx+1) + "！", 1200);
+  }
+  function mkEntity(x,y){ return { x, y, rx:x, ry:y, sx:x, sy:y, dir:1 }; }
+
+  /* ---------- 入力 ---------- */
+  document.querySelectorAll(".ctl").forEach(btn => {
+    const dir = btn.dataset.dir;
+    const on  = (ev) => { ev.preventDefault(); ensureAudio(); held[dir] = true; btn.classList.add("on"); };
+    const off = (ev) => { ev.preventDefault(); held[dir] = false; btn.classList.remove("on"); };
+    btn.addEventListener("pointerdown", on);
+    btn.addEventListener("pointerup", off);
+    btn.addEventListener("pointerleave", off);
+    btn.addEventListener("pointercancel", off);
+  });
+  $("digL").addEventListener("pointerdown", (ev) => { ev.preventDefault(); ensureAudio(); dig(-1); });
+  $("digR").addEventListener("pointerdown", (ev) => { ev.preventDefault(); ensureAudio(); dig(1); });
+  window.addEventListener("keydown", (e) => {
+    ensureAudio();
+    if(e.key === "ArrowLeft") held.left = true;
+    if(e.key === "ArrowRight") held.right = true;
+    if(e.key === "ArrowUp") held.up = true;
+    if(e.key === "ArrowDown") held.down = true;
+    if(e.key === "z" || e.key === "Z") dig(-1);
+    if(e.key === "x" || e.key === "X") dig(1);
+  });
+  window.addEventListener("keyup", (e) => {
+    if(e.key === "ArrowLeft") held.left = false;
+    if(e.key === "ArrowRight") held.right = false;
+    if(e.key === "ArrowUp") held.up = false;
+    if(e.key === "ArrowDown") held.down = false;
+  });
+
+  /* ---------- ほる ---------- */
+  function dig(dx){
+    if(!running) return;
+    const tx = player.x + dx, ty = player.y + 1;
+    if(cellAt(tx, ty) !== "#" || isDug(tx, ty)) return;
+    if(!passable(tx, player.y) && cellAt(tx, player.y) !== ".") return; // あなの上がふさがってたらNG
+    holes.set(key(tx, ty), performance.now() + HOLE_MS);
+    player.dir = dx;
+    seDig();
+  }
+
+  /* ---------- プレイヤー移動 ---------- */
+  function stepPlayer(now){
+    if(now - lastPlayerMove < PLAYER_STEP) return;
+    let moved = false;
+    const p = player;
+
+    if(!supported(p) && passable(p.x, p.y + 1)){
+      p.y++; moved = true;                                   // らっか
+    } else if(held.up){
+      const canClimb = cellAt(p.x, p.y) === "H" || isDug(p.x, p.y);
+      if(canClimb && passable(p.x, p.y - 1)){ p.y--; moved = true; }
+    } else if(held.down){
+      if(passable(p.x, p.y + 1)){ p.y++; moved = true; }
+    } else if(held.left){
+      p.dir = -1;
+      if(passable(p.x - 1, p.y)){ p.x--; moved = true; }
+    } else if(held.right){
+      p.dir = 1;
+      if(passable(p.x + 1, p.y)){ p.x++; moved = true; }
+    }
+
+    if(moved){
+      lastPlayerMove = now;
+      const k = key(p.x, p.y);
+      if(golds.has(k)){
+        golds.delete(k);
+        $("goldNow").textContent = goldTotal - golds.size;
+        seCoin();
+        if(golds.size === 0) levelClear();
+      }
+    }
+  }
+
+  /* ---------- てき移動 ---------- */
+  function stepEnemy(e, now){
+    if(now < enemyFreezeUntil) return;             // よーい…の あいだは うごかない
+    if(now - e.last < e.step) return;
+    if(isDug(e.x, e.y)) return;                              // あなに はまってる
+    let moved = false;
+    if(!supported(e) && passable(e.x, e.y + 1)){
+      e.y++; moved = true;
+      if(isDug(e.x, e.y)) seTrap();
+    } else {
+      const p = player;
+      if(p.y < e.y && cellAt(e.x, e.y) === "H" && passable(e.x, e.y - 1)){
+        e.y--; moved = true;
+      } else if(p.y > e.y && passable(e.x, e.y + 1)){
+        e.y++; moved = true;
+      } else if(p.x !== e.x){
+        const dx = p.x > e.x ? 1 : -1;
+        if(passable(e.x + dx, e.y)){ e.x += dx; e.dir = dx; moved = true; }
+        else if(cellAt(e.x, e.y) === "H" && passable(e.x, e.y - 1)){ e.y--; moved = true; }
+      }
+    }
+    if(moved) e.last = now;
+  }
+
+  /* ---------- あなの もどり ---------- */
+  function refillHoles(now){
+    for(const [k, t] of holes){
+      if(now < t) continue;
+      holes.delete(k);
+      const [hx, hy] = k.split(",").map(Number);
+      enemies.forEach(e => {
+        if(e.x === hx && e.y === hy){ e.x = e.sx; e.y = e.sy; e.rx = e.sx; e.ry = e.sy; }
+      });
+      if(player.x === hx && player.y === hy) hitPlayer();
+    }
+  }
+
+  /* ---------- ダメージ・クリア ---------- */
+  function hitPlayer(){
+    const now = performance.now();
+    if(now < invulnUntil) return;
+    lives--;
+    updateLives();
+    seHurt();
+    if(lives <= 0){ gameOver(); return; }
+    invulnUntil = now + HIT_INVULN;
+    player.x = player.sx; player.y = player.sy;
+    /* キツネたちも スタートいちに もどして しきりなおし */
+    enemies.forEach(e => { e.x = e.sx; e.y = e.sy; e.rx = e.sx; e.ry = e.sy; });
+    enemyFreezeUntil = now + 2000;
+    flashMsg("いたた… 😵", 900);
+  }
+  function updateLives(){
+    $("lives").textContent = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 3 - lives));
+  }
+  function levelClear(){
+    running = false;
+    seClear();
+    flashMsg("クリア！ 🎉", 1400);
+    setTimeout(() => {
+      level++;
+      if(level >= LEVELS.length) showResult(true);
+      else { loadLevel(level); running = true; }
+    }, 1500);
+  }
+  function gameOver(){
+    running = false;
+    setTimeout(() => showResult(false), 800);
+  }
+
+  /* ---------- けっか ---------- */
+  function showResult(cleared){
+    show("screen-result");
+    const starCount = cleared ? Math.max(1, lives) : 0;
+    saveBest(starCount);
+    let html = "";
+    for(let i = 0; i < 3; i++) html += '<span class="' + (i < starCount ? "on" : "off") + '">★</span>';
+    $("stars").innerHTML = html;
+    $("resultMsg").textContent =
+      !cleared        ? "ざんねん！ また ちょうせんしてね 🐢" :
+      starCount === 3 ? "パーフェクト！ おたからマスター！ 🎉" :
+      starCount === 2 ? "クリア！ おみごと！ 💪" :
+                        "クリア！ よくがんばった！ 🌱";
+    $("resultDetail").textContent = (cleared
+      ? "ぜんぶの レベルを クリア！（のこり ❤️ × " + lives + "）"
+      : "レベル " + (level + 1) + " まで すすんだよ")
+      + "　｜　ベスト ★" + loadBest();
+    if(cleared) seClear();
+  }
+
+  /* ---------- メッセージ ---------- */
+  let msgTimer = null;
+  function flashMsg(text, ms){
+    const m = $("msg");
+    m.textContent = text;
+    m.classList.add("show");
+    clearTimeout(msgTimer);
+    msgTimer = setTimeout(() => m.classList.remove("show"), ms);
+  }
+
+  /* ---------- 描画 ---------- */
+  function resize(){
+    const w = Math.min(document.querySelector(".wrap").clientWidth - 24, 440);
+    TILE = Math.floor(w / COLS);
+    cv.width = TILE * COLS;
+    cv.height = TILE * ROWS;
+  }
+  window.addEventListener("resize", resize);
+
+  /* ---------- キャラ・アイテム（ベクター描画：iOS対応） ---------- */
+  function tri(g, ax, ay, bx, by, cx, cy){
+    g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.lineTo(cx, cy); g.closePath(); g.fill();
+  }
+  function drawHamster(g, S){          // ほりほりくん（ハムスター）
+    const r = S * 0.34;
+    g.fillStyle = "#f2d4a0";
+    g.beginPath(); g.arc(-r*0.7, -r*0.7, r*0.34, 0, 7); g.arc(r*0.7, -r*0.7, r*0.34, 0, 7); g.fill();  // みみ
+    g.fillStyle = "#e79aa0";
+    g.beginPath(); g.arc(-r*0.7, -r*0.7, r*0.16, 0, 7); g.arc(r*0.7, -r*0.7, r*0.16, 0, 7); g.fill();
+    g.fillStyle = "#f2d4a0";
+    g.beginPath(); g.arc(0, 0, r, 0, 7); g.fill();                                                     // かお
+    g.fillStyle = "#f9edd2";
+    g.beginPath(); g.arc(-r*0.45, r*0.28, r*0.42, 0, 7); g.arc(r*0.45, r*0.28, r*0.42, 0, 7); g.fill(); // ほっぺ
+    g.fillStyle = "#3a2a1a";
+    g.beginPath(); g.arc(-r*0.34, -r*0.05, r*0.13, 0, 7); g.arc(r*0.34, -r*0.05, r*0.13, 0, 7); g.fill(); // め
+    g.fillStyle = "#c96a6a";
+    g.beginPath(); g.arc(0, r*0.2, r*0.12, 0, 7); g.fill();                                             // はな
+  }
+  function drawFox(g, S){              // キツネ（てき）
+    const r = S * 0.34;
+    g.fillStyle = "#d95f22";
+    tri(g, -r*0.85, -r*0.35, -r*0.5, -r*1.25, -r*0.1, -r*0.5);                                          // みみ
+    tri(g,  r*0.85, -r*0.35,  r*0.5, -r*1.25,  r*0.1, -r*0.5);
+    g.fillStyle = "#ffd0a8";
+    tri(g, -r*0.6, -r*0.45, -r*0.5, -r*0.98, -r*0.28, -r*0.5);
+    tri(g,  r*0.6, -r*0.45,  r*0.5, -r*0.98,  r*0.28, -r*0.5);
+    g.fillStyle = "#f0873a";
+    g.beginPath(); g.arc(0, 0, r, 0, 7); g.fill();                                                      // かお
+    g.fillStyle = "#fdf3e6";
+    g.beginPath(); g.arc(0, r*0.35, r*0.5, 0, 7); g.fill();                                             // くちもと
+    g.fillStyle = "#2a2320";
+    g.beginPath(); g.arc(-r*0.35, -r*0.1, r*0.12, 0, 7); g.arc(r*0.35, -r*0.1, r*0.12, 0, 7); g.fill(); // め
+    g.beginPath(); g.arc(0, r*0.2, r*0.14, 0, 7); g.fill();                                             // はな
+  }
+  function drawGem(g, S){              // おたから（ほうせき）
+    const w = S*0.28, h = S*0.36;
+    g.fillStyle = "#3fc9dc";
+    g.beginPath(); g.moveTo(0, -h); g.lineTo(w, -h*0.25); g.lineTo(0, h); g.lineTo(-w, -h*0.25); g.closePath(); g.fill();
+    g.fillStyle = "#a8f0f8";
+    g.beginPath(); g.moveTo(0, -h); g.lineTo(w, -h*0.25); g.lineTo(0, -h*0.05); g.lineTo(-w, -h*0.25); g.closePath(); g.fill();
+    g.strokeStyle = "rgba(255,255,255,.75)"; g.lineWidth = Math.max(1, S*0.03);
+    g.beginPath(); g.moveTo(-w*0.35, -h*0.55); g.lineTo(0, -h*0.05); g.stroke();
+  }
+  function drawSplash(g, S){           // あなに はまった しるし
+    g.fillStyle = "#7fd0ff";
+    g.beginPath(); g.arc(0, 0, S*0.14, 0, 7); g.fill();
+    g.beginPath(); g.arc(-S*0.16, -S*0.05, S*0.07, 0, 7); g.arc(S*0.16, -S*0.05, S*0.07, 0, 7); g.fill();
+  }
+
+  function draw(now){
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    for(let y = 0; y < ROWS; y++){
+      for(let x = 0; x < COLS; x++){
+        const c = cellAt(x, y);
+        const px = x * TILE, py = y * TILE;
+        if(c === "="){
+          ctx.fillStyle = "#5a6478";
+          ctx.fillRect(px, py, TILE, TILE);
+          ctx.fillStyle = "rgba(255,255,255,.08)";
+          ctx.fillRect(px + 2, py + 2, TILE - 4, 4);
+        } else if(c === "#"){
+          if(isDug(x, y)){
+            const remain = holes.get(key(x, y)) - now;
+            ctx.fillStyle = "#151c2b";
+            ctx.fillRect(px, py, TILE, TILE);
+            if(remain < 1200 && Math.floor(now / 150) % 2 === 0){   // もうすぐ もどる合図
+              ctx.fillStyle = "rgba(176,106,59,.55)";
+              ctx.fillRect(px, py, TILE, TILE);
+            }
+          } else {
+            ctx.fillStyle = "#8a5a30";
+            ctx.fillRect(px, py, TILE, TILE);
+            ctx.fillStyle = "#a06c3c";
+            ctx.fillRect(px + 2, py + 2, TILE - 4, TILE / 2 - 2);
+            ctx.strokeStyle = "rgba(0,0,0,.25)";
+            ctx.strokeRect(px + .5, py + .5, TILE - 1, TILE - 1);
+          }
+        } else if(c === "H"){
+          ctx.strokeStyle = "#e6b84c";
+          ctx.lineWidth = Math.max(2, TILE * .09);
+          ctx.beginPath();
+          ctx.moveTo(px + TILE * .25, py); ctx.lineTo(px + TILE * .25, py + TILE);
+          ctx.moveTo(px + TILE * .75, py); ctx.lineTo(px + TILE * .75, py + TILE);
+          for(let i = 1; i <= 3; i++){
+            ctx.moveTo(px + TILE * .25, py + TILE * i / 4);
+            ctx.lineTo(px + TILE * .75, py + TILE * i / 4);
+          }
+          ctx.stroke();
+        }
+      }
+    }
+    /* おたから */
+    golds.forEach(k => {
+      const [x, y] = k.split(",").map(Number);
+      const bob = Math.sin(now / 300 + x) * TILE * .05;
+      ctx.save();
+      ctx.translate(x * TILE + TILE / 2, y * TILE + TILE / 2 + bob);
+      drawGem(ctx, TILE);
+      ctx.restore();
+    });
+    /* エンティティ（なめらか補間） */
+    const lerp = (e) => { e.rx += (e.x - e.rx) * .35; e.ry += (e.y - e.ry) * .35; };
+    enemies.forEach(e => {
+      lerp(e);
+      ctx.save();
+      const cx = e.rx * TILE + TILE / 2, cy = e.ry * TILE + TILE / 2;
+      ctx.translate(cx, cy);
+      if(e.dir === -1) ctx.scale(-1, 1);
+      drawFox(ctx, TILE);
+      ctx.restore();
+      if(isDug(Math.round(e.rx), Math.round(e.ry))){
+        ctx.save();
+        ctx.translate(e.rx * TILE + TILE / 2, e.ry * TILE + TILE * .15);
+        drawSplash(ctx, TILE);
+        ctx.restore();
+      }
+    });
+    if(player){
+      lerp(player);
+      if(performance.now() > invulnUntil || Math.floor(now / 120) % 2 === 0){
+        ctx.save();
+        ctx.translate(player.rx * TILE + TILE / 2, player.ry * TILE + TILE / 2);
+        if(player.dir === -1) ctx.scale(-1, 1);
+        drawHamster(ctx, TILE);
+        ctx.restore();
+      }
+    }
+  }
+
+  /* ---------- メインループ ---------- */
+  function loop(now){
+    if(running && player){
+      stepPlayer(now);
+      enemies.forEach(e => stepEnemy(e, now));
+      refillHoles(now);
+      enemies.forEach(e => {
+        if(e.x === player.x && e.y === player.y && !isDug(e.x, e.y)) hitPlayer();
+      });
+    }
+    draw(now);
+    requestAnimationFrame(loop);
+  }
+
+  /* ---------- 画面切替 ---------- */
+  function show(id){
+    ["screen-start", "screen-game", "screen-result"].forEach(s => $(s).classList.add("hidden"));
+    $(id).classList.remove("hidden");
+  }
+  function startGame(){
+    initBgm();
+    level = 0; lives = 3; invulnUntil = 0;
+    show("screen-game");
+    resize();
+    loadLevel(0);
+    running = true;
+  }
+  $("startBtn").addEventListener("click", () => { ensureAudio(); seTap(); startGame(); });
+  $("retryBtn").addEventListener("click", () => { ensureAudio(); seTap(); startGame(); });
+
+  show("screen-start");   // 入口はかならずスタート画面から
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
