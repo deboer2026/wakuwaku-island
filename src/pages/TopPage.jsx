@@ -12,6 +12,7 @@ import { getCoins, checkLoginBonus, claimLoginBonus } from '../utils/coins';
 import { getRecentGames } from '../utils/recentGames';
 import { getPlayHistory } from '../utils/playHistory';
 import { detectLang } from '../utils/i18n';
+import IslandMap from './IslandMap';
 import './TopPage.css';
 
 /* ── カテゴリ別グラデーション ──────────────────────────── */
@@ -1346,6 +1347,17 @@ export default function TopPage() {
   const [coins,       setCoins]       = useState(() => typeof localStorage !== 'undefined' ? getCoins() : 0);
   const [loginBonus,  setLoginBonus]  = useState(null);
   const [recentRoutes,   setRecentRoutes]   = useState(() => typeof localStorage !== 'undefined' ? getRecentGames() : []);
+  // しまマップ⇔いちらん切替。SSR/ハイドレーション不一致回避のため初期値は固定し、
+  // 保存値の反映はマウント後に行う。
+  const [topView, setTopView] = useState('map');
+  useEffect(() => {
+    const saved = localStorage.getItem('wakuwaku_top_view');
+    if (saved === 'list') setTopView('list');
+  }, []);
+  function changeTopView(v) {
+    setTopView(v);
+    localStorage.setItem('wakuwaku_top_view', v);
+  }
 
   const season    = getSeason();
   const daysSince = getDaysSinceUpdate();
@@ -1663,8 +1675,39 @@ export default function TopPage() {
           </button>
         </div>
 
+        {/* ── しまマップ⇔いちらん 切替タブ ── */}
+        <div className="tp-view-toggle" role="tablist">
+          <button
+            role="tab"
+            aria-selected={topView === 'map'}
+            className={`tp-view-tab${topView === 'map' ? ' tp-view-tab--on' : ''}`}
+            onClick={() => changeTopView('map')}
+          >
+            🗺️ {{ja:'しまマップ', en:'Island Map', zh:'岛屿地图', ko:'섬 지도', es:'Mapa'}[lang] || 'しまマップ'}
+          </button>
+          <button
+            role="tab"
+            aria-selected={topView === 'list'}
+            className={`tp-view-tab${topView === 'list' ? ' tp-view-tab--on' : ''}`}
+            onClick={() => changeTopView('list')}
+          >
+            📋 {{ja:'いちらん', en:'List', zh:'列表', ko:'목록', es:'Lista'}[lang] || 'いちらん'}
+          </button>
+        </div>
+
+        {/* ── しまマップ ── */}
+        {topView === 'map' && (
+          <IslandMap
+            groups={SHELF_GROUPS}
+            games={ALL_SHELF_GAMES}
+            lang={lang}
+            svgMap={GAME_SVGS}
+            onPlay={(game, e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY); }}
+          />
+        )}
+
         {/* ── ジャンルグループ別ゲーム棚(6棚) ── */}
-        {SHELF_GROUPS.map(grp => {
+        {topView === 'list' && SHELF_GROUPS.map(grp => {
           const items = ALL_SHELF_GAMES.filter(grp.match);
           if (items.length === 0) return null;
           return (
