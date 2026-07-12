@@ -58,6 +58,40 @@ const MASCOT_LINES = {
    ゲームSVGイラスト（SNES風）
 ════════════════════════════════════════════════════ */
 const GAME_SVGS = {
+  g_mura: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="100" height="85" rx="12" fill="#bfe9ff"/>
+      <circle cx="16" cy="13" r="6" fill="#ffd24d"/>
+      <ellipse cx="42" cy="12" rx="9" ry="4" fill="#fff" opacity=".85"/>
+      <path d="M0 36 Q25 26 50 34 Q75 42 100 32 L100 85 L0 85 Z" fill="#9ed77a"/>
+      <g transform="translate(26 40)">
+        <path d="M-11 0 L0 -11 L11 0 Z" fill="#e07a5f"/>
+        <rect x="-8" y="0" width="16" height="12" fill="#fff3d6" stroke="#d9b06a" strokeWidth="1"/>
+        <rect x="-3" y="4" width="6" height="8" fill="#8a5a30"/>
+      </g>
+      <g transform="translate(70 56)">
+        <rect x="-14" y="-4" width="28" height="18" rx="3" fill="#a9713f" stroke="#7d4e26" strokeWidth="1.5"/>
+        <path d="M-8 4 Q-11 -2 -8 -8 Q-4 -3 -8 4 Z" fill="#5a9e3d"/>
+        <path d="M0 6 Q-3 0 0 -6 Q4 -1 0 6 Z" fill="#6fb54e"/>
+        <path d="M8 4 Q5 -2 8 -8 Q12 -3 8 4 Z" fill="#82c661"/>
+      </g>
+      <g transform="translate(30 66)">
+        <path d="M-5 -8 L-2 -14 L4 -10 Z" fill="#f2b56b"/>
+        <path d="M9 -8 L8 -15 L2 -10 Z" fill="#f2b56b"/>
+        <circle cx="2" cy="-2" r="9" fill="#f2b56b"/>
+        <ellipse cx="2" cy="1" rx="4.5" ry="3.5" fill="#fbe0bb"/>
+        <circle cx="-1.5" cy="-4" r="1.5" fill="#2a2440"/>
+        <circle cx="5.5" cy="-4" r="1.5" fill="#2a2440"/>
+        <path d="M1 -1 L3 -1 L2 0.5 Z" fill="#ff7eb3"/>
+      </g>
+      <g transform="translate(52 70)">
+        <path d="M-4 -10 Q-9 -13 -8 -18 Q-3 -16 -4 -11 Z" fill="#5a9e3d"/>
+        <path d="M-1.5 -9 Q-4 -13 -1.5 -17 Q1 -13 -1.5 -9 Z" fill="#6fb54e"/>
+        <path d="M-6 -8 Q-2 -10 2 -8 L-1 6 Q-2 8 -3 6 Z" fill="#ff8a3c"/>
+      </g>
+      <path d="M86 68 l2.4 4.8 l4.8 .6 l-3.6 3.4 l1 4.8 l-4.6 -2.4 l-4.6 2.4 l1 -4.8 l-3.6 -3.4 l4.8 -.6 Z" fill="#ffd24d" stroke="#e0a800" strokeWidth="1"/>
+    </svg>
+  ),
   g_kyoshitsu: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
       <rect x="0" y="0" width="100" height="85" rx="12" fill="#bfe9ff"/>
@@ -1013,6 +1047,12 @@ const GAMES = [
     zh:{ name:'颜色配对',             desc:'混合颜色\n是什么颜色？'                       },
     ko:{ name:'색깔 맞추기',           desc:'색을 섞으면\n무슨 색이 될까요?'                },
     es:{ name:'Colores',               desc:'¡Mezcla colores y\nencontra el resultado!'     } },
+  { id:'g_mura', route:'/mura', icon:'🏡', num:21, color:'#6bb04a', stars:5, isNew:true, category:'そうぞう',
+    ja:{ name:'どうぶつのむら',   desc:'やさいをそだてて りょうり！\nどうぶつに とどけよう！' },
+    en:{ name:'Animal Village',   desc:'Grow veggies, cook meals,\nand deliver to animals!' },
+    zh:{ name:'动物村庄',          desc:'种蔬菜做料理，\n送给小动物们！' },
+    ko:{ name:'동물 마을',        desc:'채소를 키워 요리하고\n동물에게 배달해요!' },
+    es:{ name:'Aldea Animal',     desc:'¡Cultiva, cocina y\nreparte a los animales!' } },
   { id:'g14', route:'/machi',          icon:'🏙️', num:14, color:'#00897B', stars:5, isNew:false, category:'そうぞう',
     ja:{ name:'わくわくまちづくり', desc:'じぶんだけの\nすてきなまちを\nつくろう！'            },
     en:{ name:'City Builder',        desc:'Build your own\namazing city!'                      },
