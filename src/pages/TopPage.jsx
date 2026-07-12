@@ -1638,12 +1638,23 @@ export default function TopPage() {
             </h1>
           </div>
 
-          {/* ② 季節チップ（タイトル直下に統合） */}
-          <div
-            className="tp-season tp-season--chip"
-            style={{ '--season-color': season.color, '--season-glow': season.glow }}
-          >
-            {season.emoji} {season[lang] || season.ja}
+          {/* ② 季節＋ゲーム数チップ（タイトル直下に統合） */}
+          <div className="tp-hero-chips">
+            <div
+              className="tp-season tp-season--chip"
+              style={{ '--season-color': season.color, '--season-glow': season.glow }}
+            >
+              {season.emoji} {season[lang] || season.ja}
+            </div>
+            <div className="tp-count-chip">
+              🎮 {{
+                ja:`むりょうゲーム ${ALL_SHELF_GAMES.length}こ！`,
+                en:`${ALL_SHELF_GAMES.length} Free Games!`,
+                zh:`${ALL_SHELF_GAMES.length}个免费游戏！`,
+                ko:`무료 게임 ${ALL_SHELF_GAMES.length}개!`,
+                es:`¡${ALL_SHELF_GAMES.length} juegos gratis!`,
+              }[lang] || `むりょうゲーム ${ALL_SHELF_GAMES.length}こ！`}
+            </div>
           </div>
         </div>
       </div>
