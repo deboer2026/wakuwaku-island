@@ -12,7 +12,7 @@ import { getCoins, checkLoginBonus, claimLoginBonus } from '../utils/coins';
 import { getRecentGames } from '../utils/recentGames';
 import { getPlayHistory } from '../utils/playHistory';
 import { detectLang } from '../utils/i18n';
-import IslandMap from './IslandMap';
+import IslandMap, { AREA_THEMES as MAP_AREA_THEMES } from './IslandMap';
 import './TopPage.css';
 
 /* ── カテゴリ別グラデーション ──────────────────────────── */
@@ -1589,7 +1589,15 @@ export default function TopPage() {
         </div>
         <button className="tp-top-btn tp-shop-btn" onClick={() => setShopOpen(true)}
           title={lang === 'en' ? 'Shop' : 'ショップ'}>
-          🛒 {{ja:'ショップ', en:'Shop', zh:'商店', ko:'상점', es:'Tienda'}[lang] || 'ショップ'}
+          🛒 <span className="tp-shop-label">{{ja:'ショップ', en:'Shop', zh:'商店', ko:'상점', es:'Tienda'}[lang] || 'ショップ'}</span>
+        </button>
+        <button className="tp-top-btn" onClick={startRoulette}
+          title={{ja:'ゲームルーレット', en:'Game Roulette', zh:'游戏轮盘', ko:'게임 룰렛', es:'Ruleta'}[lang] || 'ゲームルーレット'}>
+          🎲
+        </button>
+        <button className="tp-top-btn" onClick={openZukan}
+          title={{ja:'スタンプずかん', en:'Stamp Book', zh:'印章图鉴', ko:'스탬프 도감', es:'Álbum'}[lang] || 'スタンプずかん'}>
+          📖
         </button>
         <button className="tp-top-btn ksk-top-btn" onClick={() => openPanel('princess')}
           title={lang === 'en' ? 'Dress up' : 'きがえ'}>
@@ -1629,12 +1637,10 @@ export default function TopPage() {
               </span>
             </h1>
           </div>
-        </div>
 
-        {/* ② 季節バナー */}
-        <div className="tp-hero-row">
+          {/* ② 季節チップ（タイトル直下に統合） */}
           <div
-            className="tp-season"
+            className="tp-season tp-season--chip"
             style={{ '--season-color': season.color, '--season-glow': season.glow }}
           >
             {season.emoji} {season[lang] || season.ja}
@@ -1644,55 +1650,47 @@ export default function TopPage() {
 
       {/* ── ゲームセクション ── */}
       <div className="tp-game-section">
-        {/* ── 最近遊んだゲーム ── */}
-        {recentGames.length > 0 && (
-          <div className="tp-recent">
-            <div className="tp-recent-title">
-              🕐 {{ja:'さいきんあそんだゲーム', en:'Recently Played', zh:'最近玩过', ko:'최근 플레이', es:'Reciente'}[lang] || 'さいきんあそんだゲーム'}
-            </div>
-            <div className="tp-recent-scroll">
-              {recentGames.map(g => (
-                <button
-                  key={g.route}
-                  className="tp-recent-card"
-                  onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY); }}
-                >
-                  <span className="tp-recent-icon">{g.icon}</span>
-                  <span className="tp-recent-name">{(g[lang] || g.ja).name}</span>
-                </button>
-              ))}
-            </div>
+        {/* ── sticky統合バー：切替タブ＋エリアジャンプ ── */}
+        <div className="tp-sticky-bar">
+          <div className="tp-view-toggle" role="tablist">
+            <button
+              role="tab"
+              aria-selected={topView === 'map'}
+              className={`tp-view-tab${topView === 'map' ? ' tp-view-tab--on' : ''}`}
+              onClick={() => changeTopView('map')}
+            >
+              🗺️ {{ja:'しまマップ', en:'Island Map', zh:'岛屿地图', ko:'섬 지도', es:'Mapa'}[lang] || 'しまマップ'}
+            </button>
+            <button
+              role="tab"
+              aria-selected={topView === 'list'}
+              className={`tp-view-tab${topView === 'list' ? ' tp-view-tab--on' : ''}`}
+              onClick={() => changeTopView('list')}
+            >
+              📋 {{ja:'いちらん', en:'List', zh:'列表', ko:'목록', es:'Lista'}[lang] || 'いちらん'}
+            </button>
           </div>
-        )}
-
-        {/* ── アクションボタン行 ── */}
-        <div className="tp-action-row">
-          <button className="tp-roulette-btn" onClick={startRoulette}>
-            🎲 {{ja:'ゲームルーレット', en:'Game Roulette', zh:'游戏轮盘', ko:'게임 룰렛', es:'Ruleta'}[lang] || 'ゲームルーレット'}
-          </button>
-          <button className="tp-zukan-btn" onClick={openZukan}>
-            📖 {{ja:'スタンプずかん', en:'Stamp Book', zh:'印章图鉴', ko:'스탬프 도감', es:'Álbum'}[lang] || 'スタンプずかん'}
-          </button>
-        </div>
-
-        {/* ── しまマップ⇔いちらん 切替タブ ── */}
-        <div className="tp-view-toggle" role="tablist">
-          <button
-            role="tab"
-            aria-selected={topView === 'map'}
-            className={`tp-view-tab${topView === 'map' ? ' tp-view-tab--on' : ''}`}
-            onClick={() => changeTopView('map')}
-          >
-            🗺️ {{ja:'しまマップ', en:'Island Map', zh:'岛屿地图', ko:'섬 지도', es:'Mapa'}[lang] || 'しまマップ'}
-          </button>
-          <button
-            role="tab"
-            aria-selected={topView === 'list'}
-            className={`tp-view-tab${topView === 'list' ? ' tp-view-tab--on' : ''}`}
-            onClick={() => changeTopView('list')}
-          >
-            📋 {{ja:'いちらん', en:'List', zh:'列表', ko:'목록', es:'Lista'}[lang] || 'いちらん'}
-          </button>
+          {topView === 'map' && (
+            <div className="tp-sticky-jump">
+              {SHELF_GROUPS.map(grp => {
+                if (!ALL_SHELF_GAMES.some(g => grp.match(g))) return null;
+                return (
+                  <button
+                    key={grp.key}
+                    className="im-jump-btn"
+                    style={{ '--sign': (MAP_AREA_THEMES[grp.key] || {}).sign || '#888' }}
+                    onClick={() => {
+                      const el = document.getElementById(`im-area-${grp.key}`);
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                  >
+                    <span className="im-jump-icon">{grp.icon}</span>
+                    <span className="im-jump-label">{grp.label[lang] || grp.label.ja}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* ── しまマップ ── */}
@@ -1728,6 +1726,27 @@ export default function TopPage() {
             </div>
           );
         })}
+
+        {/* ── 最近遊んだゲーム（マップの下へ移動） ── */}
+        {recentGames.length > 0 && (
+          <div className="tp-recent">
+            <div className="tp-recent-title">
+              🕐 {{ja:'さいきんあそんだゲーム', en:'Recently Played', zh:'最近玩过', ko:'최근 플레이', es:'Reciente'}[lang] || 'さいきんあそんだゲーム'}
+            </div>
+            <div className="tp-recent-scroll">
+              {recentGames.map(g => (
+                <button
+                  key={g.route}
+                  className="tp-recent-card"
+                  onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY); }}
+                >
+                  <span className="tp-recent-icon">{g.icon}</span>
+                  <span className="tp-recent-name">{(g[lang] || g.ja).name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── フッターパレード ── */}

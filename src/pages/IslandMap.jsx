@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import './IslandMap.css';
 
 /* ════════════════════════════════════════════════════
@@ -9,7 +9,7 @@ import './IslandMap.css';
    - GAMES/ルート定義は一切変更しない表示層のみの追加。
 ════════════════════════════════════════════════════ */
 
-const AREA_THEMES = {
+export const AREA_THEMES = {
   asobu:    { bg:'linear-gradient(180deg,#c9f0bd,#a9e39b)', sign:'#3f9d4a', deco:['🌳','🍄','🌼','🐿️'] },
   nerau:    { bg:'linear-gradient(180deg,#cdeaff,#a9d8ff)', sign:'#3a86d4', deco:['⛰️','🪁','🎈','🦅'] },
   race:     { bg:'linear-gradient(180deg,#ffe6c4,#ffd0a0)', sign:'#e07a1f', deco:['🏁','🚦','🌵','⛽'] },
@@ -32,8 +32,6 @@ const UI_TEXT = {
 };
 
 export default function IslandMap({ groups, games, lang, svgMap, onPlay }) {
-  const areaRefs = useRef({});
-
   /* エリア・建物のレイアウトを算出（ゲーム追加時も自動対応） */
   const layout = useMemo(() => {
     let y = TOP_PAD;
@@ -77,28 +75,8 @@ export default function IslandMap({ groups, games, lang, svgMap, onPlay }) {
     return d;
   }, [layout]);
 
-  function jumpTo(key) {
-    const el = areaRefs.current[key];
-    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
   return (
     <div className="im-wrap">
-      {/* ── エリアクイックジャンプ ── */}
-      <div className="im-jump">
-        {layout.areas.map(({ grp }) => (
-          <button
-            key={grp.key}
-            className="im-jump-btn"
-            style={{ '--sign': (AREA_THEMES[grp.key] || DEFAULT_THEME).sign }}
-            onClick={() => jumpTo(grp.key)}
-          >
-            <span className="im-jump-icon">{grp.icon}</span>
-            <span className="im-jump-label">{grp.label[lang] || grp.label.ja}</span>
-          </button>
-        ))}
-      </div>
-
       {/* ── 島本体 ── */}
       <div className="im-ocean">
         <div className="im-island" style={{ height: layout.totalH }}>
@@ -109,7 +87,7 @@ export default function IslandMap({ groups, games, lang, svgMap, onPlay }) {
               <div
                 key={grp.key}
                 className="im-area"
-                ref={el => { areaRefs.current[grp.key] = el; }}
+                id={`im-area-${grp.key}`}
                 style={{ top, height, background: theme.bg }}
               >
                 {/* エリア看板 */}
