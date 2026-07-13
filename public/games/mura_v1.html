@@ -46,6 +46,10 @@
   .fab:active{transform:translateY(2px); box-shadow:0 2px 0 var(--accent-dark);}
   .fab .fdot{position:absolute; top:2px; right:2px; width:12px; height:12px; background:var(--bad); border-radius:50%; border:2px solid #fff; visibility:hidden;}
   .fab .fdot.on{visibility:visible;}
+  .mission{position:absolute; top:calc(58px + var(--sat,0px)); left:max(10px,var(--sal,0px)); z-index:9; background:rgba(255,251,235,.95); border:2px solid #e0c780; border-radius:14px; padding:7px 12px; font-size:12px; font-weight:900; box-shadow:0 3px 0 rgba(42,64,32,.2); pointer-events:none; max-width:78vw;}
+  .mission .mprog{color:#c79400;}
+  .mission.flash{animation:mflash .5s ease-out 2;}
+  @keyframes mflash{0%,100%{transform:scale(1);}50%{transform:scale(1.07);}}
   .hint{position:absolute; left:50%; transform:translateX(-50%); bottom:max(16px,var(--sab,0px)); background:rgba(42,64,32,.75); color:#fff; font-size:12px; font-weight:900; border-radius:99px; padding:7px 16px; z-index:9; pointer-events:none; white-space:nowrap; opacity:0; transition:opacity .4s;}
   .hint.show{opacity:1;}
 
@@ -109,6 +113,20 @@
   .map-piece svg{width:34px; height:34px;}
   .hearts{font-size:11px; letter-spacing:1px;}
 
+  /* おようふくやさん */
+  .shop-tabs{display:flex; gap:6px; margin:8px 0; overflow-x:auto; padding-bottom:4px; -webkit-overflow-scrolling:touch;}
+  .shop-tab{flex:0 0 auto; background:#f3e6f0; border:2px solid #e0c2d5; border-radius:12px; padding:8px 12px; font-family:inherit; font-size:12px; font-weight:900; color:var(--night); opacity:.65; white-space:nowrap;}
+  .shop-tab.active{background:#ffdff0; border-color:#e0a8c0; opacity:1;}
+  .shop-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .shop-card{background:#fdf3f8; border:2px solid #efd4e2; border-radius:14px; padding:8px 6px; text-align:center; cursor:pointer; position:relative;}
+  .shop-card:active{transform:scale(.96);}
+  .shop-card canvas{width:76px; height:92px; display:block; margin:0 auto;}
+  .shop-card .wname{font-size:11px; font-weight:900; margin-top:2px;}
+  .shop-card .wprice{font-size:12px; font-weight:900; color:#c79400; margin-top:2px;}
+  .shop-card.wearing{border-color:#6bb04a; background:#eef8e6;}
+  .shop-card .wtag{position:absolute; top:5px; right:5px; background:var(--accent); color:#fff; font-size:9px; font-weight:900; border-radius:99px; padding:2px 7px;}
+  .shop-card.cant .wprice{color:var(--bad);}
+
   /* 料理ミニゲーム */
   .mini-stage{margin-top:6px;}
   .mini-label{font-size:14px; font-weight:900; margin-bottom:6px;}
@@ -143,6 +161,7 @@
 <div class="hud-bottom">
   <button class="fab" id="invBtn" aria-label="もちもの" style="position:relative;">🧺<span class="fdot" id="invDot"></span></button>
 </div>
+<div class="mission" id="missionBanner">📜 <span id="missionText"></span></div>
 <div class="hint" id="hint"></div>
 
 <div class="kitchen-panel" id="kitchenPanel">
@@ -292,6 +311,8 @@
     houses: [ {x:640,y:330},{x:640,y:480},{x:640,y:630},{x:640,y:780},{x:640,y:915} ],
     dig: {x:530, y:520},
     fountain: {x:390, y:470},
+    boutique: {x:265, y:360},
+    boutiqueDoor: {x:265, y:420},
     flag: {x:505, y:225},
     star: {x:255, y:470},
     spawn: {x:390, y:560},
@@ -312,6 +333,10 @@
       mapPieces:0, pity:0, treasureReady:false, treasureCount:0,
       decos:[], komugiUnlocked:false,
       lastEggAt:0, lastSeen:Date.now(),
+      mIdx:0, mProg:0,
+      wardrobe:{ owned:["basic","crown","face_none","neck_none","hand_none","shoes_navy","pet_none","fx_none"],
+        outfit:"basic", head:"crown", face:"face_none", neck:"neck_none",
+        hand:"hand_none", shoes:"shoes_navy", pet:"pet_none", fx:"fx_none" },
     };
   }
   let S = defaultState();
@@ -328,6 +353,10 @@
       if(!Array.isArray(S.dishes)) S.dishes = [];
       if(!Array.isArray(S.orders)) S.orders = [];
       if(!Array.isArray(S.decos)) S.decos = [];
+      const wdef = defaultState().wardrobe;
+      S.wardrobe = Object.assign({}, wdef, d.wardrobe || {});
+      if(!Array.isArray(S.wardrobe.owned)) S.wardrobe.owned = wdef.owned.slice();
+      wdef.owned.forEach(id => { if(S.wardrobe.owned.indexOf(id) < 0) S.wardrobe.owned.push(id); });
     }catch(e){ S = defaultState(); }
   }
 
@@ -345,6 +374,7 @@
       for(let l=S.level+1; l<=newLv; l++){ if(LEVEL_MSG[l]) msgs.push("むらLv." + l + "！ " + LEVEL_MSG[l]); }
       S.level = newLv;
       if(msgs.length){ showRewardModal("🎉 レベルアップ！", msgs.join("\n"), null); sfx.crown(); }
+      setTimeout(checkStateMission, 50);
     }
     renderStatus();
   }
@@ -367,6 +397,97 @@
     S.lastEggAt = Date.now();
     sfx.harvest(); save(); renderStatus();
     toast("🥚 たまごを " + n + "こ あつめた！");
+    missionEvent("egg");
+  }
+
+  /* ================= ミッション ================= */
+  const MISSIONS = [
+    { ev:"plant",     n:1, text:"はたけに たねを まこう",                    reward:5 },
+    { ev:"harvest",   n:1, text:"さくもつを しゅうかくしよう",              reward:5 },
+    { ev:"cook",      n:1, text:"キッチンで りょうりを つくろう",           reward:5 },
+    { ev:"deliver",   n:1, text:"どうぶつに りょうりを とどけよう",         reward:8 },
+    { st:() => S.level >= 2, text:"むらを Lv.2に しよう",                   reward:8 },
+    { ev:"plant_corn",n:1, text:"とうもろこしを うえよう",                  reward:5 },
+    { ev:"deliver",   n:3, text:"ちゅうもんを 3かい とどけよう",            reward:10 },
+    { ev:"piece",     n:1, text:"ちずの かけらを みつけよう",               reward:5 },
+    { st:() => Object.values(S.friends).some(h => h >= 3), text:"だれかと なかよし❤️3に なろう", reward:8 },
+    { st:() => S.level >= 3, text:"むらを Lv.3に して いどを つくろう",     reward:10 },
+    { ev:"treasure",  n:1, text:"ちずを かんせいさせて たからを ほろう",    reward:12 },
+    { st:() => S.level >= 4, text:"むらを Lv.4に しよう",                   reward:10 },
+    { st:() => Object.values(S.friends).some(h => h >= 5), text:"どうぶつを むらに ひっこしさせよう", reward:15 },
+    { st:() => S.level >= 5, text:"むらを Lv.5に して にわとりごやを つくろう", reward:12 },
+    { ev:"egg",       n:1, text:"たまごを あつめよう",                      reward:5 },
+    { ev:"cook_lv5",  n:1, text:"オムレツか いちごケーキを つくろう",       reward:10 },
+    { st:() => S.level >= 6, text:"むらを Lv.6に しよう",                   reward:15 },
+    { ev:"buy",       n:1, text:"おようふくやさんで おかいものを しよう",   reward:10 },
+  ];
+  const REPEAT_MISSIONS = [
+    { ev:"deliver",  n:3, text:"ちゅうもんを 3かい とどけよう",   reward:10 },
+    { ev:"harvest",  n:5, text:"さくもつを 5こ しゅうかくしよう", reward:10 },
+    { ev:"cook",     n:2, text:"りょうりを 2こ つくろう",         reward:10 },
+    { ev:"treasure", n:1, text:"たからばこを ほりだそう",         reward:15 },
+    { ev:"buy",      n:1, text:"あたらしい おしゃれを 1つ かおう", reward:12 },
+  ];
+  function curMission(){
+    if(S.mIdx < MISSIONS.length) return MISSIONS[S.mIdx];
+    return REPEAT_MISSIONS[(S.mIdx - MISSIONS.length) % REPEAT_MISSIONS.length];
+  }
+  function missionBanner(flash){
+    const m = curMission();
+    const prog = m.ev && m.n > 1 ? ' <span class="mprog">（' + S.mProg + '/' + m.n + '）</span>' : '';
+    $("missionText").innerHTML = m.text + prog;
+    if(flash){
+      const b = $("missionBanner");
+      b.classList.remove("flash");
+      void b.offsetWidth;
+      b.classList.add("flash");
+    }
+  }
+  function missionEvent(ev){
+    const m = curMission();
+    if(!m.ev || m.ev !== ev) return;
+    S.mProg++;
+    if(S.mProg >= m.n){ completeMission(); }
+    else { save(); missionBanner(true); }
+  }
+  function checkStateMission(){
+    const m = curMission();
+    if(m.st && m.st()) completeMission();
+  }
+  function completeMission(){
+    const m = curMission();
+    S.mIdx++; S.mProg = 0;
+    save();
+    sfx.done();
+    const next = curMission();
+    showModal(
+      '<h2>🎉 ミッションクリア！</h2>' +
+      '<p style="font-size:14px; font-weight:900;">「' + m.text + '」</p>' +
+      '<p class="reward-line">ごほうび 👑 +' + m.reward + '</p>' +
+      '<p style="font-size:12px; font-weight:900; opacity:.75; margin-top:8px;">つぎのミッション：<br>📜 ' + next.text + '</p>' +
+      '<button class="big-btn" id="missionOk">つぎへ！</button>'
+    );
+    missionBanner(true);
+    const ok = $("missionOk");
+    if(ok) ok.addEventListener("click", () => {
+      closeModal();
+      addCrowns(m.reward);
+      checkStateMission();
+      missionBanner(false);
+    });
+    else { addCrowns(m.reward); checkStateMission(); }
+  }
+  /* 旧セーブ向け：状態系ミッションのサイレント追いつき */
+  function missionCatchup(){
+    let guard = 0;
+    while(guard++ < 30){
+      const m = curMission();
+      if(m.st && m.st()){
+        S.mIdx++; S.mProg = 0;
+        S.crowns += m.reward; S.totalCrowns += m.reward;
+      } else break;
+    }
+    S.level = calcLevel(S.totalCrowns);
   }
 
   /* ================= SVG（DOM UI用） ================= */
@@ -445,6 +566,10 @@
 
   /* ================= プレイヤー・どうぶつ ================= */
   const player = { x:POS.spawn.x, y:POS.spawn.y, speed:165, moving:false };
+  const pet = { x: POS.spawn.x - 30, y: POS.spawn.y + 8 };
+  const trail = [];
+  let trailTimer = 0;
+  const TRAIL_COLORS_NIJI = ["#ff7eb3","#ffd24d","#6bd47e","#5ecbf7","#c97fe0"];
   /* バーチャルスティック + キーボード */
   const stick = { active:false, id:null, ox:0, oy:0, dx:0, dy:0 };
   const STICK_R = 52, STICK_DEAD = 9;
@@ -558,73 +683,571 @@
     ctx.closePath(); ctx.fillStyle = fill; ctx.fill();
   }
 
+  /* ---- おようふく定義（8スロット） ---- */
+  const OUTFITS = {
+    basic:    { name:"はじまりの ふく", price:0,  p:"#5b8def", d:"#ff9ecb" },
+    sora:     { name:"そらいろの ふく", price:15, p:"#5ecbf7", d:"#9fdcf7" },
+    midori:   { name:"もりの ふく",     price:15, p:"#4caf50", d:"#8fd6a3" },
+    himawari: { name:"ひまわりの ふく", price:20, p:"#f2a93c", d:"#ffd24d" },
+    ichigo:   { name:"いちごの ふく",   price:25, p:"#e05572", d:"#f75d7f", pat:"dots" },
+    shima:    { name:"しましまの ふく", price:25, p:"#e05572", d:"#ff8aa8", pat:"stripes" },
+    sakura:   { name:"さくらの ふく",   price:30, p:"#e88aa8", d:"#ffc2d6", pat:"flowers" },
+    heart:    { name:"ハートの ふく",   price:30, p:"#f06292", d:"#ff9ecb", pat:"hearts" },
+    hoshizora:{ name:"ほしぞらの ふく", price:35, p:"#3d4b8f", d:"#5b6ac2", pat:"stars" },
+    yoru:     { name:"よぞらの ふく",   price:45, p:"#2c2c54", d:"#44447a", pat:"galaxy" },
+    royal:    { name:"ロイヤルの ふく", price:50, p:"#7b5fc9", d:"#a88ae0", pat:"trim" },
+    niji:     { name:"にじいろの ふく", price:60, rainbow:true },
+  };
+  const HEADS = {
+    crown:    { name:"おうかん",          price:0 },
+    beret:    { name:"あかい ベレーぼう", price:15 },
+    mugiwara: { name:"むぎわらぼうし",    price:15 },
+    ribbon:   { name:"おおきな リボン",   price:20 },
+    chef:     { name:"コックさんの ぼうし", price:20 },
+    hana:     { name:"おはなの かんむり", price:25 },
+    party:    { name:"パーティーぼうし",  price:25 },
+    nekomimi: { name:"ねこみみ",          price:30 },
+    mahou:    { name:"まほうの ぼうし",   price:40 },
+    tenshi:   { name:"てんしの わ",       price:50 },
+  };
+  const FACES = {
+    face_none:  { name:"なし",             price:0 },
+    face_hoppe: { name:"ほっぺシール",     price:10 },
+    face_maru:  { name:"まるめがね",       price:15 },
+    face_sun:   { name:"ほしの サングラス", price:25 },
+    face_heart: { name:"ハートめがね",     price:30 },
+  };
+  const NECKS = {
+    neck_none:     { name:"なし",           price:0 },
+    neck_scarf:    { name:"あかい マフラー", price:15 },
+    neck_tie:      { name:"ちょうネクタイ",  price:15 },
+    neck_necklace: { name:"ネックレス",      price:25 },
+    neck_cape:     { name:"ゆうしゃの マント", price:40 },
+    neck_capestar: { name:"ほしの マント",   price:55 },
+  };
+  const HANDS = {
+    hand_none:    { name:"なし",             price:0 },
+    hand_balloon: { name:"あかい ふうせん",   price:15 },
+    hand_basket:  { name:"バスケット",        price:15 },
+    hand_candy:   { name:"ぺろぺろキャンディ", price:15 },
+    hand_flag:    { name:"むらの はた",       price:20 },
+    hand_hana:    { name:"はなたば",          price:20 },
+    hand_wand:    { name:"まほうの つえ",     price:30 },
+  };
+  const SHOES = {
+    shoes_navy:  { name:"はじまりの くつ", price:0,  col:"#4a4a6a" },
+    shoes_red:   { name:"あかい くつ",     price:15, col:"#e05572" },
+    shoes_green: { name:"みどりの くつ",   price:15, col:"#4caf50" },
+    shoes_pink:  { name:"ピンクの くつ",   price:15, col:"#ff9ecb" },
+    shoes_gold:  { name:"きんの くつ",     price:35, col:"#ffd24d", trim:"#c79400" },
+    shoes_niji:  { name:"にじの くつ",     price:45, niji:true },
+  };
+  const PETS = {
+    pet_none:   { name:"なし",             price:0 },
+    pet_chou:   { name:"ちょうちょ",       price:25 },
+    pet_hiyoko: { name:"ひよこ",           price:30 },
+    pet_kaeru:  { name:"かえるくん",       price:30 },
+    pet_kotori: { name:"あおい ことり",    price:35 },
+    pet_hoshi:  { name:"ほしの ようせい",  price:60 },
+  };
+  const FXS = {
+    fx_none:  { name:"なし",           price:0 },
+    fx_kira:  { name:"キラキラの あと", price:40 },
+    fx_heart: { name:"ハートの あと",   price:40 },
+    fx_star:  { name:"ほしの あと",     price:50 },
+    fx_niji:  { name:"にじの あと",     price:80 },
+  };
+  const WSLOTS = {
+    outfit:{ label:"ふく",     icon:"👕", items:OUTFITS, def:"basic" },
+    head:  { label:"ぼうし",   icon:"👒", items:HEADS,   def:"crown" },
+    face:  { label:"かお",     icon:"🕶️", items:FACES,   def:"face_none" },
+    neck:  { label:"くびもと", icon:"🧣", items:NECKS,   def:"neck_none" },
+    hand:  { label:"もちもの", icon:"🎈", items:HANDS,   def:"hand_none" },
+    shoes: { label:"くつ",     icon:"👟", items:SHOES,   def:"shoes_navy" },
+    pet:   { label:"おとも",   icon:"🐣", items:PETS,    def:"pet_none" },
+    fx:    { label:"キラキラ", icon:"✨", items:FXS,     def:"fx_none" },
+  };
+  function normalizeWard(w){
+    w = w || {};
+    const out = {};
+    Object.keys(WSLOTS).forEach(k => {
+      out[k] = (w[k] && WSLOTS[k].items[w[k]]) ? w[k] : WSLOTS[k].def;
+    });
+    return out;
+  }
+
   /* ---- 主人公 ---- */
-  function drawPlayer(x, y, t, moving, gender){
+  function rrc(c, x, y, w, h, r){
+    c.beginPath();
+    c.moveTo(x+r, y);
+    c.arcTo(x+w, y, x+w, y+h, r);
+    c.arcTo(x+w, y+h, x, y+h, r);
+    c.arcTo(x, y+h, x, y, r);
+    c.arcTo(x, y, x+w, y, r);
+    c.closePath();
+  }
+  function star5c(c, x, y, r, fill, stroke){
+    c.beginPath();
+    for(let i=0; i<10; i++){
+      const ang = -Math.PI/2 + i*Math.PI/5;
+      const rad = (i%2===0) ? r : r*0.45;
+      const px = x + Math.cos(ang)*rad, py = y + Math.sin(ang)*rad;
+      if(i===0) c.moveTo(px, py); else c.lineTo(px, py);
+    }
+    c.closePath();
+    c.fillStyle = fill; c.fill();
+    if(stroke){ c.strokeStyle = stroke; c.lineWidth = 1.2; c.stroke(); }
+  }
+  function heartc(c, x, y, sz, fill){
+    c.fillStyle = fill;
+    c.beginPath();
+    c.moveTo(x, y + sz*0.9);
+    c.bezierCurveTo(x - sz*1.2, y, x - sz*0.7, y - sz*0.9, x, y - sz*0.25);
+    c.bezierCurveTo(x + sz*0.7, y - sz*0.9, x + sz*1.2, y, x, y + sz*0.9);
+    c.closePath(); c.fill();
+  }
+  function princessDressPath(c, x, by){
+    c.beginPath();
+    c.moveTo(x-7, by-34); c.lineTo(x+7, by-34);
+    c.quadraticCurveTo(x+15, by-14, x+13, by-8);
+    c.quadraticCurveTo(x, by-4, x-13, by-8);
+    c.quadraticCurveTo(x-15, by-14, x-7, by-34);
+    c.closePath();
+  }
+  function outfitFill(c, of, x, by, princess){
+    if(of.rainbow){
+      const g = c.createLinearGradient(x, by-36, x, by-6);
+      g.addColorStop(0, "#ff7eb3"); g.addColorStop(0.3, "#ffd24d");
+      g.addColorStop(0.62, "#6bd47e"); g.addColorStop(1, "#5b8def");
+      return g;
+    }
+    return princess ? of.d : of.p;
+  }
+  function drawOutfitPattern(c, of, x, by, princess){
+    if(!of.pat) return;
+    c.save();
+    if(princess){ princessDressPath(c, x, by); } else { rrc(c, x-9, by-36, 18, 24, 6); }
+    c.clip();
+    if(of.pat === "dots"){
+      c.fillStyle = "rgba(255,255,255,.85)";
+      for(let iy=0; iy<4; iy++) for(let ix=0; ix<3; ix++){
+        c.beginPath();
+        c.arc(x-10 + ix*10 + (iy%2)*5, by-32 + iy*8, 1.8, 0, Math.PI*2);
+        c.fill();
+      }
+    } else if(of.pat === "stars"){
+      star5c(c, x-6, by-28, 3.4, "#ffe082");
+      star5c(c, x+6, by-20, 3, "#ffe082");
+      star5c(c, x-2, by-11, 2.6, "#fff");
+    } else if(of.pat === "stripes"){
+      c.fillStyle = "rgba(255,255,255,.9)";
+      for(let i=0; i<4; i++) c.fillRect(x-15, by-34 + i*7.5, 30, 3.4);
+    } else if(of.pat === "hearts"){
+      heartc(c, x-6, by-27, 3, "rgba(255,255,255,.9)");
+      heartc(c, x+6, by-19, 2.7, "rgba(255,255,255,.9)");
+      heartc(c, x-2, by-11, 2.4, "#ffe0ec");
+    } else if(of.pat === "flowers"){
+      [[-6,-27],[6,-20],[-1,-11]].forEach(f => {
+        for(let i=0; i<5; i++){
+          const a = i * Math.PI*2/5;
+          c.fillStyle = "#fff";
+          c.beginPath(); c.arc(x+f[0]+Math.cos(a)*2.4, by+f[1]+Math.sin(a)*2.4, 1.5, 0, Math.PI*2); c.fill();
+        }
+        c.fillStyle = "#ffd24d";
+        c.beginPath(); c.arc(x+f[0], by+f[1], 1.4, 0, Math.PI*2); c.fill();
+      });
+    } else if(of.pat === "galaxy"){
+      c.fillStyle = "#ffe082";
+      c.beginPath(); c.arc(x-5, by-26, 4.2, 0, Math.PI*2); c.fill();
+      c.fillStyle = princess ? of.d : of.p;
+      c.beginPath(); c.arc(x-3.4, by-27.2, 3.6, 0, Math.PI*2); c.fill();
+      star5c(c, x+6, by-20, 2.6, "#ffe082");
+      star5c(c, x-1, by-12, 2.2, "#fff");
+      c.fillStyle = "#fff";
+      c.beginPath(); c.arc(x+7, by-11, 1, 0, Math.PI*2); c.fill();
+    } else if(of.pat === "trim"){
+      c.strokeStyle = "#ffd24d"; c.lineWidth = 2;
+      if(princess){ princessDressPath(c, x, by); c.stroke(); }
+      else { rrc(c, x-7.5, by-34.5, 15, 21, 5); c.stroke(); }
+      c.fillStyle = "#ffd24d";
+      c.beginPath(); c.arc(x, by-29, 1.6, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(x, by-23, 1.6, 0, Math.PI*2); c.fill();
+    }
+    c.restore();
+  }
+  function drawHeadwear(c, head, x, hy, t){
+    if(head === "mugiwara"){
+      c.fillStyle = "#f0c96a";
+      c.beginPath(); c.ellipse(x, hy-6, 16, 5.5, 0, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(x, hy-8, 9, Math.PI, 0); c.closePath(); c.fill();
+      c.fillStyle = "#e05572";
+      c.fillRect(x-9, hy-10, 18, 3.4);
+      c.strokeStyle = "#d9a53c"; c.lineWidth = 1;
+      c.beginPath(); c.ellipse(x, hy-6, 16, 5.5, 0, 0, Math.PI*2); c.stroke();
+    } else if(head === "ribbon"){
+      const rx = x+7, ry = hy-9;
+      c.fillStyle = "#ff7eb3";
+      c.beginPath(); c.ellipse(rx-5.5, ry, 5.5, 4, -0.5, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.ellipse(rx+5.5, ry, 5.5, 4, 0.5, 0, Math.PI*2); c.fill();
+      c.fillStyle = "#e05572";
+      c.beginPath(); c.arc(rx, ry, 2.8, 0, Math.PI*2); c.fill();
+    } else if(head === "hana"){
+      c.strokeStyle = "#6fb54e"; c.lineWidth = 3; c.lineCap = "round";
+      c.beginPath(); c.arc(x, hy+1, 10.5, Math.PI*1.15, Math.PI*1.85); c.stroke();
+      [[-7,-6,"#ff9ecb"],[0,-9,"#ffd24d"],[7,-6,"#c97fe0"]].forEach(f => {
+        for(let i=0; i<5; i++){
+          const a = i * Math.PI*2/5;
+          c.fillStyle = f[2];
+          c.beginPath(); c.arc(x+f[0]+Math.cos(a)*2.6, hy+f[1]+Math.sin(a)*2.6, 1.9, 0, Math.PI*2); c.fill();
+        }
+        c.fillStyle = "#fff";
+        c.beginPath(); c.arc(x+f[0], hy+f[1], 1.7, 0, Math.PI*2); c.fill();
+      });
+    } else if(head === "mahou"){
+      c.fillStyle = "#7b5fc9";
+      c.beginPath(); c.ellipse(x, hy-6, 14.5, 4.6, 0, 0, Math.PI*2); c.fill();
+      c.beginPath();
+      c.moveTo(x-9, hy-7); c.quadraticCurveTo(x-2, hy-16, x+3, hy-25);
+      c.quadraticCurveTo(x+7, hy-16, x+9, hy-7);
+      c.closePath(); c.fill();
+      c.fillStyle = "#5e46a3";
+      c.fillRect(x-8.5, hy-10.5, 17, 3);
+      star5c(c, x+3, hy-20, 3.6, "#ffd24d");
+    } else if(head === "beret"){
+      c.fillStyle = "#e05572";
+      c.beginPath(); c.ellipse(x-1, hy-8, 12, 6.5, -0.12, 0, Math.PI*2); c.fill();
+      c.fillStyle = "#c94560";
+      c.beginPath(); c.ellipse(x-1, hy-5.5, 10.5, 3, -0.12, 0, Math.PI*2); c.fill();
+      c.strokeStyle = "#8a2f42"; c.lineWidth = 2; c.lineCap = "round";
+      c.beginPath(); c.moveTo(x-1, hy-14); c.lineTo(x-1, hy-17); c.stroke();
+    } else if(head === "chef"){
+      c.fillStyle = "#fff";
+      rrc(c, x-9, hy-13, 18, 7, 2); c.fill();
+      c.beginPath();
+      c.arc(x-6, hy-15, 5.5, 0, Math.PI*2);
+      c.arc(x, hy-18, 6.5, 0, Math.PI*2);
+      c.arc(x+6, hy-15, 5.5, 0, Math.PI*2);
+      c.fill();
+      c.strokeStyle = "#d8d8e0"; c.lineWidth = 1.4;
+      c.beginPath(); c.moveTo(x-9, hy-8); c.lineTo(x+9, hy-8); c.stroke();
+    } else if(head === "party"){
+      c.fillStyle = "#5ecbf7";
+      c.beginPath();
+      c.moveTo(x-8, hy-6); c.lineTo(x, hy-24); c.lineTo(x+8, hy-6);
+      c.closePath(); c.fill();
+      c.save();
+      c.beginPath();
+      c.moveTo(x-8, hy-6); c.lineTo(x, hy-24); c.lineTo(x+8, hy-6);
+      c.closePath(); c.clip();
+      c.fillStyle = "#ffd24d";
+      c.fillRect(x-9, hy-13, 18, 3.4);
+      c.fillRect(x-9, hy-20, 18, 3.2);
+      c.restore();
+      c.fillStyle = "#ff7eb3";
+      c.beginPath(); c.arc(x, hy-25, 3, 0, Math.PI*2); c.fill();
+    } else if(head === "nekomimi"){
+      const nc = "#5a4a6a";
+      c.fillStyle = nc;
+      c.beginPath(); c.moveTo(x-10, hy-4); c.lineTo(x-8, hy-14); c.lineTo(x-2, hy-7); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(x+10, hy-4); c.lineTo(x+8, hy-14); c.lineTo(x+2, hy-7); c.closePath(); c.fill();
+      c.fillStyle = "#ff9ec4";
+      c.beginPath(); c.moveTo(x-8.4, hy-5.4); c.lineTo(x-7.4, hy-11); c.lineTo(x-4, hy-7); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(x+8.4, hy-5.4); c.lineTo(x+7.4, hy-11); c.lineTo(x+4, hy-7); c.closePath(); c.fill();
+    } else if(head === "tenshi"){
+      const fl = t !== undefined ? Math.sin(t*2.6)*1.6 : 0;
+      c.strokeStyle = "#ffd24d"; c.lineWidth = 3;
+      c.beginPath(); c.ellipse(x, hy-16+fl, 10, 3.4, 0, 0, Math.PI*2); c.stroke();
+      c.strokeStyle = "rgba(255,240,160,.55)"; c.lineWidth = 6;
+      c.beginPath(); c.ellipse(x, hy-16+fl, 10, 3.4, 0, 0, Math.PI*2); c.stroke();
+    } else {
+      /* おうかん（デフォルト） */
+      c.fillStyle = "#ffd24d"; c.strokeStyle = "#e0a800"; c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(x-7, hy-7); c.lineTo(x-5.5, hy-13); c.lineTo(x-2.5, hy-9);
+      c.lineTo(x, hy-14); c.lineTo(x+2.5, hy-9); c.lineTo(x+5.5, hy-13);
+      c.lineTo(x+7, hy-7); c.closePath();
+      c.fill(); c.stroke();
+    }
+  }
+  function drawFaceAcc(c, face, x, hy){
+    if(face === "face_maru"){
+      c.strokeStyle = "#6e5a42"; c.lineWidth = 1.8;
+      c.beginPath(); c.arc(x-3.6, hy+3, 3.6, 0, Math.PI*2); c.stroke();
+      c.beginPath(); c.arc(x+3.6, hy+3, 3.6, 0, Math.PI*2); c.stroke();
+      c.beginPath(); c.moveTo(x-0.4, hy+3); c.lineTo(x+0.4, hy+3); c.stroke();
+    } else if(face === "face_sun"){
+      star5c(c, x-3.8, hy+3, 4.4, "#3a3a5a");
+      star5c(c, x+3.8, hy+3, 4.4, "#3a3a5a");
+      c.strokeStyle = "#3a3a5a"; c.lineWidth = 1.6;
+      c.beginPath(); c.moveTo(x-1, hy+2.4); c.lineTo(x+1, hy+2.4); c.stroke();
+      c.fillStyle = "rgba(255,255,255,.5)";
+      c.beginPath(); c.arc(x-4.6, hy+2, 1, 0, Math.PI*2); c.fill();
+    } else if(face === "face_heart"){
+      heartc(c, x-3.8, hy+3, 3.8, "rgba(255,110,160,.85)");
+      heartc(c, x+3.8, hy+3, 3.8, "rgba(255,110,160,.85)");
+      c.strokeStyle = "#e05572"; c.lineWidth = 1.4;
+      c.beginPath(); c.moveTo(x-1, hy+2.6); c.lineTo(x+1, hy+2.6); c.stroke();
+    } else if(face === "face_hoppe"){
+      star5c(c, x-7, hy+6.4, 2.4, "#ffb347");
+      star5c(c, x+7, hy+6.4, 2.4, "#ffb347");
+    }
+  }
+  function drawNeckBack(c, neck, x, by, t){
+    if(neck !== "neck_cape" && neck !== "neck_capestar") return;
+    const sway = t !== undefined ? Math.sin(t*3)*2.4 : 0;
+    c.fillStyle = neck === "neck_cape" ? "#d94f4f" : "#3d4b8f";
+    c.beginPath();
+    c.moveTo(x-9, by-34);
+    c.quadraticCurveTo(x-19+sway, by-20, x-16+sway, by-6);
+    c.lineTo(x+16-sway, by-6);
+    c.quadraticCurveTo(x+19-sway, by-20, x+9, by-34);
+    c.closePath(); c.fill();
+    if(neck === "neck_capestar"){
+      star5c(c, x-8+sway*0.5, by-18, 2.6, "#ffe082");
+      star5c(c, x+7-sway*0.5, by-13, 2.2, "#ffe082");
+    }
+  }
+  function drawNeckFront(c, neck, x, by){
+    if(neck === "neck_scarf"){
+      c.fillStyle = "#e05572";
+      rrc(c, x-9.5, by-37, 19, 5.5, 2.6); c.fill();
+      rrc(c, x+2, by-34, 5.5, 11, 2.4); c.fill();
+      c.strokeStyle = "#c94560"; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(x+3.4, by-26); c.lineTo(x+3.4, by-24); c.moveTo(x+6, by-26); c.lineTo(x+6, by-24); c.stroke();
+    } else if(neck === "neck_tie"){
+      c.fillStyle = "#e05572";
+      c.beginPath(); c.moveTo(x, by-33); c.lineTo(x-6, by-36.4); c.lineTo(x-6, by-29.6); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(x, by-33); c.lineTo(x+6, by-36.4); c.lineTo(x+6, by-29.6); c.closePath(); c.fill();
+      c.fillStyle = "#c94560";
+      c.beginPath(); c.arc(x, by-33, 1.9, 0, Math.PI*2); c.fill();
+    } else if(neck === "neck_necklace"){
+      c.strokeStyle = "#ffd24d"; c.lineWidth = 1.6;
+      c.beginPath(); c.arc(x, by-38, 6.5, 0.25*Math.PI, 0.75*Math.PI); c.stroke();
+      c.fillStyle = "#ff7eb3";
+      heartc(c, x, by-31, 2.4, "#ff7eb3");
+    }
+  }
+  function drawHandItem(c, hand, x, by, t){
+    const hx = x-13, hy2 = by-22;
+    if(hand === "hand_wand"){
+      c.strokeStyle = "#b06a3b"; c.lineWidth = 2.6; c.lineCap = "round";
+      c.beginPath(); c.moveTo(hx+3, hy2+3); c.lineTo(hx-6, hy2-14); c.stroke();
+      star5c(c, hx-7, hy2-17, 5, "#ffd24d", "#c79400");
+    } else if(hand === "hand_balloon"){
+      const sw = t !== undefined ? Math.sin(t*2.2)*3 : 0;
+      c.strokeStyle = "rgba(120,120,140,.8)"; c.lineWidth = 1.2;
+      c.beginPath(); c.moveTo(hx, hy2); c.quadraticCurveTo(hx-3, hy2-16, hx-5+sw, hy2-32); c.stroke();
+      c.fillStyle = "#e05572";
+      c.beginPath(); c.ellipse(hx-5+sw, hy2-40, 8, 9.5, 0, 0, Math.PI*2); c.fill();
+      c.fillStyle = "rgba(255,255,255,.55)";
+      c.beginPath(); c.arc(hx-8+sw, hy2-43, 2.6, 0, Math.PI*2); c.fill();
+    } else if(hand === "hand_hana"){
+      c.strokeStyle = "#6fb54e"; c.lineWidth = 2.2; c.lineCap = "round";
+      c.beginPath(); c.moveTo(hx, hy2); c.lineTo(hx-3, hy2-9); c.stroke();
+      c.beginPath(); c.moveTo(hx, hy2); c.lineTo(hx+1, hy2-10); c.stroke();
+      c.beginPath(); c.moveTo(hx, hy2); c.lineTo(hx-7, hy2-8); c.stroke();
+      [[-7,-10,"#ff9ecb"],[-3,-12,"#ffd24d"],[1,-13,"#c97fe0"]].forEach(f => {
+        c.fillStyle = f[2];
+        c.beginPath(); c.arc(hx+f[0], hy2+f[1], 3.2, 0, Math.PI*2); c.fill();
+        c.fillStyle = "#fff";
+        c.beginPath(); c.arc(hx+f[0], hy2+f[1], 1.3, 0, Math.PI*2); c.fill();
+      });
+    } else if(hand === "hand_basket"){
+      c.fillStyle = "#c9954e";
+      c.beginPath(); c.moveTo(hx-7, hy2); c.lineTo(hx+7, hy2); c.lineTo(hx+5, hy2+8); c.lineTo(hx-5, hy2+8); c.closePath(); c.fill();
+      c.strokeStyle = "#a3773a"; c.lineWidth = 1.6;
+      c.beginPath(); c.arc(hx, hy2-1, 6, Math.PI, 0); c.stroke();
+      c.strokeStyle = "rgba(163,119,58,.7)"; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(hx-6, hy2+3); c.lineTo(hx+6, hy2+3); c.stroke();
+    } else if(hand === "hand_flag"){
+      c.strokeStyle = "#8a5a30"; c.lineWidth = 2.4; c.lineCap = "round";
+      c.beginPath(); c.moveTo(hx, hy2+4); c.lineTo(hx, hy2-24); c.stroke();
+      const wav = t !== undefined ? Math.sin(t*3)*1.6 : 0;
+      c.fillStyle = "#ff7eb3";
+      c.beginPath();
+      c.moveTo(hx+1, hy2-24);
+      c.quadraticCurveTo(hx+10, hy2-23+wav, hx+18, hy2-21);
+      c.lineTo(hx+1, hy2-15);
+      c.closePath(); c.fill();
+      star5c(c, hx+8, hy2-20, 2.6, "#fff");
+    } else if(hand === "hand_candy"){
+      c.strokeStyle = "#fff"; c.lineWidth = 2.6; c.lineCap = "round";
+      c.beginPath(); c.moveTo(hx, hy2+3); c.lineTo(hx-3, hy2-10); c.stroke();
+      c.fillStyle = "#ff7eb3";
+      c.beginPath(); c.arc(hx-4, hy2-16, 7, 0, Math.PI*2); c.fill();
+      c.strokeStyle = "#fff"; c.lineWidth = 2.2;
+      c.beginPath(); c.arc(hx-4, hy2-16, 4.4, 0.2, Math.PI*1.4); c.stroke();
+      c.beginPath(); c.arc(hx-4, hy2-16, 1.8, Math.PI, Math.PI*2.2); c.stroke();
+    }
+  }
+  function drawPlayerTo(c, x, y, t, moving, gender, ward){
+    ward = normalizeWard(ward || S.wardrobe);
+    const of = OUTFITS[ward.outfit];
+    const sh = SHOES[ward.shoes];
+    const princess = (gender === "princess");
     const bob = moving ? Math.sin(t*12)*2.2 : Math.sin(t*2.2)*1;
     const legPh = moving ? Math.sin(t*12) : 0;
-    shadow(x, y+2, 15);
+    c.fillStyle = "rgba(42,64,32,.18)";
+    c.beginPath(); c.ellipse(x, y+2, 15, 5.4, 0, 0, Math.PI*2); c.fill();
     const by = y + bob;
-    /* あし */
-    ctx.fillStyle = "#4a4a6a";
-    rr(x-8, by-14+legPh*3, 6, 12, 3); ctx.fill();
-    rr(x+2, by-14-legPh*3, 6, 12, 3); ctx.fill();
-    if(gender === "princess"){
-      /* ドレス */
-      ctx.fillStyle = "#ff9ecb";
-      ctx.beginPath();
-      ctx.moveTo(x-7, by-34); ctx.lineTo(x+7, by-34);
-      ctx.quadraticCurveTo(x+15, by-14, x+13, by-8);
-      ctx.quadraticCurveTo(x, by-4, x-13, by-8);
-      ctx.quadraticCurveTo(x-15, by-14, x-7, by-34);
-      ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = 1.6;
-      ctx.beginPath(); ctx.moveTo(x-9, by-14); ctx.quadraticCurveTo(x, by-10, x+9, by-14); ctx.stroke();
+    /* マント（うしろ） */
+    drawNeckBack(c, ward.neck, x, by, t);
+    /* あし（くつ） */
+    if(sh.niji){
+      c.fillStyle = "#ff7eb3"; rrc(c, x-8, by-14+legPh*3, 6, 12, 3); c.fill();
+      c.fillStyle = "#5b8def"; rrc(c, x+2, by-14-legPh*3, 6, 12, 3); c.fill();
+      c.strokeStyle = "#ffd24d"; c.lineWidth = 1.4;
+      rrc(c, x-8, by-14+legPh*3, 6, 12, 3); c.stroke();
+      rrc(c, x+2, by-14-legPh*3, 6, 12, 3); c.stroke();
     } else {
-      /* チュニック */
-      ctx.fillStyle = "#5b8def";
-      rr(x-9, by-36, 18, 24, 6); ctx.fill();
-      ctx.fillStyle = "#ffd24d";
-      ctx.fillRect(x-9, by-20, 18, 3.5);
+      c.fillStyle = sh.col;
+      rrc(c, x-8, by-14+legPh*3, 6, 12, 3); c.fill();
+      rrc(c, x+2, by-14-legPh*3, 6, 12, 3); c.fill();
+      if(sh.trim){
+        c.strokeStyle = sh.trim; c.lineWidth = 1.4;
+        rrc(c, x-8, by-14+legPh*3, 6, 12, 3); c.stroke();
+        rrc(c, x+2, by-14-legPh*3, 6, 12, 3); c.stroke();
+      }
     }
+    /* ふく */
+    if(princess){
+      c.fillStyle = outfitFill(c, of, x, by, true);
+      princessDressPath(c, x, by); c.fill();
+      drawOutfitPattern(c, of, x, by, true);
+      if(of.pat !== "trim"){
+        c.strokeStyle = "rgba(255,255,255,.75)"; c.lineWidth = 1.6;
+        c.beginPath(); c.moveTo(x-9, by-14); c.quadraticCurveTo(x, by-10, x+9, by-14); c.stroke();
+      }
+    } else {
+      c.fillStyle = outfitFill(c, of, x, by, false);
+      rrc(c, x-9, by-36, 18, 24, 6); c.fill();
+      drawOutfitPattern(c, of, x, by, false);
+      if(of.pat !== "trim"){
+        c.fillStyle = "#ffd24d";
+        c.fillRect(x-9, by-20, 18, 3.5);
+      }
+    }
+    /* くびもと（まえ） */
+    drawNeckFront(c, ward.neck, x, by);
     /* うで */
-    ctx.strokeStyle = "#ffe0c2"; ctx.lineWidth = 4.5; ctx.lineCap = "round";
-    ctx.beginPath(); ctx.moveTo(x-9, by-31); ctx.lineTo(x-13, by-22-legPh*2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(x+9, by-31); ctx.lineTo(x+13, by-22+legPh*2); ctx.stroke();
+    c.strokeStyle = "#ffe0c2"; c.lineWidth = 4.5; c.lineCap = "round";
+    c.beginPath(); c.moveTo(x-9, by-31); c.lineTo(x-13, by-22-legPh*2); c.stroke();
+    c.beginPath(); c.moveTo(x+9, by-31); c.lineTo(x+13, by-22+legPh*2); c.stroke();
+    /* てのアイテム */
+    drawHandItem(c, ward.hand, x, by, t);
     /* あたま */
     const hy = by - 44;
-    if(gender === "princess"){
-      ctx.fillStyle = "#b0713a";
-      ctx.beginPath(); ctx.ellipse(x, hy+2, 13.5, 13, 0, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(x-11, hy+9, 4.5, 9, 0.25, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(x+11, hy+9, 4.5, 9, -0.25, 0, Math.PI*2); ctx.fill();
+    if(princess){
+      c.fillStyle = "#b0713a";
+      c.beginPath(); c.ellipse(x, hy+2, 13.5, 13, 0, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.ellipse(x-11, hy+9, 4.5, 9, 0.25, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.ellipse(x+11, hy+9, 4.5, 9, -0.25, 0, Math.PI*2); c.fill();
     }
-    ctx.fillStyle = "#ffe0c2";
-    ctx.beginPath(); ctx.arc(x, hy+2, 10.5, 0, Math.PI*2); ctx.fill();
+    c.fillStyle = "#ffe0c2";
+    c.beginPath(); c.arc(x, hy+2, 10.5, 0, Math.PI*2); c.fill();
     /* かみ（前髪） */
-    ctx.fillStyle = (gender === "princess") ? "#b0713a" : "#7a4f2b";
-    ctx.beginPath();
-    ctx.arc(x, hy+1, 10.5, Math.PI*1.05, Math.PI*1.95);
-    ctx.quadraticCurveTo(x+6, hy-3, x, hy-2);
-    ctx.quadraticCurveTo(x-6, hy-3, x-10, hy+1);
-    ctx.closePath(); ctx.fill();
+    c.fillStyle = princess ? "#b0713a" : "#7a4f2b";
+    c.beginPath();
+    c.arc(x, hy+1, 10.5, Math.PI*1.05, Math.PI*1.95);
+    c.quadraticCurveTo(x+6, hy-3, x, hy-2);
+    c.quadraticCurveTo(x-6, hy-3, x-10, hy+1);
+    c.closePath(); c.fill();
     /* かお */
-    ctx.fillStyle = "#2a2440";
-    ctx.beginPath(); ctx.arc(x-3.6, hy+3, 1.5, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x+3.6, hy+3, 1.5, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = "#2a2440"; ctx.lineWidth = 1.3;
-    ctx.beginPath(); ctx.arc(x, hy+6, 2.6, 0.15*Math.PI, 0.85*Math.PI); ctx.stroke();
-    if(gender === "princess"){
-      ctx.fillStyle = "rgba(255,140,170,.5)";
-      ctx.beginPath(); ctx.arc(x-6.5, hy+6, 1.7, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(x+6.5, hy+6, 1.7, 0, Math.PI*2); ctx.fill();
+    c.fillStyle = "#2a2440";
+    c.beginPath(); c.arc(x-3.6, hy+3, 1.5, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(x+3.6, hy+3, 1.5, 0, Math.PI*2); c.fill();
+    c.strokeStyle = "#2a2440"; c.lineWidth = 1.3;
+    c.beginPath(); c.arc(x, hy+6, 2.6, 0.15*Math.PI, 0.85*Math.PI); c.stroke();
+    if(princess){
+      c.fillStyle = "rgba(255,140,170,.5)";
+      c.beginPath(); c.arc(x-6.5, hy+6, 1.7, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(x+6.5, hy+6, 1.7, 0, Math.PI*2); c.fill();
     }
-    /* かんむり */
-    ctx.fillStyle = "#ffd24d"; ctx.strokeStyle = "#e0a800"; ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(x-7, hy-7); ctx.lineTo(x-5.5, hy-13); ctx.lineTo(x-2.5, hy-9);
-    ctx.lineTo(x, hy-14); ctx.lineTo(x+2.5, hy-9); ctx.lineTo(x+5.5, hy-13);
-    ctx.lineTo(x+7, hy-7); ctx.closePath();
-    ctx.fill(); ctx.stroke();
+    /* かおのアイテム */
+    drawFaceAcc(c, ward.face, x, hy);
+    /* あたまのアイテム */
+    drawHeadwear(c, ward.head, x, hy, t);
+  }
+  function drawPlayer(x, y, t, moving, gender){
+    drawPlayerTo(ctx, x, y, t, moving, gender, S.wardrobe);
+  }
+
+  /* ---- おとも ---- */
+  function drawPet(c, id, x, y, t){
+    if(id === "pet_hiyoko"){
+      const bob = Math.sin(t*8)*1.6;
+      c.fillStyle = "rgba(42,64,32,.14)";
+      c.beginPath(); c.ellipse(x, y+1, 8, 3, 0, 0, Math.PI*2); c.fill();
+      c.fillStyle = "#ffd24d";
+      c.beginPath(); c.arc(x, y-8+bob, 7.5, 0, Math.PI*2); c.fill();
+      c.fillStyle = "#f2b53c";
+      c.beginPath(); c.ellipse(x-6, y-7+bob, 3, 4.2, 0.5, 0, Math.PI*2); c.fill();
+      c.fillStyle = "#ff9800";
+      c.beginPath(); c.moveTo(x+6.5, y-9+bob); c.lineTo(x+10, y-8+bob); c.lineTo(x+6.5, y-7+bob); c.closePath(); c.fill();
+      c.fillStyle = "#2a2440";
+      c.beginPath(); c.arc(x+3.4, y-10.4+bob, 1.1, 0, Math.PI*2); c.fill();
+      c.strokeStyle = "#ff9800"; c.lineWidth = 1.4; c.lineCap = "round";
+      c.beginPath(); c.moveTo(x-2, y-1+bob); c.lineTo(x-2, y+1); c.moveTo(x+2, y-1+bob); c.lineTo(x+2, y+1); c.stroke();
+    } else if(id === "pet_chou"){
+      const fy = y - 30 + Math.sin(t*3)*4;
+      const flap = Math.abs(Math.sin(t*10)) * 0.7 + 0.3;
+      c.fillStyle = "#ff9ecb";
+      c.beginPath(); c.ellipse(x-4.5*flap, fy-2, 5.5*flap, 6.5, -0.4, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.ellipse(x+4.5*flap, fy-2, 5.5*flap, 6.5, 0.4, 0, Math.PI*2); c.fill();
+      c.fillStyle = "#f75d7f";
+      c.beginPath(); c.ellipse(x-3.4*flap, fy+3, 3.4*flap, 3.8, -0.4, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.ellipse(x+3.4*flap, fy+3, 3.4*flap, 3.8, 0.4, 0, Math.PI*2); c.fill();
+      c.fillStyle = "#5a4a6a";
+      c.beginPath(); c.ellipse(x, fy+1, 1.5, 5.5, 0, 0, Math.PI*2); c.fill();
+    } else if(id === "pet_kotori"){
+      const fy = y - 26 + Math.sin(t*2.6)*3.4;
+      c.fillStyle = "#5ecbf7";
+      c.beginPath(); c.ellipse(x, fy, 7, 6, 0, 0, Math.PI*2); c.fill();
+      const flap = Math.sin(t*9) * 0.5;
+      c.fillStyle = "#3fa8d8";
+      c.beginPath(); c.ellipse(x-3, fy-1, 5, 3, -0.7 + flap, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.moveTo(x-6.5, fy+2); c.lineTo(x-11, fy+4); c.lineTo(x-6.5, fy+4.6); c.closePath(); c.fill();
+      c.fillStyle = "#ff9800";
+      c.beginPath(); c.moveTo(x+6.4, fy-1.4); c.lineTo(x+9.6, fy-0.4); c.lineTo(x+6.4, fy+0.6); c.closePath(); c.fill();
+      c.fillStyle = "#2a2440";
+      c.beginPath(); c.arc(x+3.4, fy-2, 1.1, 0, Math.PI*2); c.fill();
+      c.fillStyle = "#cfefff";
+      c.beginPath(); c.ellipse(x+1, fy+2.6, 3.4, 2.4, 0, 0, Math.PI*2); c.fill();
+    } else if(id === "pet_kaeru"){
+      const bob = Math.abs(Math.sin(t*4))*3;
+      c.fillStyle = "rgba(42,64,32,.14)";
+      c.beginPath(); c.ellipse(x, y+1, 8, 3, 0, 0, Math.PI*2); c.fill();
+      c.fillStyle = "#6bd47e";
+      c.beginPath(); c.ellipse(x, y-6-bob, 8, 6.5, 0, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(x-4, y-12-bob, 3, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(x+4, y-12-bob, 3, 0, Math.PI*2); c.fill();
+      c.fillStyle = "#fff";
+      c.beginPath(); c.arc(x-4, y-12.4-bob, 1.8, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(x+4, y-12.4-bob, 1.8, 0, Math.PI*2); c.fill();
+      c.fillStyle = "#2a2440";
+      c.beginPath(); c.arc(x-4, y-12.4-bob, 0.9, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(x+4, y-12.4-bob, 0.9, 0, Math.PI*2); c.fill();
+      c.fillStyle = "#d9f5de";
+      c.beginPath(); c.ellipse(x, y-4-bob, 4.4, 3.4, 0, 0, Math.PI*2); c.fill();
+      c.strokeStyle = "#2a4020"; c.lineWidth = 1;
+      c.beginPath(); c.arc(x, y-8-bob, 2, 0.2*Math.PI, 0.8*Math.PI); c.stroke();
+    } else if(id === "pet_hoshi"){
+      const fy = y - 32 + Math.sin(t*2.2)*4;
+      const g = c.createRadialGradient(x, fy, 1, x, fy, 15);
+      g.addColorStop(0, "rgba(255,240,170,.95)");
+      g.addColorStop(1, "rgba(255,240,170,0)");
+      c.fillStyle = g;
+      c.beginPath(); c.arc(x, fy, 15, 0, Math.PI*2); c.fill();
+      star5c(c, x, fy, 7.5, "#ffd24d", "#c79400");
+      c.fillStyle = "#2a2440";
+      c.beginPath(); c.arc(x-1.8, fy-0.4, 0.8, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(x+1.8, fy-0.4, 0.8, 0, Math.PI*2); c.fill();
+      c.globalAlpha = 0.6 + Math.sin(t*5)*0.3;
+      c.fillStyle = "#fff";
+      c.beginPath(); c.arc(x+8, fy-8, 1.4, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(x-9, fy+4, 1.1, 0, Math.PI*2); c.fill();
+      c.globalAlpha = 1;
+    }
   }
 
   /* ---- どうぶつ ---- */
@@ -896,6 +1519,59 @@
     ctx.fillStyle = "#ddd6c6"; rr(x-8, y-24, 16, 15, 3); ctx.fill();
     star5(x, y-36, 13, "#ffd24d", "#c79400");
   }
+  function drawBoutique(x, y, t){
+    const w = 116, h = 78;
+    /* かべ */
+    ctx.fillStyle = "#fff0f5";
+    rr(x-w/2, y-h/2, w, h, 8); ctx.fill();
+    ctx.strokeStyle = "#e0a8c0"; ctx.lineWidth = 3;
+    rr(x-w/2, y-h/2, w, h, 8); ctx.stroke();
+    /* やね */
+    ctx.fillStyle = "#c97fe0";
+    ctx.beginPath();
+    ctx.moveTo(x-w/2-10, y-h/2+5); ctx.lineTo(x, y-h/2-34); ctx.lineTo(x+w/2+10, y-h/2+5);
+    ctx.closePath(); ctx.fill();
+    /* ひさし（ストライプ） */
+    for(let i=0; i<6; i++){
+      ctx.fillStyle = i%2 ? "#fff" : "#ff9ecb";
+      ctx.beginPath();
+      ctx.moveTo(x-w/2+2 + i*(w-4)/6, y-h/2+6);
+      ctx.lineTo(x-w/2+2 + (i+1)*(w-4)/6, y-h/2+6);
+      ctx.lineTo(x-w/2+2 + (i+1)*(w-4)/6, y-h/2+18);
+      ctx.arc(x-w/2+2 + (i+0.5)*(w-4)/6, y-h/2+18, (w-4)/12, 0, Math.PI);
+      ctx.closePath(); ctx.fill();
+    }
+    /* ショーウィンドウ（ドレスの マネキン） */
+    ctx.fillStyle = "#e3f4ff"; ctx.strokeStyle = "#e0a8c0"; ctx.lineWidth = 2.5;
+    rr(x-44, y-8, 34, 34, 5); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#ffd24d";
+    ctx.beginPath();
+    ctx.moveTo(x-30, y+2); ctx.lineTo(x-24, y+2);
+    ctx.quadraticCurveTo(x-19, y+16, x-21, y+20);
+    ctx.lineTo(x-33, y+20);
+    ctx.quadraticCurveTo(x-35, y+16, x-30, y+2);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#f7c8d8";
+    ctx.beginPath(); ctx.arc(x-27, y-1, 3.4, 0, Math.PI*2); ctx.fill();
+    /* ドア */
+    ctx.fillStyle = "#b06a8a";
+    ctx.beginPath();
+    ctx.moveTo(x+8, y+h/2); ctx.lineTo(x+8, y+6);
+    ctx.quadraticCurveTo(x+8, y-6, x+21, y-6);
+    ctx.quadraticCurveTo(x+34, y-6, x+34, y+6);
+    ctx.lineTo(x+34, y+h/2);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#ffd24d"; ctx.beginPath(); ctx.arc(x+29, y+20, 2.2, 0, Math.PI*2); ctx.fill();
+    /* かんばん（リボン） */
+    const sway = Math.sin(t*2)*2;
+    ctx.fillStyle = "#fff"; ctx.strokeStyle = "#e0a8c0"; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(x+46 + sway*0.3, y-24, 13, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#ff7eb3";
+    ctx.beginPath(); ctx.ellipse(x+41 + sway*0.3, y-24, 4.6, 3.4, -0.5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x+51 + sway*0.3, y-24, 4.6, 3.4, 0.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#e05572";
+    ctx.beginPath(); ctx.arc(x+46 + sway*0.3, y-24, 2.4, 0, Math.PI*2); ctx.fill();
+  }
   function drawDigSpot(x, y, t){
     ctx.fillStyle = "#7d4e26";
     ctx.beginPath(); ctx.ellipse(x, y, 20, 9, 0, 0, Math.PI*2); ctx.fill();
@@ -1089,6 +1765,7 @@
     ents.push({ y:POS.kitchen.y+55, d:() => drawKitchenBuilding(POS.kitchen.x-cam.x, POS.kitchen.y-cam.y, tGlobal) });
     if(hasKoya()) ents.push({ y:POS.coop.y+28, d:() => drawCoop(POS.coop.x-cam.x, POS.coop.y-cam.y, tGlobal, pendingEggs()) });
     if(hasWell()) ents.push({ y:POS.well.y+8, d:() => drawWell(POS.well.x-cam.x, POS.well.y-cam.y, tGlobal) });
+    ents.push({ y:POS.boutique.y+39, d:() => drawBoutique(POS.boutique.x-cam.x, POS.boutique.y-cam.y, tGlobal) });
     POS.trees.forEach(tr => ents.push({ y:tr.y, d:() => drawTree(tr.x-cam.x, tr.y-cam.y) }));
     POS.bushes.forEach(b => ents.push({ y:b.y, d:() => drawBush(b.x-cam.x, b.y-cam.y) }));
     /* じゅうにんのいえ */
@@ -1118,7 +1795,31 @@
     });
     /* 主人公 */
     ents.push({ y:player.y, d:() => drawPlayer(player.x-cam.x, player.y-cam.y, tGlobal, player.moving, S.gender || "prince") });
+    /* おとも */
+    if(S.wardrobe.pet !== "pet_none"){
+      ents.push({ y:pet.y, d:() => drawPet(ctx, S.wardrobe.pet, pet.x-cam.x, pet.y-cam.y, tGlobal) });
+    }
     ents.sort((a,b) => a.y - b.y);
+    /* キラキラの あと（キャラのうしろ） */
+    const fx = S.wardrobe.fx;
+    if(fx !== "fx_none"){
+      for(let i = trail.length - 1; i >= 0; i--){
+        const tp = trail[i];
+        const age = tGlobal - tp.t0;
+        if(age > 0.85){ trail.splice(i, 1); continue; }
+        const a = 1 - age / 0.85;
+        const px = tp.x - cam.x, py = tp.y - cam.y - age * 22;
+        ctx.globalAlpha = a;
+        if(fx === "fx_kira") diamond(px, py, 6, tp.ci % 2 ? "#ffd24d" : "#fff");
+        else if(fx === "fx_heart") heartc(ctx, px, py, 4.4, "#ff9ecb");
+        else if(fx === "fx_star") star5(px, py, 5.5, "#ffd24d");
+        else if(fx === "fx_niji"){
+          ctx.fillStyle = TRAIL_COLORS_NIJI[tp.ci];
+          ctx.beginPath(); ctx.arc(px, py, 4.4, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+    }
     ents.forEach(e => e.d());
     /* オーバーレイ：吹き出し */
     npcs.forEach(n => {
@@ -1200,6 +1901,92 @@
     ctx.fillStyle = "#ffc7e0"; ctx.beginPath(); ctx.ellipse(cx-80, sy-46, 13, 4, 0, 0, Math.PI*2); ctx.fill();
     /* 主人公 */
     drawPlayer(cx-110, sy+66, tGlobal, false, S.gender || "prince");
+    if(S.wardrobe.pet !== "pet_none") drawPet(ctx, S.wardrobe.pet, cx-158, sy+72, tGlobal);
+
+    /* ---- 料理かんせいアニメーション ---- */
+    if(kAnim){
+      const ph = Math.min(1, (performance.now() - kAnim.t0) / KANIM_DUR);
+      const potX = cx+105, potY = sy-70;
+      /* A: しょくざいが なべへ とびこむ (0〜0.38) */
+      kAnim.ings.forEach((k, i) => {
+        const delay = i * 0.07;
+        const p = Math.min(1, Math.max(0, (ph - delay) / 0.3));
+        if(p <= 0 || p >= 1) return;
+        const sx0 = cx-142, sy0 = sy-52;
+        const ix = sx0 + (potX - sx0) * p;
+        const iy = sy0 + (potY - 20 - sy0) * p - Math.sin(p * Math.PI) * 90;
+        ctx.fillStyle = ING_COLORS[k] || "#8fd06e";
+        ctx.beginPath(); ctx.arc(ix, iy, 9, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,.55)";
+        ctx.beginPath(); ctx.arc(ix-3, iy-3, 3, 0, Math.PI*2); ctx.fill();
+      });
+      /* B: ぐつぐつ + キラキラ (0.3〜0.72) */
+      if(ph > 0.3 && ph < 0.75){
+        const bp = (ph - 0.3) / 0.45;
+        /* おおきな ゆげ */
+        for(let i=0; i<5; i++){
+          const pp = (bp * 2 + i * 0.2) % 1;
+          ctx.fillStyle = "rgba(255,255,255," + (0.8 * (1 - pp)) + ")";
+          ctx.beginPath();
+          ctx.arc(potX - 24 + i*12 + Math.sin(pp*6 + i)*7, potY - 16 - pp*70, 8 + pp*12, 0, Math.PI*2);
+          ctx.fill();
+        }
+        /* なべから はねる しずく */
+        for(let i=0; i<4; i++){
+          const pp = (bp * 3 + i * 0.25) % 1;
+          const ang = -Math.PI/2 + (i - 1.5) * 0.5;
+          const jx = potX + Math.cos(ang) * pp * 46;
+          const jy = potY - 8 + Math.sin(ang) * pp * 46 + pp * pp * 30;
+          ctx.fillStyle = "rgba(255,190,138," + (1 - pp) + ")";
+          ctx.beginPath(); ctx.arc(jx, jy, 4, 0, Math.PI*2); ctx.fill();
+        }
+        /* キラキラ */
+        for(let i=0; i<6; i++){
+          const pp = (bp * 2 + i / 6) % 1;
+          const ang = i * 1.05 + bp * 3;
+          ctx.globalAlpha = 1 - pp;
+          diamond(potX + Math.cos(ang) * (30 + pp*36), potY - 20 - pp*40 + Math.sin(ang*2)*8, 6, i%2 ? "#ffd24d" : "#fff");
+          ctx.globalAlpha = 1;
+        }
+        /* なべの ゆれ */
+        const shake = Math.sin(bp * 40) * 2.5 * (1 - bp);
+        ctx.fillStyle = "#ff9e5e";
+        ctx.beginPath(); ctx.ellipse(potX + shake, potY, 26, 6.5, 0, 0, Math.PI*2); ctx.fill();
+      }
+      /* C: りょうり とうじょう (0.7〜1) */
+      if(ph > 0.7){
+        const cp = (ph - 0.7) / 0.3;
+        const ease = 1 - Math.pow(1 - cp, 3);
+        const dy = potY - 26 - ease * 74;
+        /* ひかりの わ */
+        const glowR = 34 + Math.sin(tGlobal*6) * 4;
+        const grad = ctx.createRadialGradient(potX, dy, 4, potX, dy, glowR + 18);
+        grad.addColorStop(0, "rgba(255,240,180,.9)");
+        grad.addColorStop(1, "rgba(255,240,180,0)");
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.arc(potX, dy, glowR + 18, 0, Math.PI*2); ctx.fill();
+        /* ひかりの すじ */
+        ctx.strokeStyle = "rgba(255,220,120,.7)"; ctx.lineWidth = 3; ctx.lineCap = "round";
+        for(let i=0; i<8; i++){
+          const ang = i * Math.PI/4 + tGlobal * 1.2;
+          ctx.beginPath();
+          ctx.moveTo(potX + Math.cos(ang) * (glowR - 4), dy + Math.sin(ang) * (glowR - 4));
+          ctx.lineTo(potX + Math.cos(ang) * (glowR + 10), dy + Math.sin(ang) * (glowR + 10));
+          ctx.stroke();
+        }
+        /* りょうり ほんたい（おおきく） */
+        drawDishIcon(kAnim.recipeId, potX, dy, 52);
+        /* ほし ポップ */
+        for(let i=0; i<kAnim.stars; i++){
+          const st = 0.35 + i * 0.2;
+          if(cp < st) continue;
+          const sp = Math.min(1, (cp - st) / 0.15);
+          const pop = sp < 0.6 ? sp / 0.6 * 1.25 : 1.25 - (sp - 0.6) / 0.4 * 0.25;
+          const sxp = potX + (i - (kAnim.stars-1)/2) * 34;
+          star5(sxp, dy - 48, 11 * pop, "#ffd24d", "#c79400");
+        }
+      }
+    }
   }
 
   /* ================= メインループ ================= */
@@ -1216,6 +2003,26 @@
         player.y = Math.max(120, Math.min(WORLD.h-30, player.y + iv.y * player.speed * dt));
       } else {
         player.moving = false;
+      }
+      /* おとも：主人公をゆっくり追いかける */
+      if(S.wardrobe.pet !== "pet_none"){
+        const gx = player.x - 30, gy = player.y + 8;
+        pet.x += (gx - pet.x) * Math.min(1, dt * 4.2);
+        pet.y += (gy - pet.y) * Math.min(1, dt * 4.2);
+      }
+      /* キラキラの あと */
+      if(S.wardrobe.fx !== "fx_none" && player.moving){
+        trailTimer -= dt;
+        if(trailTimer <= 0){
+          trailTimer = 0.1;
+          trail.push({
+            x: player.x + (Math.random()-0.5)*16,
+            y: player.y + Math.random()*4,
+            t0: tGlobal,
+            ci: Math.floor(Math.random()*5),
+          });
+          if(trail.length > 22) trail.shift();
+        }
       }
       npcs.forEach(n => {
         if(n.wait > 0){ n.wait -= dt; n.moving = false; }
@@ -1327,6 +2134,8 @@
     }
     /* キッチンのドア */
     cand(POS.kitchenDoor.x, POS.kitchenDoor.y + 6, 64, "🍳 キッチンに はいる", enterKitchen);
+    /* おようふくやさん */
+    cand(POS.boutiqueDoor.x, POS.boutiqueDoor.y + 6, 62, "👗 おようふくやさんに はいる", openShop);
     /* はたけ */
     for(let i=0; i<POS.plots.length; i++){
       const pos = POS.plots[i];
@@ -1397,6 +2206,8 @@
           S.plots[idx] = { crop, plantedAt: Date.now(), boost: 0 };
           sfx.plant(); save(); closeModal();
           toast("🌱 " + CROPS[crop].name + "の たねを まいたよ！");
+          missionEvent("plant");
+          if(crop === "corn") missionEvent("plant_corn");
         });
       });
       return;
@@ -1404,10 +2215,12 @@
     const r = cropRatio(p);
     if(r >= 1){
       /* しゅうかく */
+      const cropName = CROPS[p.crop].name;
       S.inv[p.crop] = (S.inv[p.crop] || 0) + 1;
       S.plots[idx] = null;
       sfx.harvest(); save(); renderKitchenPanel();
-      toast("🧺 " + CROPS[p.crop].name + "を しゅうかく！");
+      toast("🧺 " + cropName + "を しゅうかく！");
+      missionEvent("harvest");
       return;
     }
     /* そだてちゅう：みずやり */
@@ -1494,9 +2307,16 @@
       '<div style="width:70px; height:70px; margin:4px auto;">' + animalSVG(animalId) + '</div>' +
       '<p style="font-size:14px; font-weight:900;">' + ANIMALS[animalId].name + '「おいしい！ ありがとう！」</p>' +
       '<p class="reward-line">👑 +' + reward + '</p>' + extra +
-      '<button class="big-btn" data-close="1">どういたしまして！</button>'
+      '<button class="big-btn" id="deliverOk">どういたしまして！</button>'
     );
     renderStatus(); renderKitchenPanel();
+    const dOk = $("deliverOk");
+    if(dOk) dOk.addEventListener("click", () => {
+      closeModal();
+      missionEvent("deliver");
+      if(gotPiece) missionEvent("piece");
+      checkStateMission();
+    });
   }
 
   /* ---- たから ---- */
@@ -1517,9 +2337,14 @@
         '<h2>🎁 たからばこ はっけん！</h2>' +
         '<div style="width:90px; height:90px; margin:6px auto;" class="sparkle">' + SPRITES.chest + '</div>' +
         '<p class="reward-line">' + treasure.label + '</p>' +
-        '<button class="big-btn" data-close="1">やったー！</button>'
+        '<button class="big-btn" id="treasureOk">やったー！</button>'
       );
       renderStatus(); renderKitchenPanel();
+      const tOk = $("treasureOk");
+      if(tOk) tOk.addEventListener("click", () => {
+        closeModal();
+        missionEvent("treasure");
+      });
     }, 450);
   }
 
@@ -1578,6 +2403,7 @@
   let mini = null;
   function startCooking(recipeId){
     const r = RECIPES[recipeId];
+    if(kAnim) return;
     if(!canCook(recipeId)) return;
     Object.keys(r.need).forEach(k => { S.inv[k] -= r.need[k]; });
     save();
@@ -1649,28 +2475,174 @@
       finishCooking(false);
     });
   }
+  /* ---- 料理かんせいアニメーション ---- */
+  const ING_COLORS = { ninjin:"#ff8a3c", tomato:"#ef5350", ichigo:"#f75d7f", corn:"#ffd24d", komugi:"#f0c96a", egg:"#fff7e0" };
+  let kAnim = null;
+  const KANIM_DUR = 2500;
   function finishCooking(burnt){
-    const r = RECIPES[mini.recipeId];
+    const recipeId = mini.recipeId;
+    const r = RECIPES[recipeId];
     let stars = 1;
     if(!burnt){
       const inZone = mini.panPct >= mini.zoneStart && mini.panPct <= mini.zoneEnd;
       const score = mini.hits + (inZone ? 1 : 0);
       stars = score >= 4 ? 3 : (score >= 2 ? 2 : 1);
     }
-    S.dishes.push({ id: mini.recipeId, stars });
+    S.dishes.push({ id: recipeId, stars });
     if(S.dishes.length > 12) S.dishes.shift();
     save();
-    sfx.done();
-    const msg = burnt ? "ちょっと こげちゃった！ でも できあがり！" : (stars === 3 ? "かんぺき！ さいこうの できばえ！" : (stars === 2 ? "じょうずに できたね！" : "できあがり！ つぎは もっと じょうずに できるよ！"));
-    showModal(
-      '<h2>🍽️ ' + r.name + ' かんせい！</h2>' +
-      '<div style="width:80px; height:80px; margin:6px auto;">' + SPRITES[mini.recipeId] + '</div>' +
-      '<div class="stars-result">' + "⭐".repeat(stars) + "☆".repeat(3-stars) + '</div>' +
-      '<p style="font-size:13px; font-weight:900; margin:4px 0;">' + msg + '</p>' +
-      '<button class="big-btn" data-close="1">やった！</button>'
-    );
     mini = null;
-    renderKitchenPanel();
+    closeModal();
+    /* しょくざいリスト（かず分ふくらませる） */
+    const ings = [];
+    Object.keys(r.need).forEach(k => { for(let i=0; i<r.need[k]; i++) ings.push(k); });
+    const msg = burnt ? "ちょっと こげちゃった！ でも できあがり！" : (stars === 3 ? "かんぺき！ さいこうの できばえ！" : (stars === 2 ? "じょうずに できたね！" : "できあがり！ つぎは もっと じょうずに できるよ！"));
+    kAnim = { t0: performance.now(), recipeId, stars, msg, ings };
+    $("kitchenPanel").classList.remove("show");
+    /* こうかおん（じかんさで えんしゅつ） */
+    beep(440,.08,"triangle",0.1,.09); beep(520,.08,"triangle",0.3,.09); beep(480,.08,"triangle",0.5,.09);
+    beep(330,.3,"sine",0.9,.06); beep(392,.3,"sine",1.1,.06);
+    beep(660,.12,"triangle",1.8); beep(830,.12,"triangle",1.95); beep(1046,.25,"triangle",2.1);
+    setTimeout(showCookResult, KANIM_DUR + 250);
+  }
+  function showCookResult(){
+    if(!kAnim) return;
+    const a = kAnim;
+    kAnim = null;
+    sfx.done();
+    showModal(
+      '<h2>🍽️ ' + RECIPES[a.recipeId].name + ' かんせい！</h2>' +
+      '<div style="width:80px; height:80px; margin:6px auto;">' + SPRITES[a.recipeId] + '</div>' +
+      '<div class="stars-result">' + "⭐".repeat(a.stars) + "☆".repeat(3-a.stars) + '</div>' +
+      '<p style="font-size:13px; font-weight:900; margin:4px 0;">' + a.msg + '</p>' +
+      '<button class="big-btn" id="cookOk">やった！</button>'
+    );
+    const ok = $("cookOk");
+    if(ok) ok.addEventListener("click", () => {
+      closeModal();
+      $("kitchenPanel").classList.add("show");
+      renderKitchenPanel();
+      missionEvent("cook");
+      if(a.recipeId === "omelet" || a.recipeId === "cake") missionEvent("cook_lv5");
+    });
+  }
+
+  /* ================= おようふくやさん ================= */
+  let shopTab = "outfit";
+  function openShop(){
+    sfx.door();
+    shopTab = "outfit";
+    renderShop();
+  }
+  function previewWard(slot, id){
+    const w = normalizeWard(S.wardrobe);
+    w[slot] = id;
+    return w;
+  }
+  function drawShopPreview(cv, slot, id){
+    const pc = cv.getContext ? cv.getContext("2d") : null;
+    if(!pc) return;
+    pc.setTransform(2, 0, 0, 2, 0, 0);
+    const w = previewWard(slot, id);
+    if(slot === "pet" && id !== "pet_none"){
+      drawPlayerTo(pc, 28, 84, 0.6, false, S.gender || "prince", w);
+      drawPet(pc, id, 58, 84, 0.9);
+      return;
+    }
+    if(slot === "fx" && id !== "fx_none"){
+      drawPlayerTo(pc, 38, 84, 0.6, false, S.gender || "prince", w);
+      const pts = [[16,78],[24,64],[14,52]];
+      pts.forEach((pt, i) => {
+        pc.globalAlpha = 0.9 - i*0.25;
+        if(id === "fx_kira"){
+          pc.beginPath(); pc.moveTo(pt[0], pt[1]-5); pc.lineTo(pt[0]+3.4, pt[1]); pc.lineTo(pt[0], pt[1]+5); pc.lineTo(pt[0]-3.4, pt[1]); pc.closePath();
+          pc.fillStyle = i%2 ? "#ffd24d" : "#e8c86a"; pc.fill();
+        } else if(id === "fx_heart") heartc(pc, pt[0], pt[1], 4, "#ff9ecb");
+        else if(id === "fx_star") star5c(pc, pt[0], pt[1], 5, "#ffd24d");
+        else { pc.fillStyle = TRAIL_COLORS_NIJI[i]; pc.beginPath(); pc.arc(pt[0], pt[1], 4, 0, Math.PI*2); pc.fill(); }
+      });
+      pc.globalAlpha = 1;
+      return;
+    }
+    drawPlayerTo(pc, 38, 84, 0.6, false, S.gender || "prince", w);
+  }
+  function renderShop(){
+    const slot = shopTab;
+    const items = WSLOTS[slot].items;
+    const cards = Object.keys(items).map(id => {
+      const it = items[id];
+      const owned = S.wardrobe.owned.indexOf(id) >= 0;
+      const wearing = S.wardrobe[slot] === id;
+      const cant = !owned && S.crowns < it.price;
+      let priceHtml;
+      if(wearing) priceHtml = '<div class="wprice" style="color:#437a2b;">いま これ！</div>';
+      else if(owned) priceHtml = '<div class="wprice" style="color:#437a2b;">もっている</div>';
+      else priceHtml = '<div class="wprice">👑 ' + it.price + '</div>';
+      return '<div class="shop-card' + (wearing ? ' wearing' : '') + (cant ? ' cant' : '') + '" data-item="' + id + '">' +
+        (wearing ? '<span class="wtag">いまこれ</span>' : '') +
+        '<canvas class="wcv" width="152" height="184" data-item="' + id + '"></canvas>' +
+        '<div class="wname">' + it.name + '</div>' + priceHtml + '</div>';
+    }).join("");
+    const tabs = Object.keys(WSLOTS).map(k =>
+      '<button class="shop-tab' + (shopTab===k?" active":"") + '" data-slot="' + k + '">' + WSLOTS[k].icon + ' ' + WSLOTS[k].label + '</button>'
+    ).join("");
+    showModal(
+      '<h2>👗 おようふくやさん</h2>' +
+      '<p style="font-size:12px; font-weight:900; margin:0;">もっている クラウン：<span style="color:#c79400;">👑 ' + S.crowns + '</span></p>' +
+      '<div class="shop-tabs">' + tabs + '</div>' +
+      '<div class="shop-grid">' + cards + '</div>' +
+      '<button class="sub-btn" data-close="1">おみせを でる</button>'
+    );
+    document.querySelectorAll(".shop-tab").forEach(tb => {
+      tb.addEventListener("click", () => { shopTab = tb.getAttribute("data-slot"); sfx.tap(); renderShop(); });
+    });
+    document.querySelectorAll(".wcv").forEach(cv => {
+      drawShopPreview(cv, slot, cv.getAttribute("data-item"));
+    });
+    document.querySelectorAll(".shop-card").forEach(card => {
+      card.addEventListener("click", () => {
+        tryWearOrBuy(slot, card.getAttribute("data-item"));
+      });
+    });
+  }
+  function tryWearOrBuy(slot, id){
+    const it = WSLOTS[slot].items[id];
+    const owned = S.wardrobe.owned.indexOf(id) >= 0;
+    if(owned){
+      S.wardrobe[slot] = id;
+      sfx.good(); save();
+      toast("✨ " + it.name + "に きがえた！");
+      renderShop();
+      return;
+    }
+    if(S.crowns < it.price){
+      sfx.bad();
+      toast("👑が たりないみたい…（あと " + (it.price - S.crowns) + "）");
+      return;
+    }
+    /* こうにゅうかくにん */
+    showModal(
+      '<h2>👗 ' + it.name + '</h2>' +
+      '<canvas id="buyPreview" width="180" height="220" style="width:90px; height:110px; display:block; margin:4px auto;"></canvas>' +
+      '<p class="reward-line">👑 ' + it.price + 'で かう？</p>' +
+      '<button class="big-btn" id="buyOk">かう！</button>' +
+      '<button class="sub-btn" id="buyNo">やめておく</button>'
+    );
+    const pv = $("buyPreview");
+    if(pv) drawShopPreview(pv, slot, id);
+    $("buyOk").addEventListener("click", () => {
+      if(S.crowns < it.price){ sfx.bad(); renderShop(); return; }
+      S.crowns -= it.price;
+      S.wardrobe.owned.push(id);
+      S.wardrobe[slot] = id;
+      save();
+      sfx.crown();
+      renderStatus();
+      toast("🎀 " + it.name + "を かって みにつけた！");
+      renderShop();
+      missionEvent("buy");
+    });
+    $("buyNo").addEventListener("click", () => { sfx.tap(); renderShop(); });
   }
 
   /* ================= もちもの ================= */
@@ -1760,9 +2732,11 @@
   /* ================= 起動 ================= */
   load();
   S.level = calcLevel(S.totalCrowns);
+  missionCatchup();
   ensureOrders();
   renderStatus();
   renderKitchenPanel();
+  missionBanner(false);
 
   /* 定期セーブ・バッジ更新 */
   setInterval(() => { save(); updateBadges(); }, 8000);
