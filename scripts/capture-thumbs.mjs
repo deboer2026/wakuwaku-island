@@ -89,6 +89,8 @@ const WAIT_OVERRIDES = {
   'mura_v1.html': 7000,
   'machi_v7.html': 7000,
   'animal_kart_v7.html': 6000,
+  'sora_kyoshitsu_v1.html': 7000,
+  'meiro_v6.html': 6000,
 };
 
 const args = process.argv.slice(2);
