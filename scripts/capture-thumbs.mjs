@@ -28,6 +28,9 @@ const VIEWPORT = { width: 800, height: 600 };   // カード比4:3
 const THUMB_WIDTH = 480;                         // 出力webp幅
 const WEBP_QUALITY = 78;
 const DEFAULT_WAIT_MS = 4500;                    // 描画安定待ち(タイトル画面想定)
+const FLAT_STDEV = 6;                            // これ未満は「ほぼ単色」= 撮影失敗とみなす
+const RETRY_WAIT_MS = 4000;                      // 単色だった場合の追加待ち
+const MAX_RETRY = 2;
 
 /* route → ゲームHTML(src/App.jsx + src/games/*.jsx から抽出。
    同一HTMLを共有するエイリアスrouteは1回のキャプチャを複製する) */
@@ -57,7 +60,6 @@ const MAP = [
   ['/kudamono-catch', 'kudamono_v2.html'],
   ['/kyoshitsu', 'sora_kyoshitsu_v1.html'],
   ['/machi', 'machi_v7.html'],
-  ['/mahou-meiro', 'meiro_v6.html'],
   ['/mahou-nakama', 'mahou_nakama_v1.html'],
   ['/moji', 'moji_asobi_v2.html'],
   ['/moji-asobi', 'moji_asobi_v2.html'],
@@ -89,8 +91,7 @@ const WAIT_OVERRIDES = {
   'mura_v1.html': 7000,
   'machi_v7.html': 7000,
   'animal_kart_v7.html': 6000,
-  'sora_kyoshitsu_v1.html': 7000,
-  'meiro_v6.html': 6000,
+  'sora_kyoshitsu_v1.html': 6000,
 };
 
 const args = process.argv.slice(2);
@@ -131,26 +132,44 @@ async function main() {
 
       const url = `${BASE}/games/${html}`;
       try {
-        await page.goto(url, { waitUntil: 'networkidle2', timeout: 45000 });
-        await new Promise(res => setTimeout(res, WAIT_OVERRIDES[html] ?? DEFAULT_WAIT_MS));
+        const res = await page.goto(url, { waitUntil: 'networkidle2', timeout: 45000 });
+        if (!res || !res.ok()) throw new Error(`HTTP ${res ? res.status() : 'no response'}`);
 
-        // canvasがあればcanvas、なければビューポート全体
-        const canvas = await page.$('canvas');
-        const png = canvas
-          ? await canvas.screenshot({ type: 'png' })
-          : await page.screenshot({ type: 'png' });
+        // ゲームのタイトル/セレクト画面はDOMで組まれ <canvas> は display:none の
+        // パネル内に隠れていることが多い。canvasを直接撮ると失敗するか真っ白になるため、
+        // 常にビューポート全体を撮る。
+        let webp = null;
+        let stdev = 0;
+        const baseWait = WAIT_OVERRIDES[html] ?? DEFAULT_WAIT_MS;
 
-        const webp = await sharp(png)
-          .resize({ width: THUMB_WIDTH, withoutEnlargement: true })
-          .webp({ quality: WEBP_QUALITY })
-          .toBuffer();
+        for (let attempt = 0; attempt <= MAX_RETRY; attempt++) {
+          await new Promise(r => setTimeout(r, attempt === 0 ? baseWait : RETRY_WAIT_MS));
+          const png = await page.screenshot({ type: 'png' });
+
+          // ほぼ単色(=ロード中の白画面など)でないか検査
+          const stats = await sharp(png).stats();
+          stdev = Math.max(...stats.channels.map(c => c.stdev));
+          webp = await sharp(png)
+            .resize({ width: THUMB_WIDTH, withoutEnlargement: true })
+            .webp({ quality: WEBP_QUALITY })
+            .toBuffer();
+
+          if (stdev >= FLAT_STDEV) break;
+          if (attempt < MAX_RETRY) {
+            console.warn(`   ⏳ ${html}: ほぼ単色(stdev ${stdev.toFixed(1)})。待機して再取得…`);
+          }
+        }
+
+        if (stdev < FLAT_STDEV) {
+          throw new Error(`描画されませんでした (stdev ${stdev.toFixed(1)} < ${FLAT_STDEV})`);
+        }
 
         const first = outPath(pending[0]);
         await sharp(webp).toFile(first);
         for (const r of pending.slice(1)) await copyFile(first, outPath(r));
 
         done += pending.length;
-        console.log(`✅ ${html} → ${pending.join(', ')} (${(webp.length / 1024).toFixed(0)}KB)`);
+        console.log(`✅ ${html} → ${pending.join(', ')} (${(webp.length / 1024).toFixed(0)}KB, stdev ${stdev.toFixed(1)})`);
       } catch (e) {
         failed += pending.length;
         console.error(`❌ ${html} (${pending.join(', ')}): ${e.message}`);
