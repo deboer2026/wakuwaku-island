@@ -1227,6 +1227,37 @@ const SHELF_GROUPS = [
     label:{ja:'まなぶ',       en:'Learn',       zh:'学习',   ko:'배우기',     es:'Aprender' } },
 ];
 
+/* ── カテゴリチップ(4分類。既存categoryをグループにマップ) ── */
+const CAT_CHIPS = [
+  { key:'all',    match:() => true,
+    label:{ja:'ぜんぶ',     en:'All',    zh:'全部', ko:'전체',   es:'Todos'} },
+  { key:'action', match:g => ['アクション','レース'].includes(g.category),
+    label:{ja:'アクション', en:'Action', zh:'动作', ko:'액션',   es:'Acción'} },
+  { key:'puzzle', match:g => g.category === 'パズル',
+    label:{ja:'パズル',     en:'Puzzle', zh:'益智', ko:'퍼즐',   es:'Puzle'} },
+  { key:'create', match:g => g.category === 'そうぞう',
+    label:{ja:'つくる',     en:'Create', zh:'创造', ko:'만들기', es:'Crear'} },
+  { key:'learn',  match:g => ['かずあそび','もじあそび','クイズ','がくしゅう'].includes(g.category),
+    label:{ja:'がくしゅう', en:'Learn',  zh:'学习', ko:'배우기', es:'Aprender'} },
+];
+
+/* ── 実ゲーム画面サムネイル(public/thumbs/<route>.webp)。
+      未配置・読込失敗時は非表示→既存SVG/アイコンにフォールバック ── */
+function GameThumb({ route, className }) {
+  const [ok, setOk] = useState(true);
+  if (!ok) return null;
+  return (
+    <img
+      className={className}
+      src={`/thumbs${route}.webp`}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      onError={() => setOk(false)}
+    />
+  );
+}
+
 /* ── 棚用コンパクトカード ── */
 function ShelfCard({ game, lang, onClick }) {
   const t = game[lang] || game.ja;
@@ -1240,6 +1271,8 @@ function ShelfCard({ game, lang, onClick }) {
       {game.hard && <span className="tp-shelf-hard">🔥</span>}
       <div className="tp-shelf-art">
         {GAME_SVGS[game.id] || <span className="tp-shelf-icon-fb">{game.icon}</span>}
+        <GameThumb route={game.route} className="tp-shelf-thumb" />
+        <span className="tp-thumb-badge tp-thumb-badge--sm" aria-hidden="true">{game.icon}</span>
       </div>
       <div className="tp-shelf-name">{t.name}</div>
     </button>
@@ -1345,6 +1378,8 @@ function GameCard({ game, lang, isRecommended, onClick, animIndex }) {
           <span className="tp-card-new">NEW</span>
         )}
         {svg || <span className="tp-card-icon-fb">{game.icon}</span>}
+        <GameThumb route={game.route} className="tp-card-thumb" />
+        <span className="tp-thumb-badge" aria-hidden="true">{game.icon}</span>
       </div>
 
       <div className="tp-card-body">
@@ -1390,6 +1425,7 @@ export default function TopPage() {
   // しまマップ⇔いちらん切替。SSR/ハイドレーション不一致回避のため初期値は固定し、
   // 保存値の反映はマウント後に行う。
   const [topView, setTopView] = useState('map');
+  const [catKey,  setCatKey]  = useState('all');
   useEffect(() => {
     const saved = localStorage.getItem('wakuwaku_top_view');
     if (saved === 'list') setTopView('list');
@@ -1410,6 +1446,21 @@ export default function TopPage() {
   const recentGames = recentRoutes
     .map(route => GAMES.find(g => g.route === route))
     .filter(Boolean);
+
+  // きみにオススメ: よく遊ぶ分類の未プレイゲームを提案(マウント後に計算しSSR不一致を回避)
+  const [recoGames, setRecoGames] = useState([]);
+  useEffect(() => {
+    try {
+      const hist = getPlayHistory() || {};
+      const counts = CAT_CHIPS.slice(1).map(c => [c, ALL_SHELF_GAMES.filter(g => c.match(g) && hist[g.route]).length]);
+      counts.sort((a, b) => b[1] - a[1]);
+      const fav = counts[0] && counts[0][1] > 0 ? counts[0][0] : null;
+      const pool = fav
+        ? ALL_SHELF_GAMES.filter(g => fav.match(g) && !hist[g.route])
+        : ALL_SHELF_GAMES.filter(g => g.isNew && !hist[g.route]);
+      setRecoGames(pool.slice(0, 4));
+    } catch { /* noop */ }
+  }, []);
 
   useEffect(() => {
     if (localStorage.getItem('wakuwaku_bgm') !== 'off') startBGM();
@@ -1696,6 +1747,16 @@ export default function TopPage() {
               }[lang] || `むりょうゲーム ${ALL_SHELF_GAMES.length}こ！`}
             </div>
           </div>
+
+          <button
+            className="tp-cta"
+            onClick={() => {
+              const el = document.querySelector('.tp-game-section');
+              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+          >
+            ▶ {{ja:'いますぐ あそぶ', en:'Play now', zh:'立即游玩', ko:'지금 플레이', es:'Jugar ahora'}[lang] || 'いますぐ あそぶ'}
+          </button>
         </div>
       </div>
 
@@ -1721,6 +1782,21 @@ export default function TopPage() {
               📋 {{ja:'いちらん', en:'List', zh:'列表', ko:'목록', es:'Lista'}[lang] || 'いちらん'}
             </button>
           </div>
+          {topView === 'list' && (
+            <div className="tp-cat-chips" role="tablist" aria-label="カテゴリ">
+              {CAT_CHIPS.map(c => (
+                <button
+                  key={c.key}
+                  role="tab"
+                  aria-selected={catKey === c.key}
+                  className={`tp-cat-chip${catKey === c.key ? ' tp-cat-chip--on' : ''}`}
+                  onClick={() => setCatKey(c.key)}
+                >
+                  {c.label[lang] || c.label.ja}
+                </button>
+              ))}
+            </div>
+          )}
           {topView === 'map' && (
             <div className="tp-sticky-jump">
               {SHELF_GROUPS.map(grp => {
@@ -1757,7 +1833,8 @@ export default function TopPage() {
 
         {/* ── ジャンルグループ別ゲーム棚(6棚) ── */}
         {topView === 'list' && SHELF_GROUPS.map(grp => {
-          const items = ALL_SHELF_GAMES.filter(grp.match);
+          const chip  = CAT_CHIPS.find(c => c.key === catKey) || CAT_CHIPS[0];
+          const items = ALL_SHELF_GAMES.filter(grp.match).filter(chip.match);
           if (items.length === 0) return null;
           return (
             <div className="tp-shelf" key={grp.key}>
@@ -1786,6 +1863,27 @@ export default function TopPage() {
             </div>
             <div className="tp-recent-scroll">
               {recentGames.map(g => (
+                <button
+                  key={g.route}
+                  className="tp-recent-card"
+                  onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY); }}
+                >
+                  <span className="tp-recent-icon">{g.icon}</span>
+                  <span className="tp-recent-name">{(g[lang] || g.ja).name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── きみにオススメ ── */}
+        {recoGames.length > 0 && (
+          <div className="tp-recent tp-reco">
+            <div className="tp-recent-title">
+              💡 {{ja:'きみに オススメ', en:'For You', zh:'为你推荐', ko:'추천 게임', es:'Para ti'}[lang] || 'きみに オススメ'}
+            </div>
+            <div className="tp-recent-scroll">
+              {recoGames.map(g => (
                 <button
                   key={g.route}
                   className="tp-recent-card"
