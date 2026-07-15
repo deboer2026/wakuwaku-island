@@ -60,6 +60,7 @@ const MAP = [
   ['/kudamono-catch', 'kudamono_v2.html'],
   ['/kyoshitsu', 'sora_kyoshitsu_v1.html'],
   ['/machi', 'machi_v7.html'],
+  ['/mahou-meiro', 'meiro_v6.html'],
   ['/mahou-nakama', 'mahou_nakama_v1.html'],
   ['/moji', 'moji_asobi_v2.html'],
   ['/moji-asobi', 'moji_asobi_v2.html'],
