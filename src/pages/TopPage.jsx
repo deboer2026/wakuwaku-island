@@ -1424,7 +1424,7 @@ export default function TopPage() {
   const [recentRoutes,   setRecentRoutes]   = useState(() => typeof localStorage !== 'undefined' ? getRecentGames() : []);
   // しまマップ⇔いちらん切替。SSR/ハイドレーション不一致回避のため初期値は固定し、
   // 保存値の反映はマウント後に行う。
-  const [topView, setTopView] = useState('map');
+  const [topView, setTopView] = useState('list');
   const [catKey,  setCatKey]  = useState('all');
   useEffect(() => {
     const saved = localStorage.getItem('wakuwaku_top_view');
@@ -1710,14 +1710,6 @@ export default function TopPage() {
           <div className="tp-mascot-bubble" key={mascotText} aria-live="polite">
             {mascotText}
           </div>
-          <div className={`tp-hero-chars${mascotBounce ? ' tp-hero-chars--bounce' : ''}`} onClick={handleMascotTap}>
-            <KisekaeCharacters
-              kisekaeState={kisekaeState}
-              onOpen={openPanel}
-              lang={lang}
-            />
-          </div>
-
           <div className="tp-title-wrap">
             <h1 className="tp-title">
               <span className="tp-title-1">
@@ -1756,6 +1748,52 @@ export default function TopPage() {
             }}
           >
             ▶ {{ja:'いますぐ あそぶ', en:'Play now', zh:'立即游玩', ko:'지금 플레이', es:'Jugar ahora'}[lang] || 'いますぐ あそぶ'}
+          </button>
+
+          {/* ── 島ステージ: しろ+やし+きせかえキャラ ── */}
+          <div className="tp-island-stage">
+            <svg className="tp-island-svg" viewBox="0 0 560 190" aria-hidden="true">
+              <defs>
+                <linearGradient id="tpSeaG" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stopColor="#6FC8EF" /><stop offset="1" stopColor="#2F8DC4" />
+                </linearGradient>
+                <linearGradient id="tpSandG" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stopColor="#FFE9B8" /><stop offset="1" stopColor="#F0C97E" />
+                </linearGradient>
+                <linearGradient id="tpGrassG" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stopColor="#9BE87F" /><stop offset="1" stopColor="#4FBF63" />
+                </linearGradient>
+              </defs>
+              <ellipse cx="280" cy="168" rx="262" ry="20" fill="url(#tpSeaG)" />
+              <ellipse cx="280" cy="158" rx="216" ry="27" fill="url(#tpSandG)" />
+              <ellipse cx="280" cy="149" rx="176" ry="21" fill="url(#tpGrassG)" />
+              <g stroke="#3D3450" strokeWidth="3">
+                <rect x="242" y="52" width="76" height="82" rx="6" fill="#FFF4FB" />
+                <rect x="225" y="68" width="24" height="66" rx="5" fill="#F6E6FF" />
+                <rect x="311" y="68" width="24" height="66" rx="5" fill="#F6E6FF" />
+                <polygon points="225,70 237,44 249,70" fill="#8F6BEF" />
+                <polygon points="311,70 323,44 335,70" fill="#8F6BEF" />
+                <polygon points="240,54 280,20 320,54" fill="#FF7BA9" />
+                <rect x="269" y="94" width="22" height="40" rx="10" fill="#B78BE8" />
+                <circle cx="280" cy="74" r="8" fill="#FFC93C" />
+              </g>
+              <path d="M280 20 l0 -12 M280 8 l14 4 -14 6z" stroke="#3D3450" strokeWidth="3" fill="#FFC93C" />
+              <g stroke="#3D3450" strokeWidth="3">
+                <path d="M448 152 q5 -30 -2 -46" fill="none" stroke="#9A6B3F" strokeWidth="7" />
+                <path d="M446 106 q-26 -16 -38 -2 M446 106 q3 -24 22 -21 M446 106 q26 -10 31 5" fill="#4FBF63" />
+              </g>
+            </svg>
+            <div className={`tp-hero-chars${mascotBounce ? ' tp-hero-chars--bounce' : ''}`} onClick={handleMascotTap}>
+              <KisekaeCharacters
+                kisekaeState={kisekaeState}
+                onOpen={openPanel}
+                lang={lang}
+              />
+            </div>
+          </div>
+
+          <button className="tp-dress-btn" onClick={() => openPanel('princess')}>
+            👗 {{ja:'きがえ', en:'Dress up', zh:'换装', ko:'옷 입히기', es:'Vestir'}[lang] || 'きがえ'}
           </button>
         </div>
       </div>
