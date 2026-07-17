@@ -60,6 +60,21 @@
   #muteBtn { position:fixed; left:16px; bottom:16px; z-index:20; width:44px; height:44px; border-radius:50%;
              border:1px solid #3a6a8a; background:rgba(10,20,40,.6); color:#7df9ff; font-size:18px; cursor:pointer; }
   #flash { position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:5; }
+
+  /* ===== キャラ選択 ===== */
+  #selectScreen { display:none; }
+  .sel-title { font-size:17px; letter-spacing:6px; color:#ffe14d; text-shadow:0 0 12px #ff9d00; margin-bottom:22px; }
+  .sel-grid { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; max-width:460px; }
+  .sel-card { width:100px; padding:12px 6px 14px; border-radius:18px; background:rgba(20,16,44,.72);
+              border:2px solid #3a2f6a; cursor:pointer; transition:transform .1s, border-color .1s, box-shadow .1s; }
+  .sel-card:active { transform:scale(.94); }
+  .sel-card.pick { border-color:#ffe14d; box-shadow:0 0 18px rgba(255,200,60,.5); }
+  .sel-portrait { width:62px; height:62px; margin:0 auto 6px; border-radius:50%; padding:5px;
+                  background:radial-gradient(circle at 50% 38%, rgba(255,255,255,.18), rgba(0,0,0,.22)); }
+  .sel-portrait svg { width:100%; height:100%; display:block; }
+  .sel-name { font-size:15px; font-weight:bold; color:#fff; }
+  .sel-desc { font-size:10px; color:#9fc4e0; margin-top:3px; letter-spacing:1px; }
+  .sel-hint { margin-top:22px; font-size:13px; color:#c8e2f4; letter-spacing:2px; }
 </style>
 </head>
 <body>
@@ -89,6 +104,12 @@
     <span style="background:linear-gradient(90deg,#ff5e5e,#ffd25e,#7dff8a,#5ecdff,#c77dff);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:bold;">にじたま</span>で むてきに！<br>
     くるまに ぶつかっても <span style="color:#ff8fd6">♥ハート</span>が あれば だいじょうぶ
   </div>
+</div>
+
+<div id="selectScreen" class="screen">
+  <div class="sel-title">だれで はしる？</div>
+  <div class="sel-grid" id="selGrid"></div>
+  <div class="sel-hint">タップで スタート！</div>
 </div>
 
 <div id="gameover" class="screen">
@@ -234,7 +255,7 @@ const buildings = [];
 }
 
 // ---------- 車を作る ----------
-function makeCar(bodyColor, neonColor, isPlayer) {
+function makeCar(bodyColor, neonColor, isPlayer, earType, innerColor) {
   const car = new THREE.Group();
   const bodyMat = new THREE.MeshLambertMaterial({ color:bodyColor });
   const darkMat = new THREE.MeshLambertMaterial({ color:0x111118 });
@@ -263,19 +284,32 @@ function makeCar(bodyColor, neonColor, isPlayer) {
   car.userData.neonMesh = neon;
   car.userData.bodyMesh = lower;
 
-  // 🐱 プレイヤーだけネコ耳＆しっぽ
+  // どうぶつの みみ＆しっぽ（プレイヤーのみ、キャラで きりかえ）
   if (isPlayer) {
     const earMat = new THREE.MeshLambertMaterial({ color:bodyColor });
-    const innerMat = new THREE.MeshBasicMaterial({ color:0xffb0d8 });
+    const innerMat = new THREE.MeshBasicMaterial({ color: (innerColor!=null ? innerColor : 0xffb0d8) });
+    const blackMat = new THREE.MeshLambertMaterial({ color:0x222228 });
+    const et = earType || 'cat';
     for (const sx of [-1, 1]) {
-      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.7, 4), earMat);
-      ear.position.set(sx*0.55, 1.6, -0.6);
-      ear.rotation.y = Math.PI/4;
-      car.add(ear);
-      const inner = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.4, 4), innerMat);
-      inner.position.set(sx*0.55, 1.55, -0.55);
-      inner.rotation.y = Math.PI/4;
-      car.add(inner);
+      if (et === 'rabbit') {
+        const ear = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 1.2, 8), earMat);
+        ear.position.set(sx*0.4, 1.95, -0.55); car.add(ear);
+        const inner = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 0.9, 8), innerMat);
+        inner.position.set(sx*0.4, 2.0, -0.5); car.add(inner);
+      } else if (et === 'panda') {
+        const ear = new THREE.Mesh(new THREE.SphereGeometry(0.34, 12, 12), blackMat);
+        ear.position.set(sx*0.62, 1.55, -0.55); car.add(ear);
+      } else if (et === 'fox') {
+        const ear = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.85, 4), earMat);
+        ear.position.set(sx*0.58, 1.68, -0.6); ear.rotation.y = Math.PI/4; ear.rotation.z = sx*0.18; car.add(ear);
+        const inner = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.48, 4), innerMat);
+        inner.position.set(sx*0.58, 1.6, -0.55); inner.rotation.y = Math.PI/4; car.add(inner);
+      } else { // cat
+        const ear = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.7, 4), earMat);
+        ear.position.set(sx*0.55, 1.6, -0.6); ear.rotation.y = Math.PI/4; car.add(ear);
+        const inner = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.4, 4), innerMat);
+        inner.position.set(sx*0.55, 1.55, -0.55); inner.rotation.y = Math.PI/4; car.add(inner);
+      }
     }
     // しっぽ（後ろでゆらゆら）
     const tailCat = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.16, 1.4, 8), earMat);
@@ -287,10 +321,25 @@ function makeCar(bodyColor, neonColor, isPlayer) {
   return car;
 }
 
-// ---------- プレイヤー ----------
-const player = makeCar(0x10c8e8, 0x00ffff, true);
-scene.add(player);
-player.position.set(0, 0, 0);
+// ---------- キャラクター（サイト共通の どうぶつ） ----------
+const CHARACTERS = [
+  { key:'rabbit', name:'ラビィ', body:0xf4b6d2, neon:0xff5ea8, ear:'rabbit', inner:0xffd8e8, desc:'バランスがた',     spd:1.00, steer:1.00 },
+  { key:'fox',    name:'コン',   body:0xef8a3a, neon:0xffb020, ear:'fox',    inner:0xffd9b0, desc:'はやいよ！',       spd:1.08, steer:0.97 },
+  { key:'cat',    name:'ミィ',   body:0x10c8e8, neon:0x00ffff, ear:'cat',    inner:0xffb0d8, desc:'まがりやすい',     spd:1.00, steer:1.14 },
+  { key:'panda',  name:'パオ',   body:0xeeeeee, neon:0x9d7dff, ear:'panda',  inner:0x333333, desc:'ゆっくりあんしん', spd:0.92, steer:1.05 },
+];
+let currentChar = CHARACTERS[0];
+let player = null;
+function buildPlayer(char) {
+  if (player) scene.remove(player);
+  player = makeCar(char.body, char.neon, true, char.ear, char.inner);
+  player.userData.baseBody = char.body;
+  player.userData.baseNeon = char.neon;
+  player.position.set(0, 0, 0);
+  scene.add(player);
+  currentChar = char;
+}
+buildPlayer(CHARACTERS[0]);
 
 // ---------- 敵車プール ----------
 const TRAFFIC_COLORS = [0xd8355e, 0xe8b410, 0x8a3de8, 0x38d868, 0xe86a2a, 0xcccccc];
@@ -461,6 +510,7 @@ const el = {
   rainbowMsg: document.getElementById('rainbowMsg'),
   flash: document.getElementById('flash'),
   title: document.getElementById('titleScreen'),
+  select: document.getElementById('selectScreen'),
   over: document.getElementById('gameover'),
   resultScore: document.getElementById('resultScore'),
   resultStars: document.getElementById('resultStars'),
@@ -519,6 +569,7 @@ function startGame() {
   stars.forEach(s => { s.visible=false; s.userData.active=false; });
   rainbowOrbs.forEach(o => { o.visible=false; o.userData.active=false; });
   el.title.style.display = 'none';
+  el.select.style.display = 'none';
   el.over.style.display = 'none';
   el.hud.style.display = 'block';
   el.best.textContent = 'BEST ' + state.best;
@@ -557,7 +608,58 @@ function gameOver() {
   }, 900);
 }
 
-document.getElementById('startBtn').addEventListener('click', startGame);
+// ---------- localStorage 安全ラッパー（サンドボックス対策） ----------
+const SAFE_LS = (function(){
+  try { const k='__ndt'; localStorage.setItem(k,'1'); localStorage.removeItem(k); return localStorage; }
+  catch(e){ const m={}; return {
+    getItem:k=> (k in m ? m[k] : null),
+    setItem:(k,v)=>{ m[k]=String(v); },
+    removeItem:k=>{ delete m[k]; } }; }
+})();
+
+// ---------- キャラ選択画面 ----------
+const PORTRAITS = {
+  rabbit: '<svg viewBox="0 0 60 60"><ellipse cx="23" cy="9" rx="5" ry="14" fill="#f4b6d2"/><ellipse cx="37" cy="9" rx="5" ry="14" fill="#f4b6d2"/><ellipse cx="23" cy="10" rx="2.3" ry="9" fill="#ffd8e8"/><ellipse cx="37" cy="10" rx="2.3" ry="9" fill="#ffd8e8"/><circle cx="30" cy="35" r="17" fill="#f9d6e6"/><circle cx="24" cy="33" r="2.4" fill="#3a2440"/><circle cx="36" cy="33" r="2.4" fill="#3a2440"/><path d="M28 39 h4 l-2 2.4 Z" fill="#ff7eb3"/><ellipse cx="20" cy="39" rx="3" ry="2" fill="#ffb6cf"/><ellipse cx="40" cy="39" rx="3" ry="2" fill="#ffb6cf"/></svg>',
+  fox: '<svg viewBox="0 0 60 60"><path d="M14 30 L10 9 L27 22 Z" fill="#ef8a3a"/><path d="M46 30 L50 9 L33 22 Z" fill="#ef8a3a"/><circle cx="30" cy="34" r="17" fill="#ef8a3a"/><ellipse cx="30" cy="41" rx="11" ry="9" fill="#fff3e2"/><circle cx="24" cy="31" r="2.4" fill="#3a2440"/><circle cx="36" cy="31" r="2.4" fill="#3a2440"/><circle cx="30" cy="40" r="2.2" fill="#6a4a30"/></svg>',
+  cat: '<svg viewBox="0 0 60 60"><path d="M16 28 L13 10 L29 22 Z" fill="#10c8e8"/><path d="M44 28 L47 10 L31 22 Z" fill="#10c8e8"/><circle cx="30" cy="34" r="17" fill="#2ad2f0"/><circle cx="24" cy="32" r="2.4" fill="#123047"/><circle cx="36" cy="32" r="2.4" fill="#123047"/><path d="M28 37 h4 l-2 2 Z" fill="#ff7eb3"/><path d="M11 33 h9 M11 37 h9 M40 33 h9 M40 37 h9" stroke="#bff3ff" stroke-width="1.2" fill="none"/></svg>',
+  panda: '<svg viewBox="0 0 60 60"><circle cx="18" cy="16" r="7" fill="#222228"/><circle cx="42" cy="16" r="7" fill="#222228"/><circle cx="30" cy="34" r="17" fill="#f2f2f2"/><ellipse cx="23" cy="32" rx="4" ry="5" fill="#222228"/><ellipse cx="37" cy="32" rx="4" ry="5" fill="#222228"/><circle cx="23" cy="32" r="1.7" fill="#fff"/><circle cx="37" cy="32" r="1.7" fill="#fff"/><circle cx="30" cy="40" r="2.4" fill="#222228"/></svg>',
+};
+const selGrid = document.getElementById('selGrid');
+const selCards = [];
+CHARACTERS.forEach((ch, i) => {
+  const card = document.createElement('div');
+  card.className = 'sel-card';
+  card.innerHTML = '<div class="sel-portrait">' + (PORTRAITS[ch.ear]||'') + '</div>'
+                 + '<div class="sel-name">' + ch.name + '</div>'
+                 + '<div class="sel-desc">' + ch.desc + '</div>';
+  card.addEventListener('click', () => chooseCharacter(i));
+  selGrid.appendChild(card);
+  selCards.push(card);
+});
+// まえに えらんだ キャラを おもいだす
+let savedIdx = 0;
+try {
+  const sk = SAFE_LS.getItem('neon_char');
+  const fi = CHARACTERS.findIndex(c => c.key === sk);
+  if (fi >= 0) savedIdx = fi;
+} catch(e){}
+selCards[savedIdx].classList.add('pick');
+buildPlayer(CHARACTERS[savedIdx]);
+
+function chooseCharacter(i) {
+  selCards.forEach((c,j) => c.classList.toggle('pick', j===i));
+  buildPlayer(CHARACTERS[i]);
+  try { SAFE_LS.setItem('neon_char', CHARACTERS[i].key); } catch(e){}
+  el.select.style.display = 'none';
+  startGame();
+}
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  initAudio();
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  el.title.style.display = 'none';
+  el.select.style.display = 'flex';
+});
 document.getElementById('retryBtn').addEventListener('click', startGame);
 
 // ---------- スポーン ----------
@@ -617,7 +719,7 @@ function loop(now) {
 
   if (state.running) {
     // にじいろ中はボーナス加速
-    const maxSpeed = state.rainbow > 0 ? 1.7 : 1.45;
+    const maxSpeed = (state.rainbow > 0 ? 1.7 : 1.45) * currentChar.spd;
     state.speed = Math.min(state.speed + dt*0.024, maxSpeed);
     const worldSpeed = state.speed * 90 * dt;
     state.distance += worldSpeed;
@@ -627,11 +729,11 @@ function loop(now) {
       state.targetX = input.pointerX;
     } else {
       const steer = (input.right?1:0) - (input.left?1:0);
-      state.targetX += steer * dt * 16;
+      state.targetX += steer * dt * 16 * currentChar.steer;
     }
     state.targetX = Math.max(-7.2, Math.min(7.2, state.targetX));
     const dx = state.targetX - player.position.x;
-    player.position.x += dx * Math.min(dt*9, 1);
+    player.position.x += dx * Math.min(dt*9*currentChar.steer, 1);
     player.rotation.z = -dx * 0.08;
     player.rotation.y = -dx * 0.06;
 
@@ -654,8 +756,8 @@ function loop(now) {
       playerGlow.color.setHex(c);
       el.rainbowMsg.style.opacity = 1;
       if (state.rainbow <= 0) {
-        player.userData.neonMesh.material.color.setHex(0x00ffff);
-        player.userData.bodyMesh.material.color.setHex(0x10c8e8);
+        player.userData.neonMesh.material.color.setHex(player.userData.baseNeon);
+        player.userData.bodyMesh.material.color.setHex(player.userData.baseBody);
         playerGlow.color.setHex(0x00ccff);
         el.rainbowMsg.style.opacity = 0;
       }
