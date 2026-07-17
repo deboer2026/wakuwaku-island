@@ -58,6 +58,23 @@ const MASCOT_LINES = {
    ゲームSVGイラスト（SNES風）
 ════════════════════════════════════════════════════ */
 const GAME_SVGS = {
+  g_astral: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="100" height="85" rx="12" fill="#0a1226"/>
+      <circle cx="18" cy="15" r="1.5" fill="#bfe0ff" opacity=".9"/>
+      <circle cx="82" cy="13" r="1.3" fill="#bfe0ff" opacity=".8"/>
+      <circle cx="70" cy="24" r="1" fill="#bfe0ff" opacity=".7"/>
+      <circle cx="30" cy="26" r="1" fill="#bfe0ff" opacity=".7"/>
+      <circle cx="50" cy="21" r="10" fill="none" stroke="#7cecff" strokeWidth="1.4" opacity=".5"/>
+      <path d="M50 8 L52.4 16 L60 16 L53.8 20.6 L56 28 L50 23.4 L44 28 L46.2 20.6 L40 16 L47.6 16 Z" fill="#ffd982"/>
+      <path d="M50 34 L54 41 L46 41 Z" fill="#f5e6bd"/>
+      <rect x="47.6" y="40" width="4.8" height="30" rx="2" fill="#e8f3ff"/>
+      <path d="M50 40 L52 55 L50 70 L48 55 Z" fill="#7cecff" opacity=".45"/>
+      <rect x="40" y="52" width="20" height="5" rx="2.5" fill="#ffd982"/>
+      <rect x="47.6" y="70" width="4.8" height="8" rx="2" fill="#8a6a2a"/>
+    </svg>
+  ),
+
   g_neon: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
       <rect x="0" y="0" width="100" height="85" rx="12" fill="#1a1040"/>
@@ -1170,6 +1187,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'霓虹夜间兜风',       desc:'在夜晚的城市里兜风，\n收集星星吧！' },
     ko:{ name:'반짝반짝 드라이브', desc:'밤의 도시를 달리며\n별을 모아요!' },
     es:{ name:'Paseo de Neón',     desc:'¡Recorre la ciudad nocturna\ny recoge las estrellas!' } },
+  { id:'g_astral', route:'/astral-fang', icon:'⚔️', num:23, color:'#7cecff', stars:5, isNew:true, category:'アクション',
+    ja:{ name:'アストラルファング',   desc:'かげのけものに いどむ\n本格3Dアクション！' },
+    en:{ name:'Astral Fang',          desc:'A cinematic 3D action\nadventure in the sky castle!' },
+    zh:{ name:'星辉之牙',             desc:'挑战暗影之兽的\n正统3D动作游戏！' },
+    ko:{ name:'아스트랄 팽',          desc:'그림자 짐승에 맞서는\n본격 3D 액션!' },
+    es:{ name:'Colmillo Astral',      desc:'¡Acción 3D en el\ncastillo del cielo!' } },
   { id:'g_block', route:'/block', icon:'🏰', num:10, color:'#ec407a', stars:3, isNew:true, category:'アクション',
     ja:{ name:'おしろブロックくずし', desc:'パドルでボールをはじいて\nブロックをこわそう！' },
     en:{ name:'Castle Breakout',   desc:'Bounce the ball and\nbreak all the blocks!' },
