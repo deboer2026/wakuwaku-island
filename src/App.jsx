@@ -40,6 +40,7 @@ import OtakaraHorihori from './games/OtakaraHorihori'
 import KatachiAwase from './games/KatachiAwase'
 import SoraKyoshitsu from './games/SoraKyoshitsu'
 import MuraGame from './games/MuraGame'
+import NeonDrive from './games/NeonDrive'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 import { recordRecentGame } from './utils/recentGames'
@@ -69,6 +70,7 @@ const GAME_ROUTES = new Set([
   '/otakara-horihori',
   '/sora-kyoshitsu', '/kyoshitsu',
   '/mura', '/doubutsu-mura',
+  '/neon-drive', '/neon',
   // 短縮URLエイリアスも記録
   '/kudamono', '/puzzle', '/kazu', '/soccer',
 ]);
@@ -155,6 +157,8 @@ export default function App() {
         <Route path="/kyoshitsu"      element={<GameWithSEO route="/sora-kyoshitsu"><SoraKyoshitsu /></GameWithSEO>} />
         <Route path="/mura" element={<GameWithSEO route="/mura"><MuraGame /></GameWithSEO>} />
         <Route path="/doubutsu-mura" element={<GameWithSEO route="/mura"><MuraGame /></GameWithSEO>} />
+        <Route path="/neon-drive" element={<GameWithSEO route="/neon-drive"><NeonDrive /></GameWithSEO>} />
+        <Route path="/neon"       element={<GameWithSEO route="/neon-drive"><NeonDrive /></GameWithSEO>} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms"   element={<TermsPage />} />
       </Routes>

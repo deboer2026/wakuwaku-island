@@ -58,6 +58,39 @@ const MASCOT_LINES = {
    ゲームSVGイラスト（SNES風）
 ════════════════════════════════════════════════════ */
 const GAME_SVGS = {
+  g_neon: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="100" height="85" rx="12" fill="#1a1040"/>
+      <circle cx="20" cy="14" r="1.6" fill="#fff" opacity=".9"/>
+      <circle cx="78" cy="11" r="1.4" fill="#fff" opacity=".8"/>
+      <circle cx="88" cy="20" r="1.2" fill="#fff" opacity=".7"/>
+      <rect x="12" y="20" width="6" height="20" rx="1" fill="#2b1e5c"/>
+      <rect x="12" y="22" width="6" height="4" fill="#ffd24d" opacity=".9"/>
+      <rect x="12" y="30" width="6" height="4" fill="#7df9ff" opacity=".85"/>
+      <rect x="80" y="16" width="7" height="26" rx="1" fill="#2b1e5c"/>
+      <rect x="80" y="20" width="7" height="4" fill="#ff2fb0" opacity=".9"/>
+      <rect x="80" y="30" width="7" height="4" fill="#ffd24d" opacity=".85"/>
+      <path d="M38 40 L62 40 L82 85 L18 85 Z" fill="#241a44"/>
+      <path d="M38 40 L62 40 L82 85 L18 85 Z" fill="none" stroke="#0e0a24" strokeWidth="1"/>
+      <path d="M38 40 L18 85" stroke="#ff2fb0" strokeWidth="2.5"/>
+      <path d="M62 40 L82 85" stroke="#00e5ff" strokeWidth="2.5"/>
+      <rect x="48.4" y="45" width="3" height="7" fill="#bfe8ff" opacity=".85"/>
+      <rect x="47.4" y="58" width="4" height="9" fill="#bfe8ff" opacity=".85"/>
+      <rect x="46" y="72" width="6" height="11" fill="#bfe8ff" opacity=".85"/>
+      <g transform="translate(50 64)">
+        <rect x="-13" y="-4" width="26" height="9" rx="3" fill="#10c8e8"/>
+        <rect x="-8" y="-10" width="16" height="7" rx="3" fill="#2ad2f0"/>
+        <rect x="-13" y="4" width="26" height="2.4" rx="1.2" fill="#00ffff"/>
+        <path d="M-9 -10 L-6 -15 L-3 -11 Z" fill="#10c8e8"/>
+        <path d="M9 -10 L6 -15 L3 -11 Z" fill="#10c8e8"/>
+        <path d="M-8.5 -11 L-6.5 -14 L-4.5 -11.5 Z" fill="#ffb0d8"/>
+        <path d="M8.5 -11 L6.5 -14 L4.5 -11.5 Z" fill="#ffb0d8"/>
+        <rect x="-11" y="-6" width="3" height="2.4" rx="1" fill="#fff2cc"/>
+        <rect x="8" y="-6" width="3" height="2.4" rx="1" fill="#fff2cc"/>
+      </g>
+      <path d="M30 20 l1.6 3.2 l3.4 .4 l-2.5 2.3 l.7 3.4 l-3.2 -1.7 l-3.2 1.7 l.7 -3.4 l-2.5 -2.3 l3.4 -.4 Z" fill="#ffe14d" stroke="#e0a800" strokeWidth="1"/>
+    </svg>
+  ),
   g_mura: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
       <rect x="0" y="0" width="100" height="85" rx="12" fill="#bfe9ff"/>
@@ -1131,6 +1164,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'动物卡丁车GP',     desc:'驾驶动物卡丁车\n冲过赛道！' },
     ko:{ name:'애니멀 카트 GP',   desc:'동물 카트로\n코스를 달려요!' },
     es:{ name:'Kart de Animales GP', desc:'¡Corre con karts\nde animales!' } },
+  { id:'g_neon', route:'/neon-drive', icon:'🚗', num:22, color:'#00d5ff', stars:5, isNew:true, category:'レース',
+    ja:{ name:'きらきらドライブ',  desc:'よるのまちをドライブ！\nほしをあつめてはしろう！' },
+    en:{ name:'Neon Drive',        desc:'Cruise the night city\nand collect the stars!' },
+    zh:{ name:'霓虹夜间兜风',       desc:'在夜晚的城市里兜风，\n收集星星吧！' },
+    ko:{ name:'반짝반짝 드라이브', desc:'밤의 도시를 달리며\n별을 모아요!' },
+    es:{ name:'Paseo de Neón',     desc:'¡Recorre la ciudad nocturna\ny recoge las estrellas!' } },
   { id:'g_block', route:'/block', icon:'🏰', num:10, color:'#ec407a', stars:3, isNew:true, category:'アクション',
     ja:{ name:'おしろブロックくずし', desc:'パドルでボールをはじいて\nブロックをこわそう！' },
     en:{ name:'Castle Breakout',   desc:'Bounce the ball and\nbreak all the blocks!' },
