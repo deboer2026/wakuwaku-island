@@ -237,6 +237,27 @@ canvas#bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-eve
 </div>
 
 <script>
+const SAFE_LS = (function () {
+  try {
+    const testKey = '__ww_storage_test__';
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : null;
+      },
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
 /* ======== Canvas Background ======== */
 const cvs = document.getElementById('bg');
 const ctx = cvs.getContext('2d');
@@ -323,8 +344,8 @@ const TOTAL=10;
 let queue=[],current=null,qIdx=0,score=0,locked=false;
 
 function shuffle(a){return [...a].sort(()=>Math.random()-.5);}
-function getHi(){return parseInt(localStorage.getItem('moji_hi')||'0');}
-function saveHi(v){localStorage.setItem('moji_hi',v);}
+function getHi(){return parseInt(SAFE_LS.getItem('moji_hi')||'0');}
+function saveHi(v){SAFE_LS.setItem('moji_hi',v);}
 function updateHiBadge(){document.getElementById('hi-title').textContent='🏆 ハイスコア: '+getHi()+'もん';}
 
 function initStars(){

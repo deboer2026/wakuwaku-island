@@ -36,6 +36,8 @@ npm run audit:games
 
 localStorage の利用可否を確認する `setItem` → `removeItem` → `return localStorage` 相当のテストや、SAFE_LS初期化内のアクセスは許容します。キーが静的に確定できない直接アクセスは警告、ゲーム用キーの直接アクセスを確定できる場合はエラーにします。
 
+Phase 3Aでは、単一キーかつ少数の直接アクセスだけを持つactiveゲームを第1バッチとして選び、各HTML内のローカル`SAFE_LS`へ移行します。監査レポートの`localStorage`では、activeの問題をファイル数と呼び出し箇所数に分けて集計します。`SAFE_LS`自身の利用可否テストは問題箇所に数えません。保存キー、値形式、読み書きのタイミングは変更しません。
+
 Canvas は `fillText` / `strokeText` の第1引数が絵文字リテラルと確定する場合をエラーにします。絵文字を含む可能性がある変数経由の描画は警告、`textContent` や `innerHTML` などDOM上の絵文字は対象外です。
 
 ## 誤検出の可能性

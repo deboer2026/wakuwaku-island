@@ -339,6 +339,27 @@ canvas{position:absolute;top:0;left:0;width:100%;height:100%;display:block;}
 </div>
 
 <script>
+const SAFE_LS = (function () {
+  try {
+    const testKey = '__ww_storage_test__';
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : null;
+      },
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
 // ===== 定数 =====
 const FRUITS=[
   {e:'🍎',pts:10,w:1.0},{e:'🍊',pts:10,w:1.0},{e:'🍋',pts:10,w:1.0},
@@ -803,8 +824,8 @@ function endGameOver(){
   document.getElementById('go-ov').classList.add('show');
 }
 
-function getHs(){return parseInt(localStorage.getItem('kudamono_hs')||'0');}
-function saveHs(s){localStorage.setItem('kudamono_hs',s);}
+function getHs(){return parseInt(SAFE_LS.getItem('kudamono_hs')||'0');}
+function saveHs(s){SAFE_LS.setItem('kudamono_hs',s);}
 function updateHsDisp(){const hs=getHs();document.getElementById('ths').textContent=hs>0?`ハイスコア：⭐${hs}`:''}
 
 // ===== 入力（スライド） =====

@@ -539,6 +539,9 @@ for (let index = errors.length - 1; index >= 0; index -= 1) {
 const activeIssues = [...errors, ...warnings].filter((item) => item.status === 'active');
 const activeErrors = activeIssues.filter((item) => item.severity === 'error');
 const activeWarnings = activeIssues.filter((item) => item.severity === 'warning');
+const activeStorageErrors = activeErrors.filter((item) => item.category === 'STORAGE');
+const activeStorageWarnings = activeWarnings.filter((item) => item.category === 'STORAGE');
+const activeStorageFiles = new Set([...activeStorageErrors, ...activeStorageWarnings].map((item) => item.file));
 const htmlIssues = [...errors, ...warnings].filter((item) => item.file.startsWith('public/games/'));
 const allHtmlReferenceErrors = htmlIssues.filter((item) => item.referenceSeverity === 'error');
 const allHtmlReferenceWarnings = htmlIssues.filter((item) => item.referenceSeverity === 'warning');
@@ -558,6 +561,9 @@ const summary = {
   archivedOrUnusedHtml: htmlFiles.filter((entry) => entry.status === 'archived-or-unused').length,
   activeErrors: activeErrors.length,
   activeWarnings: activeWarnings.length,
+  activeLocalStorageErrors: activeStorageErrors.length,
+  activeLocalStorageWarnings: activeStorageWarnings.length,
+  activeLocalStorageProblemFiles: activeStorageFiles.size,
   allHtmlReferenceErrors: allHtmlReferenceErrors.length,
   allHtmlReferenceWarnings: allHtmlReferenceWarnings.length,
   archivedReferenceErrors: archivedReferenceErrors.length,
@@ -586,7 +592,38 @@ const comparison = {
   actualFixesResolved: Math.max(0, (baseline.phase2PreFixActiveErrors ?? summary.activeErrors) - summary.activeErrors),
   remainingActiveErrors: summary.activeErrors,
 };
-const report = { generatedAt: new Date().toISOString(), baseline, comparison, summary, errors, warnings, games, htmlFiles };
+const previousIssues = [...priorErrors, ...priorWarnings];
+const previousActiveStorageErrors = previousIssues.filter((item) => item.status === 'active' && item.category === 'STORAGE' && item.severity === 'error');
+const previousActiveStorageWarnings = previousIssues.filter((item) => item.status === 'active' && item.category === 'STORAGE' && item.severity === 'warning');
+const phase3aBaseline = previousReport?.phase3aBaseline ?? {
+  activeLocalStorageErrors: previousActiveStorageErrors.length,
+  activeLocalStorageWarnings: previousActiveStorageWarnings.length,
+  activeLocalStorageProblemFiles: new Set([...previousActiveStorageErrors, ...previousActiveStorageWarnings].map((item) => item.file)).size,
+};
+if (baseline.phase2PostFixActiveErrors == null) {
+  baseline.phase2PostFixActiveErrors = phase3aBaseline.activeLocalStorageErrors
+    + (summary.activeErrors - activeStorageErrors.length);
+}
+comparison.actualFixesResolved = Math.max(0,
+  (baseline.phase2PreFixActiveErrors ?? baseline.phase2PostFixActiveErrors)
+    - baseline.phase2PostFixActiveErrors);
+const localStorage = {
+  active: {
+    errorFiles: new Set(activeStorageErrors.map((item) => item.file)).size,
+    errorOccurrences: activeStorageErrors.length,
+    warningFiles: new Set(activeStorageWarnings.map((item) => item.file)).size,
+    warningOccurrences: activeStorageWarnings.length,
+    problemFiles: activeStorageFiles.size,
+  },
+  phase3a: {
+    preFixErrors: phase3aBaseline.activeLocalStorageErrors,
+    fixedOccurrences: Math.max(0, phase3aBaseline.activeLocalStorageErrors - activeStorageErrors.length),
+    remainingErrors: activeStorageErrors.length,
+    remainingWarnings: activeStorageWarnings.length,
+    remainingProblemFiles: activeStorageFiles.size,
+  },
+};
+const report = { generatedAt: new Date().toISOString(), baseline, phase3aBaseline, comparison, localStorage, summary, errors, warnings, games, htmlFiles };
 await mkdir(rel('reports'), { recursive: true });
 await writeFile(rel('reports', 'game-audit.json'), `${JSON.stringify(report, null, 2)}\n`, 'utf8');
 
@@ -604,14 +641,22 @@ console.log(`- referenced-secondary HTML: ${summary.referencedSecondaryHtml}`);
 console.log(`- archived-or-unused HTML: ${summary.archivedOrUnusedHtml}`);
 console.log(`- active errors: ${summary.activeErrors}`);
 console.log(`- active warnings: ${summary.activeWarnings}`);
+console.log(`- active localStorage errors: ${summary.activeLocalStorageErrors} in ${localStorage.active.errorFiles} files`);
+console.log(`- active localStorage warnings: ${summary.activeLocalStorageWarnings} in ${localStorage.active.warningFiles} files`);
 console.log(`- all HTML reference errors: ${summary.allHtmlReferenceErrors}`);
 console.log(`- all HTML reference warnings: ${summary.allHtmlReferenceWarnings}`);
 console.log('\nPhase comparison');
 console.log(`- Phase 1 active-equivalent errors: ${baseline.phase1ActiveErrors}`);
 console.log(`- Phase 2 pre-fix active errors: ${baseline.phase2PreFixActiveErrors}`);
-console.log(`- Phase 2 current active errors: ${summary.activeErrors}`);
+console.log(`- Phase 2 post-fix active errors: ${baseline.phase2PostFixActiveErrors}`);
 console.log(`- resolved as false positives: ${comparison.falsePositivesResolved}`);
 console.log(`- resolved by P0 fixes: ${comparison.actualFixesResolved}`);
+console.log('\nPhase 3A storage comparison');
+console.log(`- pre-fix active localStorage errors: ${localStorage.phase3a.preFixErrors}`);
+console.log(`- fixed localStorage occurrences: ${localStorage.phase3a.fixedOccurrences}`);
+console.log(`- remaining active localStorage errors: ${localStorage.phase3a.remainingErrors}`);
+console.log(`- remaining active localStorage warnings: ${localStorage.phase3a.remainingWarnings}`);
+console.log(`- remaining localStorage problem files: ${localStorage.phase3a.remainingProblemFiles}`);
 for (const [heading, items] of [['ERRORS', errors], ['WARNINGS', warnings]]) {
   console.log(`\n${heading} (${items.length})`);
   if (!items.length) console.log('- none');

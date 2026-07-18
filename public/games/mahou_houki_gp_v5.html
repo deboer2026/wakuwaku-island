@@ -41,6 +41,27 @@
 <div id="err"></div>
 
 <script>
+const SAFE_LS = (function () {
+  try {
+    const testKey = '__ww_storage_test__';
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : null;
+      },
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
 (function(){
   "use strict";
   function fatal(msg){ const d=document.getElementById('err'); if(d){ d.style.display='block'; d.textContent='⚠ '+msg; } }
@@ -143,7 +164,7 @@ try{
   let stageStars=[0,0,0], resultStars=0, resultBonus=0, resultT=0;
   let keyL=false,keyR=false, ptr=null, tAnim=0;
   const parts=[];
-  let bestScore=0; try{ bestScore=parseInt(localStorage.getItem('houki_best_v5')||'0',10)||0; }catch(e){}
+  let bestScore=0; try{ bestScore=parseInt(SAFE_LS.getItem('houki_best_v5')||'0',10)||0; }catch(e){}
 
   function courseX(pat,z){
     if(pat==='slalom') return 7*Math.sin(z*0.05)+2.5*Math.sin(z*0.13);
@@ -219,7 +240,7 @@ try{
     stageStars[stageIdx]=resultStars;
     totalScore += score;
     if(stageIdx===STAGES.length-1){
-      if(totalScore>bestScore){ bestScore=totalScore; try{localStorage.setItem('houki_best_v5',''+bestScore);}catch(e){} } }
+      if(totalScore>bestScore){ bestScore=totalScore; try{SAFE_LS.setItem('houki_best_v5',''+bestScore);}catch(e){} } }
     resultT=0; state='result'; stopBgm(); sfx.win();
   }
   function update(dt){ if(state!=='play')return;

@@ -97,6 +97,27 @@ canvas{display:block;image-rendering:pixelated;}
    Crossy Road系メカニクス（保護対象外）＋オリジナル：お菓子の国テーマ、
    シュガーウェーブ追跡、うさぎ姫キャラ、キャンディ収集 */
 'use strict';
+const SAFE_LS = (function () {
+  try {
+    const testKey = '__ww_storage_test__';
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : null;
+      },
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 let W=0,H=0,CELL=0,COLS=9;
 function resize(){
@@ -160,7 +181,7 @@ function getRow(n){ensureRows(n+14);return rows[n-baseRow];}
 
 /* ---- player ---- */
 let P,candy,score,hiScore,best,playing=false,wave,last=0;
-hiScore=parseInt(localStorage.getItem('okashi_crossing_hs')||'0');
+hiScore=parseInt(SAFE_LS.getItem('okashi_crossing_hs')||'0');
 
 function startGame(){
   document.getElementById('title-screen').classList.add('hidden');
@@ -176,7 +197,7 @@ function startGame(){
 function gameOver(splash){
   playing=false;notifyRun(false);
   splash?sSplash():sCrash();
-  if(score>hiScore){hiScore=score;localStorage.setItem('okashi_crossing_hs',hiScore);}
+  if(score>hiScore){hiScore=score;SAFE_LS.setItem('okashi_crossing_hs',hiScore);}
   document.getElementById('over-title').innerHTML=splash?'チョコのかわに<br>おっこちた！':(P._hit?'グミカーに<br>ぶつかっちゃった！':'シュガーウェーブに<br>のまれちゃった！');
   document.getElementById('fin-score').textContent=score;
   document.getElementById('fin-hs').textContent=hiScore;
@@ -431,7 +452,7 @@ function drawPlayer(time){
     s.style.animationDuration=(7+Math.random()*8)+'s';
     s.style.animationDelay=(-Math.random()*12)+'s';
     f.appendChild(s);}
-  const hs=parseInt(localStorage.getItem('okashi_crossing_hs')||'0');
+  const hs=parseInt(SAFE_LS.getItem('okashi_crossing_hs')||'0');
   if(hs>0)document.getElementById('title-hs').textContent='さいこうスコア '+hs;
 })();
 
