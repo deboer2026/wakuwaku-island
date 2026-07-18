@@ -1,0 +1,2195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <script src="safe_area.js"></script>
+  <title>おうかんものがたり</title>
+  <style>
+    :root {
+      --gold: #f3d57a;
+      --gold-dark: #ca982f;
+      --cream: #fff8e2;
+      --ink: #142019;
+      --panel: rgba(10, 18, 15, 0.90);
+      --safe-top: var(--sat, 0px);
+      --safe-bottom: var(--sab, 0px);
+    }
+    :root { --sat: 0px; --sab: 0px; --sal: 0px; --sar: 0px; }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: radial-gradient(circle at top, #38644b 0%, #1d372b 42%, #07100d 100%);
+      color: var(--cream);
+      font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
+      overscroll-behavior: none;
+    }
+    body {
+      display: grid;
+      place-items: center;
+      padding: 10px;
+      touch-action: manipulation;
+    }
+
+    .game-shell {
+      position: relative;
+      width: min(100vw - 12px, 1180px);
+      aspect-ratio: 16 / 9;
+      border: 4px solid #cb9d40;
+      border-radius: 22px;
+      overflow: hidden;
+      background: #244630;
+      box-shadow: 0 0 0 6px rgba(255, 235, 164, 0.10), 0 24px 72px rgba(0, 0, 0, 0.52);
+      touch-action: none;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: #2c6d48;
+      image-rendering: pixelated;
+      touch-action: none;
+    }
+
+    .top-hud {
+      position: absolute;
+      top: calc(10px + var(--safe-top));
+      left: 10px;
+      right: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      pointer-events: none;
+      z-index: 6;
+    }
+    .hud-group {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .panel {
+      background: var(--panel);
+      border: 2px solid rgba(243, 213, 122, 0.70);
+      border-radius: 12px;
+      padding: 10px 14px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.26);
+      backdrop-filter: blur(5px);
+    }
+    .label {
+      font-size: 11px;
+      opacity: 0.72;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .hearts {
+      display: flex;
+      gap: 4px;
+      min-height: 24px;
+      align-items: center;
+    }
+    .heart {
+      font-size: 21px;
+      color: #ff6471;
+      filter: drop-shadow(0 2px 0 #6f1f28);
+    }
+    .heart.empty {
+      color: rgba(255,255,255,0.18);
+      filter: none;
+    }
+    .hud-stats {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .objective-box {
+      min-width: 280px;
+      max-width: 480px;
+    }
+    .objective-title {
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      opacity: .72;
+      margin-bottom: 6px;
+    }
+    .objective-text {
+      font-size: 14px;
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
+    .boss-bar-wrap {
+      position: absolute;
+      top: calc(88px + var(--safe-top));
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(72%, 620px);
+      display: none;
+      z-index: 6;
+      pointer-events: none;
+    }
+    .boss-bar-wrap.show { display: block; }
+    .boss-name {
+      text-align: center;
+      font-weight: 900;
+      margin-bottom: 6px;
+      text-shadow: 0 2px 8px rgba(0,0,0,.45);
+    }
+    .boss-bar {
+      width: 100%;
+      height: 18px;
+      background: rgba(0,0,0,0.48);
+      border: 2px solid rgba(255,255,255,0.22);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .boss-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #d14b59, #ff9281);
+      transition: width .12s linear;
+    }
+
+    .audio-panel {
+      pointer-events: auto;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .mini-btn {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.08);
+      color: #fff7dc;
+      border-radius: 999px;
+      padding: 7px 11px;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,.18);
+    }
+    .mini-btn.off {
+      opacity: .55;
+      filter: saturate(.5);
+    }
+
+    .stage-chip {
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      color: #ffefb7;
+    }
+
+    .message-box {
+      position: absolute;
+      left: 50%;
+      bottom: calc(18px + var(--safe-bottom));
+      transform: translateX(-50%);
+      width: min(78%, 760px);
+      background: rgba(12, 20, 17, 0.96);
+      border: 3px solid #d8b55d;
+      border-radius: 14px;
+      padding: 16px 20px;
+      font-size: 17px;
+      line-height: 1.6;
+      color: #fff7dc;
+      box-shadow: 0 16px 42px rgba(0,0,0,0.48);
+      display: none;
+      z-index: 7;
+    }
+    .message-box.show { display: block; }
+    .message-box strong { color: #ffe37d; }
+
+    .hint-box {
+      position: absolute;
+      left: 12px;
+      bottom: calc(12px + var(--safe-bottom));
+      max-width: 430px;
+      background: rgba(8, 15, 13, 0.84);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 12px;
+      padding: 10px 12px;
+      color: rgba(255,255,255,0.86);
+      font-size: 13px;
+      line-height: 1.6;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 20px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      background: linear-gradient(rgba(6, 13, 11, 0.56), rgba(6, 13, 11, 0.80)), radial-gradient(circle at center, rgba(105, 168, 121, 0.40), transparent 60%);
+      z-index: 20;
+    }
+    .overlay.hidden { display: none; }
+
+    .card {
+      width: min(920px, 100%);
+      margin: auto;
+      background: rgba(10, 20, 16, 0.95);
+      border: 3px solid #d8b24d;
+      border-radius: 24px;
+      padding: 28px 30px;
+      box-shadow: 0 28px 72px rgba(0,0,0,.56);
+      text-align: center;
+    }
+
+    .logo {
+      margin: 0 0 8px;
+      color: #f7e08c;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(38px, 6vw, 74px);
+      line-height: .95;
+      letter-spacing: .04em;
+      text-shadow: 0 3px 0 #705717, 0 8px 20px rgba(0,0,0,.45);
+    }
+    .subtitle {
+      margin: 8px 0 16px;
+      font-size: 16px;
+      letter-spacing: .11em;
+      color: rgba(255,255,255,.78);
+    }
+    .story {
+      max-width: 680px;
+      margin: 0 auto 20px;
+      font-size: 15px;
+      line-height: 1.8;
+      color: rgba(255,255,255,.90);
+    }
+
+    .char-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0 18px;
+    }
+    .char-card {
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.14);
+      border-radius: 16px;
+      padding: 14px 10px;
+      cursor: pointer;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+      user-select: none;
+    }
+    .char-card:hover { transform: translateY(-2px); }
+    .char-card.active {
+      border-color: #f3d57a;
+      background: rgba(243, 213, 122, 0.14);
+      box-shadow: inset 0 0 0 3px rgba(243,213,122,0.12);
+    }
+    .avatar {
+      width: 74px;
+      height: 74px;
+      margin: 0 auto 10px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 34px;
+      box-shadow: inset 0 -5px 0 rgba(0,0,0,.12);
+      color: #142019;
+    }
+    .char-name { font-size: 15px; font-weight: 900; margin-bottom: 4px; }
+    .char-role { font-size: 12px; opacity: .76; margin-bottom: 6px; }
+    .char-desc {
+      font-size: 12px;
+      line-height: 1.55;
+      color: rgba(255,255,255,.86);
+      min-height: 56px;
+    }
+    .char-stats {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #ffe9a8;
+      line-height: 1.5;
+      font-weight: 700;
+    }
+    .selected-info {
+      min-height: 26px;
+      margin: 8px auto 16px;
+      color: #ffe79a;
+      font-weight: 800;
+    }
+
+    button.main-btn {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 28px;
+      background: linear-gradient(#f9df78, #d8aa30);
+      color: #1d2a23;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: inset 0 -4px 0 rgba(97,67,9,.25), 0 8px 24px rgba(0,0,0,.3);
+      transition: transform .15s ease, filter .15s ease, opacity .15s ease;
+    }
+    button.main-btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
+    button.main-btn:active { transform: translateY(1px); }
+    button.main-btn:disabled { opacity: .42; cursor: default; transform: none; filter: none; }
+    .hint { margin-top: 16px; color: rgba(255,255,255,.66); font-size: 13px; line-height: 1.6; }
+
+    .mobile-controls {
+      position: absolute;
+      inset: auto 0 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      padding: 0 14px calc(14px + var(--safe-bottom)) 14px;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .joystick, .action-pad { pointer-events: auto; }
+    .joystick {
+      width: 148px;
+      height: 148px;
+      border-radius: 50%;
+      position: relative;
+      background: rgba(6, 14, 11, 0.48);
+      border: 2px solid rgba(255,255,255,0.12);
+      box-shadow: inset 0 0 0 10px rgba(255,255,255,0.03), 0 6px 18px rgba(0,0,0,.26);
+      touch-action: none;
+    }
+    .joystick::before, .joystick::after {
+      content: "";
+      position: absolute;
+      background: rgba(255,255,255,0.06);
+      left: 50%; top: 50%; transform: translate(-50%, -50%);
+      border-radius: 999px;
+    }
+    .joystick::before { width: 88px; height: 2px; }
+    .joystick::after { width: 2px; height: 88px; }
+    .stick {
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 68px; height: 68px;
+      margin-left: -34px; margin-top: -34px;
+      border-radius: 50%;
+      background: rgba(243, 213, 122, 0.30);
+      border: 2px solid rgba(243, 213, 122, 0.80);
+      box-shadow: 0 6px 18px rgba(0,0,0,.28);
+      transition: transform .05s linear;
+      touch-action: none;
+    }
+    .action-pad {
+      display: grid;
+      grid-template-columns: repeat(2, 86px);
+      gap: 12px;
+      align-items: center;
+    }
+    .action-btn {
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(7, 16, 13, 0.70);
+      border: 2px solid rgba(255,255,255,0.15);
+      box-shadow: 0 6px 18px rgba(0,0,0,.28);
+      text-align: center;
+      line-height: 1.2;
+      font-weight: 900;
+      padding: 8px;
+      color: #fff;
+      user-select: none;
+      touch-action: none;
+    }
+    .action-btn .small { font-size: 12px; margin-top: 4px; opacity: .82; font-weight: 700; display: block; }
+    .action-btn.active {
+      background: rgba(243, 213, 122, 0.30);
+      border-color: rgba(243,213,122,0.82);
+      transform: scale(.97);
+    }
+
+    .flash-overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle, rgba(255,255,255,.6), rgba(255,255,255,0));
+      opacity: 0;
+      pointer-events: none;
+      z-index: 12;
+      transition: opacity .15s ease;
+    }
+    .stage-banner {
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%) scale(.95);
+      min-width: 320px;
+      max-width: 88%;
+      padding: 18px 26px;
+      border-radius: 18px;
+      background: rgba(8, 15, 13, 0.88);
+      border: 2px solid rgba(243,213,122,.72);
+      box-shadow: 0 20px 52px rgba(0,0,0,.42);
+      text-align: center;
+      z-index: 14;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s ease, transform .3s ease;
+    }
+    .stage-banner.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    .stage-banner .small { font-size: 12px; letter-spacing: .2em; opacity: .75; text-transform: uppercase; }
+    .stage-banner .big { font-size: clamp(28px, 4vw, 46px); font-weight: 900; color: #f8e69f; margin-top: 6px; font-family: Georgia, serif; }
+    .stage-banner .sub { margin-top: 4px; font-size: 14px; color: rgba(255,255,255,.84); }
+
+    @media (max-width: 960px) {
+      .char-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .hint-box { display: none; }
+      .message-box { width: min(90%, 720px); font-size: 15px; }
+      .objective-box { min-width: 220px; max-width: 360px; }
+    }
+
+    @media (max-width: 700px) {
+      body { padding: 0; }
+      .game-shell {
+        width: 100vw;
+        height: 100dvh;
+        aspect-ratio: auto;
+        border: 0;
+        border-radius: 0;
+      }
+      .top-hud { top: calc(6px + var(--safe-top)); left: 6px; right: calc(82px + var(--sar, 0px)); gap: 6px; }
+      .panel { padding: 5px 8px; border-radius: 10px; }
+      .panel::after { display: none; }
+      .label, .objective-title { font-size: 9px; letter-spacing: .08em; }
+      .heart { font-size: 13px; }
+      .hud-stats { gap: 8px; font-size: 11px; }
+      .objective-box { max-width: 210px; min-width: 0; }
+      .objective-text { font-size: 11px; line-height: 1.35; }
+      .audio-panel .mini-btn { padding: 4px 8px; font-size: 10px; }
+      .boss-bar-wrap { top: calc(96px + var(--safe-top)); width: min(92%, 640px); }
+      .card { padding: 22px 18px; }
+      .overlay { padding: 14px 12px; align-items: flex-start; }
+      .joystick { width: 132px; height: 132px; }
+      .stick { width: 60px; height: 60px; margin-left: -30px; margin-top: -30px; }
+      .action-pad { grid-template-columns: repeat(2, 76px); gap: 10px; }
+      .action-btn { width: 76px; height: 76px; font-size: 14px; }
+      .message-box { bottom: calc(108px + var(--safe-bottom)); font-size: 14px; padding: 14px 16px; }
+      .audio-panel { gap: 6px; }
+      .mini-btn { padding: 6px 10px; font-size: 11px; }
+    }
+  
+
+    /* Royal Trilogy premium visual treatment */
+    .game-shell {
+      border-color: #efd990;
+      box-shadow:
+        0 0 0 2px #6f5424,
+        0 0 0 7px rgba(239, 217, 144, 0.13),
+        0 28px 84px rgba(0,0,0,.62);
+    }
+    .game-shell::before {
+      content: "";
+      position: absolute;
+      inset: 5px;
+      border: 1px solid rgba(255,240,185,.22);
+      border-radius: 15px;
+      pointer-events: none;
+      z-index: 18;
+    }
+    .panel {
+      position: relative;
+      background:
+        linear-gradient(180deg, rgba(38,49,43,.95), rgba(8,16,13,.92));
+      border-color: rgba(246,221,139,.78);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.14),
+        inset 0 -8px 18px rgba(0,0,0,.18),
+        0 8px 24px rgba(0,0,0,.32);
+    }
+    .panel::after {
+      content: "◆";
+      position: absolute;
+      right: 7px;
+      top: 5px;
+      color: rgba(248,222,137,.28);
+      font-size: 9px;
+    }
+    .objective-text { color: #fff4cc; text-shadow: 0 1px 5px rgba(0,0,0,.55); }
+    .card {
+      position: relative;
+      background:
+        radial-gradient(circle at 50% -10%, rgba(244,218,124,.15), transparent 38%),
+        linear-gradient(145deg, rgba(28,43,35,.98), rgba(8,17,14,.98));
+      border-color: #f0d77f;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,.08),
+        inset 0 0 60px rgba(239,204,95,.05),
+        0 30px 90px rgba(0,0,0,.66);
+    }
+    .card::before, .card::after {
+      content: "✦";
+      position: absolute;
+      top: 14px;
+      color: rgba(244,218,124,.55);
+      font-size: 18px;
+    }
+    .card::before { left: 18px; }
+    .card::after { right: 18px; }
+    .logo {
+      background: linear-gradient(180deg, #fff4bd 0%, #f6d97b 48%, #bd812a 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 4px 0 rgba(64,38,7,.62));
+    }
+    .royal-crest {
+      width: 112px;
+      height: 72px;
+      margin: 0 auto 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      color: #f2d781;
+      border: 2px solid rgba(242,215,129,.65);
+      border-radius: 50% 50% 42% 42%;
+      background: radial-gradient(circle, rgba(244,218,124,.15), rgba(0,0,0,.12));
+      box-shadow: inset 0 0 18px rgba(244,218,124,.09), 0 8px 24px rgba(0,0,0,.28);
+    }
+    .royal-crest b { font-family: Georgia, serif; font-size: 28px; letter-spacing: -.08em; }
+    .royal-crest span { font-size: 13px; opacity: .78; }
+    .royal-ribbon {
+      display: inline-block;
+      margin-bottom: 9px;
+      padding: 5px 16px;
+      border-top: 1px solid rgba(243,215,125,.38);
+      border-bottom: 1px solid rgba(243,215,125,.38);
+      color: #f8e7aa;
+      font: 700 11px/1.2 Georgia, serif;
+      letter-spacing: .22em;
+    }
+    .stage-route {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      max-width: 700px;
+      margin: 0 auto 18px;
+    }
+    .stage-route > div {
+      padding: 8px 7px;
+      border: 1px solid rgba(244,218,124,.25);
+      border-radius: 10px;
+      background: rgba(255,255,255,.035);
+      color: rgba(255,255,255,.78);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+    .stage-route strong { display:block; color:#ffe8a0; font-size:12px; margin-bottom:2px; }
+    .char-card {
+      background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.025));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 6px 18px rgba(0,0,0,.16);
+    }
+    .char-card.active {
+      box-shadow: inset 0 0 0 2px rgba(246,218,124,.12), 0 0 24px rgba(239,202,94,.16);
+    }
+    button.main-btn {
+      background: linear-gradient(180deg, #fff0a6, #ddb64c 54%, #b88123);
+      border: 1px solid rgba(255,247,205,.45);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.55),
+        inset 0 -5px 0 rgba(92,54,8,.25),
+        0 10px 25px rgba(0,0,0,.36);
+    }
+    .stage-banner {
+      background:
+        radial-gradient(circle at top, rgba(243,217,126,.16), transparent 55%),
+        rgba(6,13,11,.94);
+      border-color: #ecd27b;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), 0 24px 65px rgba(0,0,0,.58);
+    }
+    .stage-banner .big { letter-spacing: .06em; }
+    .boss-bar {
+      height: 20px;
+      background: linear-gradient(180deg, rgba(0,0,0,.72), rgba(39,17,26,.68));
+      border-color: rgba(255,228,159,.48);
+      box-shadow: inset 0 0 8px rgba(0,0,0,.75), 0 5px 18px rgba(0,0,0,.32);
+    }
+    .boss-fill { background: linear-gradient(90deg, #7f1730, #e45666 60%, #ffd094); }
+    @media (max-width: 700px) {
+      .stage-route { grid-template-columns: 1fr; }
+      .royal-crest { width: 92px; height: 58px; }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="game-shell">
+    <canvas id="game" width="960" height="540"></canvas>
+
+    <div class="top-hud">
+      <div class="hud-group">
+        <div class="panel">
+          <div class="label">Life</div>
+          <div class="hearts" id="hearts"></div>
+        </div>
+        <div class="panel">
+          <div class="label">Hero</div>
+          <div class="hud-stats">
+            <span class="badge" id="heroName">-</span>
+            <span class="badge">◆ <span id="coins">0</span></span>
+            <span class="badge">敵 <span id="enemyCount">0</span></span>
+            <span class="badge">目的物 <span id="progressText">-</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud-group" style="justify-content:flex-end;">
+        <div class="panel objective-box">
+          <div class="objective-title">Objective</div>
+          <div class="objective-text" id="objectiveText">キャラクターを選んでゲームを始めてください</div>
+        </div>
+        <div class="panel audio-panel">
+          <div class="stage-chip" id="stageChip">STAGE 1</div>
+          <button class="mini-btn" id="bgmToggle">BGM ON</button>
+          <button class="mini-btn" id="seToggle">SE ON</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="boss-bar-wrap" id="bossBarWrap">
+      <div class="boss-name" id="bossName">ボス</div>
+      <div class="boss-bar"><div class="boss-fill" id="bossFill"></div></div>
+    </div>
+
+    <div class="message-box" id="message"></div>
+
+    <div class="hint-box">
+      PC：移動 <strong>WASD / 矢印</strong> ・ 攻撃 <strong>Space</strong> ・ 調べる <strong>E</strong><br>
+      スマホ：左下の<strong>仮想スティック</strong>で移動、右下のボタンで攻撃 / 調べる
+    </div>
+
+    <div class="mobile-controls">
+      <div class="joystick" id="joystick"><div class="stick" id="stick"></div></div>
+      <div class="action-pad">
+        <div class="action-btn" id="attackBtn">攻撃<span class="small">Attack</span></div>
+        <div class="action-btn" id="interactBtn">調べる<span class="small">Talk/Open</span></div>
+      </div>
+    </div>
+
+    <div class="flash-overlay" id="flashOverlay"></div>
+    <div class="stage-banner" id="stageBanner">
+      <div class="small" id="stageBannerSmall">Stage Start</div>
+      <div class="big" id="stageBannerBig">FOREST CROWN</div>
+      <div class="sub" id="stageBannerSub">森の王国</div>
+    </div>
+
+    <div class="overlay" id="startScreen">
+      <div class="card">
+        <div class="royal-crest"><span>✦</span><b>FC</b><span>✦</span></div>
+        <div class="royal-ribbon">ROYAL TRILOGY</div>
+        <h1 class="logo">FOREST CROWN</h1>
+        <div class="subtitle">どうぶつ × プリンス・プリンセスの王国アクションアドベンチャー</div>
+        <p class="story">
+          3つの王国から、<strong>王冠石・星月冠・天空の王笏</strong>が奪われました。<br>
+          会話、探索、ギミック、強化された敵との戦闘を乗り越え、三王国の宝を取り戻してください。
+        </p>
+        <div class="stage-route">
+          <div><strong>STAGE 1</strong>森の王国と王冠石</div>
+          <div><strong>STAGE 2</strong>月夜の城と星月冠</div>
+          <div><strong>STAGE 3</strong>天空宮殿と王笏</div>
+        </div>
+        <div class="char-grid" id="characterGrid"></div>
+        <div class="selected-info" id="selectedInfo">キャラクターを選んでください</div>
+        <button class="main-btn" id="startButton" disabled>このキャラでスタート</button>
+        <div class="hint">
+          3ステージ構成、ボス固有攻撃、敵の遠距離攻撃、予告付き落雷、突進演出、BGM / 効果音を搭載しています。<br>
+          BGM / 効果音はブラウザ制限のため、ゲーム開始後に自動で有効化されます。
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay hidden" id="endScreen">
+      <div class="card" style="max-width: 760px;">
+        <h2 class="logo" id="endTitle" style="font-size: clamp(34px, 5vw, 60px);">ROYAL CLEAR</h2>
+        <p class="story" id="endText" style="margin-bottom: 18px;">王国の宝を取り戻しました。</p>
+        <button class="main-btn" id="endButton">もう一度遊ぶ</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+      // ワールドは常に 960x540 の論理座標系。表示は歪ませず cover でフィットさせる。
+      const W = 960;
+      const H = 540;
+      const view = { scale: 1, camX: 0, camY: 0, dpr: 1 };
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        const cw = Math.max(1, Math.round(rect.width));
+        const ch = Math.max(1, Math.round(rect.height));
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(ch * dpr)) {
+          canvas.width = Math.round(cw * dpr);
+          canvas.height = Math.round(ch * dpr);
+        }
+        view.dpr = dpr;
+        // cover: 画面を埋めつつ縦横比を維持（あふれた分はカメラで追従）
+        view.scale = Math.max(cw / W, ch / H);
+        view.viewW = cw / view.scale;
+        view.viewH = ch / view.scale;
+      }
+
+      function updateCamera() {
+        const vw = view.viewW || W;
+        const vh = view.viewH || H;
+        const target = (typeof player !== "undefined" && player) ? player : { x: W / 2, y: H / 2, w: 0, h: 0 };
+        let cx = target.x + target.w / 2 - vw / 2;
+        let cy = target.y + target.h / 2 - vh / 2;
+        // ワールド外を映さないようクランプ
+        view.camX = vw >= W ? (W - vw) / 2 : Math.min(Math.max(cx, 0), W - vw);
+        view.camY = vh >= H ? (H - vh) / 2 : Math.min(Math.max(cy, 0), H - vh);
+      }
+
+      window.addEventListener("resize", resizeCanvas);
+      window.addEventListener("orientationchange", () => setTimeout(resizeCanvas, 250));
+      resizeCanvas();
+
+      const heartsEl = document.getElementById("hearts");
+      const coinsEl = document.getElementById("coins");
+      const enemyCountEl = document.getElementById("enemyCount");
+      const progressTextEl = document.getElementById("progressText");
+      const heroNameEl = document.getElementById("heroName");
+      const objectiveTextEl = document.getElementById("objectiveText");
+      const stageChipEl = document.getElementById("stageChip");
+      const bossBarWrap = document.getElementById("bossBarWrap");
+      const bossFill = document.getElementById("bossFill");
+      const bossNameEl = document.getElementById("bossName");
+      const messageEl = document.getElementById("message");
+      const flashOverlay = document.getElementById("flashOverlay");
+      const stageBanner = document.getElementById("stageBanner");
+      const stageBannerSmall = document.getElementById("stageBannerSmall");
+      const stageBannerBig = document.getElementById("stageBannerBig");
+      const stageBannerSub = document.getElementById("stageBannerSub");
+
+      const startScreen = document.getElementById("startScreen");
+      const endScreen = document.getElementById("endScreen");
+      const endTitle = document.getElementById("endTitle");
+      const endText = document.getElementById("endText");
+      const endButton = document.getElementById("endButton");
+      const startButton = document.getElementById("startButton");
+      const characterGrid = document.getElementById("characterGrid");
+      const selectedInfo = document.getElementById("selectedInfo");
+      const bgmToggle = document.getElementById("bgmToggle");
+      const seToggle = document.getElementById("seToggle");
+
+      const joystick = document.getElementById("joystick");
+      const stick = document.getElementById("stick");
+      const attackBtn = document.getElementById("attackBtn");
+      const interactBtn = document.getElementById("interactBtn");
+
+      const keys = {};
+      const touchMove = { x: 0, y: 0, active: false, pointerId: null };
+
+      let running = false;
+      let lastTime = 0;
+      let screenShake = 0;
+      let messageTimer = 0;
+      let selectedCharacterId = null;
+      let currentStageIndex = 0;
+      let questStage = 0;
+      let projectiles = [];
+      let particles = [];
+      let hazards = [];
+      let enemies = [];
+      let boss = null;
+      let world = null;
+      let endMode = "restart";
+      let stageBannerTimer = 0;
+      let flashTimer = 0;
+
+      const characters = [
+        { id: "catKnight", name: "ねこ騎士", role: "バランス型の勇敢な騎士", desc: "剣で近くをしっかり攻撃。扱いやすいスタンダードタイプ。", statsText: "HP5 / 速さふつう / 剣", emoji: "🐱", cardColor: "linear-gradient(#f5d48d, #dfab57)", bodyColor: "#567f56", hoodColor: "#95d29a", faceColor: "#f1d7ac", accentColor: "#e7c468", weaponType: "melee", speed: 190, maxHp: 5, damage: 1, range: 62, cooldown: 0.33, ears: "cat", crown: false, cape: false, dress: false },
+        { id: "rabbitPrincess", name: "うさぎプリンセス", role: "すばやい魔法のプリンセス", desc: "ハートの魔法を飛ばせる遠距離型。移動が速く、華やかな戦い方。", statsText: "HP4 / 速い / 魔法弾", emoji: "🐰", cardColor: "linear-gradient(#f7d6e7, #e6a7c3)", bodyColor: "#ea7ca7", hoodColor: "#ffe0ec", faceColor: "#fff4f8", accentColor: "#f0c963", weaponType: "ranged", speed: 215, maxHp: 4, damage: 1, range: 260, cooldown: 0.28, ears: "rabbit", crown: true, cape: false, dress: true },
+        { id: "bearPrince", name: "こぐまプリンス", role: "パワー型の元気な王子さま", desc: "HPが高く、近接攻撃が強い。少しゆっくりだが頼もしさ抜群。", statsText: "HP6 / やや遅い / 強い剣", emoji: "🐻", cardColor: "linear-gradient(#e9c29c, #ca8e56)", bodyColor: "#5c7ac7", hoodColor: "#85a4e7", faceColor: "#c58b5e", accentColor: "#f4db73", weaponType: "melee", speed: 165, maxHp: 6, damage: 2, range: 70, cooldown: 0.42, ears: "bear", crown: true, cape: true, dress: false },
+        { id: "foxMage", name: "きつね魔法使い", role: "知恵ある遠距離魔法使い", desc: "星の魔法弾で遠くから攻撃。火力が高く、少しテクニカル。", statsText: "HP4 / 速さふつう / 強めの魔法弾", emoji: "🦊", cardColor: "linear-gradient(#f4c08a, #e3884f)", bodyColor: "#7d54a7", hoodColor: "#d79557", faceColor: "#ffcfb0", accentColor: "#ffe17d", weaponType: "ranged", speed: 188, maxHp: 4, damage: 2, range: 285, cooldown: 0.38, ears: "fox", crown: false, cape: false, dress: false }
+      ];
+
+      const player = {
+        x: 72, y: 342, w: 28, h: 34, dir: "down", speed: 180,
+        hp: 5, maxHp: 5, damage: 1, range: 62, cooldown: 0.33,
+        attackTimer: 0, attackCooldown: 0, invincible: 0, coins: 0,
+        walkCycle: 0, hasRelic1: false, hasRelic2: false, hasRelic3: false, character: null
+      };
+
+      const stageCatalog = [
+        { key: "forest", name: "STAGE 1", title: "FOREST CROWN", subtitle: "森の王国と王冠石", music: "forest" },
+        { key: "moon", name: "STAGE 2", title: "MOONLIGHT KEEP", subtitle: "月夜の城と星月冠", music: "moon" },
+        { key: "sky", name: "STAGE 3", title: "SKY PALACE", subtitle: "天空宮殿と王家の王笏", music: "sky" }
+      ];
+
+      const audio = {
+        ctx: null,
+        master: null,
+        musicGain: null,
+        sfxGain: null,
+        bgmEnabled: true,
+        seEnabled: true,
+        timer: null,
+        currentSong: null,
+        step: 0,
+        accent: 0
+      };
+
+      function midiToFreq(n) { return 440 * Math.pow(2, (n - 69) / 12); }
+      function ensureAudio() {
+        if (!audio.ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return;
+          audio.ctx = new AC();
+          audio.master = audio.ctx.createGain();
+          audio.musicGain = audio.ctx.createGain();
+          audio.sfxGain = audio.ctx.createGain();
+          audio.master.gain.value = 0.65;
+          audio.musicGain.gain.value = 0.18;
+          audio.sfxGain.gain.value = 0.28;
+          audio.musicGain.connect(audio.master);
+          audio.sfxGain.connect(audio.master);
+          audio.master.connect(audio.ctx.destination);
+        }
+        if (audio.ctx && audio.ctx.state === "suspended") audio.ctx.resume();
+      }
+      function playTone(freq, duration, type, gain, when, detune = 0) {
+        if (!audio.ctx) return;
+        const osc = audio.ctx.createOscillator();
+        const g = audio.ctx.createGain();
+        osc.type = type || "triangle";
+        osc.frequency.setValueAtTime(freq, when);
+        osc.detune.value = detune;
+        g.gain.setValueAtTime(0.0001, when);
+        g.gain.exponentialRampToValueAtTime(gain, when + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, when + duration);
+        osc.connect(g);
+        g.connect(type === "sfx-noise" ? audio.sfxGain : audio.musicGain);
+        osc.start(when);
+        osc.stop(when + duration + 0.03);
+      }
+      function playSfx(name) {
+        if (!audio.seEnabled) return;
+        ensureAudio();
+        if (!audio.ctx) return;
+        const t = audio.ctx.currentTime + 0.01;
+        const sfxOut = audio.sfxGain;
+
+        const tone = (freq, dur, type = "square", gain = 0.12, offset = 0, detune = 0) => {
+          const osc = audio.ctx.createOscillator();
+          const g = audio.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, t + offset);
+          osc.detune.value = detune;
+          g.gain.setValueAtTime(0.0001, t + offset);
+          g.gain.exponentialRampToValueAtTime(gain, t + offset + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + offset + dur);
+          osc.connect(g); g.connect(sfxOut); osc.start(t + offset); osc.stop(t + offset + dur + 0.03);
+        };
+
+        if (name === "swing") { tone(310, 0.08, "square", 0.10); tone(520, 0.08, "square", 0.08, 0.03); }
+        else if (name === "magic") { tone(640, 0.10, "triangle", 0.10); tone(860, 0.12, "triangle", 0.07, 0.04); }
+        else if (name === "hit") { tone(180, 0.09, "sawtooth", 0.16); tone(120, 0.14, "square", 0.12, 0.02); }
+        else if (name === "hurt") { tone(160, 0.10, "sawtooth", 0.18); tone(90, 0.16, "square", 0.13, 0.04); }
+        else if (name === "open") { tone(520, 0.08, "triangle", 0.10); tone(660, 0.09, "triangle", 0.09, 0.06); tone(820, 0.12, "triangle", 0.08, 0.12); }
+        else if (name === "clear") { tone(660, 0.12, "triangle", 0.12); tone(880, 0.18, "triangle", 0.12, 0.12); tone(1046, 0.26, "triangle", 0.11, 0.25); }
+        else if (name === "boss") { tone(130, 0.18, "sawtooth", 0.18); tone(98, 0.22, "square", 0.14, 0.12); }
+        else if (name === "step") { tone(300, 0.03, "triangle", 0.03); }
+        else if (name === "select") { tone(700, 0.08, "triangle", 0.08); }
+      }
+      function stopMusic() {
+        if (audio.timer) clearInterval(audio.timer);
+        audio.timer = null;
+      }
+      function musicTick() {
+        if (!audio.bgmEnabled || !audio.ctx || !audio.currentSong) return;
+        const t = audio.ctx.currentTime + 0.02;
+        const beat = 0.26;
+        const patterns = {
+          forest: {
+            lead: [76, 79, 81, 79, 76, 74, 72, 74],
+            bass: [48, 55, 52, 55, 48, 55, 52, 55],
+            pad: [60, 64, 67, 64]
+          },
+          moon: {
+            lead: [74, 77, 79, 77, 74, 72, 70, 72],
+            bass: [45, 52, 48, 52, 45, 52, 48, 52],
+            pad: [57, 60, 64, 60]
+          },
+          sky: {
+            lead: [79, 83, 86, 88, 86, 83, 81, 83],
+            bass: [52, 59, 55, 59, 52, 59, 55, 59],
+            pad: [64, 67, 71, 74]
+          },
+          boss: {
+            lead: [69, 69, 72, 69, 67, 69, 72, 76],
+            bass: [40, 40, 40, 43, 38, 38, 41, 43],
+            pad: [52, 57, 55, 50]
+          },
+          victory: {
+            lead: [76, 79, 83, 88, 86, 88, 91, 95],
+            bass: [52, 55, 59, 64, 52, 55, 59, 64],
+            pad: [64, 67, 71, 76]
+          }
+        };
+        const p = patterns[audio.currentSong] || patterns.forest;
+        const i = audio.step % p.lead.length;
+        const padIndex = audio.step % p.pad.length;
+
+        const tone = (note, dur, type, gain, offset = 0, detune = 0) => {
+          const osc = audio.ctx.createOscillator();
+          const g = audio.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(midiToFreq(note), t + offset);
+          osc.detune.value = detune;
+          g.gain.setValueAtTime(0.0001, t + offset);
+          g.gain.exponentialRampToValueAtTime(gain, t + offset + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + offset + dur);
+          osc.connect(g); g.connect(audio.musicGain); osc.start(t + offset); osc.stop(t + offset + dur + 0.03);
+        };
+
+        tone(p.bass[i], beat * 0.95, "triangle", 0.08);
+        tone(p.lead[i], beat * 0.8, audio.currentSong === "boss" ? "sawtooth" : "square", 0.06, 0.02);
+        if (audio.step % 2 === 0) tone(p.pad[padIndex], beat * 1.8, "sine", 0.035, 0.02, audio.currentSong === "moon" ? 8 : 0);
+        if (audio.currentSong === "boss" && audio.step % 4 === 2) tone(p.lead[i] + 12, beat * 0.5, "triangle", 0.04, 0.06);
+        audio.step += 1;
+      }
+      function startMusic(song) {
+        ensureAudio();
+        if (!audio.ctx) return;
+        stopMusic();
+        audio.currentSong = song;
+        audio.step = 0;
+        if (!audio.bgmEnabled) return;
+        musicTick();
+        audio.timer = setInterval(musicTick, 240);
+      }
+      function updateAudioButtons() {
+        bgmToggle.textContent = audio.bgmEnabled ? "BGM ON" : "BGM OFF";
+        seToggle.textContent = audio.seEnabled ? "SE ON" : "SE OFF";
+        bgmToggle.classList.toggle("off", !audio.bgmEnabled);
+        seToggle.classList.toggle("off", !audio.seEnabled);
+      }
+
+      function createEnemy(x, y, type = "slime") {
+        const base = {
+          slime: { w: 30, h: 26, hp: 2, speed: 62, damage: 1, shot: 4.6 },
+          bat: { w: 28, h: 22, hp: 1, speed: 90, damage: 1, shot: 3.8 },
+          wisp: { w: 24, h: 24, hp: 2, speed: 74, damage: 1, shot: 2.7 },
+          wolf: { w: 36, h: 26, hp: 3, speed: 80, damage: 1, shot: 3.2 },
+          cloudWisp: { w: 26, h: 24, hp: 3, speed: 78, damage: 1, shot: 2.25 },
+          guard: { w: 32, h: 34, hp: 4, speed: 58, damage: 1, shot: 3.0 }
+        }[type] || { w: 30, h: 26, hp: 2, speed: 62, damage: 1, shot: 4.5 };
+        return {
+          x, y, type,
+          w: base.w, h: base.h,
+          hp: base.hp, maxHp: base.hp,
+          speed: base.speed, damage: base.damage,
+          hitFlash: 0,
+          wanderAngle: Math.random() * Math.PI * 2,
+          wanderTimer: 0.8 + Math.random() * 1.5,
+          bob: Math.random() * Math.PI * 2,
+          attackTimer: base.shot * (0.7 + Math.random() * 0.55),
+          dashTimer: 0,
+          dashVx: 0,
+          dashVy: 0,
+          boss: false,
+          bossKind: null,
+          spawnTimer: 0,
+          patternTimer: 0,
+          phase: 1
+        };
+      }
+      function createBoss(kind) {
+        if (kind === "slimeKing") {
+          return { x: 790, y: 286, w: 54, h: 46, type: "slime", boss: true, bossKind: "slimeKing", hp: 14, maxHp: 14, speed: 58, damage: 1, hitFlash: 0, wanderAngle: 0, wanderTimer: 0, bob: 0, spawnTimer: 3.2, patternTimer: 1.7, dashTimer: 0, dashVx: 0, dashVy: 0, phase: 1 };
+        }
+        if (kind === "shadowWolf") {
+          return { x: 790, y: 286, w: 58, h: 36, type: "wolf", boss: true, bossKind: "shadowWolf", hp: 17, maxHp: 17, speed: 76, damage: 1, hitFlash: 0, wanderAngle: 0, wanderTimer: 0, bob: 0, spawnTimer: 2.5, patternTimer: 1.5, dashTimer: 0, dashVx: 0, dashVy: 0, phase: 1 };
+        }
+        return { x: 770, y: 226, w: 72, h: 54, type: "dragon", boss: true, bossKind: "stormDragon", hp: 22, maxHp: 22, speed: 52, damage: 1, hitFlash: 0, wanderAngle: 0, wanderTimer: 0, bob: 0, spawnTimer: 2.2, patternTimer: 1.4, dashTimer: 0, dashVx: 0, dashVy: 0, phase: 1 };
+      }
+
+      function buildStage1() {
+        return {
+          theme: "forest",
+          trees: [
+            { x: 56, y: 64 }, { x: 888, y: 62 }, { x: 58, y: 462 }, { x: 874, y: 458 },
+            { x: 264, y: 48 }, { x: 448, y: 50 }, { x: 660, y: 50 }, { x: 804, y: 52 },
+            { x: 78, y: 348 }, { x: 844, y: 344 }, { x: 508, y: 472 }
+          ],
+          flowers: Array.from({ length: 70 }, (_, i) => ({ x: 50 + ((i * 129) % 850), y: 38 + ((i * 89) % 460), c: i % 4 })),
+          obstacles: [
+            { x: 0, y: 0, w: 960, h: 26, type: "wall" }, { x: 0, y: 514, w: 960, h: 26, type: "wall" },
+            { x: 0, y: 0, w: 26, h: 540, type: "wall" }, { x: 934, y: 0, w: 26, h: 540, type: "wall" },
+            { x: 115, y: 86, w: 150, h: 54, type: "hedge" }, { x: 318, y: 82, w: 104, h: 50, type: "hedge" },
+            { x: 515, y: 82, w: 112, h: 50, type: "hedge" }, { x: 702, y: 82, w: 132, h: 54, type: "hedge" },
+            { x: 98, y: 225, w: 118, h: 66, type: "rock" }, { x: 316, y: 238, w: 92, h: 58, type: "hedge" },
+            { x: 565, y: 230, w: 104, h: 70, type: "rock" }, { x: 740, y: 236, w: 78, h: 64, type: "hedge" },
+            { x: 150, y: 386, w: 132, h: 50, type: "hedge" }, { x: 362, y: 382, w: 112, h: 56, type: "rock" },
+            { x: 585, y: 384, w: 128, h: 54, type: "hedge" }
+          ],
+          fountain: { x: 455, y: 172, r: 40 },
+          castle: { x: 734, y: 112, w: 156, h: 124 },
+          gate: { x: 794, y: 216, w: 34, h: 36, open: false },
+          gateBarrier: { x: 778, y: 236, w: 66, h: 20 },
+          npc: { kind: "owl", x: 108, y: 322, w: 30, h: 34, talked: false },
+          chest: { x: 476, y: 318, w: 40, h: 32, visible: false, opened: false },
+          pedestal: { x: 800, y: 144, w: 28, h: 28, active: false, taken: false },
+          crystalGate: null,
+          crystals: [],
+          playerStart: { x: 72, y: 342 },
+          progress() { return player.hasRelic1 ? "王冠石" : (world.chest.opened ? "鍵入手" : world.gate.open ? "城門開放" : world.chest.visible ? "宝箱出現" : "探索中"); },
+          initialEnemies: [createEnemy(252, 190, "slime"), createEnemy(362, 156, "bat"), createEnemy(470, 248, "slime"), createEnemy(626, 180, "slime"), createEnemy(704, 330, "bat")]
+        };
+      }
+
+      function buildStage2() {
+        return {
+          theme: "moon",
+          trees: [
+            { x: 58, y: 74 }, { x: 138, y: 66 }, { x: 242, y: 82 }, { x: 360, y: 60 }, { x: 482, y: 72 },
+            { x: 620, y: 72 }, { x: 742, y: 64 }, { x: 842, y: 76 }, { x: 880, y: 432 }, { x: 92, y: 438 }
+          ],
+          flowers: Array.from({ length: 60 }, (_, i) => ({ x: 60 + ((i * 121) % 830), y: 42 + ((i * 83) % 440), c: i % 4 })),
+          obstacles: [
+            { x: 0, y: 0, w: 960, h: 26, type: "wall" }, { x: 0, y: 514, w: 960, h: 26, type: "wall" },
+            { x: 0, y: 0, w: 26, h: 540, type: "wall" }, { x: 934, y: 0, w: 26, h: 540, type: "wall" },
+            { x: 114, y: 116, w: 110, h: 64, type: "crystalRock" }, { x: 264, y: 116, w: 74, h: 58, type: "crystalRock" },
+            { x: 362, y: 270, w: 82, h: 56, type: "crystalRock" }, { x: 128, y: 304, w: 88, h: 56, type: "crystalRock" },
+            { x: 256, y: 392, w: 96, h: 58, type: "crystalRock" }, { x: 526, y: 118, w: 120, h: 54, type: "thorn" },
+            { x: 522, y: 374, w: 126, h: 60, type: "thorn" }, { x: 692, y: 92, w: 176, h: 48, type: "stone" },
+            { x: 696, y: 390, w: 164, h: 50, type: "stone" }
+          ],
+          castle: { x: 728, y: 154, w: 156, h: 156 },
+          gate: { x: 770, y: 248, w: 70, h: 24, open: false },
+          gateBarrier: { x: 744, y: 262, w: 122, h: 18 },
+          npc: { kind: "swan", x: 88, y: 406, w: 30, h: 34, talked: false },
+          crystals: [
+            { x: 282, y: 210, w: 24, h: 34, lit: false },
+            { x: 458, y: 170, w: 24, h: 34, lit: false },
+            { x: 448, y: 350, w: 24, h: 34, lit: false }
+          ],
+          pedestal: { x: 802, y: 176, w: 30, h: 30, active: false, taken: false },
+          chest: null,
+          playerStart: { x: 72, y: 422 },
+          progress() {
+            const lit = world.crystals.filter(c => c.lit).length;
+            if (player.hasRelic2) return "星月冠";
+            if (world.pedestal.active) return "ボス撃破";
+            return `結晶 ${lit}/3`;
+          },
+          initialEnemies: [createEnemy(198, 222, "wisp"), createEnemy(210, 340, "bat"), createEnemy(330, 184, "wisp"), createEnemy(520, 286, "wisp"), createEnemy(590, 216, "bat"), createEnemy(630, 328, "wolf")]
+        };
+      }
+
+
+      function buildStage3() {
+        return {
+          theme: "sky",
+          trees: [],
+          flowers: Array.from({ length: 46 }, (_, i) => ({ x: 70 + ((i * 137) % 820), y: 45 + ((i * 97) % 420), c: i % 4 })),
+          obstacles: [
+            { x: 0, y: 0, w: 960, h: 26, type: "wall" }, { x: 0, y: 514, w: 960, h: 26, type: "wall" },
+            { x: 0, y: 0, w: 26, h: 540, type: "wall" }, { x: 934, y: 0, w: 26, h: 540, type: "wall" },
+            { x: 92, y: 100, w: 132, h: 54, type: "cloudWall" }, { x: 288, y: 88, w: 104, h: 60, type: "cloudWall" },
+            { x: 468, y: 104, w: 130, h: 52, type: "cloudWall" }, { x: 108, y: 286, w: 104, h: 60, type: "goldStone" },
+            { x: 302, y: 270, w: 92, h: 62, type: "cloudWall" }, { x: 492, y: 292, w: 112, h: 56, type: "goldStone" },
+            { x: 154, y: 410, w: 122, h: 48, type: "cloudWall" }, { x: 376, y: 402, w: 118, h: 52, type: "goldStone" },
+            { x: 662, y: 92, w: 224, h: 46, type: "palaceWall" }, { x: 674, y: 396, w: 210, h: 48, type: "palaceWall" }
+          ],
+          castle: { x: 700, y: 126, w: 180, h: 196 },
+          gate: { x: 746, y: 250, w: 86, h: 32, open: false },
+          gateBarrier: { x: 716, y: 270, w: 146, h: 20 },
+          npc: { kind: "pegasus", x: 78, y: 404, w: 34, h: 36, talked: false },
+          seals: [
+            { x: 260, y: 204, w: 30, h: 30, active: false },
+            { x: 450, y: 188, w: 30, h: 30, active: false },
+            { x: 554, y: 376, w: 30, h: 30, active: false }
+          ],
+          pedestal: { x: 792, y: 160, w: 34, h: 32, active: false, taken: false },
+          chest: null,
+          crystals: [],
+          playerStart: { x: 62, y: 430 },
+          progress() {
+            const active = world.seals.filter(s => s.active).length;
+            if (player.hasRelic3) return "天空の王笏";
+            if (world.pedestal.active) return "天空竜撃破";
+            return `風の紋章 ${active}/3`;
+          },
+          initialEnemies: [
+            createEnemy(196, 210, "cloudWisp"), createEnemy(246, 346, "bat"),
+            createEnemy(396, 222, "guard"), createEnemy(512, 186, "cloudWisp"),
+            createEnemy(574, 336, "guard"), createEnemy(638, 230, "cloudWisp")
+          ]
+        };
+      }
+
+      world = buildStage1();
+      enemies = [];
+
+      function showFlash(strength = 0.8) {
+
+        flashOverlay.style.opacity = String(strength);
+        flashTimer = 0.18;
+      }
+      function showStageBanner(title, sub, small = "Stage Start") {
+        stageBannerSmall.textContent = small;
+        stageBannerBig.textContent = title;
+        stageBannerSub.textContent = sub;
+        stageBanner.classList.add("show");
+        stageBannerTimer = 2.0;
+      }
+      function showMessage(html, sec = 3.4) {
+        messageEl.innerHTML = html;
+        messageEl.classList.add("show");
+        messageTimer = sec;
+      }
+      function hideMessage() {
+        messageEl.classList.remove("show");
+        messageTimer = 0;
+      }
+      function spawnParticles(x, y, color, count) {
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 30 + Math.random() * 120;
+          particles.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 0.4 + Math.random() * 0.55,
+            maxLife: 0.95,
+            size: 2 + Math.random() * 4,
+            color
+          });
+        }
+      }
+
+      function initCharacterCards() {
+        characterGrid.innerHTML = "";
+        characters.forEach(char => {
+          const div = document.createElement("div");
+          div.className = "char-card";
+          div.dataset.id = char.id;
+          div.innerHTML = `
+            <div class="avatar" style="background:${char.cardColor};">${char.emoji}</div>
+            <div class="char-name">${char.name}</div>
+            <div class="char-role">${char.role}</div>
+            <div class="char-desc">${char.desc}</div>
+            <div class="char-stats">${char.statsText}</div>
+          `;
+          div.addEventListener("click", () => selectCharacter(char.id));
+          characterGrid.appendChild(div);
+        });
+      }
+      function selectCharacter(id) {
+        selectedCharacterId = id;
+        document.querySelectorAll(".char-card").forEach(card => {
+          card.classList.toggle("active", card.dataset.id === id);
+        });
+        const char = characters.find(c => c.id === id);
+        selectedInfo.textContent = `選択中：${char.name} / ${char.statsText}`;
+        startButton.disabled = false;
+        playSfx("select");
+      }
+
+      function resetPlayerToCharacter() {
+        const char = characters.find(c => c.id === selectedCharacterId) || characters[0];
+        player.character = char;
+        player.w = 28; player.h = 34; player.dir = "down";
+        player.speed = char.speed;
+        player.maxHp = char.maxHp;
+        player.hp = char.maxHp;
+        player.damage = char.damage;
+        player.range = char.range;
+        player.cooldown = char.cooldown;
+        player.attackTimer = 0; player.attackCooldown = 0; player.invincible = 0;
+        player.coins = 0; player.walkCycle = 0; player.hasRelic1 = false; player.hasRelic2 = false; player.hasRelic3 = false;
+      }
+
+      function loadStage(index, keepProgress = true) {
+        currentStageIndex = index;
+        world = index === 0 ? buildStage1() : index === 1 ? buildStage2() : buildStage3();
+        enemies = world.initialEnemies.slice();
+        boss = null;
+        projectiles = [];
+        particles = [];
+        hazards = [];
+        questStage = 0;
+        player.attackCooldown = 0;
+        player.attackTimer = 0;
+        player.invincible = 0;
+        player.x = world.playerStart.x;
+        player.y = world.playerStart.y;
+        if (!keepProgress) {
+          player.coins = 0;
+          player.hasRelic1 = false;
+          player.hasRelic2 = false;
+          player.hasRelic3 = false;
+        }
+        player.hp = player.maxHp;
+        touchMove.x = 0; touchMove.y = 0; touchMove.active = false; updateStick();
+        hideMessage();
+        endScreen.classList.add("hidden");
+        updateObjective(); updateHud(); updateBossBar();
+        stageChipEl.textContent = stageCatalog[currentStageIndex].name;
+        startMusic(stageCatalog[currentStageIndex].music);
+        showStageBanner(stageCatalog[currentStageIndex].title, stageCatalog[currentStageIndex].subtitle, currentStageIndex === 0 ? "Royal Quest" : "New Realm");
+      }
+
+      function startNewGame() {
+        resetPlayerToCharacter();
+        loadStage(0, false);
+        startScreen.classList.add("hidden");
+        running = true;
+        lastTime = performance.now();
+        showMessage(`${player.character.name}の冒険がはじまる！<br>まずは<strong>${world.npc.kind === "owl" ? "フクロウ執事" : "しらとりプリンセス"}</strong>に話しかけよう。`, 3.2);
+      }
+
+      function updateObjective() {
+        let text = "";
+        if (currentStageIndex === 0) {
+          if (questStage === 0) text = "フクロウ執事に話しかけよう";
+          else if (questStage === 1) text = "庭園の魔物をすべてしずめよう";
+          else if (questStage === 2) text = "中央の宝箱からロイヤルキーを手に入れよう";
+          else if (questStage === 3) text = "城門の前で調べて、門を開こう";
+          else if (questStage === 4) text = "ダークスライムキングを倒そう";
+          else if (questStage === 5) text = "祭壇の王冠石を取り戻そう";
+          else text = "ステージ1クリア！";
+        } else if (currentStageIndex === 1) {
+          if (questStage === 0) text = "しらとりプリンセスに話しかけよう";
+          else if (questStage === 1) text = "3つの月光結晶を調べて灯そう";
+          else if (questStage === 2) text = "シャドウウルフを倒そう";
+          else if (questStage === 3) text = "祭壇の星月冠を取り戻そう";
+          else text = "ステージ2クリア！";
+        } else {
+          if (questStage === 0) text = "ペガサス王子に話しかけよう";
+          else if (questStage === 1) text = "3つの風の紋章を起動しよう";
+          else if (questStage === 2) text = "天空竜テンペストを倒そう";
+          else if (questStage === 3) text = "天空の王笏を取り戻そう";
+          else text = "三王国に平和が戻った！";
+        }
+        objectiveTextEl.textContent = text;
+      }
+
+      function updateHud() {
+        heartsEl.innerHTML = "";
+        for (let i = 0; i < player.maxHp; i++) {
+          const span = document.createElement("span");
+          span.className = "heart" + (i >= player.hp ? " empty" : "");
+          span.textContent = "♥";
+          heartsEl.appendChild(span);
+        }
+        coinsEl.textContent = player.coins;
+        enemyCountEl.textContent = enemies.filter(e => e.hp > 0).length + (boss && boss.hp > 0 ? 1 : 0);
+        progressTextEl.textContent = world ? world.progress() : "-";
+        heroNameEl.textContent = player.character ? player.character.name : "-";
+      }
+
+      function updateBossBar() {
+        if (boss && boss.hp > 0) {
+          bossBarWrap.classList.add("show");
+          bossNameEl.textContent = boss.bossKind === "stormDragon" ? "天空竜テンペスト" : boss.bossKind === "shadowWolf" ? "シャドウウルフ" : "ダークスライムキング";
+          bossFill.style.width = `${Math.max(0, boss.hp / boss.maxHp) * 100}%`;
+        } else {
+          bossBarWrap.classList.remove("show");
+        }
+      }
+
+      function rectsOverlap(a, b) {
+        return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+      }
+      function collidesWithWorld(rect) {
+        for (const o of world.obstacles) { if (rectsOverlap(rect, o)) return true; }
+        if (!world.gate.open && rectsOverlap(rect, world.gateBarrier)) return true;
+        return false;
+      }
+      function moveEntity(entity, dx, dy) {
+        const nextX = { x: entity.x + dx, y: entity.y, w: entity.w, h: entity.h };
+        if (!collidesWithWorld(nextX)) entity.x += dx;
+        const nextY = { x: entity.x, y: entity.y + dy, w: entity.w, h: entity.h };
+        if (!collidesWithWorld(nextY)) entity.y += dy;
+      }
+      function near(obj, dist = 72) {
+        const ax = player.x + player.w / 2; const ay = player.y + player.h / 2;
+        const bx = obj.x + obj.w / 2; const by = obj.y + obj.h / 2;
+        return Math.hypot(ax - bx, ay - by) < dist;
+      }
+
+      function getAttackBox() {
+        const reach = player.range;
+        const size = 52;
+        const cx = player.x + player.w / 2 - size / 2;
+        const cy = player.y + player.h / 2 - size / 2;
+        if (player.dir === "up") return { x: cx, y: player.y + player.h / 2 - reach, w: size, h: reach };
+        if (player.dir === "down") return { x: cx, y: player.y + player.h / 2, w: size, h: reach };
+        if (player.dir === "left") return { x: player.x + player.w / 2 - reach, y: cy, w: reach, h: size };
+        return { x: player.x + player.w / 2, y: cy, w: reach, h: size };
+      }
+      function spawnProjectile(owner, options = {}) {
+        const fromPlayer = owner === "player";
+        const source = fromPlayer ? player : (options.source || boss);
+        if (!source) return;
+        const sx = source.x + source.w / 2;
+        const sy = source.y + source.h / 2;
+        let dx = 0, dy = 0;
+        if (typeof options.angle === "number") {
+          dx = Math.cos(options.angle); dy = Math.sin(options.angle);
+        } else if (fromPlayer) {
+          if (player.dir === "up") dy = -1;
+          else if (player.dir === "down") dy = 1;
+          else if (player.dir === "left") dx = -1;
+          else dx = 1;
+        } else {
+          const px = player.x + player.w / 2;
+          const py = player.y + player.h / 2;
+          const dist = Math.hypot(px - sx, py - sy) || 1;
+          dx = (px - sx) / dist; dy = (py - sy) / dist;
+        }
+        const speed = options.speed || (fromPlayer ? 320 : 230);
+        const ch = player.character;
+        const defaultEnemyColor = boss && boss.bossKind === "stormDragon" ? "#ffe691" : boss && boss.bossKind === "shadowWolf" ? "#8db0ff" : "#c97bff";
+        const color = options.color || (fromPlayer ? (ch.id === "rabbitPrincess" ? "#ffd4ec" : "#ffe68f") : defaultEnemyColor);
+        const size = options.size || 10;
+        projectiles.push({
+          x: sx - size / 2, y: sy - size / 2, w: size, h: size,
+          vx: dx * speed, vy: dy * speed,
+          life: options.life || (fromPlayer ? 0.95 : 1.55),
+          owner, damage: options.damage || (fromPlayer ? player.damage : 1),
+          color, sparkle: fromPlayer && ch.weaponType === "ranged",
+          trail: options.trail || false
+        });
+      }
+
+      function spawnRadial(source, count, speed, color, offset = 0) {
+        for (let i = 0; i < count; i++) {
+          spawnProjectile("boss", { source, angle: offset + (Math.PI * 2 * i / count), speed, color, size: 11, life: 2.4, trail: true });
+        }
+      }
+
+      function spawnAimedBurst(source, count, spread, speed, color) {
+        const sx = source.x + source.w / 2, sy = source.y + source.h / 2;
+        const angle = Math.atan2(player.y + player.h / 2 - sy, player.x + player.w / 2 - sx);
+        const center = (count - 1) / 2;
+        for (let i = 0; i < count; i++) {
+          spawnProjectile("boss", { source, angle: angle + (i - center) * spread, speed, color, size: 10, life: 2.1, trail: true });
+        }
+      }
+
+      function spawnLightningWarnings(count) {
+        for (let i = 0; i < count; i++) {
+          const px = i === 0 ? player.x + player.w / 2 : 100 + Math.random() * 760;
+          const py = i === 0 ? player.y + player.h / 2 : 110 + Math.random() * 340;
+          hazards.push({ x: px, y: py, radius: 28 + Math.random() * 10, warn: 0.78 + i * 0.08, active: 0.22, struck: false, damageDone: false });
+        }
+      }
+
+      function applyDamageToEnemy(enemy, damage) {
+        enemy.hp -= damage;
+        enemy.hitFlash = 0.12;
+        spawnParticles(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, enemy.boss ? "#ffd6a4" : "#f4e29a", 8);
+        playSfx("hit");
+        if (enemy.hp <= 0) {
+          spawnParticles(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, enemy.boss ? "#f6b7ff" : "#f4d35e", enemy.boss ? 22 : 14);
+          player.coins += enemy.boss ? 7 : (enemy.type === "bat" ? 2 : enemy.type === "wisp" ? 3 : 1);
+          if (enemy.boss) onBossDefeated();
+          updateHud(); updateBossBar();
+        }
+      }
+      function onBossDefeated() {
+        playSfx("clear");
+        showFlash(0.95);
+        hazards = [];
+        if (currentStageIndex === 0) {
+          boss = null; questStage = 5; world.pedestal.active = true;
+          showMessage("ボスを倒した！<br><strong>祭壇に王冠石</strong>があらわれた。", 3.8);
+        } else if (currentStageIndex === 1) {
+          boss = null; questStage = 3; world.pedestal.active = true;
+          showMessage("シャドウウルフを撃破！<br><strong>星月冠</strong>が祭壇に戻った。", 3.8);
+        } else {
+          boss = null; questStage = 3; world.pedestal.active = true;
+          showMessage("天空竜テンペストを撃破！<br><strong>天空の王笏</strong>が輝き始めた。", 3.8);
+        }
+        startMusic(stageCatalog[currentStageIndex].music);
+        updateObjective();
+      }
+
+      function attack() {
+        if (!running || player.attackCooldown > 0) return;
+        player.attackCooldown = player.cooldown;
+        player.attackTimer = 0.16;
+        playSfx(player.character.weaponType === "melee" ? "swing" : "magic");
+
+        if (player.character.weaponType === "melee") {
+          const box = getAttackBox();
+          let hitSomething = false;
+          enemies.forEach(enemy => {
+            if (enemy.hp > 0 && rectsOverlap(box, enemy)) { applyDamageToEnemy(enemy, player.damage); hitSomething = true; }
+          });
+          if (boss && boss.hp > 0 && rectsOverlap(box, boss)) { applyDamageToEnemy(boss, player.damage); hitSomething = true; }
+          if (hitSomething) screenShake = Math.max(screenShake, 6);
+        } else {
+          spawnProjectile("player");
+        }
+      }
+
+      function interact() {
+        if (!running) return;
+
+        if (currentStageIndex === 0) {
+          if (questStage === 0 && near(world.npc, 78)) {
+            world.npc.talked = true; questStage = 1; updateObjective();
+            showMessage("フクロウ執事：<br>『庭園の魔物をしずめ、<strong>ロイヤルキー</strong>を取り戻してください。』"); return;
+          }
+          if (questStage === 2 && world.chest.visible && !world.chest.opened && near(world.chest, 82)) {
+            world.chest.opened = true; questStage = 3;
+            spawnParticles(world.chest.x + 20, world.chest.y + 16, "#fff0a6", 26); playSfx("open");
+            updateHud(); updateObjective(); showMessage("ロイヤルキーを入手！<br>城門の前で<strong>調べる</strong>と開けられる。", 3.2); return;
+          }
+          const gateObj = { x: world.gateBarrier.x, y: world.gateBarrier.y, w: world.gateBarrier.w, h: world.gateBarrier.h };
+          if (questStage === 3 && near(gateObj, 88)) {
+            world.gate.open = true; questStage = 4; boss = createBoss("slimeKing");
+            updateObjective(); updateBossBar(); playSfx("boss"); showFlash(0.65); startMusic("boss");
+            showStageBanner("BOSS BATTLE", "ダークスライムキング", "Royal Warning");
+            showMessage("城門が開いた！<br><strong>放射弾としもべ召喚</strong>に注意！", 3.6); return;
+          }
+          if (questStage === 5 && world.pedestal.active && !world.pedestal.taken && near(world.pedestal, 76)) {
+            world.pedestal.taken = true; player.hasRelic1 = true; questStage = 6;
+            spawnParticles(world.pedestal.x + world.pedestal.w / 2, world.pedestal.y + world.pedestal.h / 2, "#fff2b6", 38);
+            playSfx("clear"); showFlash(0.92); updateHud(); updateObjective();
+            endMode = "nextStage"; running = false; endTitle.textContent = "STAGE 1 CLEAR";
+            endText.textContent = `${player.character.name}は王冠石を取り戻した。次は月夜の城へ。スター：${player.coins}`;
+            endButton.textContent = "ステージ2へ"; endScreen.classList.remove("hidden"); startMusic("victory"); return;
+          }
+        } else if (currentStageIndex === 1) {
+          if (questStage === 0 && near(world.npc, 78)) {
+            world.npc.talked = true; questStage = 1; updateObjective();
+            showMessage("しらとりプリンセス：<br>『<strong>3つの月光結晶</strong>に光を戻してください。』", 3.4); return;
+          }
+          if (questStage === 1) {
+            for (const crystal of world.crystals) {
+              if (!crystal.lit && near(crystal, 74)) {
+                crystal.lit = true; spawnParticles(crystal.x + crystal.w / 2, crystal.y + crystal.h / 2, "#beddff", 24); playSfx("open");
+                const lit = world.crystals.filter(c => c.lit).length;
+                showMessage(`月光結晶が輝いた！ <strong>${lit}/3</strong>`, 2.3);
+                if (lit >= 3) {
+                  world.gate.open = true; questStage = 2; boss = createBoss("shadowWolf");
+                  playSfx("boss"); showFlash(0.75); updateBossBar(); updateObjective(); startMusic("boss");
+                  showStageBanner("BOSS BATTLE", "シャドウウルフ", "Moon Gate Open");
+                  showMessage("結晶が共鳴した！<br><strong>三連弾と高速突進</strong>を見切ろう。", 3.6);
+                }
+                updateHud(); return;
+              }
+            }
+          }
+          if (questStage === 3 && world.pedestal.active && !world.pedestal.taken && near(world.pedestal, 76)) {
+            world.pedestal.taken = true; player.hasRelic2 = true; questStage = 4; updateHud(); updateObjective();
+            spawnParticles(world.pedestal.x + world.pedestal.w / 2, world.pedestal.y + world.pedestal.h / 2, "#dcecff", 44);
+            playSfx("clear"); showFlash(1); startMusic("victory");
+            endMode = "nextStage"; running = false; endTitle.textContent = "STAGE 2 CLEAR";
+            endText.textContent = `${player.character.name}は星月冠を取り戻した。最後の天空宮殿へ。合計スター：${player.coins}`;
+            endButton.textContent = "ステージ3へ"; endScreen.classList.remove("hidden"); return;
+          }
+        } else {
+          if (questStage === 0 && near(world.npc, 82)) {
+            world.npc.talked = true; questStage = 1; updateObjective();
+            showMessage("ペガサス王子：<br>『天空宮殿を守る<strong>3つの風の紋章</strong>を起動してください。』", 3.5); return;
+          }
+          if (questStage === 1) {
+            for (const seal of world.seals) {
+              if (!seal.active && near(seal, 78)) {
+                seal.active = true; spawnParticles(seal.x + seal.w / 2, seal.y + seal.h / 2, "#fff0aa", 30); playSfx("open");
+                const active = world.seals.filter(s => s.active).length;
+                showMessage(`風の紋章が起動！ <strong>${active}/3</strong>`, 2.3);
+                if (active >= 3) {
+                  world.gate.open = true; questStage = 2; boss = createBoss("stormDragon");
+                  playSfx("boss"); showFlash(0.9); updateBossBar(); updateObjective(); startMusic("boss");
+                  showStageBanner("FINAL BOSS", "天空竜テンペスト", "The Last Crown");
+                  showMessage("天空竜テンペストが降臨！<br><strong>予告落雷・全方向弾・突風</strong>を回避しよう。", 4.0);
+                }
+                updateHud(); return;
+              }
+            }
+          }
+          if (questStage === 3 && world.pedestal.active && !world.pedestal.taken && near(world.pedestal, 80)) {
+            world.pedestal.taken = true; player.hasRelic3 = true; questStage = 4; updateHud(); updateObjective();
+            spawnParticles(world.pedestal.x + world.pedestal.w / 2, world.pedestal.y + world.pedestal.h / 2, "#fff0a6", 58);
+            playSfx("clear"); showFlash(1); startMusic("victory");
+            endMode = "restart"; running = false; endTitle.textContent = "ROYAL TRILOGY CLEAR";
+            endText.textContent = `${player.character.name}は三王国の宝をすべて取り戻しました。王冠石・星月冠・天空の王笏がそろい、王国に平和が戻りました。合計スター：${player.coins}`;
+            endButton.textContent = "最初から遊ぶ"; endScreen.classList.remove("hidden"); return;
+          }
+        }
+
+        if (world.npc && near(world.npc, 80)) {
+          showMessage(`『現在の使命は <strong>${objectiveTextEl.textContent}</strong> です。』`, 2.7); return;
+        }
+        showMessage("近くに調べられるものはない。", 2.0);
+      }
+
+      function damagePlayer(amount) {
+        if (player.invincible > 0) return;
+        player.hp = Math.max(0, player.hp - amount);
+        player.invincible = 0.95;
+        screenShake = 8;
+        spawnParticles(player.x + player.w / 2, player.y + player.h / 2, "#ff6471", 12);
+        playSfx("hurt");
+        showFlash(0.45);
+        updateHud();
+        if (player.hp <= 0) {
+          running = false;
+          endMode = "retry";
+          endTitle.textContent = "TRY AGAIN";
+          endText.textContent = `${player.character.name}は力尽きてしまった……。もう一度チャレンジしよう。`;
+          endButton.textContent = "再挑戦";
+          endScreen.classList.remove("hidden");
+        }
+      }
+
+      function updateQuestFlow() {
+        if (currentStageIndex === 0 && questStage === 1 && enemies.every(e => e.hp <= 0)) {
+          questStage = 2;
+          world.chest.visible = true;
+          updateObjective();
+          playSfx("open");
+          showMessage("庭園の魔物をしずめた！<br>中央にある宝箱がひらけるようになった。", 3.2);
+        }
+      }
+
+      function update(dt) {
+        if (!running) return;
+
+        player.attackCooldown = Math.max(0, player.attackCooldown - dt);
+        player.attackTimer = Math.max(0, player.attackTimer - dt);
+        player.invincible = Math.max(0, player.invincible - dt);
+
+        let moveX = 0, moveY = 0;
+        if (keys["ArrowUp"] || keys["w"] || keys["W"]) moveY -= 1;
+        if (keys["ArrowDown"] || keys["s"] || keys["S"]) moveY += 1;
+        if (keys["ArrowLeft"] || keys["a"] || keys["A"]) moveX -= 1;
+        if (keys["ArrowRight"] || keys["d"] || keys["D"]) moveX += 1;
+        if (touchMove.active || Math.abs(touchMove.x) > 0.05 || Math.abs(touchMove.y) > 0.05) { moveX += touchMove.x; moveY += touchMove.y; }
+        const magnitude = Math.hypot(moveX, moveY);
+        if (magnitude > 0) {
+          const nx = moveX / magnitude, ny = moveY / magnitude;
+          if (Math.abs(nx) > Math.abs(ny)) player.dir = nx < 0 ? "left" : "right"; else player.dir = ny < 0 ? "up" : "down";
+          const speedScale = Math.min(1, Math.max(0.4, magnitude));
+          moveEntity(player, nx * player.speed * dt * speedScale, ny * player.speed * dt * speedScale);
+          player.walkCycle += dt * 10;
+        }
+
+        enemies.forEach(enemy => {
+          if (enemy.hp <= 0) return;
+          enemy.hitFlash = Math.max(0, enemy.hitFlash - dt); enemy.bob += dt * 4; enemy.attackTimer -= dt;
+          const px = player.x + player.w / 2, py = player.y + player.h / 2;
+          const ex = enemy.x + enemy.w / 2, ey = enemy.y + enemy.h / 2;
+          const dist = Math.hypot(px - ex, py - ey);
+
+          if (enemy.dashTimer > 0) {
+            enemy.dashTimer -= dt;
+            moveEntity(enemy, enemy.dashVx * dt, enemy.dashVy * dt);
+          } else {
+            let vx = 0, vy = 0;
+            if (dist < (enemy.type === "bat" ? 185 : 165)) { vx = (px - ex) / Math.max(dist, 1); vy = (py - ey) / Math.max(dist, 1); }
+            else {
+              enemy.wanderTimer -= dt;
+              if (enemy.wanderTimer <= 0) { enemy.wanderTimer = 0.7 + Math.random() * 1.6; enemy.wanderAngle += (Math.random() - 0.5) * 2.6; }
+              vx = Math.cos(enemy.wanderAngle); vy = Math.sin(enemy.wanderAngle);
+            }
+            moveEntity(enemy, vx * enemy.speed * dt, vy * enemy.speed * dt);
+          }
+
+          if (enemy.attackTimer <= 0 && dist < 310) {
+            if (enemy.type === "wisp" || enemy.type === "cloudWisp") {
+              spawnProjectile("boss", { source: enemy, speed: enemy.type === "cloudWisp" ? 245 : 210, color: enemy.type === "cloudWisp" ? "#fff1a8" : "#9fc4ff", size: 9, life: 1.8 });
+              enemy.attackTimer = enemy.type === "cloudWisp" ? 2.1 : 2.7;
+            } else if (enemy.type === "guard") {
+              spawnAimedBurst(enemy, 3, 0.14, 215, "#f6d68a"); enemy.attackTimer = 3.1;
+            } else if (enemy.type === "wolf" && dist < 240) {
+              const d = dist || 1; enemy.dashVx = (px - ex) / d * 310; enemy.dashVy = (py - ey) / d * 310; enemy.dashTimer = 0.38; enemy.attackTimer = 3.3;
+            } else if (enemy.type === "bat") {
+              spawnProjectile("boss", { source: enemy, speed: 200, color: currentStageIndex === 0 ? "#b98cda" : "#9eb6ff", size: 8, life: 1.7 }); enemy.attackTimer = 3.9;
+            } else enemy.attackTimer = 4.5;
+          }
+          if (rectsOverlap(player, enemy)) damagePlayer(enemy.damage);
+        });
+
+        if (boss && boss.hp > 0) {
+          boss.phase = boss.hp <= boss.maxHp * 0.5 ? 2 : 1;
+          boss.hitFlash = Math.max(0, boss.hitFlash - dt); boss.bob += dt * 3; boss.patternTimer -= dt;
+          const px = player.x + player.w / 2, py = player.y + player.h / 2;
+          const ex = boss.x + boss.w / 2, ey = boss.y + boss.h / 2;
+          const dist = Math.hypot(px - ex, py - ey) || 1;
+
+          if (boss.dashTimer > 0) {
+            boss.dashTimer -= dt; moveEntity(boss, boss.dashVx * dt, boss.dashVy * dt);
+          } else {
+            const chase = boss.bossKind === "stormDragon" ? 0.48 : 1;
+            moveEntity(boss, (px - ex) / dist * boss.speed * dt * chase, (py - ey) / dist * boss.speed * dt * chase);
+          }
+
+          if (boss.patternTimer <= 0) {
+            if (boss.bossKind === "slimeKing") {
+              if (Math.random() < 0.55) spawnRadial(boss, boss.phase === 1 ? 8 : 12, boss.phase === 1 ? 175 : 220, "#d795ef", Math.random() * 0.5);
+              else {
+                enemies.push(createEnemy(boss.x - 30, boss.y + 42, "slime"));
+                enemies.push(createEnemy(boss.x + 34, boss.y + 38, "bat"));
+              }
+              boss.patternTimer = boss.phase === 1 ? 2.6 : 1.75;
+            } else if (boss.bossKind === "shadowWolf") {
+              if (Math.random() < 0.5) spawnAimedBurst(boss, boss.phase === 1 ? 3 : 5, 0.16, boss.phase === 1 ? 250 : 290, "#9db9ff");
+              else {
+                boss.dashVx = (px - ex) / dist * (boss.phase === 1 ? 420 : 520);
+                boss.dashVy = (py - ey) / dist * (boss.phase === 1 ? 420 : 520);
+                boss.dashTimer = boss.phase === 1 ? 0.48 : 0.56;
+                showFlash(0.2);
+              }
+              boss.patternTimer = boss.phase === 1 ? 2.25 : 1.45;
+            } else {
+              const roll = Math.random();
+              if (roll < 0.38) spawnLightningWarnings(boss.phase === 1 ? 3 : 5);
+              else if (roll < 0.73) spawnRadial(boss, boss.phase === 1 ? 10 : 16, boss.phase === 1 ? 205 : 255, "#ffe091", Math.random() * 0.45);
+              else spawnAimedBurst(boss, boss.phase === 1 ? 4 : 7, 0.13, boss.phase === 1 ? 270 : 320, "#d9f3ff");
+              boss.patternTimer = boss.phase === 1 ? 2.0 : 1.25;
+            }
+          }
+          if (rectsOverlap(player, boss)) damagePlayer(1);
+        }
+
+        projectiles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; });
+        projectiles = projectiles.filter(p => p.life > 0 && p.x > -30 && p.x < W + 30 && p.y > -30 && p.y < H + 30);
+        projectiles.forEach(p => {
+          if (p.owner === "player") {
+            enemies.forEach(enemy => { if (enemy.hp > 0 && rectsOverlap(p, enemy) && p.life > 0) { applyDamageToEnemy(enemy, p.damage); p.life = 0; } });
+            if (boss && boss.hp > 0 && rectsOverlap(p, boss) && p.life > 0) { applyDamageToEnemy(boss, p.damage); p.life = 0; }
+          } else if (rectsOverlap(p, player) && p.life > 0) { damagePlayer(p.damage); p.life = 0; }
+        });
+
+        hazards.forEach(h => {
+          if (h.warn > 0) h.warn -= dt;
+          else {
+            if (!h.struck) { h.struck = true; showFlash(0.42); screenShake = Math.max(screenShake, 8); playSfx("hit"); }
+            h.active -= dt;
+            if (!h.damageDone) {
+              const cx = player.x + player.w / 2, cy = player.y + player.h / 2;
+              if (Math.hypot(cx - h.x, cy - h.y) < h.radius + 10) damagePlayer(1);
+              h.damageDone = true;
+            }
+          }
+        });
+        hazards = hazards.filter(h => h.warn > 0 || h.active > 0);
+
+        particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.96; p.vy *= 0.96; p.life -= dt; });
+        particles = particles.filter(p => p.life > 0);
+        if (messageTimer > 0) { messageTimer -= dt; if (messageTimer <= 0) hideMessage(); }
+        if (stageBannerTimer > 0) { stageBannerTimer -= dt; if (stageBannerTimer <= 0) stageBanner.classList.remove("show"); }
+        if (flashTimer > 0) { flashTimer -= dt; if (flashTimer <= 0) flashOverlay.style.opacity = "0"; else flashOverlay.style.opacity = String(Math.min(1, flashTimer / 0.18)); }
+        screenShake = Math.max(0, screenShake - 40 * dt);
+        updateQuestFlow(); updateHud(); updateBossBar();
+      }
+
+      function drawTree(x, y, moon = false) {
+        ctx.fillStyle = moon ? "rgba(0,0,0,0.22)" : "rgba(0,0,0,0.18)";
+        ctx.beginPath(); ctx.ellipse(x + 18, y + 38, 26, 10, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = moon ? "#654e86" : "#6b4528";
+        ctx.fillRect(x + 13, y + 18, 10, 24);
+        ctx.fillStyle = moon ? "#433169" : "#174d32";
+        ctx.beginPath(); ctx.arc(x + 18, y + 15, 22, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = moon ? "#6b59a6" : "#2f7750";
+        ctx.beginPath(); ctx.arc(x + 11, y + 9, 14, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = moon ? "#90a4ff" : "#4d9866";
+        ctx.beginPath(); ctx.arc(x + 24, y + 8, 9, 0, Math.PI * 2); ctx.fill();
+      }
+      function drawHedge(o, moon = false) {
+        ctx.fillStyle = "rgba(0,0,0,0.15)"; ctx.fillRect(o.x + 5, o.y + o.h - 6, o.w - 10, 8);
+        for (let x = o.x + 12; x < o.x + o.w - 6; x += 24) {
+          ctx.fillStyle = moon ? "#2c284f" : "#184f34"; ctx.beginPath(); ctx.arc(x, o.y + o.h / 2 + 4, 18, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = moon ? "#574e8d" : "#2f8351"; ctx.beginPath(); ctx.arc(x - 5, o.y + o.h / 2 - 4, 12, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      function drawRock(o, moon = false) {
+        ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.beginPath(); ctx.ellipse(o.x + o.w / 2, o.y + o.h - 4, o.w / 2, 10, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = moon ? "#4a4c73" : "#5a6d66"; ctx.beginPath(); ctx.roundRect(o.x, o.y + 6, o.w, o.h - 6, 12); ctx.fill();
+        ctx.fillStyle = moon ? "#8aa7ff" : "#87968f"; ctx.beginPath(); ctx.roundRect(o.x + 9, o.y + 8, o.w * 0.56, 11, 6); ctx.fill();
+      }
+      function drawFountain() {
+        const f = world.fountain;
+        ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.beginPath(); ctx.ellipse(f.x + 1, f.y + 22, 56, 18, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#899c9a"; ctx.beginPath(); ctx.arc(f.x, f.y, 44, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#5da8d9"; ctx.beginPath(); ctx.arc(f.x, f.y, 30, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#7ebce5"; ctx.beginPath(); ctx.arc(f.x, f.y, 20, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#b5c1bf"; ctx.fillRect(f.x - 6, f.y - 34, 12, 32); ctx.beginPath(); ctx.arc(f.x, f.y - 38, 12, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "rgba(190,232,255,0.8)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(f.x, f.y - 52); ctx.lineTo(f.x, f.y - 24); ctx.stroke();
+      }
+      function drawBanner(x, y, color) {
+        ctx.fillStyle = "#755a29"; ctx.fillRect(x, y, 2, 32);
+        ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(x + 2, y); ctx.lineTo(x + 18, y + 4); ctx.lineTo(x + 18, y + 22); ctx.lineTo(x + 10, y + 18); ctx.lineTo(x + 2, y + 22); ctx.closePath(); ctx.fill();
+      }
+      function drawCastleStage1() {
+        const c = world.castle;
+        ctx.fillStyle = "rgba(0,0,0,0.22)"; ctx.fillRect(c.x - 8, c.y + c.h - 4, c.w + 16, 16);
+        ctx.fillStyle = "#aab0b3"; ctx.fillRect(c.x, c.y + 26, c.w, c.h - 26);
+        ctx.fillStyle = "#969da0"; ctx.fillRect(c.x - 18, c.y + 14, 32, 100); ctx.fillRect(c.x + c.w - 14, c.y + 14, 32, 100);
+        ctx.fillStyle = "#c5c9cb";
+        for (let x = c.x; x < c.x + c.w; x += 18) ctx.fillRect(x, c.y + 18, 10, 10);
+        for (let x = c.x - 18; x < c.x + 10; x += 12) ctx.fillRect(x, c.y + 8, 8, 10);
+        for (let x = c.x + c.w - 14; x < c.x + c.w + 18; x += 12) ctx.fillRect(x, c.y + 8, 8, 10);
+        ctx.fillStyle = world.gate.open ? "#6e5130" : "#5a4330"; ctx.beginPath(); ctx.roundRect(world.gate.x, world.gate.y - 40, world.gate.w, 72, 8); ctx.fill();
+        if (!world.gate.open) { ctx.fillStyle = "rgba(243, 213, 122, 0.26)"; ctx.fillRect(world.gateBarrier.x, world.gateBarrier.y, world.gateBarrier.w, world.gateBarrier.h); ctx.strokeStyle = "#e3c95f"; ctx.lineWidth = 3; ctx.strokeRect(world.gateBarrier.x, world.gateBarrier.y, world.gateBarrier.w, world.gateBarrier.h); }
+        ctx.fillStyle = "#4e5f78"; ctx.fillRect(c.x + 26, c.y + 58, 16, 22); ctx.fillRect(c.x + 114, c.y + 58, 16, 22);
+        drawBanner(c.x + 20, c.y + 30, "#e05d72"); drawBanner(c.x + c.w - 28, c.y + 30, "#6a91e9");
+      }
+      function drawCastleStage2() {
+        const c = world.castle;
+        ctx.fillStyle = "rgba(0,0,0,0.28)"; ctx.fillRect(c.x - 12, c.y + c.h - 6, c.w + 24, 18);
+        ctx.fillStyle = "#7d86b6"; ctx.fillRect(c.x, c.y + 24, c.w, c.h - 24);
+        ctx.fillStyle = "#a7b0df";
+        for (let x = c.x; x < c.x + c.w; x += 18) ctx.fillRect(x, c.y + 14, 10, 10);
+        ctx.fillStyle = "#5c6696"; ctx.fillRect(c.x - 18, c.y + 10, 30, 124); ctx.fillRect(c.x + c.w - 12, c.y + 10, 30, 124);
+        ctx.fillStyle = "#d6e2ff"; ctx.fillRect(c.x + 28, c.y + 70, 18, 26); ctx.fillRect(c.x + 110, c.y + 70, 18, 26);
+        ctx.fillStyle = world.gate.open ? "#5b5876" : "#32324f"; ctx.beginPath(); ctx.roundRect(world.gate.x, world.gate.y - 54, world.gate.w, 92, 9); ctx.fill();
+        if (!world.gate.open) {
+          ctx.fillStyle = "rgba(165, 196, 255, 0.18)"; ctx.fillRect(world.gateBarrier.x, world.gateBarrier.y, world.gateBarrier.w, world.gateBarrier.h);
+          ctx.strokeStyle = "#a8c5ff"; ctx.lineWidth = 3; ctx.strokeRect(world.gateBarrier.x, world.gateBarrier.y, world.gateBarrier.w, world.gateBarrier.h);
+        }
+        drawBanner(c.x + 18, c.y + 22, "#8bb7ff"); drawBanner(c.x + c.w - 26, c.y + 22, "#d8bbff");
+      }
+
+      function drawCastleStage3() {
+        const c = world.castle;
+        ctx.fillStyle = "rgba(78,60,24,0.25)"; ctx.fillRect(c.x - 18, c.y + c.h - 6, c.w + 36, 20);
+        ctx.fillStyle = "#f2e7bc"; ctx.fillRect(c.x, c.y + 34, c.w, c.h - 34);
+        ctx.fillStyle = "#d4b95e"; ctx.fillRect(c.x - 18, c.y + 18, 34, 142); ctx.fillRect(c.x + c.w - 16, c.y + 18, 34, 142);
+        ctx.fillStyle = "#fff6d5";
+        for (let x = c.x; x < c.x + c.w; x += 20) ctx.fillRect(x, c.y + 22, 12, 12);
+        ctx.fillStyle = "#8bc9e8"; ctx.fillRect(c.x + 32, c.y + 72, 20, 32); ctx.fillRect(c.x + 126, c.y + 72, 20, 32);
+        ctx.fillStyle = world.gate.open ? "#b98a43" : "#775b30"; ctx.beginPath(); ctx.roundRect(world.gate.x, world.gate.y - 72, world.gate.w, 108, 10); ctx.fill();
+        if (!world.gate.open) {
+          ctx.fillStyle = "rgba(255,226,124,0.18)"; ctx.fillRect(world.gateBarrier.x, world.gateBarrier.y, world.gateBarrier.w, world.gateBarrier.h);
+          ctx.strokeStyle = "#ffe08a"; ctx.lineWidth = 3; ctx.strokeRect(world.gateBarrier.x, world.gateBarrier.y, world.gateBarrier.w, world.gateBarrier.h);
+        }
+        drawBanner(c.x + 18, c.y + 34, "#f0c95b"); drawBanner(c.x + c.w - 28, c.y + 34, "#78cbe9");
+      }
+
+      function drawSeals() {
+        if (!world.seals) return;
+        world.seals.forEach((s, index) => {
+          ctx.save(); ctx.translate(s.x + s.w / 2, s.y + s.h / 2);
+          ctx.fillStyle = s.active ? "rgba(255,235,150,.26)" : "rgba(120,190,225,.12)"; ctx.beginPath(); ctx.arc(0, 0, 24, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = s.active ? "#ffe595" : "#75b9db"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); ctx.stroke();
+          ctx.rotate(Date.now() / 900 + index);
+          ctx.fillStyle = s.active ? "#fff1ae" : "#8dd0ef";
+          ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(5, -3); ctx.lineTo(12, 0); ctx.lineTo(5, 3); ctx.lineTo(0, 12); ctx.lineTo(-5, 3); ctx.lineTo(-12, 0); ctx.lineTo(-5, -3); ctx.closePath(); ctx.fill();
+          ctx.restore();
+        });
+      }
+
+      function drawHazards() {
+        hazards.forEach(h => {
+          ctx.save();
+          if (h.warn > 0) {
+            const pulse = 0.55 + Math.sin(Date.now() / 80) * 0.18;
+            ctx.globalAlpha = pulse;
+            ctx.strokeStyle = "#ffe48c"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(h.x, h.y, h.radius, 0, Math.PI * 2); ctx.stroke();
+            ctx.fillStyle = "rgba(255,220,100,.08)"; ctx.beginPath(); ctx.arc(h.x, h.y, h.radius, 0, Math.PI * 2); ctx.fill();
+          } else {
+            ctx.globalAlpha = Math.max(0.25, h.active / 0.22);
+            ctx.strokeStyle = "#fff8cf"; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(h.x + 12, h.y - 70); ctx.lineTo(h.x - 7, h.y - 18); ctx.lineTo(h.x + 8, h.y - 18); ctx.lineTo(h.x - 12, h.y + 22); ctx.stroke();
+            ctx.fillStyle = "rgba(255,241,140,.34)"; ctx.beginPath(); ctx.arc(h.x, h.y, h.radius, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.restore();
+        });
+      }
+
+      function drawNpc() {
+        const n = world.npc;
+        ctx.save(); ctx.translate(n.x + n.w / 2, n.y + n.h / 2);
+        ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.beginPath(); ctx.ellipse(0, 16, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+        if (n.kind === "owl") {
+          ctx.fillStyle = "#6b4d34"; ctx.beginPath(); ctx.ellipse(0, 5, 13, 14, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#c8aa7d"; ctx.beginPath(); ctx.arc(0, -4, 10, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(-4, -5, 3.5, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(4, -5, 3.5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#1a1a1a"; ctx.fillRect(-5, -6, 2, 2); ctx.fillRect(3, -6, 2, 2);
+          ctx.fillStyle = "#f3b546"; ctx.beginPath(); ctx.moveTo(0, -1); ctx.lineTo(-3, 3); ctx.lineTo(3, 3); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "#2c4b76"; ctx.fillRect(-9, 8, 18, 10);
+        } else if (n.kind === "swan") {
+          ctx.fillStyle = "#edf4ff"; ctx.beginPath(); ctx.arc(0, -5, 10, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#e5f5ff"; ctx.beginPath(); ctx.moveTo(-10, 4); ctx.lineTo(0, -14); ctx.lineTo(10, 4); ctx.lineTo(8, 16); ctx.lineTo(-8, 16); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "#b2d0ff"; ctx.beginPath(); ctx.ellipse(-8, 0, 6, 12, -0.8, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(8, 0, 6, 12, 0.8, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#ffd86f"; ctx.fillRect(-8, -18, 16, 3);
+        } else {
+          ctx.fillStyle = "#f8f1d9"; ctx.beginPath(); ctx.ellipse(0, 4, 13, 15, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#c8eaff"; ctx.beginPath(); ctx.moveTo(-10, 2); ctx.lineTo(-24, -5); ctx.lineTo(-17, 10); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(10, 2); ctx.lineTo(24, -5); ctx.lineTo(17, 10); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "#e8c86f"; ctx.fillRect(-8, -13, 16, 3); ctx.beginPath(); ctx.moveTo(-6, -13); ctx.lineTo(-2, -19); ctx.lineTo(0, -13); ctx.fill(); ctx.beginPath(); ctx.moveTo(0, -13); ctx.lineTo(4, -20); ctx.lineTo(6, -13); ctx.fill();
+          ctx.fillStyle = "#7d6242"; ctx.beginPath(); ctx.moveTo(-9, -4); ctx.lineTo(0, -15); ctx.lineTo(9, -4); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "#17202a"; ctx.fillRect(-5, 0, 2, 2); ctx.fillRect(3, 0, 2, 2);
+        }
+        ctx.restore();
+        if ((questStage === 0 || Math.sin(Date.now() / 300) > 0) && running) {
+          ctx.fillStyle = n.kind === "pegasus" ? "#fff0a8" : n.kind === "swan" ? "#d6e4ff" : "#fff4ba";
+          ctx.font = "bold 16px sans-serif"; ctx.fillText("!", n.x + 8, n.y - 8);
+        }
+      }
+      function drawChest() {
+        if (!world.chest || !world.chest.visible) return;
+        const ch = world.chest; ctx.save(); ctx.translate(ch.x, ch.y);
+        if (ch.opened) {
+          ctx.fillStyle = "#79491f"; ctx.fillRect(0, 16, ch.w, 16); ctx.fillStyle = "#d8b05c"; ctx.fillRect(0, 12, ch.w, 5); ctx.fillStyle = "#8c5d28"; ctx.save(); ctx.translate(0, 2); ctx.rotate(-0.35); ctx.fillRect(0, 0, ch.w, 12); ctx.restore();
+        } else {
+          ctx.fillStyle = "#79491f"; ctx.beginPath(); ctx.roundRect(0, 0, ch.w, ch.h, 5); ctx.fill(); ctx.fillStyle = "#d8b05c"; ctx.fillRect(0, 11, ch.w, 5); ctx.fillStyle = "#f4e08b"; ctx.fillRect(17, 14, 6, 8);
+          ctx.fillStyle = "#fff4a8"; ctx.beginPath(); ctx.arc(20, -6, 4, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore();
+      }
+      function drawPedestal() {
+        const p = world.pedestal;
+        if (!p) return;
+        ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.fillRect(p.x - 10, p.y + 24, p.w + 20, 12);
+        ctx.fillStyle = currentStageIndex === 0 ? "#9fa3a8" : "#8e9fd8"; ctx.fillRect(p.x, p.y + 12, p.w, 16);
+        ctx.fillStyle = currentStageIndex === 0 ? "#c9ced3" : "#d6e4ff"; ctx.fillRect(p.x + 6, p.y, p.w - 12, 16);
+        if (!p.taken && p.active) {
+          ctx.save(); const cx = p.x + p.w / 2; const cy = p.y - 4 + Math.sin(Date.now() / 240) * 2.5; ctx.translate(cx, cy); ctx.rotate(Date.now() / 600);
+          ctx.fillStyle = currentStageIndex === 0 ? "#ffe68f" : "#d4e3ff"; ctx.beginPath();
+          for (let i = 0; i < 4; i++) { ctx.rotate(Math.PI / 2); ctx.lineTo(0, -12); ctx.lineTo(4, 0); }
+          ctx.closePath(); ctx.fill(); ctx.restore();
+          ctx.fillStyle = currentStageIndex === 0 ? "rgba(255,241,170,0.25)" : "rgba(190,218,255,0.28)"; ctx.beginPath(); ctx.arc(p.x + p.w / 2, p.y + 8, 22, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      function drawCrystals() {
+        if (!world.crystals) return;
+        world.crystals.forEach(c => {
+          ctx.save(); ctx.translate(c.x + c.w / 2, c.y + c.h / 2);
+          ctx.fillStyle = c.lit ? "rgba(191,220,255,0.22)" : "rgba(98,121,196,0.15)"; ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = c.lit ? "#beddff" : "#7189d6";
+          ctx.beginPath(); ctx.moveTo(0, -17); ctx.lineTo(10, -4); ctx.lineTo(5, 16); ctx.lineTo(-5, 16); ctx.lineTo(-10, -4); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = c.lit ? "#ecf8ff" : "#b2c3ff"; ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(5, -2); ctx.lineTo(2, 9); ctx.lineTo(-2, 9); ctx.lineTo(-5, -2); ctx.closePath(); ctx.fill();
+          ctx.restore();
+        });
+      }
+
+      function drawCharacterEars(ch) {
+        if (ch.ears === "cat" || ch.ears === "fox") {
+          ctx.fillStyle = ch.hoodColor;
+          ctx.beginPath(); ctx.moveTo(-8, -18); ctx.lineTo(-3, -30); ctx.lineTo(0, -18); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(8, -18); ctx.lineTo(3, -30); ctx.lineTo(0, -18); ctx.closePath(); ctx.fill();
+        } else if (ch.ears === "rabbit") {
+          ctx.fillStyle = ch.hoodColor;
+          ctx.beginPath(); ctx.ellipse(-5, -29, 4, 12, -0.15, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(5, -29, 4, 12, 0.15, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#ffd1e3";
+          ctx.beginPath(); ctx.ellipse(-5, -29, 2, 8, -0.15, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(5, -29, 2, 8, 0.15, 0, Math.PI * 2); ctx.fill();
+        } else if (ch.ears === "bear") {
+          ctx.fillStyle = ch.hoodColor;
+          ctx.beginPath(); ctx.arc(-7, -20, 5, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(7, -20, 5, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      function drawCrown(ch) {
+        if (!ch.crown) return;
+        ctx.fillStyle = ch.accentColor;
+        ctx.fillRect(-8, -18, 16, 3);
+        ctx.beginPath(); ctx.moveTo(-6, -18); ctx.lineTo(-2, -24); ctx.lineTo(0, -18); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(4, -25); ctx.lineTo(6, -18); ctx.fill();
+      }
+      function drawAttackEffect() {
+        const ch = player.character;
+        const cx = player.x + player.w / 2, cy = player.y + player.h / 2;
+        ctx.save(); ctx.globalAlpha = 0.86; ctx.lineCap = "round";
+        if (ch.weaponType === "melee") {
+          ctx.strokeStyle = currentStageIndex === 0 ? "#fff4bd" : "#d6e6ff";
+          ctx.lineWidth = 8; ctx.beginPath();
+          if (player.dir === "up") ctx.arc(cx, cy, 34, Math.PI * 1.1, Math.PI * 1.9);
+          else if (player.dir === "down") ctx.arc(cx, cy, 34, Math.PI * 0.1, Math.PI * 0.9);
+          else if (player.dir === "left") ctx.arc(cx, cy, 34, Math.PI * 0.6, Math.PI * 1.4);
+          else ctx.arc(cx, cy, 34, -Math.PI * 0.4, Math.PI * 0.4);
+          ctx.stroke();
+        } else {
+          ctx.strokeStyle = ch.id === "rabbitPrincess" ? "#ffd9ed" : "#ffe8a0";
+          ctx.lineWidth = 6; ctx.beginPath();
+          if (player.dir === "up") ctx.arc(cx, cy, 28, Math.PI * 1.25, Math.PI * 1.75);
+          else if (player.dir === "down") ctx.arc(cx, cy, 28, Math.PI * 0.25, Math.PI * 0.75);
+          else if (player.dir === "left") ctx.arc(cx, cy, 28, Math.PI * 0.75, Math.PI * 1.25);
+          else ctx.arc(cx, cy, 28, -Math.PI * 0.25, Math.PI * 0.25);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+      function drawPlayer() {
+        const ch = player.character; if (!ch) return;
+        const blink = player.invincible > 0 && Math.floor(player.invincible * 12) % 2 === 0; if (blink) return;
+        const step = Math.sin(player.walkCycle) * 1.5;
+        ctx.save(); ctx.translate(player.x + player.w / 2, player.y + player.h / 2 + step);
+        ctx.fillStyle = "rgba(0,0,0,0.25)"; ctx.beginPath(); ctx.ellipse(0, 15, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+        drawCharacterEars(ch); ctx.fillStyle = ch.faceColor; ctx.beginPath(); ctx.arc(0, -9, 8.4, 0, Math.PI * 2); ctx.fill(); drawCrown(ch);
+        ctx.fillStyle = ch.bodyColor; ctx.beginPath(); ctx.moveTo(-11, -3); ctx.lineTo(11, -3); ctx.lineTo(8, 15); ctx.lineTo(-8, 15); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = ch.hoodColor; ctx.beginPath(); ctx.moveTo(-10, -4); ctx.lineTo(8, -4); ctx.lineTo(-1, -18); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = ch.accentColor; ctx.fillRect(-9, 3, 18, 3);
+        if (ch.cape) { ctx.fillStyle = "#d94b5b"; ctx.beginPath(); ctx.moveTo(10, -1); ctx.lineTo(18, 4); ctx.lineTo(11, 11); ctx.closePath(); ctx.fill(); }
+        if (ch.dress) { ctx.fillStyle = "#fff0f6"; ctx.beginPath(); ctx.moveTo(-8, 8); ctx.lineTo(0, 15); ctx.lineTo(8, 8); ctx.closePath(); ctx.fill(); }
+        ctx.strokeStyle = "#4b2f1b"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-6, 14); ctx.lineTo(-7, 19); ctx.moveTo(6, 14); ctx.lineTo(7, 19); ctx.stroke();
+        ctx.fillStyle = "#18251f";
+        if (player.dir === "left" || player.dir === "right") ctx.fillRect(player.dir === "left" ? -6 : 3, -11, 3, 3);
+        else { ctx.fillRect(-4, -11, 2, 2); ctx.fillRect(2, -11, 2, 2); }
+        if (ch.weaponType === "melee") {
+          ctx.strokeStyle = "#d9dfe4"; ctx.lineWidth = 3; ctx.beginPath();
+          if (player.dir === "left") { ctx.moveTo(-8, 0); ctx.lineTo(-18, 4); }
+          else if (player.dir === "right") { ctx.moveTo(8, 0); ctx.lineTo(18, 4); }
+          else if (player.dir === "up") { ctx.moveTo(4, -2); ctx.lineTo(12, -12); }
+          else { ctx.moveTo(8, 4); ctx.lineTo(17, 14); }
+          ctx.stroke();
+        } else {
+          ctx.strokeStyle = "#f6e9a1"; ctx.lineWidth = 3; ctx.beginPath();
+          if (player.dir === "left") { ctx.moveTo(-8, 0); ctx.lineTo(-17, 4); }
+          else if (player.dir === "right") { ctx.moveTo(8, 0); ctx.lineTo(17, 4); }
+          else if (player.dir === "up") { ctx.moveTo(4, -2); ctx.lineTo(10, -12); }
+          else { ctx.moveTo(8, 4); ctx.lineTo(14, 14); }
+          ctx.stroke();
+          ctx.fillStyle = "#fff6c2";
+          if (player.dir === "left") { ctx.beginPath(); ctx.arc(-18, 4, 3, 0, Math.PI * 2); ctx.fill(); }
+          else if (player.dir === "right") { ctx.beginPath(); ctx.arc(18, 4, 3, 0, Math.PI * 2); ctx.fill(); }
+          else if (player.dir === "up") { ctx.beginPath(); ctx.arc(10, -13, 3, 0, Math.PI * 2); ctx.fill(); }
+          else { ctx.beginPath(); ctx.arc(14, 14, 3, 0, Math.PI * 2); ctx.fill(); }
+        }
+        ctx.restore();
+        if (player.attackTimer > 0) drawAttackEffect();
+      }
+      function drawEnemy(enemy) {
+        if (!enemy || enemy.hp <= 0) return;
+        ctx.save(); const bob = Math.sin(enemy.bob) * (enemy.type === "bat" ? 5 : 2); ctx.translate(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2 + bob); if (enemy.hitFlash > 0) ctx.filter = "brightness(2)";
+        ctx.fillStyle = "rgba(0,0,0,0.22)"; ctx.beginPath(); ctx.ellipse(0, enemy.h / 2 + 5, enemy.w / 2, 5, 0, 0, Math.PI * 2); ctx.fill();
+        if (enemy.bossKind === "slimeKing") {
+          ctx.fillStyle = "#713d87"; ctx.beginPath(); ctx.ellipse(0, 6, 26, 18, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#9d62b6"; ctx.beginPath(); ctx.arc(-7, -4, 10, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(7, -4, 10, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#1a1421"; ctx.fillRect(-8, -2, 3, 3); ctx.fillRect(5, -2, 3, 3); ctx.fillStyle = "#d97cff"; ctx.fillRect(-3, 4, 6, 4);
+        } else if (enemy.bossKind === "shadowWolf") {
+          ctx.fillStyle = "#42507d"; ctx.beginPath(); ctx.ellipse(0, 4, 24, 14, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#9fb6ff"; ctx.beginPath(); ctx.moveTo(-18, -4); ctx.lineTo(-5, -16); ctx.lineTo(0, -6); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(18, -4); ctx.lineTo(5, -16); ctx.lineTo(0, -6); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "#d9e7ff"; ctx.beginPath(); ctx.arc(-6, -2, 4, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(6, -2, 4, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#102033"; ctx.fillRect(-7, -3, 2, 2); ctx.fillRect(5, -3, 2, 2);
+        } else if (enemy.bossKind === "stormDragon") {
+          ctx.fillStyle = "#c89838"; ctx.beginPath(); ctx.ellipse(0, 5, 31, 19, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#f2d377"; ctx.beginPath(); ctx.moveTo(-24, -4); ctx.lineTo(-38, -18); ctx.lineTo(-31, 5); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(24, -4); ctx.lineTo(38, -18); ctx.lineTo(31, 5); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "#8dd5ed"; ctx.beginPath(); ctx.moveTo(-18, 2); ctx.lineTo(-42, 10); ctx.lineTo(-26, 18); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(18, 2); ctx.lineTo(42, 10); ctx.lineTo(26, 18); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "#fff8cf"; ctx.beginPath(); ctx.arc(-8, -4, 5, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(8, -4, 5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#553b10"; ctx.fillRect(-9, -5, 2, 2); ctx.fillRect(7, -5, 2, 2);
+        } else if (enemy.type === "slime") {
+          ctx.fillStyle = "#84c45c"; ctx.beginPath(); ctx.ellipse(0, 2, 15, 13, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = "#b4e47a"; ctx.beginPath(); ctx.arc(-5, -3, 6, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = "#15251c"; ctx.fillRect(-6, 1, 3, 3); ctx.fillRect(4, 1, 3, 3);
+        } else if (enemy.type === "bat") {
+          ctx.fillStyle = currentStageIndex === 2 ? "#d6a94b" : currentStageIndex === 0 ? "#6c4c8d" : "#6272b8"; ctx.beginPath(); ctx.arc(0, 1, 8, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(-7, 0); ctx.lineTo(-18, -7); ctx.lineTo(-14, 7); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(7, 0); ctx.lineTo(18, -7); ctx.lineTo(14, 7); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "#ffdc73"; ctx.fillRect(-4, -1, 2, 2); ctx.fillRect(2, -1, 2, 2);
+        } else if (enemy.type === "wisp" || enemy.type === "cloudWisp") {
+          ctx.fillStyle = enemy.type === "cloudWisp" ? "rgba(255,235,150,.25)" : "rgba(176,205,255,.28)"; ctx.beginPath(); ctx.arc(0, 0, 16, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = enemy.type === "cloudWisp" ? "#fff2a8" : "#ddecff"; ctx.beginPath(); ctx.arc(0, -2, 9, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = enemy.type === "cloudWisp" ? "#8fd5eb" : "#8bb0ff"; ctx.beginPath(); ctx.moveTo(0, 8); ctx.lineTo(-6, 18); ctx.lineTo(0, 14); ctx.lineTo(6, 18); ctx.closePath(); ctx.fill();
+        } else if (enemy.type === "guard") {
+          ctx.fillStyle = "#f0dc9a"; ctx.fillRect(-11, -9, 22, 26); ctx.fillStyle = "#b58a34"; ctx.fillRect(-13, -14, 26, 8); ctx.fillStyle = "#79b7d0"; ctx.fillRect(-8, -7, 16, 8); ctx.fillStyle = "#493512"; ctx.fillRect(-5, -4, 2, 2); ctx.fillRect(3, -4, 2, 2); ctx.fillStyle = "#e2c25d"; ctx.fillRect(-15, 4, 5, 17); ctx.fillRect(10, 4, 5, 17);
+        } else {
+          ctx.fillStyle = "#7e87a8"; ctx.beginPath(); ctx.ellipse(0, 3, 18, 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = "#dce6ff"; ctx.beginPath(); ctx.arc(-7, -1, 4, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(7, -1, 4, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = "#112036"; ctx.fillRect(-8, -2, 2, 2); ctx.fillRect(6, -2, 2, 2);
+        }
+        ctx.restore();
+      }
+      function drawProjectiles() {
+        projectiles.forEach(p => {
+          ctx.save(); ctx.fillStyle = p.color;
+          if (p.sparkle) {
+            ctx.beginPath(); ctx.arc(p.x + p.w / 2, p.y + p.h / 2, p.w / 2, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = .6; ctx.fillRect(p.x - 3, p.y + 4, p.w + 6, 2); ctx.fillRect(p.x + 4, p.y - 3, 2, p.h + 6);
+          } else { ctx.beginPath(); ctx.arc(p.x + p.w / 2, p.y + p.h / 2, p.w / 2, 0, Math.PI * 2); ctx.fill(); }
+          ctx.restore();
+        });
+      }
+      function drawParticles() {
+        particles.forEach(p => {
+          ctx.save(); ctx.globalAlpha = Math.max(0, p.life / p.maxLife); ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); ctx.restore();
+        });
+      }
+      function drawLighting() {
+        const gradient = ctx.createRadialGradient(player.x + player.w / 2, player.y + player.h / 2, 70, player.x + player.w / 2, player.y + player.h / 2, currentStageIndex === 0 ? 430 : currentStageIndex === 1 ? 500 : 540);
+        gradient.addColorStop(0, "rgba(255, 244, 185, 0.00)");
+        gradient.addColorStop(1, currentStageIndex === 0 ? "rgba(5, 16, 12, 0.24)" : currentStageIndex === 1 ? "rgba(12, 15, 36, 0.34)" : "rgba(42, 105, 130, 0.12)");
+        ctx.fillStyle = gradient; ctx.fillRect(0, 0, W, H);
+      }
+
+      function drawBackground() {
+        if (currentStageIndex === 0) {
+          ctx.fillStyle = "#3e8458"; ctx.fillRect(0, 0, W, H);
+          ctx.fillStyle = "rgba(255,255,255,0.03)"; for (let y = 26; y < H - 26; y += 22) for (let x = 26; x < W - 26; x += 24) ctx.fillRect(x, y, 5, 2);
+          ctx.fillStyle = "#c2a06a"; ctx.fillRect(40, 170, 880, 44); ctx.fillRect(470, 110, 42, 290); ctx.fillRect(736, 214, 156, 34); ctx.fillRect(250, 330, 430, 34);
+          world.flowers.forEach(f => { const colors = ["#fff3a3", "#cce9ff", "#ffb9cb", "#daf8c8"]; ctx.fillStyle = colors[f.c]; ctx.fillRect(f.x, f.y, 3, 3); });
+          world.trees.forEach(t => drawTree(t.x, t.y, false));
+          world.obstacles.forEach(o => { if (o.type === "wall") { ctx.fillStyle = "#183729"; ctx.fillRect(o.x, o.y, o.w, o.h); } else if (o.type === "hedge") drawHedge(o, false); else drawRock(o, false); });
+          drawFountain(); drawCastleStage1();
+        } else if (currentStageIndex === 1) {
+          const sky = ctx.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, "#152044"); sky.addColorStop(0.55, "#24376f"); sky.addColorStop(1, "#0f1530"); ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+          ctx.fillStyle = "rgba(255,255,255,0.8)"; ctx.beginPath(); ctx.arc(812, 88, 38, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = "rgba(255,255,255,0.12)"; ctx.beginPath(); ctx.arc(812, 88, 58, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#293568"; ctx.fillRect(0, 130, W, H - 130); ctx.fillStyle = "#3f4f92"; ctx.fillRect(0, 350, W, 164); ctx.fillStyle = "#8fa8ff"; ctx.fillRect(680, 210, 220, 34);
+          world.flowers.forEach(f => { const colors = ["#dce4ff", "#bed3ff", "#f1c6ff", "#d5f7ff"]; ctx.fillStyle = colors[f.c]; ctx.fillRect(f.x, f.y + 120, 3, 3); });
+          world.trees.forEach(t => drawTree(t.x, t.y, true));
+          world.obstacles.forEach(o => { if (o.type === "wall") { ctx.fillStyle = "#101933"; ctx.fillRect(o.x, o.y, o.w, o.h); } else if (o.type === "thorn") drawHedge(o, true); else if (o.type === "stone") { ctx.fillStyle = "#55628f"; ctx.fillRect(o.x, o.y, o.w, o.h); } else drawRock(o, true); });
+          drawCastleStage2(); drawCrystals();
+        } else {
+          const sky = ctx.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, "#62bce2"); sky.addColorStop(0.48, "#bdeafa"); sky.addColorStop(1, "#eefbff"); ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+          for (let i = 0; i < 14; i++) {
+            const x = 30 + (i * 83) % 900, y = 36 + (i * 47) % 150;
+            ctx.fillStyle = "rgba(255,255,255,.58)"; ctx.beginPath(); ctx.ellipse(x, y, 34, 13, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(x + 25, y + 3, 28, 11, 0, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.fillStyle = "#eaf6e9"; ctx.fillRect(0, 142, W, H - 142);
+          ctx.fillStyle = "#f5e8b6"; ctx.fillRect(36, 178, 860, 42); ctx.fillRect(468, 118, 46, 310); ctx.fillRect(674, 254, 214, 36);
+          world.flowers.forEach(f => { const colors = ["#ffe688", "#b7e7ff", "#f6c9ff", "#ffffff"]; ctx.fillStyle = colors[f.c]; ctx.fillRect(f.x, f.y + 100, 4, 4); });
+          world.obstacles.forEach(o => {
+            if (o.type === "wall") { ctx.fillStyle = "#559bbb"; ctx.fillRect(o.x, o.y, o.w, o.h); }
+            else if (o.type === "cloudWall") { ctx.fillStyle = "rgba(255,255,255,.84)"; ctx.beginPath(); ctx.roundRect(o.x, o.y, o.w, o.h, 22); ctx.fill(); ctx.strokeStyle = "rgba(111,185,215,.36)"; ctx.stroke(); }
+            else if (o.type === "goldStone") { ctx.fillStyle = "#d9bd6a"; ctx.beginPath(); ctx.roundRect(o.x, o.y, o.w, o.h, 12); ctx.fill(); ctx.fillStyle = "#f5e2a2"; ctx.fillRect(o.x + 10, o.y + 9, o.w * .55, 9); }
+            else { ctx.fillStyle = "#d8c179"; ctx.fillRect(o.x, o.y, o.w, o.h); }
+          });
+          drawCastleStage3(); drawSeals();
+        }
+        drawNpc(); drawChest(); drawPedestal();
+      }
+
+      function render() {
+        resizeCanvas();
+        updateCamera();
+        // バッファ全体をクリア（変換なしの実ピクセル空間で）
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.fillStyle = "#16281d";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // ワールド座標系へ（DPR × cover倍率 × カメラ位置）
+        const s = view.scale * view.dpr;
+        ctx.setTransform(s, 0, 0, s, -view.camX * s, -view.camY * s);
+        ctx.save();
+        if (screenShake > 0) ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
+        drawBackground();
+        const drawList = [
+          ...enemies.filter(e => e.hp > 0).map(e => ({ y: e.y + e.h, type: "enemy", ref: e })),
+          ...(boss && boss.hp > 0 ? [{ y: boss.y + boss.h, type: "enemy", ref: boss }] : []),
+          { y: player.y + player.h, type: "player", ref: player }
+        ].sort((a, b) => a.y - b.y);
+        drawList.forEach(item => item.type === "enemy" ? drawEnemy(item.ref) : drawPlayer());
+        drawProjectiles(); drawHazards(); drawParticles(); drawLighting();
+        ctx.restore();
+      }
+
+      function gameLoop(timestamp) {
+        const dt = Math.min((timestamp - lastTime) / 1000, 0.033);
+        lastTime = timestamp;
+        update(dt);
+        render();
+        requestAnimationFrame(gameLoop);
+      }
+
+      function handleKeyDown(event) {
+        keys[event.key] = true;
+        if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) event.preventDefault();
+        if (event.code === "Space") attack();
+        if (event.key === "e" || event.key === "E") interact();
+      }
+      function handleKeyUp(event) { keys[event.key] = false; }
+      function updateStick() {
+        const max = 36; stick.style.transform = `translate(${touchMove.x * max}px, ${touchMove.y * max}px)`;
+      }
+      function setJoystickFromPointer(clientX, clientY) {
+        const rect = joystick.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2; const cy = rect.top + rect.height / 2;
+        let dx = clientX - cx, dy = clientY - cy;
+        const max = rect.width * 0.28; const dist = Math.hypot(dx, dy);
+        if (dist > max) { dx = dx / dist * max; dy = dy / dist * max; }
+        touchMove.x = dx / max; touchMove.y = dy / max; updateStick();
+      }
+      function resetJoystick() {
+        touchMove.x = 0; touchMove.y = 0; touchMove.active = false; touchMove.pointerId = null; updateStick();
+      }
+      function setupJoystick() {
+        joystick.addEventListener("pointerdown", e => { e.preventDefault(); touchMove.active = true; touchMove.pointerId = e.pointerId; joystick.setPointerCapture(e.pointerId); setJoystickFromPointer(e.clientX, e.clientY); });
+        joystick.addEventListener("pointermove", e => { if (!touchMove.active || touchMove.pointerId !== e.pointerId) return; e.preventDefault(); setJoystickFromPointer(e.clientX, e.clientY); });
+        const end = e => { if (touchMove.pointerId !== e.pointerId) return; e.preventDefault(); resetJoystick(); };
+        joystick.addEventListener("pointerup", end); joystick.addEventListener("pointercancel", end);
+      }
+      function bindActionButton(el, action) {
+        el.addEventListener("pointerdown", e => { e.preventDefault(); el.classList.add("active"); action(); });
+        const clear = e => { e.preventDefault(); el.classList.remove("active"); };
+        el.addEventListener("pointerup", clear); el.addEventListener("pointercancel", clear); el.addEventListener("pointerleave", clear);
+      }
+
+      document.addEventListener("keydown", handleKeyDown);
+      document.addEventListener("keyup", handleKeyUp);
+
+      bgmToggle.addEventListener("click", () => {
+        audio.bgmEnabled = !audio.bgmEnabled;
+        ensureAudio();
+        if (audio.bgmEnabled) startMusic((boss && boss.hp > 0) ? "boss" : stageCatalog[currentStageIndex].music);
+        else stopMusic();
+        updateAudioButtons();
+      });
+      seToggle.addEventListener("click", () => {
+        audio.seEnabled = !audio.seEnabled;
+        updateAudioButtons();
+        if (audio.seEnabled) playSfx("select");
+      });
+
+      startButton.addEventListener("click", () => {
+        if (!selectedCharacterId) return;
+        ensureAudio();
+        updateAudioButtons();
+        startNewGame();
+      });
+      endButton.addEventListener("click", () => {
+        ensureAudio();
+        if (endMode === "nextStage") {
+          endScreen.classList.add("hidden");
+          const nextIndex = Math.min(2, currentStageIndex + 1);
+          loadStage(nextIndex, true);
+          running = true;
+          lastTime = performance.now();
+          showMessage(nextIndex === 1 ? "月夜の城に到着！<br><strong>しらとりプリンセス</strong>に話しかけよう。" : "天空宮殿に到着！<br><strong>ペガサス王子</strong>に話しかけよう。", 3.2);
+        } else if (endMode === "retry") {
+          endScreen.classList.add("hidden");
+          loadStage(currentStageIndex, true);
+          running = true;
+          lastTime = performance.now();
+          showMessage(`${player.character.name}で再挑戦！`, 2.4);
+        } else {
+          endScreen.classList.add("hidden");
+          startNewGame();
+        }
+      });
+
+      initCharacterCards();
+      selectCharacter(characters[0].id);
+      setupJoystick();
+      bindActionButton(attackBtn, attack);
+      bindActionButton(interactBtn, interact);
+      updateAudioButtons();
+      updateObjective();
+      render();
+      requestAnimationFrame(gameLoop);
+    })();
+  </script>
+</body>
+</html>

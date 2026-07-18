@@ -42,6 +42,7 @@ import SoraKyoshitsu from './games/SoraKyoshitsu'
 import MuraGame from './games/MuraGame'
 import NeonDrive from './games/NeonDrive'
 import AstralFang from './games/AstralFang'
+import OukanMonogatari from './games/OukanMonogatari'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 import { recordRecentGame } from './utils/recentGames'
@@ -73,6 +74,7 @@ const GAME_ROUTES = new Set([
   '/mura', '/doubutsu-mura',
   '/neon-drive', '/neon',
   '/astral-fang', '/astral',
+  '/oukan-monogatari', '/oukan',
   // 短縮URLエイリアスも記録
   '/kudamono', '/puzzle', '/kazu', '/soccer',
 ]);
@@ -163,6 +165,8 @@ export default function App() {
         <Route path="/neon"       element={<GameWithSEO route="/neon-drive"><NeonDrive /></GameWithSEO>} />
         <Route path="/astral-fang" element={<GameWithSEO route="/astral-fang"><AstralFang /></GameWithSEO>} />
         <Route path="/astral"      element={<GameWithSEO route="/astral-fang"><AstralFang /></GameWithSEO>} />
+        <Route path="/oukan-monogatari" element={<GameWithSEO route="/oukan-monogatari"><OukanMonogatari /></GameWithSEO>} />
+        <Route path="/oukan"            element={<GameWithSEO route="/oukan-monogatari"><OukanMonogatari /></GameWithSEO>} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms"   element={<TermsPage />} />
       </Routes>

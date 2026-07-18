@@ -75,6 +75,24 @@ const GAME_SVGS = {
     </svg>
   ),
 
+  g_oukan: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="100" height="85" rx="12" fill="#1d372b"/>
+      <circle cx="20" cy="15" r="1.5" fill="#f6dd8b" opacity=".9"/>
+      <circle cx="80" cy="13" r="1.3" fill="#f6dd8b" opacity=".8"/>
+      <circle cx="70" cy="24" r="1" fill="#fff4cc" opacity=".7"/>
+      <circle cx="30" cy="25" r="1" fill="#fff4cc" opacity=".7"/>
+      <path d="M22 62 L22 34 L34 46 L50 26 L66 46 L78 34 L78 62 Z" fill="#f3d57a"/>
+      <path d="M22 62 L22 34 L34 46 L50 26 L66 46 L78 34 L78 62 Z" fill="none" stroke="#a5761f" strokeWidth="1.4"/>
+      <rect x="20" y="62" width="60" height="9" rx="3" fill="#e0b64a"/>
+      <circle cx="50" cy="24" r="3.4" fill="#ff8fae"/>
+      <circle cx="30" cy="49" r="3" fill="#7fd3ff"/>
+      <circle cx="70" cy="49" r="3" fill="#8be08f"/>
+      <rect x="46" y="66" width="8" height="3" rx="1.5" fill="#fff4cc"/>
+      <path d="M50 6 L51.8 12 L58 12 L53 15.6 L54.8 21.6 L50 18 L45.2 21.6 L47 15.6 L42 12 L48.2 12 Z" fill="#fff4cc" opacity=".85"/>
+    </svg>
+  ),
+
   g_neon: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
       <rect x="0" y="0" width="100" height="85" rx="12" fill="#1a1040"/>
@@ -1265,6 +1283,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'形状配对',           desc:'在宇宙中拼合\n和分类形状！' },
     ko:{ name:'모양 맞추기',        desc:'우주에서 모양을\n끼우고 분류해요!' },
     es:{ name:'Formas Espaciales',  desc:'¡Encaja y clasifica\nformas en el espacio!' } },
+  { id:'g_oukan', route:'/oukan-monogatari', icon:'👑', num:24, color:'#d8b24d', stars:5, isNew:true, category:'アクション',
+    ja:{ name:'おうかんものがたり', desc:'すきなキャラで\n3つのおうこくをぼうけん！' },
+    en:{ name:'Crown Story',        desc:'Adventure through three\nkingdoms with your hero!' },
+    zh:{ name:'王冠物语',           desc:'选择角色，\n冒险三大王国！' },
+    ko:{ name:'왕관 이야기',        desc:'좋아하는 캐릭터로\n세 왕국을 모험하자!' },
+    es:{ name:'Historia de la Corona', desc:'¡Aventúrate por tres\nreinos con tu héroe!' } },
 ];
 
 /* ── 全ゲーム統合(チャレンジ系は🔥マーク) ── */
