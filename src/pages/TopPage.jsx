@@ -1542,6 +1542,27 @@ export default function TopPage() {
     if (detected !== lang) setLang(detected);
   }, []);
 
+  // 横スクロール棚(.tp-shelf-scroll / .tp-chips 等)の上でマウスホイールを
+  // 縦回転させると、その要素が縦ホイールを消費してページが縦スクロールしなく
+  // なるChromeの挙動への対策。横成分の無い純縦ホイールはページに転送する。
+  useEffect(() => {
+    const onWheel = (e) => {
+      const scroller = e.target.closest?.('.tp-shelf-scroll, .tp-chips, .tp-cat-chips, .tp-recent-scroll');
+      if (!scroller) return;
+      // 主に縦方向の回転で、その要素が横にしかスクロールできない場合のみ転送
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        const canScrollX = scroller.scrollWidth > scroller.clientWidth;
+        // 横に動けない、または既に横端 → 縦ホイールをページへ委譲
+        if (!canScrollX) {
+          window.scrollBy({ top: e.deltaY, behavior: 'auto' });
+          e.preventDefault();
+        }
+      }
+    };
+    window.addEventListener('wheel', onWheel, { passive: false });
+    return () => window.removeEventListener('wheel', onWheel);
+  }, []);
+
   function handleMuteToggle() {
     toggleBGM();
     setIsMuted(prev => {
