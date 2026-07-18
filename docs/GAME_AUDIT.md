@@ -38,6 +38,8 @@ localStorage の利用可否を確認する `setItem` → `removeItem` → `retu
 
 Phase 3Aでは、単一キーかつ少数の直接アクセスだけを持つactiveゲームを第1バッチとして選び、各HTML内のローカル`SAFE_LS`へ移行します。監査レポートの`localStorage`では、activeの問題をファイル数と呼び出し箇所数に分けて集計します。`SAFE_LS`自身の利用可否テストは問題箇所に数えません。保存キー、値形式、読み書きのタイミングは変更しません。
 
+Phase 3Bでは、`block_kuzushi_v4`、`doubutsu_block_v3`、`doubutsu_puzzle_v3`、`flag_quiz_v2`、`kakurenbo_v2`、`mori_v4`、`sniper_v3`、`usagi_carrot_v2`の8件・17箇所を同じ`SAFE_LS`基準へ移行しました。activeのlocalStorage残件はエラー28件・警告12件・9ファイルです。複数キー、キー移行、既存未コミット差分などを含む処理はPhase 3C以降へ残します。
+
 Canvas は `fillText` / `strokeText` の第1引数が絵文字リテラルと確定する場合をエラーにします。絵文字を含む可能性がある変数経由の描画は警告、`textContent` や `innerHTML` などDOM上の絵文字は対象外です。
 
 ## 誤検出の可能性

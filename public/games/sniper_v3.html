@@ -207,15 +207,41 @@ canvas{position:absolute;top:0;left:0;display:block;}
 
 <script>
 'use strict';
+const SAFE_LS = (function () {
+  try {
+    const testKey = "__ww_storage_test__";
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key)
+          ? memory[key]
+          : null;
+      },
+
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
 // ================= 保存 =================
 const SAVE_KEY='sniper_v3_progress';
 function loadProg(){
-  try{const d=JSON.parse(localStorage.getItem(SAVE_KEY));
+  try{const d=JSON.parse(SAFE_LS.getItem(SAVE_KEY));
     if(d&&Array.isArray(d.stars))return{stars:d.stars.slice(0,5).concat([0,0,0,0,0]).slice(0,5),endlessHi:d.endlessHi|0};
   }catch(e){}
   return{stars:[0,0,0,0,0],endlessHi:0};
 }
-function saveProg(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(prog));}catch(e){}}
+function saveProg(){try{SAFE_LS.setItem(SAVE_KEY,JSON.stringify(prog));}catch(e){}}
 let prog=loadProg();
 
 // ================= ステージ設定 =================

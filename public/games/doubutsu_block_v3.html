@@ -159,6 +159,32 @@ canvas{display:block;}
 
 <script>
 'use strict';
+const SAFE_LS = (function () {
+  try {
+    const testKey = "__ww_storage_test__";
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key)
+          ? memory[key]
+          : null;
+      },
+
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
 /* ================= 基本設定 ================= */
 const COLS=7, ROWS=13, HIDDEN=1;
 const TYPES=5;
@@ -685,9 +711,9 @@ function startGame(){
 function doGameOver(){
   gameRunning=false;gameOverFlag=true;
   stopBGM();sOver();
-  const best=parseInt(localStorage.getItem(HS_KEY)||'0');
+  const best=parseInt(SAFE_LS.getItem(HS_KEY)||'0');
   const isNew=score>best;
-  if(isNew)localStorage.setItem(HS_KEY,String(score));
+  if(isNew)SAFE_LS.setItem(HS_KEY,String(score));
   const stars=score>=30000?3:score>=12000?2:score>=4000?1:0;
   document.getElementById('over-stars').textContent='⭐'.repeat(stars)+'☆'.repeat(3-stars);
   document.getElementById('over-score').textContent='スコア: '+score.toLocaleString();
@@ -715,7 +741,7 @@ function init(){
     drawAnimal(ctx2,0,0,52,i%TYPES);
     row.appendChild(c);
   }
-  document.getElementById('hs-num').textContent=parseInt(localStorage.getItem(HS_KEY)||'0').toLocaleString();
+  document.getElementById('hs-num').textContent=parseInt(SAFE_LS.getItem(HS_KEY)||'0').toLocaleString();
   document.getElementById('start-btn').addEventListener('click',startGame);
   document.getElementById('retry-btn').addEventListener('click',startGame);
   document.getElementById('home-btn').addEventListener('click',goBack);

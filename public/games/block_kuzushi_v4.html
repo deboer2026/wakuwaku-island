@@ -45,6 +45,32 @@
 <script>
 (function(){
   "use strict";
+  const SAFE_LS = (function () {
+    try {
+      const testKey = "__ww_storage_test__";
+      localStorage.setItem(testKey, testKey);
+      localStorage.removeItem(testKey);
+      return localStorage;
+    } catch (e) {
+      const memory = {};
+
+      return {
+        getItem(key) {
+          return Object.prototype.hasOwnProperty.call(memory, key)
+            ? memory[key]
+            : null;
+        },
+
+        setItem(key, value) {
+          memory[key] = String(value);
+        },
+
+        removeItem(key) {
+          delete memory[key];
+        }
+      };
+    }
+  })();
   const LW = 480, LH = 720;
   const cv = document.getElementById('cv');
   const ctx = cv.getContext('2d');
@@ -127,12 +153,12 @@
   const SAVE_KEY = 'block_v4_progress';
   function loadProg(){
     try{
-      const p = JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');
+      const p = JSON.parse(SAFE_LS.getItem(SAVE_KEY)||'{}');
       return { stars: Array.isArray(p.stars)?p.stars:[0,0,0,0,0], char: p.char|0 };
     }catch(e){ return { stars:[0,0,0,0,0], char:0 }; }
   }
   function saveProg(){
-    try{ localStorage.setItem(SAVE_KEY, JSON.stringify(prog)); }catch(e){}
+    try{ SAFE_LS.setItem(SAVE_KEY, JSON.stringify(prog)); }catch(e){}
   }
   let prog = loadProg();
   function unlockedStages(){

@@ -165,6 +165,32 @@ canvas{display:block;position:absolute;inset:0;width:100%;height:100%;z-index:0;
 
 <script>
 "use strict";
+const SAFE_LS = (function () {
+  try {
+    const testKey = "__ww_storage_test__";
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key)
+          ? memory[key]
+          : null;
+      },
+
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
 /* ==================================================================
    どうぶつかくれんぼ v2
    - 相棒えらび → ステージセレクト → プレイ
@@ -198,8 +224,8 @@ const STAGES = [
 ];
 
 const PKEY = 'kakurenbo_v2_progress';
-function loadProg(){ try{return JSON.parse(localStorage.getItem(PKEY))||{stars:{},best:{}}}catch(e){return{stars:{},best:{}}} }
-function saveProg(p){ try{localStorage.setItem(PKEY,JSON.stringify(p))}catch(e){} }
+function loadProg(){ try{return JSON.parse(SAFE_LS.getItem(PKEY))||{stars:{},best:{}}}catch(e){return{stars:{},best:{}}} }
+function saveProg(p){ try{SAFE_LS.setItem(PKEY,JSON.stringify(p))}catch(e){} }
 let prog = loadProg();
 function stageUnlocked(i){ return i===0 || (prog.stars[i-1]>0); }
 

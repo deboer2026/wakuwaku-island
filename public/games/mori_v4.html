@@ -47,6 +47,32 @@
 <script>
 (()=>{
 "use strict";
+const SAFE_LS = (function () {
+  try {
+    const testKey = "__ww_storage_test__";
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key)
+          ? memory[key]
+          : null;
+      },
+
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
 const cv=document.getElementById('game'), ctx=cv.getContext('2d');
 const VW=320, VH=240, TILE=16, ROWS=15;
 const stageEl=document.getElementById('stage');
@@ -60,13 +86,13 @@ resize(); addEventListener('resize',resize);
 /* ================= SAVE ================= */
 const SAVE_KEY='mori_v4_progress';
 function loadSave(){
-  try{ const d=JSON.parse(localStorage.getItem(SAVE_KEY)); 
+  try{ const d=JSON.parse(SAFE_LS.getItem(SAVE_KEY));
     if(d&&typeof d==='object') return {unlocked:d.unlocked||0, stars:Array.isArray(d.stars)?d.stars:[], chara:d.chara|0};
   }catch(e){}
   return {unlocked:0, stars:[], chara:0};
 }
 const SAVE=loadSave();
-function persist(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(SAVE)); }catch(e){} }
+function persist(){ try{ SAFE_LS.setItem(SAVE_KEY,JSON.stringify(SAVE)); }catch(e){} }
 
 /* ================= AUDIO ENGINE (chiptune) ================= */
 const Audio8={

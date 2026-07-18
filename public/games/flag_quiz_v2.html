@@ -432,6 +432,33 @@ body{background:#0a1628;display:flex;flex-direction:column;align-items:center;}
 // こっきクイズ せかいのたび v2
 // =====================================================
 
+const SAFE_LS = (function () {
+  try {
+    const testKey = "__ww_storage_test__";
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key)
+          ? memory[key]
+          : null;
+      },
+
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
+
 // ===== ガイドキャラ =====
 const GUIDES=[
   {id:'pen',  emoji:'🐧', name:'ペンタ',   role:'パイロット',
@@ -562,13 +589,13 @@ const SAVE_KEY='kokki_quiz_v2_progress';
 let save={stars:{},hiscore:0,guide:'pen'};
 function loadSave(){
   try{
-    const raw=localStorage.getItem(SAVE_KEY);
+    const raw=SAFE_LS.getItem(SAVE_KEY);
     if(raw){const p=JSON.parse(raw);if(p&&typeof p==='object')save=Object.assign(save,p);}
   }catch(e){}
   if(!save.stars||typeof save.stars!=='object')save.stars={};
 }
 function persist(){
-  try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){}
+  try{SAFE_LS.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){}
 }
 function getStars(regionId,diffId){
   return (save.stars[regionId]&&save.stars[regionId][diffId])||0;

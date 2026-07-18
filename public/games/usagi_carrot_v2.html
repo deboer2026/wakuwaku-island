@@ -169,6 +169,32 @@
 <script>
 (function(){
 "use strict";
+const SAFE_LS = (function () {
+  try {
+    const testKey = "__ww_storage_test__";
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key)
+          ? memory[key]
+          : null;
+      },
+
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
 var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
 var W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
 function resize(){ W=window.innerWidth; H=window.innerHeight;
@@ -202,9 +228,9 @@ function stopBGM(){ if(bgmTimer){ clearInterval(bgmTimer); bgmTimer=null; } }
 /* ---------- progress ---------- */
 var SAVE_KEY='usagi_carrot_v2_progress';
 var progress={unlocked:1, stars:[0,0,0,0,0], best:[0,0,0,0,0]};
-try{ var s=localStorage.getItem(SAVE_KEY); if(s){ var p=JSON.parse(s);
+try{ var s=SAFE_LS.getItem(SAVE_KEY); if(s){ var p=JSON.parse(s);
   if(p&&p.stars&&p.stars.length===5) progress=p; } }catch(e){}
-function saveProgress(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(progress)); }catch(e){} }
+function saveProgress(){ try{ SAFE_LS.setItem(SAVE_KEY,JSON.stringify(progress)); }catch(e){} }
 
 /* ---------- stages ---------- */
 var STAGES=[

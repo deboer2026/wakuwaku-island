@@ -183,6 +183,32 @@ button{font-family:inherit;cursor:pointer;}
 
 <script>
 'use strict';
+const SAFE_LS = (function () {
+  try {
+    const testKey = "__ww_storage_test__";
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key)
+          ? memory[key]
+          : null;
+      },
+
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
 /* ================= DATA ================= */
 const CHARS=[
   {id:'neko', e:'🐱', n:'ねこ'},
@@ -212,8 +238,8 @@ const SAVE_KEY='puzzle_v3_progress';
 
 /* ================= STATE ================= */
 let save={stars:{},char:'neko'};
-try{const s=localStorage.getItem(SAVE_KEY);if(s)save=Object.assign(save,JSON.parse(s));}catch(e){}
-function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){}}
+try{const s=SAFE_LS.getItem(SAVE_KEY);if(s)save=Object.assign(save,JSON.parse(s));}catch(e){}
+function persist(){try{SAFE_LS.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){}}
 
 let bgm=null;
 function bgmInit(){
