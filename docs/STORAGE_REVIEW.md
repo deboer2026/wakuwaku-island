@@ -215,3 +215,13 @@ Phase 3Cの目的は、複数キー、旧版共有キー、動的キー、頻繁
 - `/runner`: キャラクターをindex 1へ変更し、実プレイでハイスコア457を保存。リロード後にindex 1の選択表示とハイスコア457を確認した。
 - `/ichigo`: 実プレイでステージ1をクリアし、進行とハイスコア43の保存を確認した。リロード操作はブラウザURL安全ポリシーに拒否され、リロード後UIの確認は未実施。キー・JSON・保存／読込関数のfixture検証で補完する。
 - 次バッチ: Phase 3D-2で`public/games/shoot3.html`と`public/games/sora_v3.html`を扱う。
+
+## 13. Phase 3D-2 実施結果
+
+- 対象: `/shooting`（get 2 / set 2）と`/sora`（get 2 / set 2）の合計8箇所。
+- 結果: 両HTMLへ標準`SAFE_LS`を1件ずつ追加し、ゲームロジック内の直接get/setを0件にした。キー数、JSON.parse/stringify、`parseInt`／単項`+`、デフォルト値、保存関数の呼出位置と条件分岐はHEAD版と機械比較で一致した。
+- 監査: active STORAGE errorは20件から14件、warningは12件から10件、問題ファイルは7件から5件へ減少した。監査スクリプトの変更は不要で、SAFE_LS初期化テストの誤検出と重複カウントは0件だった。
+- `/shooting`: ブラウザで起動、マップ、ステージ開始、Canvas、射撃・被弾、BGM、進行表示と新規ページでの進行表示を確認した。`shooting_hs2`の数値73と`shooting_v3_progress`の`{unlocked:2,stars:{1:3}}`は実コードfixtureで保存・再読込を確認した。
+- `/sora`: ブラウザでキャラクターをプリンセスからプリンスへ変更し、新規ページでプリンスの選択復元を確認した。ステージ開始、Canvas、BGMも確認した。`{stars:{0:2},char:'prince'}`と`best`値88は実コードfixtureで保存・再読込を確認した。
+- 共通: localStorageがSecurityErrorを投げるfixtureでもメモリフォールバックのget/setを確認した。ブラウザコンソールエラーとSecurityErrorは0件だった。
+- 次バッチ: Phase 3D-3で`public/games/shabondama_v3.html`と`public/games/jewelry_master_v8.html`を扱う。

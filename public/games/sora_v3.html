@@ -259,6 +259,30 @@
 <script>
 (function(){
 "use strict";
+const SAFE_LS = (function () {
+  try {
+    const testKey = "__ww_storage_test__";
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key)
+          ? memory[key]
+          : null;
+      },
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
+
 const cv=document.getElementById('c'), ctx=cv.getContext('2d');
 let W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
 function resize(){
@@ -272,9 +296,9 @@ const $=id=>document.getElementById(id);
 /* ---------- save ---------- */
 const SAVE_KEY='soratobi_v3_progress';
 let save={stars:{}, char:'princess'};
-try{ const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); if(s&&s.stars) save=s; }catch(e){}
-function persist(){ try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){} }
-let best=+(localStorage.getItem('soratobi_best')||0);
+try{ const s=JSON.parse(SAFE_LS.getItem(SAVE_KEY)||'null'); if(s&&s.stars) save=s; }catch(e){}
+function persist(){ try{SAFE_LS.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){} }
+let best=+(SAFE_LS.getItem('soratobi_best')||0);
 
 /* ---------- audio ---------- */
 let AC=null, master=null, muted=false;
@@ -497,7 +521,7 @@ function endGame(cleared){
   $('backBtn').classList.add('hidden');
   $('stageLbl').classList.add('hidden');
   $('bossBar').classList.add('hidden');
-  if(score>best){best=score; try{localStorage.setItem('soratobi_best',best);}catch(e){}}
+  if(score>best){best=score; try{SAFE_LS.setItem('soratobi_best',best);}catch(e){}}
   $('finalScore').textContent=score.toLocaleString();
   $('bestLine').textContent='ベストスコア '+best.toLocaleString();
   const rs=$('resStars'), nx=$('nextBtn');

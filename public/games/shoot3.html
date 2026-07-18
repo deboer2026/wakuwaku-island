@@ -234,15 +234,39 @@ let raf=null,frame=0;
 const cv=document.getElementById('cv');
 const ctx=cv.getContext('2d');
 
+const SAFE_LS = (function () {
+  try {
+    const testKey = "__ww_storage_test__";
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key)
+          ? memory[key]
+          : null;
+      },
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
+
 // ---------- セーブ ----------
-function getHs(){return parseInt(localStorage.getItem('shooting_hs2')||'0');}
-function saveHs(s){if(s>getHs())localStorage.setItem('shooting_hs2',s);}
+function getHs(){return parseInt(SAFE_LS.getItem('shooting_hs2')||'0');}
+function saveHs(s){if(s>getHs())SAFE_LS.setItem('shooting_hs2',s);}
 function loadProg(){
-  try{const p=JSON.parse(localStorage.getItem('shooting_v3_progress')||'{}');
+  try{const p=JSON.parse(SAFE_LS.getItem('shooting_v3_progress')||'{}');
     return {unlocked:p.unlocked||1,stars:p.stars||{}};}
   catch(e){return {unlocked:1,stars:{}};}
 }
-function saveProg(p){localStorage.setItem('shooting_v3_progress',JSON.stringify(p));}
+function saveProg(p){SAFE_LS.setItem('shooting_v3_progress',JSON.stringify(p));}
 
 // ---------- リサイズ ----------
 function resize(){
