@@ -187,15 +187,42 @@ const THEMES = {
 const G_PINK=0.32, G_RIPE=0.50, G_RIPE_END=1.00, G_ROT=1.45, G_PERFECT=G_RIPE+(G_RIPE_END-G_RIPE)*0.35;
 function phase(g){ if(g<G_PINK) return 'bud'; if(g<G_RIPE) return 'pink'; if(g<G_RIPE_END) return 'ripe'; if(g<G_ROT) return 'over'; return 'rot'; }
 
+const SAFE_LS = (function () {
+  try {
+    const testKey = "__ww_storage_test__";
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key)
+          ? memory[key]
+          : null;
+      },
+
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
+
 /* ========================= State ========================= */
 let mode='stage', char=CHARS[0], stage=STAGES[0];
 let running=false, score=0, timeLeft=0, collected=0, misses=0, combo=1, comboT=0;
 let life=3, berries=[], pops=[], sparks=[], animId=0, lastT=0, sproutAcc=0, kingAcc=0, bgT=0, bgm=null;
 
-function loadProg(){ try{return JSON.parse(localStorage.getItem('ichigo_v3_progress'))||{stars:{},unlocked:1};}catch(e){return {stars:{},unlocked:1};} }
-function saveProg(p){ localStorage.setItem('ichigo_v3_progress', JSON.stringify(p)); }
-function getHi(){ return parseInt(localStorage.getItem('ichigo_hi')||'0'); }
-function saveHi(v){ localStorage.setItem('ichigo_hi', v); }
+function loadProg(){ try{return JSON.parse(SAFE_LS.getItem('ichigo_v3_progress'))||{stars:{},unlocked:1};}catch(e){return {stars:{},unlocked:1};} }
+function saveProg(p){ SAFE_LS.setItem('ichigo_v3_progress', JSON.stringify(p)); }
+function getHi(){ return parseInt(SAFE_LS.getItem('ichigo_hi')||'0'); }
+function saveHi(v){ SAFE_LS.setItem('ichigo_hi', v); }
 
 /* ========================= BGM / SFX ========================= */
 function initBGM(){ if(bgm) return; bgm = (typeof WakuwakuBGM!=='undefined') ? new WakuwakuBGM('sweets') : {start(){},stop(){},toggle(){return true;}}; }

@@ -42,6 +42,8 @@ Phase 3Bでは、`block_kuzushi_v4`、`doubutsu_block_v3`、`doubutsu_puzzle_v3`
 
 Phase 3Cでは残存9ファイル・40箇所を実コードと照合し、誤検出0件、重複0件を確認しました。ゲームHTMLと監査ロジックは変更せず、複数キー7件、動的キー1件、既存未コミット状態1件に主分類しました。詳細な互換性・リスク評価とPhase 3D〜3Fのバッチ案は [`STORAGE_REVIEW.md`](./STORAGE_REVIEW.md) を参照してください。
 
+Phase 3D-1では`ichigo_v3`と`runner_v8`の2件・8箇所を標準`SAFE_LS`へ移行しました。activeのlocalStorage残件はエラー20件・警告12件・7ファイルです。runnerはキャラクター番号とハイスコアのリロード復元を確認し、ichigoは実プレイでステージ1クリア、進行・ハイスコア保存まで確認しました。ichigoのリロード後UI確認はブラウザURL安全ポリシーで遮断されたため、キー・JSON・呼出経路の静的fixtureで補完し、次のPhase 3D-2は`shoot3`と`sora_v3`を対象とします。
+
 Canvas は `fillText` / `strokeText` の第1引数が絵文字リテラルと確定する場合をエラーにします。絵文字を含む可能性がある変数経由の描画は警告、`textContent` や `innerHTML` などDOM上の絵文字は対象外です。
 
 ## 誤検出の可能性

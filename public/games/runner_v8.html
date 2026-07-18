@@ -278,8 +278,35 @@ function midStrip(st,idx){
  return stripURI(`<svg xmlns="http://www.w3.org/2000/svg" width="480" height="160" viewBox="0 0 480 160"><rect x="52" y="96" width="12" height="64" rx="4" fill="#6D4C41"/><ellipse cx="58" cy="82" rx="30" ry="34" fill="${st.mid}"/><rect x="180" y="110" width="10" height="50" rx="3" fill="#6D4C41"/><ellipse cx="185" cy="98" rx="24" ry="27" fill="${st.mid}"/><rect x="310" y="90" width="13" height="70" rx="4" fill="#6D4C41"/><ellipse cx="316" cy="74" rx="33" ry="38" fill="${st.mid}"/><rect x="425" y="115" width="9" height="45" rx="3" fill="#6D4C41"/><ellipse cx="429" cy="104" rx="21" ry="24" fill="${st.mid}"/></svg>`);
 }
 
+const SAFE_LS = (function () {
+  try {
+    const testKey = "__ww_storage_test__";
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key)
+          ? memory[key]
+          : null;
+      },
+
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
+
 // ===== 状態 =====
-let selChar=parseInt(localStorage.getItem('runner_char')||'0');
+let selChar=parseInt(SAFE_LS.getItem('runner_char')||'0');
 if(isNaN(selChar)||selChar<0||selChar>=CHAR_DEFS.length)selChar=0;
 let score=0,coinCount=0,lives=3;
 let combo=0,comboTimer=null;
@@ -374,7 +401,7 @@ function buildCharSelect(){
   b.style.cssText=`background:${i===selChar?'linear-gradient(135deg,#FFE082,#FFCA28)':'rgba(255,179,0,0.1)'};border:2.5px solid ${i===selChar?'#FF8F00':'rgba(200,140,0,0.25)'};box-shadow:${i===selChar?'0 0 12px rgba(255,180,0,0.5)':'none'};transform:${i===selChar?'scale(1.1)':'scale(1)'};`;
   b.innerHTML=charSVG(c,42);
   b.addEventListener('click',()=>{
-   selChar=i;localStorage.setItem('runner_char',i);buildCharSelect();
+   selChar=i;SAFE_LS.setItem('runner_char',i);buildCharSelect();
    const d=document.getElementById('demo-runner');d.innerHTML=charSVG(CHAR_DEFS[selChar],90);
    sfx('coin');
   });
@@ -873,7 +900,7 @@ function endGame(){
  sfx('gameover');
  const hs=getHs();
  const isNew=score>hs;
- if(isNew)localStorage.setItem('runner_hs',score);
+ if(isNew)SAFE_LS.setItem('runner_hs',score);
  const stars=score>=2000?'⭐⭐⭐':score>=800?'⭐⭐':'⭐';
  document.getElementById('go-emoji').textContent=isNew?'🏆':'🌟';
  document.getElementById('go-sub').textContent=`${STAGES[stageIdx].name} まで はしったよ！`;
@@ -881,7 +908,7 @@ function endGame(){
  document.getElementById('go-hs').classList.toggle('show',isNew);
  setTimeout(()=>document.getElementById('go-screen').classList.add('show'),500);
 }
-function getHs(){return parseInt(localStorage.getItem('runner_hs')||'0');}
+function getHs(){return parseInt(SAFE_LS.getItem('runner_hs')||'0');}
 function updateHsDisp(){
  const hs=getHs();
  document.getElementById('hs-disp').textContent=hs>0?`🏆 ハイスコア：⭐${hs}`:'';
