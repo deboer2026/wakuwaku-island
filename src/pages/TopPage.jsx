@@ -1854,9 +1854,6 @@ export default function TopPage() {
             </div>
           </div>
 
-          <button className="tp-dress-btn" onClick={() => openPanel('princess')}>
-            👗 {{ja:'きがえ', en:'Dress up', zh:'换装', ko:'옷 입히기', es:'Vestir'}[lang] || 'きがえ'}
-          </button>
         </div>
       </div>
 
