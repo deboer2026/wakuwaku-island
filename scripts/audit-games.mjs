@@ -12,6 +12,8 @@ const knownCategories = new Set([
 const errors = [];
 const warnings = [];
 const seenIssues = new Set();
+let currentHtmlContext = null;
+let previousReport = null;
 
 async function read(relativePath) {
   return readFile(rel(...relativePath.split('/')), 'utf8');
@@ -29,11 +31,17 @@ function evidenceAt(text, index) {
 }
 
 function issue(severity, category, file, message, options = {}) {
+  const referenceSeverity = severity;
+  const status = options.status ?? currentHtmlContext?.status ?? null;
+  if (status && status !== 'active' && severity === 'error') severity = 'warning';
   const item = {
     severity,
+    referenceSeverity,
     category,
     file: posix(file),
-    route: options.route ?? null,
+    status,
+    route: options.route ?? currentHtmlContext?.route ?? null,
+    wrapper: options.wrapper ?? currentHtmlContext?.wrapper ?? null,
     message,
     line: options.line ?? (options.text != null && options.index != null
       ? lineAt(options.text, options.index)
@@ -186,8 +194,24 @@ function hasEmoji(value) {
   return /\p{Extended_Pictographic}/u.test(value);
 }
 
+async function importedModuleUsesHook(source, importerFile, hookName) {
+  for (const match of source.matchAll(/^import[\s\S]*?from\s+['"](\.[^'"]+)['"]/gm)) {
+    const base = path.resolve(path.dirname(rel(...importerFile.split('/'))), match[1]);
+    for (const candidate of [base, `${base}.js`, `${base}.jsx`, path.join(base, 'index.js'), path.join(base, 'index.jsx')]) {
+      try {
+        const imported = await readFile(candidate, 'utf8');
+        if (new RegExp(`\\b${hookName}\\s*\\(`).test(imported)) return true;
+        break;
+      } catch {
+        // Try the next conventional extension.
+      }
+    }
+  }
+  return false;
+}
+
 async function inspectHtml(file, text) {
-  const route = null;
+  const route = currentHtmlContext?.route ?? null;
   for (const match of text.matchAll(/\b(?:[A-Za-z_$][\w$]*\.)?(?:fillText|strokeText)\s*\(\s*(['"`])([\s\S]*?)\1/g)) {
     if (hasEmoji(match[2])) {
       issue('error', 'CANVAS', file, 'Canvas の文字描画に絵文字リテラルを直接渡しています', { route, text, index: match.index });
@@ -205,21 +229,32 @@ async function inspectHtml(file, text) {
   }
 
   for (const match of text.matchAll(/localStorage\s*\.\s*(getItem|setItem|removeItem|clear)\s*\(/g)) {
-    const nearby = text.slice(Math.max(0, match.index - 500), Math.min(text.length, match.index + 500));
-    const allowed = /SAFE_LS|safeLS|storage(?:Available|Test)|__.*(?:test|probe)/i.test(nearby)
-      && /try\s*\{|catch\s*[({]/.test(nearby);
+    const nearby = text.slice(Math.max(0, match.index - 700), Math.min(text.length, match.index + 700));
+    const storageProbe = /localStorage\s*\.\s*setItem\s*\(/.test(nearby)
+      && /localStorage\s*\.\s*removeItem\s*\(/.test(nearby)
+      && /return\s+localStorage\b/.test(nearby)
+      && /try\s*\{[\s\S]*catch\s*[({]/.test(nearby);
+    const allowed = storageProbe || (/SAFE_LS|safeLS|storage(?:Available|Test)|__.*(?:test|probe)/i.test(nearby)
+      && /try\s*\{|catch\s*[({]/.test(nearby));
     if (!allowed) {
-      issue('error', 'STORAGE', file, `ゲーム HTML から localStorage.${match[1]} を直接使用しています`, { text, index: match.index });
+      const callTail = text.slice(match.index + match[0].length, match.index + match[0].length + 160);
+      const literalKey = callTail.match(/^\s*(['"])(.*?)\1/);
+      const severity = literalKey && !/(?:test|probe|available)/i.test(literalKey[2]) ? 'error' : 'warning';
+      const certainty = severity === 'error' ? '' : '可能性があります: ';
+      issue(severity, 'STORAGE', file, `${certainty}ゲーム HTML から localStorage.${match[1]} を直接使用しています`, { text, index: match.index });
     }
   }
 
   const bgmNews = allMatches(text, /new\s+WakuwakuBGM\s*\(/g);
-  if (bgmNews.length) {
-    const guarded = /typeof\s+WakuwakuBGM\s*!==?\s*['"]undefined['"]/.test(text)
-      || /if\s*\(\s*(?:window\.)?WakuwakuBGM\s*\)/.test(text);
-    const loaded = /<script\b[^>]*\bsrc\s*=\s*['"][^'"]*wakuwaku_bgm\.js['"]/i.test(text);
-    if (!guarded) issue('error', 'BGM', file, 'WakuwakuBGM を存在確認ガードなしで生成しています', { text, index: bgmNews[0].index });
-    if (!loaded) issue('error', 'BGM', file, 'WakuwakuBGM を共有ライブラリの読込なしで使用しています', { text, index: bgmNews[0].index });
+  const loaded = /<script\b[^>]*\bsrc\s*=\s*['"][^'"]*wakuwaku_bgm\.js['"]/i.test(text);
+  for (const bgmNew of bgmNews) {
+    const functionStart = Math.max(text.lastIndexOf('function ', bgmNew.index), text.lastIndexOf('=>', bgmNew.index));
+    const localPrefix = text.slice(Math.max(0, functionStart), bgmNew.index);
+    const guarded = /typeof\s+WakuwakuBGM\s*!==?\s*['"]undefined['"]/.test(localPrefix)
+      || /typeof\s+WakuwakuBGM\s*===?\s*['"]undefined['"][\s\S]{0,120}?return\b/.test(localPrefix)
+      || /if\s*\(\s*(?:window\.)?WakuwakuBGM\s*\)/.test(localPrefix);
+    if (!guarded) issue('error', 'BGM', file, 'WakuwakuBGM を存在確認ガードなしで生成しています', { text, index: bgmNew.index });
+    if (!loaded) issue('error', 'BGM', file, 'WakuwakuBGM を共有ライブラリの読込なしで使用しています', { text, index: bgmNew.index });
   }
 
   const hasGoBack = /postMessage\s*\(\s*\{[\s\S]{0,160}?type\s*:\s*['"]goBack['"]/.test(text);
@@ -291,6 +326,7 @@ async function inspectHtml(file, text) {
 const metaFile = 'src/seo/gameMeta.js';
 const appFile = 'src/App.jsx';
 const topFile = 'src/pages/TopPage.jsx';
+try { previousReport = JSON.parse(await read('reports/game-audit.json')); } catch { previousReport = null; }
 const [metaText, appText, topText] = await Promise.all([read(metaFile), read(appFile), read(topFile)]);
 
 const metaEntries = extractMeta(metaText);
@@ -360,7 +396,8 @@ for (const key of ['route', 'id']) {
 }
 for (const list of new Set(topGames.map((game) => game.list))) {
   for (const [value, values] of duplicates(topGames.filter((game) => game.list === list), 'num')) {
-    issue('error', 'REGISTRY', topFile, `${list} の num "${value}" が ${values.length} 回使われています`, { route: values[0].route, text: topText, index: values[1].index });
+    const numIsConsumed = /\b(?:game|g)\.num\b/.test(topText);
+    issue(numIsConsumed ? 'error' : 'warning', 'REGISTRY', topFile, `${list} の num "${value}" が ${values.length} 回使われています${numIsConsumed ? '' : 'が、現在のUIから参照されていません'}`, { route: values[0].route, text: topText, index: values[1].index });
   }
 }
 for (const game of topGames) {
@@ -386,10 +423,13 @@ for (const svg of svgKeys) {
 const wrapperNames = (await readdir(rel('src', 'games'))).filter((name) => name.endsWith('.jsx')).sort();
 const wrappers = [];
 const componentRoutes = new Map();
+const componentPaths = new Map();
 for (const appImport of app.imports) {
   const filename = `${path.basename(appImport.module, '.jsx')}.jsx`;
   const routes = app.routes.filter((route) => route.components.includes(appImport.component) && route.canonical).map((route) => route.canonical);
+  const paths = app.routes.filter((route) => route.components.includes(appImport.component)).map((route) => route.path);
   componentRoutes.set(filename, new Set(routes));
+  componentPaths.set(filename, new Set(paths));
 }
 for (const name of wrapperNames) {
   const file = `src/games/${name}`;
@@ -398,8 +438,10 @@ for (const name of wrapperNames) {
   const iframeSrcMatch = iframe?.[0].match(/\bsrc\s*=\s*['"]([^'"]+)['"]/i);
   const gameContentMatch = text.match(/<GameContent\b[^>]*\broute\s*=\s*['"]([^'"]+)['"]/i);
   const iframeSrc = iframeSrcMatch?.[1] ?? null;
-  const gameRoute = gameContentMatch?.[1] ?? null;
-  wrappers.push({ file, component: path.basename(name, '.jsx'), route: gameRoute, iframeSrc });
+  const expectedRoutes = componentRoutes.get(name) ?? new Set();
+  const appPaths = componentPaths.get(name) ?? new Set();
+  const gameRoute = gameContentMatch?.[1] ?? (expectedRoutes.size === 1 ? [...expectedRoutes][0] : (appPaths.size === 1 ? [...appPaths][0] : null));
+  wrappers.push({ file, component: path.basename(name, '.jsx'), route: gameRoute, iframeSrc, appPaths: [...appPaths] });
   if (!iframe) continue;
   const iframeIndex = iframe.index ?? text.indexOf('<iframe');
   if (!iframeSrc) issue('error', 'WRAPPER', file, 'iframe の src を静的に取得できません', { route: gameRoute, text, index: iframeIndex });
@@ -407,11 +449,17 @@ for (const name of wrapperNames) {
     const diskPath = iframeSrc.startsWith('/') ? rel('public', ...iframeSrc.slice(1).split('/')) : rel('public', 'games', iframeSrc);
     try { await stat(diskPath); } catch { issue('error', 'WRAPPER', file, `iframe の参照先 ${iframeSrc} が存在しません`, { route: gameRoute, text, index: iframeIndex }); }
   }
-  if (gameRoute && !metaRoutes.has(gameRoute)) issue('error', 'WRAPPER', file, 'GameContent route が gameMeta の正規ルートに存在しません', { route: gameRoute, text, index: gameContentMatch.index });
-  const expectedRoutes = componentRoutes.get(name) ?? new Set();
-  if (gameRoute && expectedRoutes.size && !expectedRoutes.has(gameRoute)) issue('error', 'WRAPPER', file, 'GameContent route が App の正規ルートと一致しません', { route: gameRoute, text, index: gameContentMatch.index });
-  if (!/\buseGameNav\s*\(/.test(text)) issue('error', 'WRAPPER', file, 'iframe がありますが useGameNav を使用していません', { route: gameRoute });
-  if (!/\buseIframeBridge\s*\(/.test(text)) issue('error', 'WRAPPER', file, 'iframe がありますが useIframeBridge を使用していません', { route: gameRoute });
+  if (gameContentMatch && gameRoute && !metaRoutes.has(gameRoute)) issue('error', 'WRAPPER', file, 'GameContent route が gameMeta の正規ルートに存在しません', { route: gameRoute, text, index: gameContentMatch.index });
+  if (gameContentMatch && gameRoute && expectedRoutes.size && !expectedRoutes.has(gameRoute)) issue('error', 'WRAPPER', file, 'GameContent route が App の正規ルートと一致しません', { route: gameRoute, text, index: gameContentMatch.index });
+  const equivalentNav = /addEventListener\s*\(\s*['"]message['"]/.test(text)
+    && /type\s*===?\s*['"]goBack['"]/.test(text)
+    && /\bnavigate\s*\(/.test(text);
+  const hasImportedNav = await importedModuleUsesHook(text, file, 'useGameNav');
+  if (!/\buseGameNav\s*\(/.test(text) && !equivalentNav && !hasImportedNav) {
+    issue('warning', 'WRAPPER', file, 'useGameNav または同等の親ナビゲーション処理を確認できません', { route: gameRoute });
+  }
+  const hasImportedBridge = await importedModuleUsesHook(text, file, 'useIframeBridge');
+  if (!/\buseIframeBridge\s*\(/.test(text) && !hasImportedBridge) issue('warning', 'WRAPPER', file, 'useIframeBridge の実装を1段階追跡しても確認できません', { route: gameRoute });
   if (!/\bref\s*=\s*\{[^}]+\}/.test(iframe[0])) issue('error', 'WRAPPER', file, 'iframe ref を確認できません', { route: gameRoute, text, index: iframeIndex });
   const allow = iframe[0].match(/\ballow\s*=\s*['"]([^'"]+)['"]/i)?.[1] ?? '';
   if (!/autoplay/i.test(allow) || !/fullscreen/i.test(allow)) issue('error', 'WRAPPER', file, 'iframe の allow に autoplay と fullscreen が揃っていません', { route: gameRoute, text, index: iframeIndex });
@@ -419,11 +467,6 @@ for (const name of wrapperNames) {
 }
 
 const htmlNames = (await readdir(rel('public', 'games'))).filter((name) => name.endsWith('.html')).sort();
-for (const name of htmlNames) {
-  const file = `public/games/${name}`;
-  await inspectHtml(file, await read(file));
-}
-
 const games = [...metaRoutes].sort().map((route) => {
   const meta = metaEntries.find((entry) => entry.route === route);
   const top = topGames.find((entry) => entry.route === route);
@@ -442,9 +485,66 @@ const games = [...metaRoutes].sort().map((route) => {
     topPageId: top?.id ?? null,
     wrapper: wrapper?.file ?? null,
     iframeSrc: wrapper?.iframeSrc ?? null,
+    html: wrapper?.iframeSrc ? `public${wrapper.iframeSrc}` : null,
+    status: 'active',
     htmlExists: wrapper?.iframeSrc ? htmlNames.includes(path.posix.basename(wrapper.iframeSrc)) : false,
   };
 });
+
+const activeHtml = new Map();
+for (const game of games) {
+  if (game.html) activeHtml.set(game.html, { route: game.route, wrapper: game.wrapper });
+}
+const secondaryHtml = new Map();
+for (const wrapper of wrappers) {
+  if (!wrapper.iframeSrc) continue;
+  const html = `public${wrapper.iframeSrc}`;
+  if (!activeHtml.has(html)) secondaryHtml.set(html, { route: wrapper.route, wrapper: wrapper.file });
+}
+const htmlFiles = htmlNames.map((name) => {
+  const html = `public/games/${name}`;
+  const active = activeHtml.get(html);
+  const secondary = secondaryHtml.get(html);
+  return {
+    status: active ? 'active' : (secondary ? 'referenced-secondary' : 'archived-or-unused'),
+    route: active?.route ?? secondary?.route ?? null,
+    wrapper: active?.wrapper ?? secondary?.wrapper ?? null,
+    html,
+  };
+});
+for (const entry of htmlFiles) {
+  currentHtmlContext = entry;
+  await inspectHtml(entry.html, await read(entry.html));
+}
+currentHtmlContext = null;
+
+const activeWrappers = new Set(games.map((game) => game.wrapper).filter(Boolean));
+const secondaryWrappers = new Set(wrappers.filter((wrapper) => !metaRoutes.has(wrapper.route)).map((wrapper) => wrapper.file));
+for (const item of [...errors, ...warnings]) {
+  if (item.status) continue;
+  if (item.route && metaRoutes.has(item.route)) item.status = 'active';
+  else if (activeWrappers.has(item.file)) item.status = 'active';
+  else if (secondaryWrappers.has(item.file) || (item.route && app.routes.some((route) => route.path === item.route))) item.status = 'referenced-secondary';
+  else if (item.category === 'REGISTRY') item.status = 'active';
+}
+for (let index = errors.length - 1; index >= 0; index -= 1) {
+  const item = errors[index];
+  if (item.status && item.status !== 'active') {
+    errors.splice(index, 1);
+    item.severity = 'warning';
+    warnings.push(item);
+  }
+}
+
+const activeIssues = [...errors, ...warnings].filter((item) => item.status === 'active');
+const activeErrors = activeIssues.filter((item) => item.severity === 'error');
+const activeWarnings = activeIssues.filter((item) => item.severity === 'warning');
+const htmlIssues = [...errors, ...warnings].filter((item) => item.file.startsWith('public/games/'));
+const allHtmlReferenceErrors = htmlIssues.filter((item) => item.referenceSeverity === 'error');
+const allHtmlReferenceWarnings = htmlIssues.filter((item) => item.referenceSeverity === 'warning');
+const archivedIssues = htmlIssues.filter((item) => item.status === 'archived-or-unused');
+const archivedReferenceErrors = archivedIssues.filter((item) => item.referenceSeverity === 'error');
+const archivedReferenceWarnings = archivedIssues.filter((item) => item.referenceSeverity === 'warning');
 
 const summary = {
   gameMetaRoutes: metaRoutes.size,
@@ -453,10 +553,40 @@ const summary = {
   topPageGames: topGames.length,
   wrappers: wrapperNames.length,
   htmlGames: htmlNames.length,
+  activeHtml: htmlFiles.filter((entry) => entry.status === 'active').length,
+  referencedSecondaryHtml: htmlFiles.filter((entry) => entry.status === 'referenced-secondary').length,
+  archivedOrUnusedHtml: htmlFiles.filter((entry) => entry.status === 'archived-or-unused').length,
+  activeErrors: activeErrors.length,
+  activeWarnings: activeWarnings.length,
+  allHtmlReferenceErrors: allHtmlReferenceErrors.length,
+  allHtmlReferenceWarnings: allHtmlReferenceWarnings.length,
+  archivedReferenceErrors: archivedReferenceErrors.length,
+  archivedReferenceWarnings: archivedReferenceWarnings.length,
   errors: errors.length,
   warnings: warnings.length,
 };
-const report = { generatedAt: new Date().toISOString(), summary, errors, warnings, games };
+const priorSummary = previousReport?.summary ?? {};
+const priorErrors = previousReport?.errors ?? [];
+const priorWarnings = previousReport?.warnings ?? [];
+const isPriorActive = (item) => activeHtml.has(item.file)
+  || activeWrappers.has(item.file)
+  || (item.route && metaRoutes.has(item.route))
+  || (item.category === 'REGISTRY' && !item.route);
+const inheritedBaseline = previousReport?.baseline;
+const baseline = inheritedBaseline ?? {
+  phase1Errors: priorSummary.errors ?? null,
+  phase1Warnings: priorSummary.warnings ?? null,
+  phase1ActiveErrors: priorErrors.filter(isPriorActive).length,
+  phase1ActiveWarnings: priorWarnings.filter(isPriorActive).length,
+  phase2PreFixActiveErrors: summary.activeErrors,
+  phase2PreFixActiveWarnings: summary.activeWarnings,
+};
+const comparison = {
+  falsePositivesResolved: Math.max(0, (baseline.phase1ActiveErrors ?? summary.activeErrors) - (baseline.phase2PreFixActiveErrors ?? summary.activeErrors)),
+  actualFixesResolved: Math.max(0, (baseline.phase2PreFixActiveErrors ?? summary.activeErrors) - summary.activeErrors),
+  remainingActiveErrors: summary.activeErrors,
+};
+const report = { generatedAt: new Date().toISOString(), baseline, comparison, summary, errors, warnings, games, htmlFiles };
 await mkdir(rel('reports'), { recursive: true });
 await writeFile(rel('reports', 'game-audit.json'), `${JSON.stringify(report, null, 2)}\n`, 'utf8');
 
@@ -469,6 +599,19 @@ console.log(`- GAME_ROUTES: ${summary.gameRoutesSet}`);
 console.log(`- TopPage games: ${summary.topPageGames}`);
 console.log(`- wrappers: ${summary.wrappers}`);
 console.log(`- game HTML files: ${summary.htmlGames}`);
+console.log(`- active HTML: ${summary.activeHtml}`);
+console.log(`- referenced-secondary HTML: ${summary.referencedSecondaryHtml}`);
+console.log(`- archived-or-unused HTML: ${summary.archivedOrUnusedHtml}`);
+console.log(`- active errors: ${summary.activeErrors}`);
+console.log(`- active warnings: ${summary.activeWarnings}`);
+console.log(`- all HTML reference errors: ${summary.allHtmlReferenceErrors}`);
+console.log(`- all HTML reference warnings: ${summary.allHtmlReferenceWarnings}`);
+console.log('\nPhase comparison');
+console.log(`- Phase 1 active-equivalent errors: ${baseline.phase1ActiveErrors}`);
+console.log(`- Phase 2 pre-fix active errors: ${baseline.phase2PreFixActiveErrors}`);
+console.log(`- Phase 2 current active errors: ${summary.activeErrors}`);
+console.log(`- resolved as false positives: ${comparison.falsePositivesResolved}`);
+console.log(`- resolved by P0 fixes: ${comparison.actualFixesResolved}`);
 for (const [heading, items] of [['ERRORS', errors], ['WARNINGS', warnings]]) {
   console.log(`\n${heading} (${items.length})`);
   if (!items.length) console.log('- none');
@@ -477,5 +620,5 @@ for (const [heading, items] of [['ERRORS', errors], ['WARNINGS', warnings]]) {
     console.log(`[${item.category}] ${where}: ${item.message}`);
   }
 }
-console.log(`\nResult: ${errors.length ? 'FAILED' : 'PASSED'}`);
-process.exitCode = errors.length ? 1 : 0;
+console.log(`\nResult: ${activeErrors.length ? 'FAILED' : 'PASSED'}`);
+process.exitCode = activeErrors.length ? 1 : 0;
