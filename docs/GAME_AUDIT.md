@@ -40,6 +40,8 @@ Phase 3Aでは、単一キーかつ少数の直接アクセスだけを持つact
 
 Phase 3Bでは、`block_kuzushi_v4`、`doubutsu_block_v3`、`doubutsu_puzzle_v3`、`flag_quiz_v2`、`kakurenbo_v2`、`mori_v4`、`sniper_v3`、`usagi_carrot_v2`の8件・17箇所を同じ`SAFE_LS`基準へ移行しました。activeのlocalStorage残件はエラー28件・警告12件・9ファイルです。複数キー、キー移行、既存未コミット差分などを含む処理はPhase 3C以降へ残します。
 
+Phase 3Cでは残存9ファイル・40箇所を実コードと照合し、誤検出0件、重複0件を確認しました。ゲームHTMLと監査ロジックは変更せず、複数キー7件、動的キー1件、既存未コミット状態1件に主分類しました。詳細な互換性・リスク評価とPhase 3D〜3Fのバッチ案は [`STORAGE_REVIEW.md`](./STORAGE_REVIEW.md) を参照してください。
+
 Canvas は `fillText` / `strokeText` の第1引数が絵文字リテラルと確定する場合をエラーにします。絵文字を含む可能性がある変数経由の描画は警告、`textContent` や `innerHTML` などDOM上の絵文字は対象外です。
 
 ## 誤検出の可能性
