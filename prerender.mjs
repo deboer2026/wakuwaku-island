@@ -21,6 +21,16 @@ function buildHead(helmet) {
   ].filter(Boolean).join('\n    ')
 }
 
+// React 19 + renderToString では <title>/<meta>/<link>/ld+json が body 内に
+// そのまま出力されるため、head へ引き上げる（canonical を Google に確実に認識させる）
+const HOIST_RE = /<title>[\s\S]*?<\/title>|<meta\s[^>]*?>|<link rel="canonical"[^>]*?>|<script type="application\/ld\+json">[\s\S]*?<\/script>/g
+
+function hoistHeadTags(html) {
+  const tags = []
+  const body = html.replace(HOIST_RE, (m) => { tags.push(m); return '' })
+  return { hoisted: tags.join('\n    '), body }
+}
+
 // トップ固有の head タグ（title/desc/canonical/og/twitter）とサイト全体FAQを除去
 function stripTopHead(html) {
   return html
@@ -38,14 +48,16 @@ function stripTopHead(html) {
 
 for (const url of routes) {
   const { html, helmet } = render(url)
+  const { hoisted, body } = hoistHeadTags(html)
   let page
   if (url === '/') {
-    // トップは既存の静的 head を維持し、本文だけ差し込む
-    page = template.replace(ROOT, `<div id="root">${html}</div>`)
+    // トップは既存の静的 head を維持し、本文だけ差し込む（hoisted は静的 head と重複するため破棄）
+    page = template.replace(ROOT, `<div id="root">${body}</div>`)
   } else {
+    const headTags = [buildHead(helmet), hoisted].filter(Boolean).join('\n    ')
     page = stripTopHead(template)
-      .replace('</head>', `  ${buildHead(helmet)}\n  </head>`)
-      .replace(ROOT, `<div id="root">${html}</div>`)
+      .replace('</head>', `  ${headTags}\n  </head>`)
+      .replace(ROOT, `<div id="root">${body}</div>`)
   }
   const dir = url === '/' ? 'dist' : path.join('dist', url.replace(/^\//, ''))
   fs.mkdirSync(dir, { recursive: true })
