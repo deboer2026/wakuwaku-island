@@ -261,3 +261,39 @@ Phase 3Cの目的は、複数キー、旧版共有キー、動的キー、頻繁
 - 採用変更: 標準`SAFE_LS`定義1件と、get/set各1件の呼び出し先変更だけ。修正・除外・HEADへ復元した既存変更はない。SAFE_LS定義を除去して呼び出し先を戻す正規化比較はHEAD版と完全一致した。
 - 監査: `/iro`のSTORAGE error 0・warning 2→error 0・warning 0。active STORAGEはerror 0・warning 0、問題ファイル0になった。active全体error 38・warning 61、active 39を維持し、SAFE_LSテストの誤検出はない。
 - 保存・復元: 実コードfixtureで`iro_hi=8`と`iro_hi_hard=5`を独立保存し、新規コンテキストから復元した。SecurityErrorフォールバックでも両キーの分離、既定値0、`String(value)`、null、removeItem互換を確認した。Phase 3のactive STORAGE対応は完了した。
+
+## 18. Phase 3完了確定（Phase 4A、2026-07-19）
+
+### Phase別実績
+
+| Phase | コミット | 対象 | ゲーム数 | 解消アクセス数 |
+| --- | --- | --- | ---: | ---: |
+| 3A | `23aa6f7` | kazu-asobi、kudamono-catch、houki、moji、okashi-crossing、animal-soccer、tashizan、tokei-yomi | 8 | 17 |
+| 3B | `c458c4d` | block、animal-block、doubutsu-puzzle、kokki、kakurenbo、mori、sniper、usagi-carrot | 8 | 17 |
+| 3C | `cf2b649` | 残存9ゲームの設計・互換性レビュー | 9 | 0（調査のみ） |
+| 3D-1 | `b2e5e74` | ichigo、runner | 2 | 8 |
+| 3D-2 | `99921f0` | shooting、sora | 2 | 8 |
+| 3D-3 | `ffd1127` | shabondama、jewelry-master | 2 | 14 |
+| 3E-1 | `fd53af4` | katakana-asobi | 1 | 4 |
+| 3E-2 | `8c9bf10` | machi | 1 | 4 |
+| 3F | `5528469` | iro | 1 | 2 |
+
+実装対象は重複なしの25ゲーム、直接アクセスは合計74件（get 39、set 35、remove 0）。開始時のactive STORAGEはerror 45・warning 29・問題25ファイル、完了時はerror 0・warning 0・問題0ファイルである。
+
+### 最終状態と互換性
+
+- active 39ゲームのうちSAFE_LS使用は34ゲーム、ストレージ未使用は5ゲーム。SAFE_LS定義を除外したゲームロジック内の直接localStorageは、使用ゲーム数0、getItem 0、setItem 0、removeItem 0、clear・length・key・全キー列挙0である。
+- SAFE_LS使用34ゲームはすべてlocalStorage可用性エラーを捕捉し、メモリへフォールバックする。標準実装は`String(value)`、未登録キーのnull、removeItemをlocalStorage互換で提供する。既存独自shimもSecurityError時にscriptを継続する。
+- メモリフォールバックは同一ページセッションだけの退避であり、ページ再読込後に値が消えることは仕様である。永続保存に成功した場合のキー・値形式・保存タイミングは従来どおりである。
+- `/machi`の旧版共有コイン、`/iro`と`/katakana-asobi`のモード別キーを含め、キー名、JSON構造、数値変換、既定値、更新条件を変更していない。
+- HEAD正規化比較、インラインscript構文検査、正常保存・新規コンテキスト復元、破損値・SecurityError fixture、監査、client/SSRビルド、39ルートプリレンダで検証した。
+
+### 今後の運用ルール
+
+1. 新規ゲームは最初からHTML内の既存スコープに標準SAFE_LSを1つだけ置き、ゲームロジックから直接localStorageを呼ばない。
+2. キー、値形式、JSON、数値変換、既定値、読込・保存タイミングを変更する場合は、SAFE_LS対応とは別コミット・別レビューにする。
+3. 監査でSAFE_LS可用性テストをゲーム利用として数えず、route別allowlistや例外で指摘を隠さない。
+4. 変更時は正常保存・再読込復元とSecurityError時の同一セッション内復元を確認し、メモリ保存が再読込で消える仕様を維持する。
+5. `node scripts/audit-games.mjs`と`npm run audit:games`でactive STORAGE error/warning 0を継続確認する。
+
+未対応active STORAGE対象は0件で、Phase 3ストレージ安全化を完了とする。
