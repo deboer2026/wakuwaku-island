@@ -211,6 +211,33 @@ if(!CanvasRenderingContext2D.prototype.roundRect){
 const SAVE_KEY='machi_v3_story';       // v7進行(新規)
 const COIN_KEY='machi_v3_coins';       // 既存コイン(共有・温存)
 
+const SAFE_LS = (function () {
+  try {
+    const testKey = "__ww_storage_test__";
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key)
+          ? memory[key]
+          : null;
+      },
+
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
+
 /* ---------- BGM ---------- */
 const bgm=(typeof WakuwakuBGM!=='undefined')?new WakuwakuBGM('happy'):{start(){},stop(){},setTheme(){}};
 
@@ -339,12 +366,12 @@ function defaultSave(){
           zukan:[], curArea:0};
 }
 function loadSave(){
-  try{const raw=localStorage.getItem(SAVE_KEY);if(raw){const d=JSON.parse(raw);if(d&&d.areas)return d;}}catch(e){}
+  try{const raw=SAFE_LS.getItem(SAVE_KEY);if(raw){const d=JSON.parse(raw);if(d&&d.areas)return d;}}catch(e){}
   return defaultSave();
 }
-function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){}}
-function getCoins(){try{const v=parseInt(localStorage.getItem(COIN_KEY),10);return isNaN(v)?60:v;}catch(e){return 60;}}
-function setCoins(v){try{localStorage.setItem(COIN_KEY,String(Math.max(0,Math.floor(v))));}catch(e){}updateHUD();}
+function save(){try{SAFE_LS.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){}}
+function getCoins(){try{const v=parseInt(SAFE_LS.getItem(COIN_KEY),10);return isNaN(v)?60:v;}catch(e){return 60;}}
+function setCoins(v){try{SAFE_LS.setItem(COIN_KEY,String(Math.max(0,Math.floor(v))));}catch(e){}updateHUD();}
 
 /* ---------- 状態 ---------- */
 let screen='title';

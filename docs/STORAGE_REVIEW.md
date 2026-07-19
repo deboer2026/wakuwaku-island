@@ -244,3 +244,12 @@ Phase 3Cの目的は、複数キー、旧版共有キー、動的キー、頻繁
 - 監査: active STORAGE errorは2件から0件、warningは8件から6件、問題ファイルは3件から2件へ減少した。SAFE_LS初期化テストの誤検出と重複カウントは0件だった。
 - 保存・復元: 実コードfixtureで`katakana_hi_word=8`と`katakana_hi_char=5`を保存し、新規コンテキストで個別に復元した。SecurityErrorフォールバックでも両キーは衝突せず、`String(value)`互換を維持した。
 - 残存STORAGE対象: `/machi`と、既存作業状態を保持している`/iro`。次はPhase 3E-2で`/machi`を扱う。
+
+## 16. Phase 3E-2 実施結果
+
+- 対象: `/machi`（`public/games/machi_v7.html`）。get 2 / set 2、remove・clear・列挙API・storageイベント・親ページとのストレージ同期はない。
+- キーと形式: `machi_v3_story`は`{areas,zukan,curArea}`のJSON object、`machi_v3_coins`は`String(Math.max(0,Math.floor(v)))`で保存する数値文字列。後者は旧`machi_v6.html`との共有キーで、名称・形式・`parseInt(value,10)`・既定値60を維持した。
+- ライフサイクル: script末尾の`init()`でstoryを読込み、HUD更新時にcoinを読む。建築・報酬・破壊ではcoinを即時保存し、storyは各操作と画面遷移で保存する。非表示時はBGM停止後にstoryを保存、表示復帰時はタイトル以外でBGMを再開し、`pagehide`でもstoryを保存する。二重イベントでもcoin加算・減算は再実行されない。
+- 結果: 標準`SAFE_LS`を1件追加し、ゲームロジック内の直接get/set 4件を0件にした。キー、JSON、数値変換、既定値、条件分岐、保存・読込位置はHEAD版との正規化機械比較で一致した。
+- 監査: active STORAGE error 0件、warning 6→2件、問題ファイル2→1件。active全体error 38件・warning 63件、active 39件を維持し、SAFE_LS初期化テストの誤検出はない。
+- 保存・復元: story JSON、共有coin、v6数値文字列の双方向互換、`visibilitychange`、`pagehide`、SecurityErrorメモリフォールバックをfixtureで確認した。残存対象は既存差分を保持している`/iro`のみで、次はPhase 3Fとする。

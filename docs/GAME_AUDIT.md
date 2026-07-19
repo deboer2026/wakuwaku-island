@@ -88,3 +88,11 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実�
 - 監査: active STORAGE errorは2件から0件、warningは8件から6件、問題ファイルは3件から2件へ減少した。active全体はerror 38件・warning 67件で、39ゲームを維持している。
 - 保存・復元: 実コードfixtureでword=8、char=5を別キーへ保存し、新規コンテキストから個別に復元した。SecurityError時もword=12、char=3をメモリ上で分離して保存・読込でき、値が文字列化されることを確認した。
 - 次段階: Phase 3E-2で`/machi`（`public/games/machi_v7.html`）を扱う。
+
+## Phase 3E-2 実施結果
+
+- 対象: `/machi`（`public/games/machi_v7.html`）。直接localStorage get 2件・set 2件を標準`SAFE_LS`へ移行し、ゲームロジック内の直接アクセスを0件にした。
+- 互換性: `machi_v3_story`のJSON objectと、旧`machi_v6.html`とも共有する`machi_v3_coins`の数値文字列を維持した。初期読込、建築・報酬・破壊時の即時コイン更新、画面遷移、`visibilitychange`、`pagehide`の保存順序は変更していない。
+- 監査: active STORAGE errorは0件のまま、warningは6件から2件、問題ファイルは2件から1件へ減少した。active全体はerror 38件・warning 63件、active 39件を維持した。
+- 保存・復元: fixtureでstory JSONと共有コインを新規コンテキストから復元し、v6形式の数値文字列37の読込と42の書込互換、非表示時のBGM停止→保存、`pagehide`保存でコインが重複増減しないこと、SecurityError時の同一セッション内復元を確認した。
+- 残存STORAGE対象は既存差分を保持している`/iro`のみ。次はPhase 3Fで個別に扱う。
