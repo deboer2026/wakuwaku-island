@@ -4,10 +4,10 @@ Phase 4Bで、Phase 3完了後にactiveゲームへ残る非STORAGE監査問題�
 
 ## 1. Executive Summary
 
-- active 39ルートの非STORAGE指摘はerror 38件、warning 61件、合計99件。37ルート・38ファイルに指摘があり、`/mura`と`/sora-kyoshitsu`は0件である。
+- Phase 4C-1完了後、active 39ルートの非STORAGE指摘はerror 32件、warning 61件、合計93件。36ルート・37ファイルに指摘が残る。
 - STORAGEはerror 0件、warning 0件、問題ファイル0件を維持した。
 - P0は0件。起動不能、主要操作不能、未処理例外、データ破損を監査証拠だけから確定できる指摘はない。
-- P1はCanvas文字描画26 error、入力指定4 error、重複id 2 error、戻る操作43 warningの計32 error / 43 warning。最初はDOM・入力の限定修正、その後Canvas、戻る操作の順を推奨する。
+- Phase 4C-1で入力指定4 errorと重複id 2 errorを解消した。残るP1はCanvas文字描画26 errorと戻る操作43 warningで、次はCanvas描画を扱う。
 - P2はviewport、safe-area、画面回転の6 error / 17 warning、P3は現在のUIから未参照の登録番号重複1 warningである。
 - BGM安全性、パフォーマンス・ライフサイクル、その他カテゴリのactive指摘は0件である。
 
@@ -19,11 +19,11 @@ Phase 4Bで、Phase 3完了後にactiveゲームへ残る非STORAGE監査問題�
 | active | 39 |
 | referenced-secondary | 1 |
 | archived-or-unused | 24 |
-| active error | 38 |
+| active error | 32 |
 | active warning | 61 |
 | active STORAGE error / warning | 0 / 0 |
-| 非STORAGE問題ルート | 37 |
-| 非STORAGE問題ファイル | 38 |
+| 非STORAGE問題ルート | 36 |
+| 非STORAGE問題ファイル | 37 |
 
 `node scripts/audit-games.mjs`と`npm run audit:games`はいずれも同じ値を生成し、既存の非STORAGE指摘により終了コード1となった。
 
@@ -37,26 +37,26 @@ Phase 4Bで、Phase 3完了後にactiveゲームへ残る非STORAGE監査問題�
 | B. BGM安全性 | 0 | 0 | 0 | — |
 | C. ナビゲーション・親iframe通信 | 0 | 43 | 35 | P1 |
 | D. safe-area・画面回転・モバイル表示 | 6 | 17 | 17 | P2 |
-| E. タッチ・入力・操作性 | 4 | 0 | 4 | P1 |
-| F. HTML・アクセシビリティ・メタ情報 | 2 | 1 | 3 | P1 / P3 |
+| E. タッチ・入力・操作性 | 0 | 0 | 0 | 対応済み |
+| F. HTML・アクセシビリティ・メタ情報 | 0 | 1 | 1 | P3 |
 | G. パフォーマンス・ライフサイクル | 0 | 0 | 0 | — |
 | H. その他 | 0 | 0 | 0 | — |
-| **合計** | **38** | **61** | **38（重複除外）** | — |
+| **合計** | **32** | **61** | **37（重複除外）** | — |
 
-カテゴリ別Filesはカテゴリ内の一意ファイル数であり、カテゴリ間で同じHTMLを重複して数える。合計行の38は全カテゴリを通した一意ファイル数である。
+カテゴリ別Filesはカテゴリ内の一意ファイル数であり、カテゴリ間で同じHTMLを重複して数える。合計行の37は全カテゴリを通した一意ファイル数である。
 
 ## 4. Priority Breakdown
 
 | Priority | Error | Warning | Files |
 | -------- | ----: | ------: | ----: |
 | P0 | 0 | 0 | 0 |
-| P1 | 32 | 43 | 36 |
+| P1 | 26 | 43 | 35 |
 | P2 | 6 | 17 | 17 |
 | P3 | 0 | 1 | 1 |
-| **合計** | **38** | **61** | **38（重複除外）** |
+| **合計** | **32** | **61** | **37（重複除外）** |
 
 - P0: 該当なし。実装前のブラウザ再現で起動不能や主要操作不能が確認された場合のみP0へ昇格する。
-- P1: Canvas互換、touch-action、重複id、戻る契約。主要表示・操作または複数ゲームへ影響し、比較的小さな単位へ分割できる。
+- P1: Canvas互換と戻る契約。touch-actionと重複idはPhase 4C-1で対応済み。
 - P2: viewport、safe-area、回転案内。主に端末固有の表示・操作性で、代替操作が存在する。
 - P3: 現行UIから未参照の登録番号重複。実害確認後に修正または監査妥当性を再評価する。
 
@@ -71,7 +71,7 @@ Main categoryは件数の多い分類を基本とし、同数の場合は監査�
 | `/astral-fang` | `public/games/astral_fang_v1.html` | 1 | 3 | D | P1 |
 | `/bike` | `public/games/wakuwaku_bike_v3.html` | 8 | 1 | A | P1 |
 | `/block` | `public/games/block_kuzushi_v4.html` | 0 | 1 | C | P1 |
-| `/doubutsu-puzzle` | `public/games/doubutsu_puzzle_v3.html` | 1 | 1 | E | P1 |
+| `/doubutsu-puzzle` | `public/games/doubutsu_puzzle_v3.html` | 0 | 1 | C | P1 |
 | `/houki` | `public/games/mahou_houki_gp_v5.html` | 3 | 2 | A | P1 |
 | `/ichigo` | `public/games/ichigo_v3.html` | 0 | 1 | C | P1 |
 | `/iro` | `public/games/iro_awase_v3.html` | 0 | 2 | C | P1 |
@@ -84,7 +84,7 @@ Main categoryは件数の多い分類を基本とし、同数の場合は監査�
 | `/kokki` | `public/games/flag_quiz_v2.html` | 0 | 2 | C | P1 |
 | `/kudamono-catch` | `public/games/kudamono_v2.html` | 0 | 2 | C | P1 |
 | `/machi` | `public/games/machi_v7.html` | 11 | 1 | A | P1 |
-| `/mahou-meiro` | `public/games/meiro_v6.html` | 1 | 2 | C | P1 |
+| `/mahou-meiro` | `public/games/meiro_v6.html` | 0 | 2 | C | P1 |
 | `/mahou-nakama` | `public/games/mahou_nakama_v1.html` | 0 | 2 | F | P1 |
 | `/moji` | `public/games/moji_asobi_v2.html` | 0 | 2 | C | P1 |
 | `/mori` | `public/games/mori_v4.html` | 1 | 2 | D | P1 |
@@ -96,22 +96,22 @@ Main categoryは件数の多い分類を基本とし、同数の場合は監査�
 | `/otakara-horihori` | `public/games/otakara_horihori_v1.html` | 1 | 0 | D | P2 |
 | `/oukan-monogatari` | `public/games/oukan_monogatari_v1.html` | 0 | 3 | D | P1 |
 | `/runner` | `public/games/runner_v8.html` | 0 | 2 | C | P1 |
-| `/shabondama` | `public/games/shabondama_v3.html` | 1 | 1 | E | P1 |
+| `/shabondama` | `public/games/shabondama_v3.html` | 0 | 1 | C | P1 |
 | `/shooting` | `public/games/shoot3.html` | 0 | 2 | C | P1 |
-| `/sniper` | `public/games/sniper_v3.html` | 1 | 0 | E | P1 |
-| `/sora` | `public/games/sora_v3.html` | 1 | 2 | C | P1 |
+| `/sniper` | `public/games/sniper_v3.html` | 0 | 0 | — | — |
+| `/sora` | `public/games/sora_v3.html` | 0 | 2 | C | P1 |
 | `/sora-kyoshitsu` | `public/games/sora_kyoshitsu_v1.html` | 0 | 0 | — | — |
-| `/sushi` | `public/games/sushi_v3.html` | 1 | 1 | E | P1 |
+| `/sushi` | `public/games/sushi_v3.html` | 0 | 1 | C | P1 |
 | `/tashizan` | `public/games/tashizan_v2.html` | 0 | 2 | C | P1 |
 | `/tokei-yomi` | `public/games/tokei_yomi_v1.html` | 0 | 2 | C | P1 |
 | `/usagi-carrot` | `public/games/usagi_carrot_v2.html` | 0 | 1 | C | P1 |
-| **合計** | **39 active HTML** | **38** | **61** | — | — |
+| **合計** | **39 active HTML** | **32** | **61** | — | — |
 
 `/mahou-nakama`のwarning 2件のうち1件は上記active HTML、もう1件は`src/pages/TopPage.jsx:1280`にあるため、問題ファイル総数は問題ルート数より1多い。
 
 ## 6. Common Cause Groups
 
-以下は99件を同一ファイル・同一原因でまとめた全件台帳である。`file`はファイル全体判定（JSONの`line: null`）、`—`は監査JSONに個別evidenceがないことを表す。各ルートのactive HTMLは前節の表を正とする。
+以下はPhase 4B時点の99件を同一ファイル・同一原因でまとめた全件台帳である。対応済み項目も削除せず状態を残す。`file`はファイル全体判定（JSONの`line: null`）、`—`は監査JSONに個別evidenceがないことを表す。各ルートのactive HTMLは前節の表を正とする。
 
 | ID | Route / HTML | Severity / rule | Count | Message | Line | Evidence | Category / priority | Fix scope |
 | --- | --- | --- | ---: | --- | --- | --- | --- | --- |
@@ -129,19 +129,19 @@ Main categoryは件数の多い分類を基本とし、同数の場合は監査�
 | D4 | `/okashi-crossing` / `okashi_crossing.html` | warning / SAFE_AREA | 1 | safe-area CSS変数未使用 | file | 対象変数参照を静的検出できない | D / P2 | per-game |
 | D5 | `/kart`, `/astral-fang`, `/oukan-monogatari` / 各active HTML | warning / ORIENTATION | 3 | `orientationchange`だけに依存する可能性 | file | resize等との併用を静的検出できない | D / P2 | shared template + per-game |
 | D6 | `/oukan-monogatari` / `oukan_monogatari_v1.html` | warning / ORIENTATION | 1 | 固定向き前提だが向き案内なし | file | rotate hintを静的検出できない | D / P2 | per-game |
-| E1 | `/doubutsu-puzzle`, `/shabondama`, `/sniper`, `/sushi` / 各active HTML | error / HTML | 4 | `touch-action`指定なし | file | CSS指定を静的検出できない | E / P1 | shared template + per-game |
-| F1 | `/mahou-meiro` / `meiro_v6.html` | error / HTML | 1 | id `char-label`が2回 | 336 | `<div id="char-label">` | F / P1 | per-game |
-| F2 | `/sora` / `sora_v3.html` | error / HTML | 1 | id `backBtn`が2回 | 181 | `<button ... id="backBtn">` | F / P1 | per-game |
+| E1 | `/doubutsu-puzzle`, `/shabondama`, `/sniper`, `/sushi` / 各active HTML | error / HTML | 4 | `touch-action`指定なし | file | CSS指定を静的検出できない | E / P1 | **対応済み (4C-1)**: `.card`は`manipulation`、操作Canvasは`none` |
+| F1 | `/mahou-meiro` / `meiro_v6.html` | error / HTML | 1 | id `char-label`が2回 | 336 | `<div id="char-label">` | F / P1 | **対応済み (4C-1)**: 2見出しを`.option-label`へclass化 |
+| F2 | `/sora` / `sora_v3.html` | error / HTML | 1 | id `backBtn`が2回 | 181 | `<button ... id="backBtn">` | F / P1 | **対応済み (4C-1)**: タイトル側を`titleBackBtn`へ変更 |
 | F3 | `/mahou-nakama` / `src/pages/TopPage.jsx` | warning / REGISTRY | 1 | `SCHOOL_GAMES`のnum `18`が重複し現UIから未参照 | 1280 | `{ id:'g_katachi', ... num:18 ... }` | F / P3 | audit false positive candidate / per-game config |
-| **合計** | **37 routes / 38 files** | — | **99** | — | — | — | **38 error / 61 warning** | — |
+| **Phase 4B基準合計** | **37 routes / 38 files** | — | **99** | — | — | — | **38 error / 61 warning** | **6 error対応済み、93件残存** |
 
 ## 7. Proposed Fix Phases
 
-各Phaseの件数は排他的で、合計が38 error / 61 warningになる。FilesとRoutesはPhase内の一意数であり、Phase間では同じルートを再度扱う場合がある。
+各Phaseの基準件数は排他的で、Phase 4B時点の合計38 error / 61 warningになる。4C-1の6 errorは対応済みで、残存は32 error / 61 warningである。FilesとRoutesはPhase内の一意数であり、Phase間では同じルートを再度扱う場合がある。
 
 | Phase | Scope | Routes | Files | Error | Warning | Risk |
 | ----- | ----- | -----: | ----: | ----: | ------: | ---: |
-| 4C-1 | DOM重複id・touch-action | 6 | 6 | 6 | 0 | 3 |
+| 4C-1 | DOM重複id・touch-action（対応済み） | 6 | 6 | 6 | 0 | 3 |
 | 4C-2 | Canvas絵文字・記号描画 | 5 | 5 | 26 | 0 | 4 |
 | 4C-3 | 戻る操作・親iframe通信 | 35 | 35 | 0 | 43 | 4 |
 | 4C-4 | viewport・safe-area・回転案内 | 17 | 17 | 6 | 17 | 4 |
@@ -150,13 +150,13 @@ Main categoryは件数の多い分類を基本とし、同数の場合は監査�
 
 | Phase | 対象ルート | 難易度 | 回帰リスク | ブラウザ負荷 | 推奨順 | コミット方針 |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
-| 4C-1 | `/doubutsu-puzzle`, `/shabondama`, `/sniper`, `/sushi`, `/mahou-meiro`, `/sora` | 2 | 3 | 3 | 1 | touch-action 4件と重複id 2件を別コミットに分割推奨 |
+| 4C-1 | `/doubutsu-puzzle`, `/shabondama`, `/sniper`, `/sushi`, `/mahou-meiro`, `/sora` | 2 | 3 | 3 | 完了 | 1コミットで限定修正済み |
 | 4C-2 | `/machi`, `/houki`, `/okashi-crossing`, `/animal-soccer`, `/bike` | 3 | 4 | 5 | 2 | 描画差が大きいためゲーム単位または2〜3バッチへ分割 |
 | 4C-3 | C1〜C3の35ルート | 3 | 4 | 5 | 3 | 戻る契約を先に確定し、5〜8ゲーム程度のバッチへ分割 |
 | 4C-4 | `/animal-block`, `/astral-fang`, `/houki`, `/iro`, `/kakurenbo`, `/kart`, `/katakana-asobi`, `/kazu-asobi`, `/machi`, `/moji`, `/mori`, `/neon-drive`, `/okashi-crossing`, `/otakara-horihori`, `/oukan-monogatari`, `/tashizan`, `/tokei-yomi` | 3 | 4 | 5 | 4 | viewport、safe-area、orientationを別コミットへ分割 |
 | 4C-5 | `/mahou-nakama`（`TopPage.jsx`） | 2 | 2 | 2 | 5 | 実害確認後、1コミット。監査変更とは分離 |
 
-4C-1を最初にする理由は、6ファイルに限定でき、重複idのDOM選択影響とタッチ操作のブラウザ既定動作を早期に安定化できるためである。P0は0件のため、緊急修正Phaseは設けない。
+4C-1は6ファイルの限定修正として完了した。P0は0件のため緊急修正Phaseは設けず、次は4C-2のCanvas描画へ進む。
 
 ## 8. False Positive Candidates
 
@@ -176,6 +176,14 @@ Main categoryは件数の多い分類を基本とし、同数の場合は監査�
 - 4C-5: TopPageの現行・将来データ参照箇所を確認し、表示順、番号表示、選択状態に影響がないことを確認する。
 - 各PhaseでSTORAGE 0 / 0、保存キー・形式、BGM、ゲームロジックの非変更を維持する。
 
-## 10. Recommended Next Action
+## 10. Phase 4C-1 Result
 
-次はPhase 4C-1として、まず`/mahou-meiro`と`/sora`の重複idを挙動確認し、続いて`/doubutsu-puzzle`、`/shabondama`、`/sniper`、`/sushi`のtouch-actionを限定修正する。実装前に各DOM参照先と入力イベントをHEAD版から記録し、2コミットへ分割する。
+- 重複id: `/mahou-meiro`の2見出しを`.option-label`へclass化し、`/sora`のタイトルボタンを`titleBackBtn`へ変更してHUDボタンとイベントを分離した。静的・生成文字列を含む重複idは0件、リテラルID参照は整合した。
+- touch-action: `/doubutsu-puzzle`の`.card`へ`manipulation`、`/shabondama`・`/sniper`・`/sushi`の操作Canvasへ`none`を設定した。`html`/`body`には追加せず、既存スクロール領域と入力イベントを変更していない。
+- 監査: active error 38→32、warning 61維持。対象6 errorは0、STORAGEは0 / 0、active 39を維持した。
+- 検証: 全6インラインscriptの`node --check`、HEAD正規化比較、ID・参照整合、touch-action競合、DOM／イベントfixture 22項目に成功した。
+- ブラウザ: ホスト側の開発サーバーは最新HTMLを200で返したが、Browser環境から専用ローカルURLへの接続が拒否されたため実画面操作は未実施。安全制約を迂回せずfixtureで補完した。
+
+## 11. Recommended Next Action
+
+次はPhase 4C-2として、`/machi`、`/houki`、`/okashi-crossing`、`/animal-soccer`、`/bike`のCanvas絵文字・記号描画26 errorをゲーム単位または2〜3バッチへ分割して修正する。

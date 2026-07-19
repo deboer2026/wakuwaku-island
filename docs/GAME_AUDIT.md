@@ -122,3 +122,12 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実�
 - P0は0件、P1は32 error / 43 warning。P2は6 error / 17 warning、P3は1 warningと判定した。
 - 詳細なルート別台帳、共通原因、false positive候補、修正単位は`docs/NON_STORAGE_REVIEW.md`を参照する。
 - 次はPhase 4C-1として重複idとtouch-actionの6ファイルを限定修正し、その後Canvas、戻る操作、モバイル表示の順に進める。
+
+## Phase 4C-1: 重複ID・touch-action修正（2026-07-19）
+
+- 対象: `/mahou-meiro`、`/sora`の重複id 2件と、`/doubutsu-puzzle`、`/shabondama`、`/sniper`、`/sushi`のtouch-action不足4件を最小差分で修正した。
+- ID: `/mahou-meiro`の同種見出しをclass化し、`/sora`のタイトル用とHUD用の戻るボタンを一意IDと独立イベントへ分離した。重複idは0件になった。
+- 入力: タップ専用パズルカードへ`touch-action: manipulation`、操作Canvasへ`touch-action: none`を限定設定し、ページ全体、イベントリスナー、`preventDefault`は変更していない。
+- 監査: active error 38→32、warning 61維持。STORAGE 0 / 0、active 39を維持した。
+- 検証: 全script構文、HEAD正規化比較、ID参照、DOM／イベントfixture 22項目、client/SSRビルド、39ルートプリレンダを確認した。ブラウザ実画面は専用ローカルURLへの接続拒否により未実施で、fixtureで補完した。
+- 次はPhase 4C-2として、5ゲームのCanvas絵文字・記号描画26 errorを扱う。
