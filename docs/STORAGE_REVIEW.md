@@ -235,3 +235,12 @@ Phase 3Cの目的は、複数キー、旧版共有キー、動的キー、頻繁
 - `/jewelry-master`: ブラウザで起動、マップ、ゲーム画面、SVG描画、BGMを確認した。注文成功後のコイン10とコレクション1/60を新規ページで復元した。`jm8_save`、`jm_col`、`jm_hs`は実コードfixtureでも保存・再読込を確認した。
 - 共通: localStorageがSecurityErrorを投げるfixtureでもメモリフォールバックのget/setを確認した。ブラウザコンソールエラーとSecurityErrorは0件だった。
 - 次段階: Phase 3Eで`katakana_asobi_v1.html`と`machi_v7.html`を個別に扱う。
+
+## 15. Phase 3E-1 実施結果
+
+- 対象: `/katakana-asobi`（`public/games/katakana_asobi_v1.html`）のget 3 / set 1。remove、clear、列挙APIは使用していない。
+- 動的キー: `hiKey()`の`mode==='word'?'katakana_hi_word':'katakana_hi_char'`をHEAD版のまま維持した。wordモードは`katakana_hi_word`、charモードは`katakana_hi_char`へ保存する。
+- 結果: 標準`SAFE_LS`を1件追加し、ゲームロジック内の直接get/setを0件にした。キー式、get/set件数、`parseInt`3件、`||'0'`3件、保存関数と読込関数の呼出位置、終了時の新記録分岐はHEAD版と機械比較で一致した。JSON、`Number`、`String`、`??`はゲームロジックで使用していない。
+- 監査: active STORAGE errorは2件から0件、warningは8件から6件、問題ファイルは3件から2件へ減少した。SAFE_LS初期化テストの誤検出と重複カウントは0件だった。
+- 保存・復元: 実コードfixtureで`katakana_hi_word=8`と`katakana_hi_char=5`を保存し、新規コンテキストで個別に復元した。SecurityErrorフォールバックでも両キーは衝突せず、`String(value)`互換を維持した。
+- 残存STORAGE対象: `/machi`と、既存作業状態を保持している`/iro`。次はPhase 3E-2で`/machi`を扱う。

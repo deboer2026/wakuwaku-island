@@ -462,15 +462,42 @@ const TOTAL=10;
 let mode='word';
 let queue=[],current=null,qIdx=0,score=0,locked=false;
 
+const SAFE_LS = (function () {
+  try {
+    const testKey = "__ww_storage_test__";
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key)
+          ? memory[key]
+          : null;
+      },
+
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
+
 function shuffle(a){return [...a].sort(()=>Math.random()-.5);}
 function hiKey(){return mode==='word'?'katakana_hi_word':'katakana_hi_char';}
-function getHi(){return parseInt(localStorage.getItem(hiKey())||'0');}
+function getHi(){return parseInt(SAFE_LS.getItem(hiKey())||'0');}
 function getTitleHi(){
-  const w=parseInt(localStorage.getItem('katakana_hi_word')||'0');
-  const c=parseInt(localStorage.getItem('katakana_hi_char')||'0');
+  const w=parseInt(SAFE_LS.getItem('katakana_hi_word')||'0');
+  const c=parseInt(SAFE_LS.getItem('katakana_hi_char')||'0');
   return Math.max(w,c);
 }
-function saveHi(v){localStorage.setItem(hiKey(),v);}
+function saveHi(v){SAFE_LS.setItem(hiKey(),v);}
 function updateHiBadge(){document.getElementById('hi-title').textContent='🏆 ハイスコア: '+getTitleHi()+'もん';}
 
 function initStars(){

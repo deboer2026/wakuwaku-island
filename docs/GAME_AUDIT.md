@@ -79,3 +79,12 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実�
 - 監査: active STORAGE errorは14件から2件、warningは10件から8件、問題ファイルは5件から3件へ減少した。active全体はerror 40件・warning 69件で、39ゲームを維持している。
 - 保存・復元: `/shabondama`はブラウザでキャラクター変更を新規ページでも復元し、進行JSONとハイスコアは実コードfixtureで確認した。`/jewelry-master`は実プレイでコインとコレクションを保存し、新規ページで復元した。SAVE JSON、コレクション、ハイスコアは実コードfixtureでも確認した。
 - 次段階: Phase 3Eで動的キーの`katakana_asobi_v1.html`と、頻繁な同期保存を持つ`machi_v7.html`を個別に扱う。
+
+## Phase 3E-1 実施結果
+
+- 対象: `/katakana-asobi`（`public/games/katakana_asobi_v1.html`）の直接localStorage get 3件・set 1件。
+- 動的キー: `mode==='word'?'katakana_hi_word':'katakana_hi_char'`を変更せず維持し、実キー`katakana_hi_word`と`katakana_hi_char`が衝突しないことを確認した。
+- 結果: HTMLへ標準`SAFE_LS`を1件追加し、ゲームロジック内の直接get/setを0件にした。数値文字列形式、`parseInt(...||'0')`、読込・保存タイミング、条件分岐は変更していない。
+- 監査: active STORAGE errorは2件から0件、warningは8件から6件、問題ファイルは3件から2件へ減少した。active全体はerror 38件・warning 67件で、39ゲームを維持している。
+- 保存・復元: 実コードfixtureでword=8、char=5を別キーへ保存し、新規コンテキストから個別に復元した。SecurityError時もword=12、char=3をメモリ上で分離して保存・読込でき、値が文字列化されることを確認した。
+- 次段階: Phase 3E-2で`/machi`（`public/games/machi_v7.html`）を扱う。
