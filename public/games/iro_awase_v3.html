@@ -511,13 +511,40 @@ const MIX3=[
 ];
 const NAME=['あか','あお','きいろ','みどり','オレンジ','むらさき','ピンク','みずいろ'];
 
+const SAFE_LS = (function () {
+  try {
+    const testKey = "__ww_storage_test__";
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key)
+          ? memory[key]
+          : null;
+      },
+
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
+
 /* ===== Game state ===== */
 const TOTAL=10;
 let queue=[],current=null,qIdx=0,score=0,locked=false,mode='easy';
 function shuffle(a){return [...a].sort(()=>Math.random()-.5);}
 const HI_KEYS={easy:'iro_hi',hard:'iro_hi_hard'};
-function getHi(m){return parseInt(localStorage.getItem(HI_KEYS[m])||'0');}
-function saveHi(m,v){localStorage.setItem(HI_KEYS[m],v);}
+function getHi(m){return parseInt(SAFE_LS.getItem(HI_KEYS[m])||'0');}
+function saveHi(m,v){SAFE_LS.setItem(HI_KEYS[m],v);}
 function updateHiBadges(){
   document.getElementById('hi-easy').textContent='🏆 '+getHi('easy');
   document.getElementById('hi-hard').textContent='🏆 '+getHi('hard');

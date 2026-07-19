@@ -96,3 +96,11 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実�
 - 監査: active STORAGE errorは0件のまま、warningは6件から2件、問題ファイルは2件から1件へ減少した。active全体はerror 38件・warning 63件、active 39件を維持した。
 - 保存・復元: fixtureでstory JSONと共有コインを新規コンテキストから復元し、v6形式の数値文字列37の読込と42の書込互換、非表示時のBGM停止→保存、`pagehide`保存でコインが重複増減しないこと、SecurityError時の同一セッション内復元を確認した。
 - 残存STORAGE対象は既存差分を保持している`/iro`のみ。次はPhase 3Fで個別に扱う。
+
+## Phase 3F 実施結果
+
+- 対象: `/iro`（`public/games/iro_awase_v3.html`）。開始時は変更扱いだったが、HEAD blobと作業ファイルのハッシュはともに`42c8eb1c62ee714b103d92f44e092e8f04760d79`で、内容差分は0行だった。
+- 採用変更: 標準`SAFE_LS`を1件追加し、`getHi()`と`saveHi()`の直接localStorage get 1件・set 1件だけを置換した。除外・復元した既存変更はない。
+- 互換性: `iro_hi`と`iro_hi_hard`、数値文字列、`parseInt(...||'0')`、既定値0、タイトル表示時の読込、ゲーム終了時に`score>hi`の場合だけ保存する条件を維持した。
+- 監査: active STORAGE error 0件・warning 2件から、error 0件・warning 0件になった。active全体はerror 38件・warning 61件、active 39件を維持し、Phase 3のSTORAGE対応を完了した。
+- 保存・復元: fixtureでeasy=8、hard=5を独立保存し、新規コンテキストから復元した。SecurityError時もeasy=7、hard=3を分離して保存・読込でき、null・文字列化・removeItem互換を確認した。

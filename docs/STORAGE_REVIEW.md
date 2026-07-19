@@ -253,3 +253,11 @@ Phase 3Cの目的は、複数キー、旧版共有キー、動的キー、頻繁
 - 結果: 標準`SAFE_LS`を1件追加し、ゲームロジック内の直接get/set 4件を0件にした。キー、JSON、数値変換、既定値、条件分岐、保存・読込位置はHEAD版との正規化機械比較で一致した。
 - 監査: active STORAGE error 0件、warning 6→2件、問題ファイル2→1件。active全体error 38件・warning 63件、active 39件を維持し、SAFE_LS初期化テストの誤検出はない。
 - 保存・復元: story JSON、共有coin、v6数値文字列の双方向互換、`visibilitychange`、`pagehide`、SecurityErrorメモリフォールバックをfixtureで確認した。残存対象は既存差分を保持している`/iro`のみで、次はPhase 3Fとする。
+
+## 17. Phase 3F 実施結果
+
+- 対象: `/iro`（`public/games/iro_awase_v3.html`）。開始時のGit変更表示を精査した結果、HEADと作業ファイルは同一blob・同一ハッシュで、改行コード差分、文字コード差分、コメント追加、整形、UI・CSS・Canvas・BGM変更を含む内容差分はなかった。
+- STORAGE仕様: `HI_KEYS={easy:'iro_hi',hard:'iro_hi_hard'}`、`getHi(m)`は`parseInt(value||'0')`、`saveHi(m,v)`は値をそのままsetItemへ渡す。タイトル初期化とタイトル復帰時に読込み、ゲーム終了時の`score>hi`だけで選択中モードの最高値を保存する。remove・clear・列挙API・storageイベント・ページライフサイクル保存はない。
+- 採用変更: 標準`SAFE_LS`定義1件と、get/set各1件の呼び出し先変更だけ。修正・除外・HEADへ復元した既存変更はない。SAFE_LS定義を除去して呼び出し先を戻す正規化比較はHEAD版と完全一致した。
+- 監査: `/iro`のSTORAGE error 0・warning 2→error 0・warning 0。active STORAGEはerror 0・warning 0、問題ファイル0になった。active全体error 38・warning 61、active 39を維持し、SAFE_LSテストの誤検出はない。
+- 保存・復元: 実コードfixtureで`iro_hi=8`と`iro_hi_hard=5`を独立保存し、新規コンテキストから復元した。SecurityErrorフォールバックでも両キーの分離、既定値0、`String(value)`、null、removeItem互換を確認した。Phase 3のactive STORAGE対応は完了した。
