@@ -1289,11 +1289,34 @@ let phase=PHASE.ARRIVE;
 let score=0,lives=3,combo=0,currentQ=null,selGem=null,selAcc=null;
 let timerIv=null,timerLeft=100,running=false;
 let curDay=1,custIdx=0,dayMiss=0,roundNum=0,timeLimit=20;
+const SAFE_LS = (function () {
+  try {
+    const testKey = "__ww_storage_test__";
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key)
+          ? memory[key]
+          : null;
+      },
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
 const SAVE_KEY='jm8_save';
 function loadSave(){
   const d={stars:{},coins:0,decor:{owned:[],wall:'none',carpet:false,chand:false,caseg:false},rainbowSeen:false};
   try{
-    const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');
+    const s=JSON.parse(SAFE_LS.getItem(SAVE_KEY)||'{}');
     Object.assign(d,s);
     d.decor=Object.assign({owned:[],wall:'none',carpet:false,chand:false,caseg:false},s.decor||{});
     d.stars=s.stars||{};
@@ -1301,7 +1324,7 @@ function loadSave(){
   return d;
 }
 let SAVE=loadSave();
-function persist(){localStorage.setItem(SAVE_KEY,JSON.stringify(SAVE));}
+function persist(){SAFE_LS.setItem(SAVE_KEY,JSON.stringify(SAVE));}
 const $=id=>document.getElementById(id);
 
 // ===== 初期化 =====
@@ -1425,8 +1448,8 @@ function dayClear(){
   if((SAVE.stars[curDay]||0)<stars)SAVE.stars[curDay]=stars;
   const bonus=stars*20;
   SAVE.coins+=bonus;persist();
-  const hs=parseInt(localStorage.getItem('jm_hs')||'0');
-  if(score>hs)localStorage.setItem('jm_hs',score);
+  const hs=parseInt(SAFE_LS.getItem('jm_hs')||'0');
+  if(score>hs)SAFE_LS.setItem('jm_hs',score);
   $('dr-day').textContent='Day '+curDay+' クリア！';
   $('dr-stars').innerHTML=[1,2,3].map(i=>'<span class="dr-star '+(i<=stars?'on':'')+'" style="animation-delay:'+(i*0.25)+'s">★</span>').join('');
   $('dr-body').innerHTML='⭐ スコア '+score.toLocaleString()+'<br>🪙 コインボーナス +'+bonus+'（ぜんぶで '+SAVE.coins+'）';
@@ -1781,8 +1804,8 @@ function allClear(){
   running=false;clearInterval(timerIv);
   sfx('fanfare');
   $('reaction-ov').classList.remove('show');
-  const hs=parseInt(localStorage.getItem('jm_hs')||'0');
-  if(score>hs)localStorage.setItem('jm_hs',score);
+  const hs=parseInt(SAFE_LS.getItem('jm_hs')||'0');
+  if(score>hs)SAFE_LS.setItem('jm_hs',score);
   // all-clear-ovを表示
   const ov=document.getElementById('all-clear-ov');
   if(ov){
@@ -1810,11 +1833,11 @@ function restartGame(){
 
 
 // ===== コレクション =====
-function loadCol(){try{return JSON.parse(localStorage.getItem('jm_col')||'[]');}catch(e){return [];}}
+function loadCol(){try{return JSON.parse(SAFE_LS.getItem('jm_col')||'[]');}catch(e){return [];}}
 function addCollection(gid,aid){
   const c=loadCol();const k=gid+'_'+aid;
   if(c.includes(k))return false;
-  c.push(k);localStorage.setItem('jm_col',JSON.stringify(c));
+  c.push(k);SAFE_LS.setItem('jm_col',JSON.stringify(c));
   updateColCount();return true;
 }
 function updateColCount(){

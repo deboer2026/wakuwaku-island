@@ -71,3 +71,11 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実�
 - 監査: active STORAGE errorは20件から14件、warningは12件から10件、問題ファイルは7件から5件へ減少した。active全体はerror 52件・warning 71件で、39ゲームを維持している。
 - 保存・復元: `/shooting`はブラウザでマップ進行表示を新規ページでも確認し、`shooting_hs2`と`shooting_v3_progress`は実コードfixtureで保存・再読込を確認した。`/sora`はブラウザでキャラクター変更を新規ページでも復元し、進行JSONと`best`は実コードfixtureで確認した。両ゲームとも起動・Canvas・BGM・SecurityErrorなしを確認した。
 - 次バッチ: Phase 3D-3で`public/games/shabondama_v3.html`と`public/games/jewelry_master_v8.html`を扱う。
+
+## Phase 3D-3 実施結果
+
+- 対象: `/shabondama`（`public/games/shabondama_v3.html`）と`/jewelry-master`（`public/games/jewelry_master_v8.html`）の直接localStorage get 7件・set 7件。
+- 結果: 両HTMLへ標準`SAFE_LS`を1件ずつ追加し、ゲームロジック内の直接get/setを0件にした。保存キー、JSON構造、数値変換、読込・保存タイミング、分岐は変更していない。
+- 監査: active STORAGE errorは14件から2件、warningは10件から8件、問題ファイルは5件から3件へ減少した。active全体はerror 40件・warning 69件で、39ゲームを維持している。
+- 保存・復元: `/shabondama`はブラウザでキャラクター変更を新規ページでも復元し、進行JSONとハイスコアは実コードfixtureで確認した。`/jewelry-master`は実プレイでコインとコレクションを保存し、新規ページで復元した。SAVE JSON、コレクション、ハイスコアは実コードfixtureでも確認した。
+- 次段階: Phase 3Eで動的キーの`katakana_asobi_v1.html`と、頻繁な同期保存を持つ`machi_v7.html`を個別に扱う。

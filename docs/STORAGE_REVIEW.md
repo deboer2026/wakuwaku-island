@@ -225,3 +225,13 @@ Phase 3Cの目的は、複数キー、旧版共有キー、動的キー、頻繁
 - `/sora`: ブラウザでキャラクターをプリンセスからプリンスへ変更し、新規ページでプリンスの選択復元を確認した。ステージ開始、Canvas、BGMも確認した。`{stars:{0:2},char:'prince'}`と`best`値88は実コードfixtureで保存・再読込を確認した。
 - 共通: localStorageがSecurityErrorを投げるfixtureでもメモリフォールバックのget/setを確認した。ブラウザコンソールエラーとSecurityErrorは0件だった。
 - 次バッチ: Phase 3D-3で`public/games/shabondama_v3.html`と`public/games/jewelry_master_v8.html`を扱う。
+
+## 14. Phase 3D-3 実施結果
+
+- 対象: `/shabondama`（get 3 / set 3）と`/jewelry-master`（get 4 / set 4）の合計14箇所。
+- 結果: 両HTMLへ標準`SAFE_LS`を1件ずつ追加し、ゲームロジック内の直接get/setを0件にした。キー数、JSON.parse/stringify、`parseInt`、デフォルト値、保存関数の呼出位置と条件分岐はHEAD版と機械比較で一致した。
+- 監査: active STORAGE errorは14件から2件、warningは10件から8件、問題ファイルは5件から3件へ減少した。監査スクリプトの変更は不要で、SAFE_LS初期化テストの誤検出と重複カウントは0件だった。
+- `/shabondama`: ブラウザで起動、キャラクター選択、マップ、ステージ開始、Canvas、BGMを確認した。キャラクターを「にゃんた」へ変更し、新規ページで復元した。進行`{stars,unlocked}`、キャラクターID、ハイスコアは実コードfixtureでも保存・再読込を確認した。
+- `/jewelry-master`: ブラウザで起動、マップ、ゲーム画面、SVG描画、BGMを確認した。注文成功後のコイン10とコレクション1/60を新規ページで復元した。`jm8_save`、`jm_col`、`jm_hs`は実コードfixtureでも保存・再読込を確認した。
+- 共通: localStorageがSecurityErrorを投げるfixtureでもメモリフォールバックのget/setを確認した。ブラウザコンソールエラーとSecurityErrorは0件だった。
+- 次段階: Phase 3Eで`katakana_asobi_v1.html`と`machi_v7.html`を個別に扱う。

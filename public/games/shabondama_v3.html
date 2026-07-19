@@ -277,16 +277,40 @@ let progress={stars:[0,0,0,0,0,0,0,0],unlocked:1};
 const cv=document.getElementById('cv');
 const ctx=cv.getContext('2d');
 
+const SAFE_LS = (function () {
+  try {
+    const testKey = "__ww_storage_test__";
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    const memory = {};
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(memory, key)
+          ? memory[key]
+          : null;
+      },
+      setItem(key, value) {
+        memory[key] = String(value);
+      },
+      removeItem(key) {
+        delete memory[key];
+      }
+    };
+  }
+})();
+
 // ================= セーブ =================
 function loadProgress(){
-  try{const p=JSON.parse(localStorage.getItem('shabondama_v3_progress'));
+  try{const p=JSON.parse(SAFE_LS.getItem('shabondama_v3_progress'));
     if(p&&Array.isArray(p.stars)){progress.stars=p.stars.concat([0,0,0,0,0,0,0,0]).slice(0,8);progress.unlocked=p.unlocked||1;}
   }catch(e){}
-  const c=localStorage.getItem('shabondama_v3_char'); if(c){const f=CHARACTERS.find(x=>x.id===c); if(f)curChar=f;}
+  const c=SAFE_LS.getItem('shabondama_v3_char'); if(c){const f=CHARACTERS.find(x=>x.id===c); if(f)curChar=f;}
 }
-function saveProgress(){try{localStorage.setItem('shabondama_v3_progress',JSON.stringify(progress));}catch(e){}}
-function getHs(){return parseInt(localStorage.getItem('shabondama_hs')||'0');}
-function saveHs(s){try{localStorage.setItem('shabondama_hs',s);}catch(e){}}
+function saveProgress(){try{SAFE_LS.setItem('shabondama_v3_progress',JSON.stringify(progress));}catch(e){}}
+function getHs(){return parseInt(SAFE_LS.getItem('shabondama_hs')||'0');}
+function saveHs(s){try{SAFE_LS.setItem('shabondama_hs',s);}catch(e){}}
 
 // ================= 初期化 =================
 function init(){
@@ -349,7 +373,7 @@ function buildCharCards(){
 function markSelectedChar(){
   document.querySelectorAll('.char-card').forEach(el=>el.classList.toggle('sel',el.dataset.id===curChar.id));
 }
-function saveCharChoice(){try{localStorage.setItem('shabondama_v3_char',curChar.id);}catch(e){}}
+function saveCharChoice(){try{SAFE_LS.setItem('shabondama_v3_char',curChar.id);}catch(e){}}
 
 // ================= マップ配置 =================
 function layoutMap(){
