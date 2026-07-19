@@ -114,3 +114,11 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実�
 - 保存互換性: 既存キー、JSON構造、数値・文字列形式、既定値、読込・保存タイミング、ハイスコア更新条件を維持した。固定キー、複数キー、旧版共有キー、動的キー、ページライフサイクル保存は個別fixtureとHEAD比較で確認した。
 - 残る非STORAGE問題: active error 38件（HTML 12、CANVAS 26）、warning 61件（REGISTRY 1、NAV 43、SAFE_AREA 13、ORIENTATION 4）。次のPhase 4Bで優先順位を付ける。
 - 運用: 新規ゲームは初回実装からSAFE_LSを使用し、直接localStorageを追加しない。監査、構文検査、正常保存・復元、SecurityErrorフォールバックを登録・変更時の必須確認とする。
+
+## Phase 4B: 非STORAGE問題の分類（2026-07-19）
+
+- activeの非STORAGE指摘38 error / 61 warningを全件分類した。STORAGEは0 / 0を維持している。
+- 主な内訳はCanvas描画26 error、戻る操作43 warning、モバイル表示6 error / 17 warning、入力4 error、HTML・メタ2 error / 1 warningである。
+- P0は0件、P1は32 error / 43 warning。P2は6 error / 17 warning、P3は1 warningと判定した。
+- 詳細なルート別台帳、共通原因、false positive候補、修正単位は`docs/NON_STORAGE_REVIEW.md`を参照する。
+- 次はPhase 4C-1として重複idとtouch-actionの6ファイルを限定修正し、その後Canvas、戻る操作、モバイル表示の順に進める。
