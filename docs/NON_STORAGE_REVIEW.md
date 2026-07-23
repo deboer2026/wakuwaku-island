@@ -4,10 +4,10 @@ Phase 4Bで、Phase 3完了後にactiveゲームへ残る非STORAGE監査問題�
 
 ## 1. Executive Summary
 
-- Phase 4C-2完了後、active 39ルートの非STORAGE指摘はerror 6件、warning 61件、合計67件。36ルート・37ファイルに指摘が残る。
+- Phase 4C-3A完了後、active 39ルートの非STORAGE指摘はerror 6件、warning 52件、合計58件。32ルート・33ファイルに指摘が残る。
 - STORAGEはerror 0件、warning 0件、問題ファイル0件を維持した。
 - P0は0件。起動不能、主要操作不能、未処理例外、データ破損を監査証拠だけから確定できる指摘はない。
-- Phase 4C-1で入力指定4 errorと重複id 2 error、Phase 4C-2でCanvas文字描画26 errorを解消した。残るP1は戻る操作43 warningである。
+- Phase 4C-1で入力指定4 errorと重複id 2 error、Phase 4C-2でCanvas文字描画26 errorを解消した。Phase 4C-3Aでは戻る操作のfalse positive候補10件を精査し、9件を監査ルールで解消、1件を実修正対象として維持した。残るP1は戻る操作34 warningである。
 - P2はviewport、safe-area、画面回転の6 error / 17 warning、P3は現在のUIから未参照の登録番号重複1 warningである。
 - BGM安全性、パフォーマンス・ライフサイクル、その他カテゴリのactive指摘は0件である。
 
@@ -20,10 +20,10 @@ Phase 4Bで、Phase 3完了後にactiveゲームへ残る非STORAGE監査問題�
 | referenced-secondary | 1 |
 | archived-or-unused | 24 |
 | active error | 6 |
-| active warning | 61 |
+| active warning | 52 |
 | active STORAGE error / warning | 0 / 0 |
-| 非STORAGE問題ルート | 36 |
-| 非STORAGE問題ファイル | 37 |
+| 非STORAGE問題ルート | 32 |
+| 非STORAGE問題ファイル | 33 |
 
 `node scripts/audit-games.mjs`と`npm run audit:games`はいずれも同じ値を生成し、既存の非STORAGE指摘により終了コード1となった。
 
@@ -35,13 +35,13 @@ Phase 4Bで、Phase 3完了後にactiveゲームへ残る非STORAGE監査問題�
 | -------- | ----: | ------: | ----: | -------- |
 | A. Canvas絵文字・環境依存描画 | 0 | 0 | 0 | 対応済み |
 | B. BGM安全性 | 0 | 0 | 0 | — |
-| C. ナビゲーション・親iframe通信 | 0 | 43 | 35 | P1 |
+| C. ナビゲーション・親iframe通信 | 0 | 34 | 26 | P1 |
 | D. safe-area・画面回転・モバイル表示 | 6 | 17 | 17 | P2 |
 | E. タッチ・入力・操作性 | 0 | 0 | 0 | 対応済み |
 | F. HTML・アクセシビリティ・メタ情報 | 0 | 1 | 1 | P3 |
 | G. パフォーマンス・ライフサイクル | 0 | 0 | 0 | — |
 | H. その他 | 0 | 0 | 0 | — |
-| **合計** | **6** | **61** | **37（重複除外）** | — |
+| **合計** | **6** | **52** | **33（重複除外）** | — |
 
 カテゴリ別Filesはカテゴリ内の一意ファイル数であり、カテゴリ間で同じHTMLを重複して数える。合計行の37は全カテゴリを通した一意ファイル数である。
 
@@ -50,10 +50,10 @@ Phase 4Bで、Phase 3完了後にactiveゲームへ残る非STORAGE監査問題�
 | Priority | Error | Warning | Files |
 | -------- | ----: | ------: | ----: |
 | P0 | 0 | 0 | 0 |
-| P1 | 0 | 43 | 35 |
+| P1 | 0 | 34 | 26 |
 | P2 | 6 | 17 | 17 |
 | P3 | 0 | 1 | 1 |
-| **合計** | **6** | **61** | **37（重複除外）** |
+| **合計** | **6** | **52** | **33（重複除外）** |
 
 - P0: 該当なし。実装前のブラウザ再現で起動不能や主要操作不能が確認された場合のみP0へ昇格する。
 - P1: 戻る契約。touch-actionと重複idはPhase 4C-1、Canvas互換はPhase 4C-2で対応済み。
@@ -71,27 +71,27 @@ Main categoryは件数の多い分類を基本とし、同数の場合は監査�
 | `/astral-fang` | `public/games/astral_fang_v1.html` | 1 | 3 | D | P1 |
 | `/bike` | `public/games/wakuwaku_bike_v3.html` | 0 | 1 | C | P1 |
 | `/block` | `public/games/block_kuzushi_v4.html` | 0 | 1 | C | P1 |
-| `/doubutsu-puzzle` | `public/games/doubutsu_puzzle_v3.html` | 0 | 1 | C | P1 |
+| `/doubutsu-puzzle` | `public/games/doubutsu_puzzle_v3.html` | 0 | 0 | — | — |
 | `/houki` | `public/games/mahou_houki_gp_v5.html` | 0 | 2 | C | P1 |
 | `/ichigo` | `public/games/ichigo_v3.html` | 0 | 1 | C | P1 |
-| `/iro` | `public/games/iro_awase_v3.html` | 0 | 2 | C | P1 |
+| `/iro` | `public/games/iro_awase_v3.html` | 0 | 1 | D | P2 |
 | `/jewelry-master` | `public/games/jewelry_master_v8.html` | 0 | 2 | C | P1 |
 | `/kakurenbo` | `public/games/kakurenbo_v2.html` | 0 | 2 | C | P1 |
 | `/kart` | `public/games/animal_kart_v7.html` | 0 | 3 | D | P1 |
-| `/katachi` | `public/games/katachi_awase_v1.html` | 0 | 1 | C | P1 |
-| `/katakana-asobi` | `public/games/katakana_asobi_v1.html` | 0 | 2 | C | P1 |
+| `/katachi` | `public/games/katachi_awase_v1.html` | 0 | 0 | — | — |
+| `/katakana-asobi` | `public/games/katakana_asobi_v1.html` | 0 | 1 | D | P2 |
 | `/kazu-asobi` | `public/games/kazu_asobi_v3.html` | 0 | 2 | C | P1 |
 | `/kokki` | `public/games/flag_quiz_v2.html` | 0 | 2 | C | P1 |
 | `/kudamono-catch` | `public/games/kudamono_v2.html` | 0 | 2 | C | P1 |
 | `/machi` | `public/games/machi_v7.html` | 1 | 1 | D | P1 |
 | `/mahou-meiro` | `public/games/meiro_v6.html` | 0 | 2 | C | P1 |
 | `/mahou-nakama` | `public/games/mahou_nakama_v1.html` | 0 | 2 | F | P1 |
-| `/moji` | `public/games/moji_asobi_v2.html` | 0 | 2 | C | P1 |
+| `/moji` | `public/games/moji_asobi_v2.html` | 0 | 1 | D | P2 |
 | `/mori` | `public/games/mori_v4.html` | 1 | 2 | D | P1 |
 | `/mura` | `public/games/mura_v1.html` | 0 | 0 | — | — |
 | `/neko-chou` | `public/games/neko_chou_v1.html` | 0 | 1 | C | P1 |
 | `/neon-drive` | `public/games/neon_drive_v1.html` | 1 | 2 | D | P1 |
-| `/nurie` | `public/games/nurie_oekaki_v1.html` | 0 | 1 | C | P1 |
+| `/nurie` | `public/games/nurie_oekaki_v1.html` | 0 | 0 | — | — |
 | `/okashi-crossing` | `public/games/okashi_crossing.html` | 0 | 2 | C | P1 |
 | `/otakara-horihori` | `public/games/otakara_horihori_v1.html` | 1 | 0 | D | P2 |
 | `/oukan-monogatari` | `public/games/oukan_monogatari_v1.html` | 0 | 3 | D | P1 |
@@ -101,11 +101,11 @@ Main categoryは件数の多い分類を基本とし、同数の場合は監査�
 | `/sniper` | `public/games/sniper_v3.html` | 0 | 0 | — | — |
 | `/sora` | `public/games/sora_v3.html` | 0 | 2 | C | P1 |
 | `/sora-kyoshitsu` | `public/games/sora_kyoshitsu_v1.html` | 0 | 0 | — | — |
-| `/sushi` | `public/games/sushi_v3.html` | 0 | 1 | C | P1 |
-| `/tashizan` | `public/games/tashizan_v2.html` | 0 | 2 | C | P1 |
-| `/tokei-yomi` | `public/games/tokei_yomi_v1.html` | 0 | 2 | C | P1 |
+| `/sushi` | `public/games/sushi_v3.html` | 0 | 0 | — | — |
+| `/tashizan` | `public/games/tashizan_v2.html` | 0 | 1 | D | P2 |
+| `/tokei-yomi` | `public/games/tokei_yomi_v1.html` | 0 | 1 | D | P2 |
 | `/usagi-carrot` | `public/games/usagi_carrot_v2.html` | 0 | 1 | C | P1 |
-| **合計** | **39 active HTML** | **6** | **61** | — | — |
+| **合計** | **39 active HTML** | **6** | **52** | — | — |
 
 `/mahou-nakama`のwarning 2件のうち1件は上記active HTML、もう1件は`src/pages/TopPage.jsx:1280`にあるため、問題ファイル総数は問題ルート数より1多い。
 
@@ -121,7 +121,8 @@ Main categoryは件数の多い分類を基本とし、同数の場合は監査�
 | A4 | `/animal-soccer` / `soccer_v7.html` | error / CANVAS | 2 | Canvasへ絵文字リテラル | 560, 574 | `fillText`へ🐻、⚽ | A / P1 | **対応済み (4C-2)**: キーパーとボールをprimitives化 |
 | A5 | `/bike` / `wakuwaku_bike_v3.html` | error / CANVAS | 8 | Canvasへ絵文字リテラル | 697, 705, 715, 726, 764, 777, 819, 820 | `fillText`/`strokeText`へ🚀、🪨、🪙、🏁、💦 | A / P1 | **対応済み (4C-2)**: アイテム、旗、警告、説明アイコンをprimitives化 |
 | C1 | `/kart`, `/astral-fang`, `/kokki`, `/ichigo`, `/kakurenbo`, `/kazu-asobi`, `/machi`, `/houki`, `/mori`, `/neon-drive`, `/oukan-monogatari`, `/bike` / 各active HTML | warning / NAV | 12 | 親ページへの`goBack`メッセージを確認できない | file | `postMessage({type:'goBack'})`を静的検出できない | C / P1 | shared template + per-game |
-| C2 | `/block:148`, `/animal-block:727`, `/doubutsu-puzzle:528`, `/iro:883`, `/jewelry-master:1912`, `/katachi:277`, `/katakana-asobi:627`, `/kudamono-catch:867`, `/mahou-nakama:215`, `/mahou-meiro:1089`, `/moji:464`, `/neko-chou:617`, `/nurie:556`, `/okashi-crossing:475`, `/runner:953`, `/shabondama:872`, `/shooting:1216`, `/animal-soccer:708`, `/sora:357,470`, `/sushi:800`, `/tashizan:430`, `/tokei-yomi:673`, `/usagi-carrot:354` / 各active HTML | warning / NAV | 24 | `history.back()`依存 | 記載の各行 | `else history.back()`または`window.history.back()`。うち10件は同じ関数内に親`postMessage`あり | C / P1 | shared template + per-game; 10件はfalse-positive候補 |
+| C2a | `/doubutsu-puzzle:528`, `/iro:883`, `/katachi:277`, `/katakana-asobi:627`, `/moji:464`, `/nurie:556`, `/sushi:800`, `/tashizan:430`, `/tokei-yomi:673` / 各active HTML | warning / NAV | 9 | `history.back()`依存 | 記載の各行 | iframe時は同一ハンドラから`goBack`を送信し、`else`でstandalone fallbackと排他 | C / P1 | **resolved-audit-rule (4C-3A)**: 構造判定を一般化。route allowlistなし |
+| C2b | `/block:148`, `/animal-block:727`, `/jewelry-master:1912`, `/kudamono-catch:867`, `/mahou-nakama:215`, `/mahou-meiro:1089`, `/neko-chou:617`, `/okashi-crossing:492`, `/runner:953`, `/shabondama:872`, `/shooting:1216`, `/animal-soccer:714`, `/sora:357,470`, `/usagi-carrot:354` / 各active HTML | warning / NAV | 15 | `history.back()`依存 | 記載の各行 | cleanup・別フォールバックを含む、未接続、または複数経路のため自動解消しない | C / P1 | **pending-code-fix (4C-3B)**: `/shabondama`は`goBack()`未接続、他も個別動作確認 |
 | C3 | `/kokki:1079`, `/jewelry-master:1922`, `/kudamono-catch:885`, `/mahou-meiro:1135`, `/runner:957`, `/shooting:1220`, `/animal-soccer:725` / 各active HTML | warning / NAV | 7 | `location`代入依存 | 記載の各行 | `window.location.href='/'` | C / P1 | shared template + per-game |
 | D1 | `/astral-fang`, `/animal-block`, `/machi`, `/mori`, `/neon-drive`, `/otakara-horihori` / 各active HTML | error / HTML | 6 | `viewport-fit=cover`なし | file | viewport metaに指定なし | D / P2 | shared template + per-game |
 | D2 | `/kart`, `/astral-fang`, `/houki`, `/mori`, `/neon-drive` / 各active HTML | warning / SAFE_AREA | 5 | 固定UIがあるが`safe_area.js`なし | file | 読込を静的検出できない | D / P2 | shared template + per-game |
@@ -137,34 +138,37 @@ Main categoryは件数の多い分類を基本とし、同数の場合は監査�
 
 ## 7. Proposed Fix Phases
 
-各Phaseの基準件数は排他的で、Phase 4B時点の合計38 error / 61 warningになる。4C-1の6 errorと4C-2の26 errorは対応済みで、残存は6 error / 61 warningである。FilesとRoutesはPhase内の一意数であり、Phase間では同じルートを再度扱う場合がある。
+各Phaseの基準件数は排他的で、Phase 4B時点の合計38 error / 61 warningになる。4C-1の6 errorと4C-2の26 error、4C-3Aの監査false positive 9 warningは対応済みで、残存は6 error / 52 warningである。FilesとRoutesはPhase内の一意数であり、Phase間では同じルートを再度扱う場合がある。
 
 | Phase | Scope | Routes | Files | Error | Warning | Risk |
 | ----- | ----- | -----: | ----: | ----: | ------: | ---: |
 | 4C-1 | DOM重複id・touch-action（対応済み） | 6 | 6 | 6 | 0 | 3 |
 | 4C-2 | Canvas絵文字・記号描画（対応済み） | 5 | 5 | 26 | 0 | 4 |
-| 4C-3 | 戻る操作・親iframe通信 | 35 | 35 | 0 | 43 | 4 |
+| 4C-3A | 戻る操作false positive精査（対応済み） | 10 | 10 | 0 | 9 | 2 |
+| 4C-3B | 残存する戻る操作・親iframe通信 | 26 | 26 | 0 | 34 | 4 |
 | 4C-4 | viewport・safe-area・回転案内 | 17 | 17 | 6 | 17 | 4 |
 | 4C-5 | TopPage登録番号の実害確認 | 1 | 1 | 0 | 1 | 2 |
-| **合計** | — | — | — | **38** | **61** | — |
+| **Phase 4B基準合計** | — | — | — | **38** | **61** | — |
 
 | Phase | 対象ルート | 難易度 | 回帰リスク | ブラウザ負荷 | 推奨順 | コミット方針 |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
 | 4C-1 | `/doubutsu-puzzle`, `/shabondama`, `/sniper`, `/sushi`, `/mahou-meiro`, `/sora` | 2 | 3 | 3 | 完了 | 1コミットで限定修正済み |
 | 4C-2 | `/machi`, `/houki`, `/okashi-crossing`, `/animal-soccer`, `/bike` | 3 | 4 | 5 | 完了 | 1コミットでCanvas描画のみ限定修正 |
-| 4C-3 | C1〜C3の35ルート | 3 | 4 | 5 | 3 | 戻る契約を先に確定し、5〜8ゲーム程度のバッチへ分割 |
+| 4C-3A | C2のfalse positive候補10ルート | 2 | 2 | 2 | 完了 | route allowlistなしの構造判定で9件解消、1件を3Bへ継続 |
+| 4C-3B | C1、C2b、C3の26ルート | 3 | 4 | 5 | 3 | 親通信未検出12件、history fallback 15件、location依存7件を重複ルート単位で分割 |
 | 4C-4 | `/animal-block`, `/astral-fang`, `/houki`, `/iro`, `/kakurenbo`, `/kart`, `/katakana-asobi`, `/kazu-asobi`, `/machi`, `/moji`, `/mori`, `/neon-drive`, `/okashi-crossing`, `/otakara-horihori`, `/oukan-monogatari`, `/tashizan`, `/tokei-yomi` | 3 | 4 | 5 | 4 | viewport、safe-area、orientationを別コミットへ分割 |
 | 4C-5 | `/mahou-nakama`（`TopPage.jsx`） | 2 | 2 | 2 | 5 | 実害確認後、1コミット。監査変更とは分離 |
 
-4C-1と4C-2は限定修正として完了した。P0は0件のため緊急修正Phaseは設けず、次は4C-3の戻る操作・親iframe通信へ進む。
+4C-1、4C-2、4C-3Aは完了した。P0は0件のため緊急修正Phaseは設けず、次は4C-3Bで残る戻る操作・親iframe通信を個別確認する。
 
 ## 8. False Positive Candidates
 
-今回は監査ルールや除外を変更しない。候補は実装前にブラウザ挙動とルール意図を照合する。
+Phase 4C-3Aで候補10件を関数・ハンドラ単位に精査し、監査ルールを一般化した。ファイル名・route別の除外は使用していない。
 
-1. C2のうち`/doubutsu-puzzle`, `/iro`, `/katachi`, `/katakana-asobi`, `/moji`, `/nurie`, `/shabondama`, `/sushi`, `/tashizan`, `/tokei-yomi`の10件は、同じ関数内でiframe時に`postMessage({type:'goBack'})`を実行し、standalone時だけ`history.back()`へフォールバックする。親通信不足という意味では候補だが、standaloneの戻り先不定という警告意図は残る。
-2. A2の`/houki:431`にあった`◀`と`▶`は図形用途と判断し、監査除外せず左右三角形のベクター描画へ置換したため候補を解消した。
-3. F3の`SCHOOL_GAMES num 18`重複は現在のUIから未参照で、直ちに表示衝突しない可能性が高い。将来参照時の衝突リスクがあるため、仕様確認後に設定修正またはルール妥当性を判断する。
+1. C2の候補10件中、`/doubutsu-puzzle`, `/iro`, `/katachi`, `/katakana-asobi`, `/moji`, `/nurie`, `/sushi`, `/tashizan`, `/tokei-yomi`の9件は`resolved-audit-rule`。同一の実行可能ハンドラ内でiframe判定、`type:'goBack'`、`else`または`return`による排他、実イベント接続を確認した。
+2. `/shabondama`は`goBack()`内の分岐自体は正しいが、active HTML内のボタン・イベントから同関数への接続がないため`pending-code-fix`。警告を残してPhase 4C-3Bで戻る導線を確認する。
+3. A2の`/houki:431`にあった`◀`と`▶`は図形用途と判断し、監査除外せず左右三角形のベクター描画へ置換したため候補を解消した。
+4. F3の`SCHOOL_GAMES num 18`重複は現在のUIから未参照で、直ちに表示衝突しない可能性が高い。将来参照時の衝突リスクがあるため、仕様確認後に設定修正またはルール妥当性を判断する。
 
 ## 9. Validation Requirements
 
@@ -227,6 +231,29 @@ Main categoryは件数の多い分類を基本とし、同数の場合は監査�
 | `/bike` | 819 | GO説明のロケット輪郭 | テキストから分離した機体path |
 | `/bike` | 820 | GO説明のロケット塗り | 同一機体pathと通常テキスト |
 
-## 12. Recommended Next Action
+## 12. Phase 4C-3A Result
 
-次はPhase 4C-3として、active 35ルートの戻る操作・親iframe通信43 warningを契約確認後に分割修正する。
+- 精査: Phase 4Bのfalse positive候補10件を、active HTML、Reactラッパー、`useGameNav`の親側契約、イベント接続まで照合した。A分類は9件、B分類は1件。
+- A分類: iframe時は同一の実行可能ハンドラ内から`{type:'goBack'}`を親へ送り、`else`でstandalone時だけ`history.back()`へ進む。postMessageとhistoryが同一操作で同時実行されないため`resolved-audit-rule`とした。
+- B分類: `/shabondama`の`goBack()`は分岐自体は正しいが、active HTML内のボタン・イベントから呼ばれていない。ゲームHTMLは変更せず、警告を維持して`pending-code-fix`とした。
+- 一般化条件: 実行可能なscriptだけを抽出し、コメント・文字列をマスクしたうえで、同一関数／ハンドラ、iframe判定、正式payload、単一のhistory呼出、`else`／`return`による排他、実イベント接続を確認する。安全な自動判定範囲をナビゲーション呼出だけのハンドラに限定し、cleanup等を含む複合処理はPhase 4C-3Bへ残す。
+- 除外: route名、HTML名、特定ファイルのallowlistは使用していない。ゲームHTMLも変更していない。
+- 監査: active error 6維持、warning 61→52。NAV 43→34、STORAGE 0 / 0、CANVAS 0、active 39を維持した。
+- fixture: 警告しない4パターンと警告する8パターンの12 / 12に成功した。別関数・コメント・DOM文字列の`goBack`、誤payload、無条件history、両経路historyを許可していない。
+
+| Route | HTML / line | Handler / binding | Parent branch | Standalone branch | Guard | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| `/doubutsu-puzzle` | `doubutsu_puzzle_v3.html:528` | `btn-home.onclick` | `window.parent.postMessage({type:'goBack'},'*')` | `history.back()` | `else` | `resolved-audit-rule` |
+| `/iro` | `iro_awase_v3.html:883` | `goBack()` / `#back-btn onclick` | 同上 | 同上 | `else` | `resolved-audit-rule` |
+| `/katachi` | `katachi_awase_v1.html:277` | `goBack()` / `#back-btn` click handlerから呼出 | 同上 | 同上 | `else` | `resolved-audit-rule` |
+| `/katakana-asobi` | `katakana_asobi_v1.html:627` | `goBack()` / `#back-btn onclick` | 同上 | 同上 | `else` | `resolved-audit-rule` |
+| `/moji` | `moji_asobi_v2.html:464` | `goBack()` / `#back-btn onclick` | 同上 | 同上 | `else` | `resolved-audit-rule` |
+| `/nurie` | `nurie_oekaki_v1.html:556` | `goBack()` / `#back-btn onclick` | 同上 | 同上 | `else` | `resolved-audit-rule` |
+| `/shabondama` | `shabondama_v3.html:871-872` | `goBack()` / 接続なし | 同上 | 同上 | `else` | `pending-code-fix` |
+| `/sushi` | `sushi_v3.html:800` | `goBack()` / `#back-btn onclick` | 同上 | 同上 | `else` | `resolved-audit-rule` |
+| `/tashizan` | `tashizan_v2.html:430` | `goBack()` / `#back-btn onclick` | 同上 | 同上 | `else` | `resolved-audit-rule` |
+| `/tokei-yomi` | `tokei_yomi_v1.html:673` | `goBack()` / `#back-btn onclick` | 同上 | 同上 | `else` | `resolved-audit-rule` |
+
+## 13. Recommended Next Action
+
+次はPhase 4C-3Bとして、親`goBack`未検出12件、実修正・個別確認が必要な`history.back()` 15件、location代入7件から成るNAV 34 warningを、重複ルートをまとめて分割修正する。

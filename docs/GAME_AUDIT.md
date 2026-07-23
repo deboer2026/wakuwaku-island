@@ -142,3 +142,12 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実�
 - fixture: 5ルート・26分岐相当をmock Canvas contextで実行し、path生成、fill/stroke、有限座標、正サイズ、対象UnicodeのCanvas文字渡し0件、最終save/restore深度0、未処理例外なしを確認した。
 - 実画面: 5ルートすべてをローカル開発サーバーで起動し、`/machi`はマップ・ゲーム画面、`/houki`はタイトル・キャラクター選択・プレイ、`/okashi-crossing`・`/animal-soccer`・`/bike`はプレイ画面と主要操作まで確認した。図形は背景と識別でき、UI崩れ、コンソールerror、SecurityErrorはなかった。全ルートでBGM・戻るUIの表示を確認し、`/bike`ではBGM切替操作も確認した。
 - 次はPhase 4C-3として、戻る操作・親iframe通信の43 warningを扱う。
+
+## Phase 4C-3A: 戻る操作false positive精査（2026-07-23）
+
+- 対象: Phase 4Bで候補にした`/doubutsu-puzzle`、`/iro`、`/katachi`、`/katakana-asobi`、`/moji`、`/nurie`、`/shabondama`、`/sushi`、`/tashizan`、`/tokei-yomi`の`history.back()`警告10件を精査した。
+- 分類: 9件は、同一ハンドラ内でiframe時に正式な`{type:'goBack'}`を送信し、`else`でstandalone時だけ`history.back()`へ進む実装としてA（`resolved-audit-rule`）と判定した。`/shabondama`は`goBack()`が実ボタン・イベントに接続されていないためB（`pending-code-fix`）として警告を維持した。
+- 監査一般化: 実行可能scriptの同一関数／ハンドラ内で、iframe判定、正式payload、単一のhistory呼出、`else`／`return`による排他、イベント接続を確認する。コメント・文字列は判定対象外とし、cleanup等を含む複合ハンドラは自動解消しない。route・HTML別allowlistは使用していない。
+- 監査: active error 6維持、warning 61→52。NAV 43→34、STORAGE 0 / 0、CANVAS 0、HTML 64、active 39、referenced-secondary 1、archived-or-unused 24を維持した。
+- fixture: 許容4パターン、非許容8パターンの12 / 12に成功し、別関数・コメント・DOM文字列の`goBack`、誤payload、無条件history、両経路historyを誤って許可しないことを確認した。
+- ゲームHTMLは変更していない。次はPhase 4C-3Bで、親通信未検出、未接続・複合fallback、location代入を含む残存NAV 34 warningを個別に扱う。

@@ -194,6 +194,145 @@ function hasEmoji(value) {
   return /\p{Extended_Pictographic}/u.test(value);
 }
 
+function maskJavaScript(source) {
+  const masked = source.split('');
+  let quote = null;
+  let escaped = false;
+  let lineComment = false;
+  let blockComment = false;
+  for (let index = 0; index < source.length; index += 1) {
+    const char = source[index];
+    const next = source[index + 1];
+    if (lineComment) {
+      if (char === '\n') lineComment = false;
+      else masked[index] = ' ';
+      continue;
+    }
+    if (blockComment) {
+      if (char === '*' && next === '/') {
+        masked[index] = ' ';
+        masked[index + 1] = ' ';
+        blockComment = false;
+        index += 1;
+      } else if (char !== '\n') masked[index] = ' ';
+      continue;
+    }
+    if (quote) {
+      if (char !== '\n') masked[index] = ' ';
+      if (escaped) escaped = false;
+      else if (char === '\\') escaped = true;
+      else if (char === quote) quote = null;
+      continue;
+    }
+    if (char === '/' && next === '/') {
+      masked[index] = ' ';
+      masked[index + 1] = ' ';
+      lineComment = true;
+      index += 1;
+    } else if (char === '/' && next === '*') {
+      masked[index] = ' ';
+      masked[index + 1] = ' ';
+      blockComment = true;
+      index += 1;
+    } else if (char === "'" || char === '"' || char === '`') {
+      masked[index] = ' ';
+      quote = char;
+    }
+  }
+  return masked.join('');
+}
+
+function maskExecutableJavaScript(text) {
+  const masked = Array(text.length).fill(' ');
+  let foundScript = false;
+  for (const match of text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi)) {
+    foundScript = true;
+    const content = match[1];
+    const contentStart = match.index + match[0].indexOf(content);
+    const contentMasked = maskJavaScript(content);
+    for (let index = 0; index < contentMasked.length; index += 1) {
+      masked[contentStart + index] = contentMasked[index];
+    }
+  }
+  return foundScript ? masked.join('') : maskJavaScript(text);
+}
+
+function enclosingBraceBlocks(masked, targetIndex) {
+  const blocks = [];
+  for (let open = masked.lastIndexOf('{', targetIndex); open >= 0; open = masked.lastIndexOf('{', open - 1)) {
+    const close = matchingDelimiter(masked, open);
+    if (close >= targetIndex) blocks.push({ open, close });
+  }
+  return blocks;
+}
+
+function goBackPostMessageIndices(source, masked, open, close) {
+  const indices = [];
+  const block = masked.slice(open, close + 1);
+  for (const match of block.matchAll(/\b(?:window\.)?parent\.postMessage\s*\(/g)) {
+    const callStart = open + match.index;
+    const parenOpen = masked.indexOf('(', callStart);
+    const parenClose = matchingDelimiter(masked, parenOpen, '(', ')');
+    if (parenClose < 0 || parenClose > close) continue;
+    const call = source.slice(callStart, parenClose + 1);
+    if (/\btype\s*:\s*(['"])goBack\1/.test(call)) indices.push(callStart);
+  }
+  return indices;
+}
+
+function hasIframeParentCheck(maskedBlock) {
+  return /\bwindow\.parent\s*!={1,2}\s*window\b/.test(maskedBlock)
+    || /\bwindow\.self\s*!={1,2}\s*window\.top\b/.test(maskedBlock)
+    || /\bwindow\.top\s*!={1,2}\s*window\.self\b/.test(maskedBlock);
+}
+
+function hasOnlyNavigationCalls(maskedBlock) {
+  const allowed = new Set([
+    'if', 'window.parent.postMessage', 'parent.postMessage',
+    'history.back', 'window.history.back',
+  ]);
+  const calls = [...maskedBlock.matchAll(/\b([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*\(/g)]
+    .map((match) => match[1]);
+  return calls.every((call) => allowed.has(call));
+}
+
+function handlerIsBound(source, masked, open, close) {
+  const prefixStart = Math.max(0, open - 260);
+  const prefix = masked.slice(prefixStart, open);
+  if (/\.onclick\s*=\s*(?:async\s*)?(?:function\s*\([^)]*\)|(?:\([^)]*\)|[A-Za-z_$][\w$]*)?\s*=>)\s*$/.test(prefix)
+    || /addEventListener\s*\([\s\S]{0,220}?(?:function\s*\([^)]*\)|(?:\([^)]*\)|[A-Za-z_$][\w$]*)?\s*=>)\s*$/.test(prefix)) {
+    return true;
+  }
+  const functionMatch = prefix.match(/function\s+([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*$/);
+  if (!functionMatch) return false;
+  const name = functionMatch[1].replace(/[$]/g, '\\$&');
+  const functionStart = prefixStart + functionMatch.index;
+  const outsideCode = `${masked.slice(0, functionStart)}\n${masked.slice(close + 1)}`;
+  const outsideSource = `${source.slice(0, functionStart)}\n${source.slice(close + 1)}`;
+  const inlineBinding = new RegExp(`<[^>]+\\bon(?:click|pointerdown|pointerup|touchend)\\s*=\\s*(['"])[^'"]*\\b${name}\\s*\\([^'"]*\\1`, 'i');
+  return new RegExp(`\\b${name}\\s*\\(`).test(outsideCode)
+    || new RegExp(`addEventListener\\s*\\([\\s\\S]{0,180}?,\\s*${name}\\b`).test(outsideCode)
+    || new RegExp(`\\.onclick\\s*=\\s*${name}\\b`).test(outsideCode)
+    || inlineBinding.test(outsideSource);
+}
+
+function isGuardedStandaloneHistoryBack(source, masked, historyIndex) {
+  for (const { open, close } of enclosingBraceBlocks(masked, historyIndex)) {
+    const block = masked.slice(open, close + 1);
+    const historyCalls = [...block.matchAll(/\bhistory\.back\s*\(/g)];
+    if (historyCalls.length !== 1 || !hasIframeParentCheck(block) || !hasOnlyNavigationCalls(block)) continue;
+    const postMessages = goBackPostMessageIndices(source, masked, open, close);
+    if (!postMessages.length || !handlerIsBound(source, masked, open, close)) continue;
+    for (const postIndex of postMessages) {
+      const between = postIndex < historyIndex
+        ? masked.slice(postIndex, historyIndex)
+        : masked.slice(historyIndex, postIndex);
+      if (/\belse\b/.test(between) || (postIndex < historyIndex && /\breturn\b/.test(between))) return true;
+    }
+  }
+  return false;
+}
+
 async function importedModuleUsesHook(source, importerFile, hookName) {
   for (const match of source.matchAll(/^import[\s\S]*?from\s+['"](\.[^'"]+)['"]/gm)) {
     const base = path.resolve(path.dirname(rel(...importerFile.split('/'))), match[1]);
@@ -261,8 +400,13 @@ async function inspectHtml(file, text) {
   if (!hasGoBack) {
     issue('warning', 'NAV', file, '親ページへ goBack メッセージを送る実装を確認できません');
   }
+  const executableJavaScript = maskExecutableJavaScript(text);
+  for (const match of executableJavaScript.matchAll(/\bhistory\.back\s*\(/g)) {
+    if (!isGuardedStandaloneHistoryBack(text, executableJavaScript, match.index)) {
+      issue('warning', 'NAV', file, 'history.back() に依存する戻る操作があります', { text, index: match.index });
+    }
+  }
   for (const [regex, message] of [
-    [/history\.back\s*\(/g, 'history.back() に依存する戻る操作があります'],
     [/location(?:\.href)?\s*=\s*['"]\/?['"]/g, 'location 代入に依存する戻る操作があります'],
     [/parent\.(?:location|document|history)\b/g, '親ページを直接操作しています'],
   ]) {
