@@ -233,6 +233,7 @@ const SAFE_LS = (function () {
   }
 })();
 const KICKERS=['🧒','👧','🧑','👨','🧔','👩','🏃','🧑‍🦱'];
+const KICKER_COLORS=['#FFB74D','#F06292','#42A5F5','#66BB6A','#8D6E63','#AB47BC','#EF5350','#26A69A'];
 const MAX_STAGE=5;
 const STAGE_CFG=[
   {win:3,miss:3,spd:2.5,name:'かんたん'},
@@ -549,15 +550,18 @@ function drawGoal(){
 
 function drawKeeper(){
   ctx.save();
-  const sz=KH; // フォントサイズ＝キーパー高さ
-  ctx.font=`${sz}px "Apple Color Emoji","Segoe UI Emoji",serif`;
-  ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.globalAlpha=0.95;
   // 影
   ctx.globalAlpha=0.2;ctx.fillStyle='#000';
   ctx.beginPath();ctx.ellipse(KX,GB,KW*0.4,KH*0.06,0,0,Math.PI*2);ctx.fill();
   ctx.globalAlpha=0.95;
-  ctx.fillText('🐻',KX,KY);
+  const r=KH*.28;
+  ctx.fillStyle='#A66F3F';ctx.beginPath();ctx.arc(KX-r*.65,KY-r*.7,r*.34,0,7);ctx.arc(KX+r*.65,KY-r*.7,r*.34,0,7);ctx.fill();
+  ctx.beginPath();ctx.arc(KX,KY-r*.25,r,0,7);ctx.fill();
+  ctx.fillStyle='#E3B77D';ctx.beginPath();ctx.ellipse(KX,KY,r*.55,r*.42,0,0,7);ctx.fill();
+  ctx.fillStyle='#263238';ctx.beginPath();ctx.arc(KX-r*.33,KY-r*.35,r*.1,0,7);ctx.arc(KX+r*.33,KY-r*.35,r*.1,0,7);ctx.arc(KX,KY-r*.02,r*.13,0,7);ctx.fill();
+  ctx.fillStyle='#29B6F6';ctx.beginPath();ctx.roundRect(KX-r*.72,KY+r*.65,r*1.44,r*.9,r*.22);ctx.fill();
+  ctx.strokeStyle='#FFF';ctx.lineWidth=Math.max(2,r*.12);ctx.beginPath();ctx.moveTo(KX-r*.68,KY+r*.82);ctx.lineTo(KX-r*1.18,KY+r*.45);ctx.moveTo(KX+r*.68,KY+r*.82);ctx.lineTo(KX+r*1.18,KY+r*.45);ctx.stroke();
+  ctx.fillStyle='#FFD54F';ctx.beginPath();ctx.arc(KX-r*1.22,KY+r*.42,r*.2,0,7);ctx.arc(KX+r*1.22,KY+r*.42,r*.2,0,7);ctx.fill();
   ctx.restore();
 }
 
@@ -567,11 +571,11 @@ function drawBall(){
     // 影
     ctx.fillStyle='rgba(0,0,0,0.25)';
     ctx.beginPath();ctx.ellipse(BX,BY+BR*0.8,BR*0.7,BR*0.25,0,0,Math.PI*2);ctx.fill();
-    // ボール（回転アニメはCanvasの絵文字では難しいので単純に描画）
-    const sz=BR*2.2;
-    ctx.font=`${sz}px "Apple Color Emoji","Segoe UI Emoji",serif`;
-    ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText('⚽',BX,BY);
+    ctx.fillStyle='#FFF';ctx.strokeStyle='#263238';ctx.lineWidth=Math.max(1.5,BR*.12);ctx.beginPath();ctx.arc(BX,BY,BR,0,7);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#263238';ctx.beginPath();
+    for(let i=0;i<5;i++){const a=-Math.PI/2+i*Math.PI*2/5,px=BX+Math.cos(a)*BR*.3,py=BY+Math.sin(a)*BR*.3;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#263238';ctx.lineWidth=Math.max(1,BR*.08);
+    for(let i=0;i<5;i++){const a=-Math.PI/2+i*Math.PI*2/5;ctx.beginPath();ctx.moveTo(BX+Math.cos(a)*BR*.3,BY+Math.sin(a)*BR*.3);ctx.lineTo(BX+Math.cos(a)*BR*.82,BY+Math.sin(a)*BR*.82);ctx.stroke();}
     ctx.restore();
   }
 }
@@ -579,10 +583,12 @@ function drawBall(){
 function drawKicker(){
   ctx.save();
   const sz=Math.min(W,H)*0.10;
-  ctx.font=`${sz}px "Apple Color Emoji","Segoe UI Emoji",serif`;
-  ctx.textAlign='center';ctx.textBaseline='bottom';
-  // 蹴る仕草：flyingの開始直後だけ傾ける
-  ctx.fillText(KICKERS[selChar],PKX,PKY+sz*0.1);
+  ctx.translate(PKX,PKY);ctx.fillStyle=KICKER_COLORS[selChar];
+  ctx.beginPath();ctx.roundRect(-sz*.24,-sz*.58,sz*.48,sz*.5,sz*.12);ctx.fill();
+  ctx.fillStyle='#FFD0A6';ctx.beginPath();ctx.arc(0,-sz*.78,sz*.21,0,7);ctx.fill();
+  ctx.fillStyle=selChar===4?'#5D4037':['#5D4037','#6D4C41','#263238','#4E342E'][selChar%4];ctx.beginPath();ctx.arc(0,-sz*.84,sz*.22,Math.PI,0);ctx.fill();
+  ctx.strokeStyle='#263238';ctx.lineWidth=Math.max(2,sz*.07);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-sz*.13,-sz*.08);ctx.lineTo(-sz*.23,sz*.25);ctx.moveTo(sz*.13,-sz*.08);ctx.lineTo(sz*.34,sz*.16);ctx.moveTo(-sz*.22,-sz*.43);ctx.lineTo(-sz*.42,-sz*.22);ctx.moveTo(sz*.22,-sz*.43);ctx.lineTo(sz*.42,-sz*.28);ctx.stroke();
+  ctx.fillStyle='#FFF';ctx.beginPath();ctx.arc(-sz*.07,-sz*.79,sz*.025,0,7);ctx.arc(sz*.07,-sz*.79,sz*.025,0,7);ctx.fill();
   ctx.restore();
 }
 

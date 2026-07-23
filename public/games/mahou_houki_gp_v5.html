@@ -145,13 +145,13 @@ try{
     {name:'くまおうじ',body:'#c98a4b', dress:'#4a7cf0', ear:'bear',    spd:0.94, turn:1.10, desc:'まがりやすい'},
     {name:'ぺんぺん',  body:'#4a5a78', dress:'#3fcf9a', ear:'penguin', spd:1.02, turn:1.03, desc:'カーブとくい'} ];
   const STAGES=[
-    {name:'そらの くさはら', badge:'☀️', pattern:'slalom', rings:12, spdMul:1.00,
+    {name:'そらの くさはら', icon:'sun', pattern:'slalom', rings:12, spdMul:1.00,
      sky:['#4b86ff','#8fc0ff','#cfe8ff'], night:false, sun:'#fff3b0',
      g1:[106,211,106], g2:[79,184,79], flower:[255,224,120], fog:[190,225,255], deco:'tree'},
-    {name:'ゆうやけ ビーチ', badge:'🌅', pattern:'spiral', rings:14, spdMul:1.06,
+    {name:'ゆうやけ ビーチ', icon:'sunset', pattern:'spiral', rings:14, spdMul:1.06,
      sky:['#ff8a4b','#ffb87a','#ffe4bc'], night:false, sun:'#fff0a0',
      g1:[97,200,222], g2:[68,172,200], flower:[255,255,255], fog:[255,210,170], deco:'palm'},
-    {name:'ほしぞらの よる', badge:'🌙', pattern:'zigzag', rings:16, spdMul:1.12,
+    {name:'ほしぞらの よる', icon:'moon', pattern:'zigzag', rings:16, spdMul:1.12,
      sky:['#141a4d','#2a2f6e','#4a4f96'], night:true, sun:'#f4f0d8',
      g1:[118,98,188], g2:[92,76,158], flower:[190,240,255], fog:[56,56,105], deco:'crystal'} ];
   const cfg={ easy:{spd:6, turn:1.25, time:32, add:2.6, R:1.6},
@@ -291,6 +291,17 @@ try{
     g.addColorStop(0,'rgb('+st.g1.join(',')+')'); g.addColorStop(1,'rgb('+st.g2.join(',')+')');
     ctx.fillStyle=g; ctx.fillRect(0,horizon,LW,LH-horizon); } }
   function cloudShape(x,y,r){ ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.arc(x+r,y+6,r*0.8,0,7); ctx.arc(x-r*0.9,y+8,r*0.7,0,7); ctx.fill(); }
+  function drawStarIcon(x,y,r,color,alpha){ ctx.save();ctx.translate(x,y);ctx.globalAlpha=alpha===undefined?1:alpha;ctx.fillStyle=color;ctx.beginPath();
+    for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2===0?r:r*.45,px=Math.cos(a)*rr,py=Math.sin(a)*rr;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.closePath();ctx.fill();ctx.restore(); }
+  function drawSparkle(x,y,r,color){ ctx.save();ctx.translate(x,y);ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,-r);ctx.lineTo(r*.25,-r*.25);ctx.lineTo(r,0);ctx.lineTo(r*.25,r*.25);ctx.lineTo(0,r);ctx.lineTo(-r*.25,r*.25);ctx.lineTo(-r,0);ctx.lineTo(-r*.25,-r*.25);ctx.closePath();ctx.fill();ctx.restore(); }
+  function drawRingIcon(x,y,r){ ctx.save();ctx.strokeStyle='#ffe06b';ctx.lineWidth=Math.max(2,r*.28);ctx.beginPath();ctx.ellipse(x,y,r,r*.82,0,0,7);ctx.stroke();ctx.strokeStyle='#fff2a0';ctx.lineWidth=Math.max(1,r*.09);ctx.beginPath();ctx.ellipse(x,y-r*.08,r,r*.82,0,0,7);ctx.stroke();ctx.restore(); }
+  function drawArrowIcon(x,y,r,dir){ ctx.save();ctx.translate(x,y);ctx.scale(dir,1);ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(-r,0);ctx.lineTo(r*.45,-r*.72);ctx.lineTo(r*.45,r*.72);ctx.closePath();ctx.fill();ctx.restore(); }
+  function drawStageIcon(icon,x,y,r){ ctx.save();ctx.translate(x,y);
+    if(icon==='sun'){ctx.fillStyle='#FFD54F';ctx.beginPath();ctx.arc(0,0,r*.55,0,7);ctx.fill();ctx.strokeStyle='#FFD54F';ctx.lineWidth=Math.max(1.5,r*.13);for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.beginPath();ctx.moveTo(Math.cos(a)*r*.72,Math.sin(a)*r*.72);ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);ctx.stroke();}}
+    else if(icon==='sunset'){ctx.fillStyle='#FF8A65';ctx.beginPath();ctx.arc(0,r*.18,r*.62,Math.PI,0);ctx.fill();ctx.strokeStyle='#FFE0B2';ctx.lineWidth=Math.max(1.5,r*.12);ctx.beginPath();ctx.moveTo(-r,r*.2);ctx.lineTo(r,r*.2);ctx.moveTo(-r*.75,r*.5);ctx.lineTo(r*.75,r*.5);ctx.stroke();}
+    else{ctx.fillStyle='#FFF9C4';ctx.beginPath();ctx.arc(0,0,r*.72,0,7);ctx.fill();ctx.fillStyle='#2a2f6e';ctx.beginPath();ctx.arc(r*.3,-r*.18,r*.68,0,7);ctx.fill();}
+    ctx.restore(); }
+  function drawTrophy(x,y,r){ctx.save();ctx.translate(x,y);ctx.fillStyle='#FFD54F';ctx.beginPath();ctx.moveTo(-r*.6,-r*.65);ctx.lineTo(r*.6,-r*.65);ctx.quadraticCurveTo(r*.5,r*.2,0,r*.35);ctx.quadraticCurveTo(-r*.5,r*.2,-r*.6,-r*.65);ctx.fill();ctx.strokeStyle='#FFD54F';ctx.lineWidth=Math.max(2,r*.15);ctx.beginPath();ctx.arc(-r*.62,-r*.35,r*.35,-Math.PI/2,Math.PI/2);ctx.arc(r*.62,-r*.35,r*.35,Math.PI/2,Math.PI*1.5);ctx.stroke();ctx.fillRect(-r*.1,r*.25,r*.2,r*.45);ctx.fillRect(-r*.48,r*.62,r*.96,r*.18);ctx.restore();}
   function drawSky(anim){ const st=STAGES[stageIdx];
     const g=ctx.createLinearGradient(0,0,0,horizon);
     g.addColorStop(0,st.sky[0]); g.addColorStop(0.6,st.sky[1]); g.addColorStop(1,st.sky[2]);
@@ -422,13 +433,12 @@ try{
     ctx.fillStyle=timeLeft<6?'#ff8a8a':'#fff'; ctx.font='34px DotGothic16'; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(timeLeft.toFixed(1), cx, 36);
     ctx.font='20px DotGothic16'; ctx.textAlign='left'; ctx.fillStyle='#fff';
-    ctx.fillText('💍 '+got+'/'+total, 70, 26);
-    ctx.fillText(st.badge+' ステージ'+(stageIdx+1)+'/3', 70, 52);
+    drawRingIcon(57,26,9);ctx.fillText(got+'/'+total, 70, 26);
+    drawStageIcon(st.icon,57,52,9);ctx.fillText('ステージ'+(stageIdx+1)+'/3', 70, 52);
     ctx.textAlign='right'; ctx.font='22px DotGothic16'; ctx.fillText('スコア '+score, LW-70, 32);
     if(boost>0){ ctx.textAlign='center'; ctx.fillStyle='#ffe24d'; ctx.font='24px DotGothic16'; ctx.fillText('ビューン！', cx, 82); }
     if(hitFlash>0){ ctx.fillStyle='rgba(255,60,60,'+(hitFlash*0.25)+')'; ctx.fillRect(0,0,LW,LH); }
-    ctx.globalAlpha=0.5; ctx.font='40px DotGothic16'; ctx.textBaseline='bottom';
-    ctx.textAlign='left'; ctx.fillText('◀',24,LH-16); ctx.textAlign='right'; ctx.fillText('▶',LW-24,LH-16); ctx.globalAlpha=1; }
+    ctx.globalAlpha=0.5;drawArrowIcon(34,LH-30,18,-1);drawArrowIcon(LW-34,LH-30,18,1);ctx.globalAlpha=1; }
   function textC(t,y,s,c,sh2){ ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font=s+'px DotGothic16';
     if(sh2){ctx.fillStyle='rgba(0,0,0,0.45)';ctx.fillText(t,cx+3,y+3);} ctx.fillStyle=c; ctx.fillText(t,cx,y); }
   function rr(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
@@ -466,11 +476,11 @@ try{
     ctx.restore();
     rr(cx-96,168+bob,192,34,17); ctx.fillStyle='#ff6fae'; ctx.fill();
     ctx.fillStyle='#fff'; ctx.font='19px DotGothic16'; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText('✨グランプリ✨',cx,185+bob);
+    ctx.fillText('グランプリ',cx,185+bob);drawSparkle(cx-70,185+bob,8,'#fff');drawSparkle(cx+70,185+bob,8,'#fff');
     for(let i=0;i<7;i++){ const tw=Math.abs(Math.sin(tAnim*3+i*1.3));
       ctx.globalAlpha=tw; ctx.fillStyle='#fff';
       const sx3=cx+Math.sin(i*2.4)*300, sy3=100+((i*77)%180);
-      ctx.font='18px DotGothic16'; ctx.fillText('✦',sx3,sy3); } ctx.globalAlpha=1;
+      drawSparkle(sx3,sy3,7,'#fff'); } ctx.globalAlpha=1;
     const p2=0.6+0.4*Math.abs(Math.sin(tAnim*3));
     ctx.globalAlpha=p2; textC('タップして スタート！',372,30,'#fff',1); ctx.globalAlpha=1;
     if(bestScore>0) textC('ベストスコア '+bestScore,420,20,'#245',0); }
@@ -498,15 +508,14 @@ try{
   function drawResult(){
     ctx.fillStyle='rgba(8,12,30,0.65)'; ctx.fillRect(0,0,LW,LH);
     const st=STAGES[stageIdx];
-    textC(st.badge+' '+st.name+' クリア！',120,42,'#ffe24d',1);
-    ctx.font='56px DotGothic16'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    drawStageIcon(st.icon,cx,72,18);textC(st.name+' クリア！',120,42,'#ffe24d',1);
     for(let i=0;i<3;i++){ const on=i<resultStars;
       const pop=Math.min(1,Math.max(0,resultT*2-i*0.35));
       ctx.save(); ctx.translate(cx-90+i*90,200); ctx.scale(pop,pop);
-      ctx.fillStyle=on?'#ffd24d':'rgba(255,255,255,0.25)'; ctx.fillText('★',0,0); ctx.restore(); }
+      drawStarIcon(0,0,28,on?'#ffd24d':'rgba(255,255,255,0.25)'); ctx.restore(); }
     textC('のこりタイム ボーナス +'+resultBonus,268,24,'#8fe',1);
     textC('スコア '+score,308,30,'#fff',1);
-    const nx=(stageIdx+1<STAGES.length)?('つぎは '+STAGES[stageIdx+1].badge+' '+STAGES[stageIdx+1].name+'！'):'けっかはっぴょうへ！';
+    const nx=(stageIdx+1<STAGES.length)?('つぎは '+STAGES[stageIdx+1].name+'！'):'けっかはっぴょうへ！';
     const p2=0.6+0.4*Math.abs(Math.sin(tAnim*3));
     ctx.globalAlpha=p2; textC('タップで '+nx,380,24,'#ffe',1); ctx.globalAlpha=1; }
 
@@ -525,17 +534,16 @@ try{
       ctx.fillStyle='hsl('+((i*47)%360)+',85%,65%)';
       ctx.fillRect((i*127)%LW, t2-20, 6,6); }
     const ts=stageStars[0]+stageStars[1]+stageStars[2];
-    const title = ts>=9?'🏆 スーパーチャンピオン！' : ts>=7?'✨ チャンピオン！' : '🌟 ナイスフライト！';
+    const title = ts>=9?'スーパーチャンピオン！' : ts>=7?'チャンピオン！' : 'ナイスフライト！';
     textC('けっかはっぴょう',82,36,'#ffe06b',1);
-    textC(title,150,42,'#fff',1);
+    if(ts>=9)drawTrophy(cx,119,24);else drawSparkle(cx,116,18,'#ffe06b');textC(title,150,42,'#fff',1);
     for(let i=0;i<3;i++){ const st=STAGES[i];
       const y=218+i*46;
       ctx.font='24px DotGothic16'; ctx.textAlign='left'; ctx.textBaseline='middle';
-      ctx.fillStyle='#fff'; ctx.fillText(st.badge+' '+st.name, 190, y);
-      ctx.textAlign='right'; ctx.fillStyle='#ffd24d';
-      ctx.fillText('★'.repeat(stageStars[i])+'☆'.repeat(3-stageStars[i]), 610, y); }
+      drawStageIcon(st.icon,160,y,12);ctx.fillStyle='#fff'; ctx.fillText(st.name, 190, y);
+      for(let j=0;j<3;j++)drawStarIcon(535+j*34,y,12,j<stageStars[i]?'#ffd24d':'rgba(255,255,255,.25)'); }
     textC('トータルスコア '+totalScore,376,30,'#8fe',1);
-    if(totalScore>=bestScore&&bestScore>0) textC('🎉 ベストこうしん！',414,22,'#ffd24d',1);
+    if(totalScore>=bestScore&&bestScore>0){drawSparkle(cx-120,414,10,'#ffd24d');drawSparkle(cx+120,414,10,'#ffd24d');textC('ベストこうしん！',414,22,'#ffd24d',1);}
     else if(bestScore>0) textC('ベスト '+bestScore,414,20,'#cde',0);
     const p2=0.6+0.4*Math.abs(Math.sin(tAnim*3));
     ctx.globalAlpha=p2; textC('タップで タイトルへ',450,20,'#ffe',1); ctx.globalAlpha=1; }

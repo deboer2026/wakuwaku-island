@@ -131,3 +131,14 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実�
 - 監査: active error 38→32、warning 61維持。STORAGE 0 / 0、active 39を維持した。
 - 検証: 全script構文、HEAD正規化比較、ID参照、DOM／イベントfixture 22項目、client/SSRビルド、39ルートプリレンダを確認した。ブラウザ実画面は専用ローカルURLへの接続拒否により未実施で、fixtureで補完した。
 - 次はPhase 4C-2として、5ゲームのCanvas絵文字・記号描画26 errorを扱う。
+
+## Phase 4C-2: Canvas環境依存描画の除去（2026-07-23）
+
+- 対象: `/machi`（`public/games/machi_v7.html`）、`/houki`（`public/games/mahou_houki_gp_v5.html`）、`/okashi-crossing`（`public/games/okashi_crossing.html`）、`/animal-soccer`（`public/games/soccer_v7.html`）、`/bike`（`public/games/wakuwaku_bike_v3.html`）。
+- 置換: Canvasへ文字として渡していたパン、カップ、ケーキ、花、青果、時計、鉄道、星、鍵、案内、リング、矢印、きらめき、警告、菓子、クマ、ボール、ロケット、岩、コイン、旗、汗をCanvas primitivesによるpathへ置換した。DOM上の絵文字・文言は変更していない。
+- 変数経由: `/houki`のステージバッジ・結果星、`/okashi-crossing`の草地装飾、`/animal-soccer`の選択キャラクター、`/bike`のレーサー・フラッシュ・沿道装飾もCanvas文字描画から除外し、対象Unicodeが実行時に`fillText`／`strokeText`へ到達しない構造にした。
+- `/houki`判断: 単色の`◀`／`▶`は文字情報ではなく操作方向を示す図形用途と判断し、false positive除外を行わず左右三角形へ置換した。
+- 監査: active error 32→6、warning 61維持。Canvas error 26→0、STORAGE 0 / 0、HTML 64、active 39、referenced-secondary 1、archived-or-unused 24を維持した。
+- fixture: 5ルート・26分岐相当をmock Canvas contextで実行し、path生成、fill/stroke、有限座標、正サイズ、対象UnicodeのCanvas文字渡し0件、最終save/restore深度0、未処理例外なしを確認した。
+- 実画面: 5ルートすべてをローカル開発サーバーで起動し、`/machi`はマップ・ゲーム画面、`/houki`はタイトル・キャラクター選択・プレイ、`/okashi-crossing`・`/animal-soccer`・`/bike`はプレイ画面と主要操作まで確認した。図形は背景と識別でき、UI崩れ、コンソールerror、SecurityErrorはなかった。全ルートでBGM・戻るUIの表示を確認し、`/bike`ではBGM切替操作も確認した。
+- 次はPhase 4C-3として、戻る操作・親iframe通信の43 warningを扱う。
