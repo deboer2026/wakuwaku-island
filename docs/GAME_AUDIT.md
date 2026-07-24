@@ -181,3 +181,12 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実�
 - 監査: active error 6→0、active warning 30→13（モバイル表示 6 error / 17 warning → 0 / 0）。NAV 12、REGISTRY 2（いずれも本Phase以前から存在し変更なし）が残る。STORAGE 0 / 0、Canvas 0、active 39、referenced-secondary 1、archived-or-unused 24を維持した。
 - 検証: 変更した10ファイルの構文（`node --check`相当のインラインscript検証）、safe-areaのcalc()置換パターンの数値整合性、orientationメッセージリスナーの追加のみで既存ロジック不変であることをdiffで確認した。ブラウザでの実機回転・ノッチ確認は本Phaseでは未実施のため、fixture・静的検証で補完した（`docs/NON_STORAGE_REVIEW.md`参照）。
 - 次はPhase 4C-5として、`/mahou-nakama`の`SCHOOL_GAMES num "18"`重複registry warningを扱う。
+
+## Phase 4C-5: REGISTRY警告の確定・修正（2026-07-24）
+
+- 対象: 残存REGISTRY warning実測2件（`/dressup`, `/mahou-nakama`）。ゲームHTML・ゲームロジック・STORAGE・Canvas・BGM・戻る操作・safe-area・回転対応・TopPageのデザインは変更していない。
+- `/dressup`（R4・監査false positive）: `src/App.jsx`の`<Route path="/dressup" element={<DressUp />} />`は`<GameWithSEO>`で意図的にラップされておらず（`DressUp.jsx`が独自に`useIframeBridge`と`goBack`/`goHome`メッセージ処理を実装）、`gameMeta.js`・`TopPage.jsx`にも登録されていない、既存の`referenced-secondary`区分に合致する設計上のSEO非対象ルートと確認した。`/`, `/privacy`, `/terms`と同じ「SEO登録の対象外」という構造的性質を持つが、これらのみ既存コードでroute名のハードコード配列により警告対象外にされており、`/dressup`だけが取り残されていた。監査ロジックを、route名の配列ではなく「`<GameWithSEO>`でラップされているか」という構造的な条件へ一般化し、`/dressup`を含め今後同種のルートが増えても個別のroute名追加なしで正しく判定されるようにした。
+- `/mahou-nakama`（R2・登録内容不一致）: `src/pages/TopPage.jsx`の`SCHOOL_GAMES`配列で、`g_mahounakama`（`/mahou-nakama`）と`g_katachi`（`/katachi`）の2エントリが同じ`num:18`を持つデータ入力ミスを確認した。`num`は`.num`という形でどこからも参照されておらず（`rg`全文検索で0件）、表示順・stable key・SEO・sitemap生成のいずれにも影響しないことを確認した（並び順は配列順、keyは`id`を使用）。同一バッチで追加された近傍ルート（`/otakara-horihori`=19, `/sora-kyoshitsu`=20, `/astral-fang`=23, `/oukan-monogatari`=24）に対し`21`が未使用で空いていたため、`g_katachi`の`num`を`21`へ修正した。他のエントリの番号は振り直していない。
+- 登録4点セット最終確認: `/dressup`は意図的に4点セットの対象外（App route＋独自ラッパーのみで完結する secondary route）。`/mahou-nakama`・`/katachi`はいずれも4点セット（`App.jsx`のRoute、`src/games`のラッパー、`gameMeta.js`、`TopPage.jsx`）が揃っており、重複していたのは無関係な`num`表示専用プロパティのみだった。
+- 監査: active error 0維持、active warning 13→12。REGISTRY 2→0。NAV 12（変更なし）、STORAGE 0 / 0、Canvas 0、モバイル表示 0 / 0、active 39、referenced-secondary 1、archived-or-unused 24を維持した。残る警告はNAV 12件のみ。
+- **Phase 4Cは本Phaseをもって完了と判断する。** 4C-1（重複ID・touch-action）→4C-2（Canvas環境依存描画）→4C-3A〜D（戻る操作・親iframe通信）→4C-4（viewport・safe-area・回転対応）→4C-5（REGISTRY警告）を経て、active error 0・active warning 12（すべてNAV、N2/N3として分類・文書化済み）となり、実修正が必要な既知の指摘は残っていない。

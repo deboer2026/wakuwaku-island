@@ -471,3 +471,89 @@ SAFE_AREA判定を、`position:fixed`の単純な有無ではなく、実際に`
 ### 16.6 次のPhase
 
 Phase 4C-5として、`/mahou-nakama`登録の`SCHOOL_GAMES num "18"`重複REGISTRY warningを扱う。
+
+## 17. Phase 4C-5: REGISTRY警告の確定・修正（2026-07-24）
+
+### 17.1 REGISTRY warning全件抽出
+
+```text
+route: /dressup
+html: -（App.jsxのRoute定義そのもの）
+severity: warning
+rule: 正規ルートかエイリアスかを判定できないApp Routeです
+line: src/App.jsx:143
+evidence: <Route path="/dressup" element={<DressUp />} />
+```
+
+```text
+route: /mahou-nakama（と/katachi）
+html: -（TopPage.jsxのSCHOOL_GAMES配列）
+severity: warning
+rule: SCHOOL_GAMES の num "18" が 2 回使われていますが、現在のUIから参照されていません
+line: src/pages/TopPage.jsx:1280（katachi側の重複出現）
+evidence: g_mahounakama（/mahou-nakama, num:18）と g_katachi（/katachi, num:18）
+```
+
+実測: active error 0、active warning 13、NAV 12、REGISTRY 2、STORAGE 0/0、Canvas 0、active 39（開始条件の想定と一致）。
+
+### 17.2 登録構造の確認
+
+| route | App route | wrapper | iframe src | gameMeta entry | TopPage entry | registration number | active HTML |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `/dressup` | あり（`<GameWithSEO>`なし） | `DressUp.jsx`（独自実装） | `/games/dressup_v2.html` | なし | なし | -（4点セット対象外） | `dressup_v2.html`（referenced-secondary） |
+| `/mahou-nakama` | あり（`<GameWithSEO route="/mahou-nakama">`） | `MahouNakama.jsx` | `/games/mahou_nakama_v1.html` | あり | あり（`g_mahounakama`, num:18） | 18（`/katachi`と重複） | `mahou_nakama_v1.html`（active） |
+| `/katachi` | あり（`<GameWithSEO route="/katachi">`） | `KatachiAwase.jsx` | `/games/katachi_awase_v1.html` | あり | あり（`g_katachi`, num:18→21） | 18→21 | `katachi_awase_v1.html`（active） |
+
+### 17.3 `/dressup`の精査
+
+- `src/App.jsx`: `<Route path="/dressup" element={<DressUp />} />`（143行目）。`<GameWithSEO>`ラッパーなし。`GAME_ROUTES`配列には含まれる（68行目）。
+- `DressUp.jsx`: `useIframeBridge`のみ使用し、`useGameNav`は使わず、`goBack`/`goHome`メッセージ処理を自前で実装している（機能的には`useGameNav`と等価）。iframeは`/games/dressup_v2.html`を参照し実在を確認した。
+- `gameMeta.js`・`TopPage.jsx`: いずれも`/dressup`のエントリなし（`rg "/dressup" src`でApp.jsxの2箇所のみヒット）。
+- 登録番号: 該当なし（`num`を使う登録システムの対象外）。
+- archived HTML参照: なし。`dressup_v2.html`は監査上`referenced-secondary`（gameMetaに未登録だがApp.jsxからは参照される）に正しく分類されている。
+- 表示名・route・slugの不一致: TopPageにカードが存在しないため、そもそも表示名の対応関係自体が発生しない。
+- **判定: R4（監査false positive）。** `/dressup`はコード上明確に「`<GameWithSEO>`を使わない、SEO・カード表示の対象外の secondary route」として実装されている。監査の「正規ルートかエイリアスか判定できない」という警告文言は、`<GameWithSEO>`を使うルートに対して意味を持つ問いであり、そもそも`<GameWithSEO>`を使っていないルートには適用対象外と判断した。
+
+### 17.4 `/mahou-nakama`の精査
+
+- TopPage上の登録番号: `SCHOOL_GAMES`配列内で`g_mahounakama`が`num:18`を持つ。
+- `gameMeta.js`上の番号・順序情報: `gameMeta.js`のエントリ形式に`num`相当のフィールドは存在しない（route・name・category・ageMin/ageMax等のみ）。`num`は`TopPage.jsx`の`SCHOOL_GAMES`/`GAMES`配列にのみ存在する表示用の付随データ。
+- App routeとの対応: `/mahou-nakama`は`App.jsx`に正しく`<GameWithSEO route="/mahou-nakama">`で登録されており、`canonicalAppRoutes`との対応も一致する（REGISTRY errorなし）。
+- ラッパー・iframeの実在: `MahouNakama.jsx`、`public/games/mahou_nakama_v1.html`とも実在を確認した。
+- 同じ番号を持つ別ゲーム: `g_katachi`（`/katachi`）が同じ`num:18`を持っていた。
+- 番号が完全に未使用か: `rg "\.num\b" src`で`.num`というプロパティアクセスが0件であることを確認し、`num`は表示・ソート・key・SEO・sitemapのいずれにも使われていない完全な未参照データであると確定した（`scripts/audit-games.mjs`の`numIsConsumed`判定もfalseで、この理由から本来`error`ではなく`warning`として扱われている）。
+- コメントや旧配列にのみ残る番号か: いいえ、現行の`SCHOOL_GAMES`配列内の生きたエントリ2件が同時に持つ値であり、コメントアウトや旧データではない。
+- activeカード順への影響: 影響なし。カード表示順は配列の記述順（`SCHOOL_GAMES`内の並び）で決まり、Reactの`key`は`id`（`g_mahounakama`, `g_katachi`）を使用しているため、`num`の値は表示にもReactの再利用判定にも一切関与しない。
+- SEO・sitemapへの影響: 影響なし。SEO関連情報（title/description/canonical）は`gameMeta.js`から生成され、`sitemap.xml`は`gameMeta.js`のキー一覧から生成される。いずれも`TopPage.jsx`の`num`を参照していない。
+- **判定: R2（登録内容不一致・データ入力ミス）。** `num`自体は完全に未参照の付随データ（削除しても実害はないという意味ではR3的側面もある）だが、実際の欠陥は「本来ユニークであるべき値が誤って重複入力された」という単純な入力ミスであり、値自体を訂正することで解決するR2として扱った。
+
+### 17.5 分類まとめ
+
+| route | 分類 | 根拠 |
+| --- | --- | --- |
+| `/dressup` | R4（監査false positive） | `<GameWithSEO>`未使用の意図的secondary route。構造的にcanonical/alias判定の対象外 |
+| `/mahou-nakama` / `/katachi` | R2（登録内容不一致） | `SCHOOL_GAMES`の`num`重複。値は未参照だが、重複自体はデータ入力ミス |
+
+R1（実登録漏れ）・R3（削除が必要な未使用登録）・R5（用途不明）は該当なし。
+
+### 17.6 修正内容
+
+1. **`scripts/audit-games.mjs`**: `App.jsx`の各`<Route>`について、「正規ルートかエイリアスか判定できない」警告を、そのRouteが`<GameWithSEO>`でラップされている場合のみ発報するよう変更した（`usesGameWithSEO`判定を追加）。`/`, `/privacy`, `/terms`の既存route名ハードコード配列は、静的ページ自体の除外（`GAME_ROUTES`チェックも含めて丸ごとスキップする必要があるため）としてそのまま維持し、今回追加した構造的判定はこの配列を置き換えるものではなく、`/dressup`のような「`<GameWithSEO>`を使わないゲームルート」を正しく判定できるようにする追加条件として実装した。route名・HTML名によるallowlistは新規に追加していない。
+2. **`src/pages/TopPage.jsx`**: `SCHOOL_GAMES`配列の`g_katachi`エントリの`num`を`18`から`21`（同一バッチで追加された近傍ルートに対して未使用だった値）へ修正した。他のエントリの番号は振り直していない。
+
+`src/App.jsx`・`src/seo/gameMeta.js`・対象ラッパー・ゲームHTMLはいずれも変更していない（`/dressup`はR4のため監査側のみ対応、`/mahou-nakama`・`/katachi`は4点セットが揃っているため`num`修正のみで対応可能だった）。
+
+### 17.7 検証
+
+- 全文検索: `rg "/dressup|/mahou-nakama" src reports docs`で全参照箇所を確認し、想定外の参照がないことを確認した。`num:18`の全文検索で重複が解消され1件のみ残ることを確認した。
+- 登録一覧機械比較: gameMeta routes 39、App game routes 39、TopPage games 39、wrappers 40、重複route 0、重複slug（id）0、重複num（SCHOOL_GAMES内）0、存在しないHTML参照0、archived HTMLへの誤参照0を確認した（いずれも本Phase前後で変化なし、REGISTRY error 0を維持）。
+- `node --check scripts/audit-games.mjs`: OK。
+- `node scripts/audit-games.mjs`: active error 0、active warning 13→12、REGISTRY 2→0、NAV 12（変化なし）、STORAGE 0/0、Canvas 0、モバイル表示0/0、active 39、referenced-secondary 1、archived-or-unused 24。
+
+### 17.8 残存問題
+
+REGISTRY warningは0件になった。残るのはNAV 12件（Phase 4C-3で分類済み、N2 10件・N3 2件、実修正不要と判断済み）のみである。
+
+### 17.9 Phase 4C完了可否
+
+**Phase 4Cは本Phase（4C-5）をもって完了と判断する。** 4C-1〜4C-5を通じて、active errorは0、active warningはNAV 12件（すべて分類・文書化済みで実修正不要）のみとなり、STORAGE・Canvas・モバイル表示・REGISTRYはすべて健全な状態を達成した。

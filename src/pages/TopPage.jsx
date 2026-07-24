@@ -1277,7 +1277,7 @@ const SCHOOL_GAMES = [
     zh:{ name:'片假名游戏',         desc:'看图片和平假名\n选出正确的片假名！' },
     ko:{ name:'가타카나 놀이',      desc:'그림과 히라가나를 보고\n맞는 가타카나를 골라요!' },
     es:{ name:'Juego de Katakana',  desc:'¡Elige el katakana\ncorrecto con dibujos!' } },
-  { id:'g_katachi', route:'/katachi', icon:'🔷', num:18, color:'#7C7CE8', stars:3, isNew:true, category:'がくしゅう',
+  { id:'g_katachi', route:'/katachi', icon:'🔷', num:21, color:'#7C7CE8', stars:3, isNew:true, category:'がくしゅう',
     ja:{ name:'かたちあわせ',       desc:'うちゅうで かたちを\nはめたり しわけたり しよう！' },
     en:{ name:'Shape Match',        desc:'Fit and sort shapes\nin outer space!' },
     zh:{ name:'形状配对',           desc:'在宇宙中拼合\n和分类形状！' },

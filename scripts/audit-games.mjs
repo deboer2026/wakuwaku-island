@@ -529,7 +529,12 @@ for (const route of metaRoutes) {
 }
 for (const route of app.routes) {
   if (['/', '/privacy', '/terms'].includes(route.path)) continue;
-  if (!route.canonical) issue('warning', 'REGISTRY', appFile, '正規ルートかエイリアスかを判定できない App Route です', { route: route.path, text: appText, index: route.index });
+  // <GameWithSEO> でラップされていないRouteは、構造上そもそも正規／エイリアス
+  // (gameMeta連携)の対象外であり、判定不能ではなく「対象外」である。
+  const usesGameWithSEO = /<GameWithSEO\b/.test(route.line);
+  if (usesGameWithSEO && !route.canonical) {
+    issue('warning', 'REGISTRY', appFile, '正規ルートかエイリアスかを判定できない App Route です', { route: route.path, text: appText, index: route.index });
+  }
   if (!app.gameRoutesSet.includes(route.path)) issue('error', 'REGISTRY', appFile, 'App のゲームルートが GAME_ROUTES に登録されていません', { route: route.path, text: appText, index: route.index });
 }
 for (const route of app.gameRoutesSet) {
