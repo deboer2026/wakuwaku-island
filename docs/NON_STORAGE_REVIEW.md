@@ -401,3 +401,73 @@ Phase 4C-3Dとして、`info`重要度階層の追加要否と、N2/N3として�
 ### 15.7 Phase 4C-3の完了可否
 
 **完了と判断する。** Phase 4C-3A（false positive構造判定の一般化）→4C-3B（未実施のまま4C-3Cへ統合）→4C-3C（設計方針確定・監査一般化でNAV 36→12）→4C-3D（残存12件の最終分類、N2 10件・N3 2件、N4/N5 0件）を経て、NAV warningはすべて分類・文書化が完了し、実修正が必要な項目は残っていない。今後HTMLに変更が入った際は、本節の分類表と15.5の判断基準に照らして再評価する。
+
+## 16. Phase 4C-4: viewport・safe-area・回転対応（2026-07-24）
+
+### 16.1 対象17ルートの確定
+
+`docs/GAME_AUDIT.md`（Phase 4B時点の分類）、`reports/game-audit.json`、`src/App.jsx`、各Reactラッパー、`src/seo/gameMeta.js`を照合し、実測で以下17ルートを確定した（error 6・warning 17・合計23件、ファイル数17で一致）。
+
+| route | wrapper / active HTML | category | severity | message |
+| --- | --- | --- | --- | --- |
+| `/astral-fang` | `astral_fang_v1.html` | HTML | error | viewport-fit=cover がありません |
+| `/animal-block` | `doubutsu_block_v3.html` | HTML | error | viewport-fit=cover がありません |
+| `/machi` | `machi_v7.html` | HTML | error | viewport-fit=cover がありません |
+| `/mori` | `mori_v4.html` | HTML | error | viewport-fit=cover がありません |
+| `/neon-drive` | `neon_drive_v1.html` | HTML | error | viewport-fit=cover がありません |
+| `/otakara-horihori` | `otakara_horihori_v1.html` | HTML | error | viewport-fit=cover がありません |
+| `/kart` | `animal_kart_v7.html` | SAFE_AREA | warning | 固定UIがありますがsafe_area.jsの読込を確認できません |
+| `/kart` | `animal_kart_v7.html` | ORIENTATION | warning | orientationchangeだけに依存している可能性があります |
+| `/astral-fang` | `astral_fang_v1.html` | SAFE_AREA | warning | 固定UIがありますがsafe_area.jsの読込を確認できません |
+| `/astral-fang` | `astral_fang_v1.html` | ORIENTATION | warning | orientationchangeだけに依存している可能性があります |
+| `/iro` | `iro_awase_v3.html` | SAFE_AREA | warning | safe_area.jsを読み込んでいますが--sabを使用していません |
+| `/kakurenbo` | `kakurenbo_v2.html` | SAFE_AREA | warning | safe_area.jsを読み込んでいますが--sabを使用していません |
+| `/katakana-asobi` | `katakana_asobi_v1.html` | SAFE_AREA | warning | safe_area.jsを読み込んでいますが--sabを使用していません |
+| `/kazu-asobi` | `kazu_asobi_v3.html` | SAFE_AREA | warning | safe_area.jsを読み込んでいますが--sabを使用していません |
+| `/houki` | `mahou_houki_gp_v5.html` | SAFE_AREA | warning | 固定UIがありますがsafe_area.jsの読込を確認できません |
+| `/moji` | `moji_asobi_v2.html` | SAFE_AREA | warning | safe_area.jsを読み込んでいますが--sabを使用していません |
+| `/mori` | `mori_v4.html` | SAFE_AREA | warning | 固定UIがありますがsafe_area.jsの読込を確認できません |
+| `/neon-drive` | `neon_drive_v1.html` | SAFE_AREA | warning | 固定UIがありますがsafe_area.jsの読込を確認できません |
+| `/okashi-crossing` | `okashi_crossing.html` | SAFE_AREA | warning | safe_area.jsを読み込んでいますがsafe-area CSS変数を使用していません |
+| `/tashizan` | `tashizan_v2.html` | SAFE_AREA | warning | safe_area.jsを読み込んでいますが--sabを使用していません |
+| `/tokei-yomi` | `tokei_yomi_v1.html` | SAFE_AREA | warning | safe_area.jsを読み込んでいますが--sabを使用していません |
+| `/oukan-monogatari` | `oukan_monogatari_v1.html` | ORIENTATION | warning | orientationchangeだけに依存している可能性があります |
+| `/oukan-monogatari` | `oukan_monogatari_v1.html` | ORIENTATION | warning | 固定向き前提の可能性がありますが向き案内を確認できません |
+
+### 16.2 Group分類と修正内容
+
+**Group A（viewport、6ファイル、error解消）**: `astral_fang_v1.html`, `doubutsu_block_v3.html`, `machi_v7.html`, `mori_v4.html`, `neon_drive_v1.html`, `otakara_horihori_v1.html`の`<meta name="viewport">`へ`viewport-fit=cover`のみを追記した。既存のviewport件数（各1件）、`width=device-width`、`initial-scale`、`maximum-scale`/`user-scalable`の既存指定は変更していない。viewportを2件に増やしていない。
+
+**Group B（safe-area）**: 実測で以下3パターンに分かれた。
+
+1. **パス誤り（相対パス）**: `animal_kart_v7.html`・`astral_fang_v1.html`は`<script src="safe_area.js">`という相対パスで読み込んでおり、実際には正しく動作するものの、他30ファイルすべてが使う`/games/safe_area.js`という絶対パス規約と異なるため監査の`safeAreaLoaded`正規表現（`/games/safe_area.js`固定）に一致せず誤検出されていた。プロジェクト標準の絶対パスへ統一した（実質的な動作は変更なし、規約統一）。
+2. **未読込＋独自実装重複**: `mahou_houki_gp_v5.html`は`safe_area.js`を読み込まず、代わりに全く同じロジック（`postMessage`受信で`--sat`/`--sab`/`--sal`/`--sar`を`setProperty`、`requestSafeArea`をpostMessage）をインラインで複製していた。共通スクリプト`/games/safe_area.js`の読込に置き換え、重複コードを削除した（API・イベント名・payloadは共通スクリプトと完全一致のため機能変更なし）。`neon_drive_v1.html`は`safe_area.js`自体が未読込かつCSS変数も未使用だったため、読込を追加し、HUD 6要素（`#score`, `#stars`, `#hearts`, `#best`, `#speed`, `#muteBtn`）の`top`/`bottom`/`left`/`right`に`var(--sat/--sab/--sal/--sar, env(safe-area-inset-*,0px))`のfallback付きcalc()を適用した。
+3. **読込済みだが生env()のみ使用**: `okashi_crossing.html`は`/games/safe_area.js`を読み込みながら`.hud`・`#back-btn`・`#hint`の3箇所で生の`env(safe-area-inset-*)`のみを使用しており、共通スクリプトが実質未使用だった（iframe内では`env()`が正しく継承されない場合があるため、これが本来の不具合）。3箇所とも`var(--sat/--sab/--sal, env(...))`のfallback形式へ修正した。
+4. **`--sab`使用不要な誤検出（7ファイル）**: `iro_awase_v3.html`, `kakurenbo_v2.html`, `katakana_asobi_v1.html`, `kazu_asobi_v3.html`, `moji_asobi_v2.html`, `tashizan_v2.html`, `tokei_yomi_v1.html`は、いずれも画面上部のHUDバー（`padding-top: max(..., var(--sat,...))`）のみを持ち、下端に固定されたUI要素が実際には存在しないことを実測で確認した（`position:fixed`かつ`bottom:`を持つCSSルールが0件）。これらはHTMLを変更せず、下記16.3の監査一般化で対応した。
+5. **固定端UI自体が存在しない（1ファイル）**: `mori_v4.html`はviewport修正（Group A）以外に該当する固定UIが存在しない（`#wrap{position:fixed;inset:0;...}`という全画面センタリング用途のみで、`<button>`等の端固定要素・座標指定なし）ことを実測で確認した。HTML変更は不要と判断し、下記16.3の監査一般化で対応した。
+
+**Group C（回転案内、3ファイル）**: `animal_kart_v7.html`・`astral_fang_v1.html`は既存の自前`checkOrient()`（`orientationchange`/`resize`で縦持ち判定）、`oukan_monogatari_v1.html`は既存の`resizeCanvas()`（`orientationchange`/`resize`でCanvas再計算）を持っていた。いずれも親フレームの`useIframeBridge`（`src/hooks/useIframeBridge.js`）が全iframeへ常時送信している`{type:'orientation', landscapePhone}`メッセージを追加のトリガーとして接続し、`window.addEventListener('message', e => { if (e.data?.type==='orientation') checkOrient()/resizeCanvas(); })`を追加した。sandboxed iframeでは`orientationchange`が発火しないことがあるという既知の制約（`public/games/rotate_hint.js`自身のコメントに同じ記載あり）への対策であり、既存の向き判定基準・見た目・強制回転処理・ゲーム中断処理は変更していない。共通ファイル`rotate_hint.js`は「たてむきにしてね」という縦画面前提の案内であり、これら3ファイルは逆に横画面前提のゲームであるため流用せず、既存の自前実装を維持した。
+
+### 16.3 監査ルールの一般化（scripts/audit-games.mjs）
+
+SAFE_AREA判定を、`position:fixed`の単純な有無ではなく、実際に`top:`または`bottom:`を持つCSSルールブロックの有無で判定するよう変更した。
+
+- 変更前: `position:fixed`が1箇所でもあり、かつ`<button>`等のタグが存在すれば「固定UIあり」と判定し、safe_area.js読込と`--sat`/`--sab`双方の使用を一律に要求していた。`#wrap{position:fixed;inset:0;...}`のような全画面センタリング用途と、実際に端へ張り付くHUD/ボタンを区別できていなかった。
+- 変更後: CSSルールブロックを個別に抽出し、`position:fixed`を含むブロックのうち`top:`を持つものがあれば`hasFixedTopUi`、`bottom:`を持つものがあれば`hasFixedBottomUi`とする。`--sat`使用の要求は`hasFixedTopUi`が真の場合のみ、`--sab`使用の要求は`hasFixedBottomUi`が真の場合のみ行う。「固定UIがありますがsafe_area.jsの読込を確認できません」も同様に、上下どちらかの端固定UIが実在する場合のみ発報する。
+- 一般化条件: route名・HTML名によるallowlistは使用していない。CSS構造（`{...}`ブロック内の`position:fixed`と`top:`/`bottom:`の共起）のみで判定するため、どのファイルにも同じ基準が適用される。`inset:0`の全画面オーバーレイ（`.screen`, `#flash`, `#feedback-overlay`等）は端固定UIとして扱われない。
+
+### 16.4 fixture検証
+
+**safe-areaのcalc()整合性**: `top: 47px, right: 0px, bottom: 34px, left: 0px`を想定した`var(--sat/--sab/--sal/--sar, env(...))`のcalc()式を確認した。`neon_drive_v1.html`の`#speed`（`right:calc(18px + var(--sar,...))`, `bottom:calc(18px + var(--sab,...))`）は47px/34pxいずれの値でもNaN・未定義にならず、既存の18px基準オフセットに加算される形式であることをCSS式の静的確認で検証した。Canvasの論理座標・当たり判定は、これらの変更がすべてCSS `position:fixed`要素（HUD/ボタン）のみに限定されており、Canvas要素自体のサイズ・座標計算コードには一切触れていないため不変である。
+
+**回転メッセージリスナー**: 3ファイルとも既存の`checkOrient()`/`resizeCanvas()`関数自体は変更せず、追加した`addEventListener('message', ...)`はifガードで`type==='orientation'`のメッセージのみに反応し、それ以外のメッセージ（`safeArea`, `goBack`, `goHome`等）では発火しないことをdiff上のガード条件で確認した。リスナーの重複登録（同一ファイル内で同じイベントに対する二重の`addEventListener('message', ...)`呼び出し）がないことも各ファイルで1箇所のみの追加であることから確認した。
+
+**実ブラウザ検証**: 本Phaseではローカル開発サーバーでの実機・実ブラウザでのportrait/landscape切り替え、ノッチ相当safe-areaの目視確認は実施していない。上記のCSS静的検証・diffによるロジック不変性確認・監査再実行で代替した。実機確認は未実施項目として明記する。
+
+### 16.5 残存問題
+
+モバイル表示関連のerror/warningは0件になった。残るのはNAV 12件（Phase 4C-3で分類済み、N2 10件・N3 2件）とREGISTRY 2件（`/dressup`のroute判定不能、`/mahou-nakama`のSCHOOL_GAMES num重複。いずれも本Phaseの対象外で、本Phase前から存在し変更していない）のみである。
+
+### 16.6 次のPhase
+
+Phase 4C-5として、`/mahou-nakama`登録の`SCHOOL_GAMES num "18"`重複REGISTRY warningを扱う。

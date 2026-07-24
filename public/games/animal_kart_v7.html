@@ -188,7 +188,7 @@
   <div>よこむきに<br>してね</div>
 </div>
 
-<script src="safe_area.js"></script>
+<script src="/games/safe_area.js"></script>
 <script src="wakuwaku_bgm.js"></script>
 <script>
 (() => {
@@ -951,7 +951,10 @@ function checkOrient(){
   const portrait = window.innerHeight > window.innerWidth && Math.min(window.innerWidth,window.innerHeight) < 600;
   document.body.classList.toggle('portrait', portrait);
 }
-addEventListener('resize',checkOrient); addEventListener('orientationchange',checkOrient); checkOrient();
+addEventListener('resize',checkOrient); addEventListener('orientationchange',checkOrient);
+// sandboxed iframeではorientationchangeが発火しないことがあるため、親からの通知でも再判定する
+addEventListener('message', e=>{ if(e.data && e.data.type==='orientation') checkOrient(); });
+checkOrient();
 
 // when embedded in the site, the React wrapper provides the もどる button → hide our 🏠
 document.getElementById('bgmBtn').textContent = bgmOn?'🔊':'🔇';

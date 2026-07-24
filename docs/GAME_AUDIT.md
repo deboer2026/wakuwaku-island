@@ -170,3 +170,14 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実�
 - 監査: active error 6維持、warning 30維持。NAV 12維持、STORAGE 0 / 0、CANVAS 0、active 39を維持した（分類のみで数値変更なし）。
 - 詳細な12件の全件表、N2/N3の確認項目別根拠、案A/案Bの比較は`docs/NON_STORAGE_REVIEW.md`を参照する。
 - **Phase 4C-3は本Phaseをもって完了と判断する。** 実修正が必要な戻る導線の不具合は残っていない。
+
+## Phase 4C-4: viewport・safe-area・回転対応（2026-07-24）
+
+- 対象: モバイル表示カテゴリのactive HTML/SAFE_AREA/ORIENTATION 6 error / 17 warning、17ルート（`/astral-fang`, `/animal-block`, `/machi`, `/mori`, `/neon-drive`, `/otakara-horihori`, `/kart`, `/iro`, `/kakurenbo`, `/katakana-asobi`, `/kazu-asobi`, `/houki`, `/moji`, `/okashi-crossing`, `/tashizan`, `/tokei-yomi`, `/oukan-monogatari`）を修正した。ゲームロジック・STORAGE・Canvas描画・BGM・戻る操作・HomeChip・TopPageは変更していない。
+- Group A（viewport、6ファイル）: `astral_fang_v1.html`, `doubutsu_block_v3.html`, `machi_v7.html`, `mori_v4.html`, `neon_drive_v1.html`, `otakara_horihori_v1.html`の`<meta name="viewport">`へ`viewport-fit=cover`を追記した。既存のscale方針・viewport件数は変更していない。
+- Group B（safe-area）: `animal_kart_v7.html`・`astral_fang_v1.html`の相対パス`safe_area.js`参照を、他30ファイルと同じ`/games/safe_area.js`に統一した。`neon_drive_v1.html`に`/games/safe_area.js`読込を追加し、HUD 6要素（score/stars/hearts/best/speed/muteBtn）を`var(--sat/--sab/--sal/--sar, env(...))`経由へ変更した。`mahou_houki_gp_v5.html`は独自実装していたsafe-area受信ロジック（`postMessage`リスナー）が共通`/games/safe_area.js`と完全に重複していたため、共通スクリプト読込に置き換え、重複コードを削除した。`okashi_crossing.html`は`/games/safe_area.js`を読み込みながら生の`env()`のみを使い共通スクリプトを実質未使用だった3箇所を`var(--sat/--sab/--sal, env(...))`へ修正した。`iro`・`kakurenbo`・`katakana-asobi`・`kazu-asobi`・`moji`・`tashizan`・`tokei-yomi`の7ファイルはHTML変更なし（下記の監査一般化で対応）。`mori_v4.html`はHTML内に固定端UI自体が存在しないため変更なし。
+- Group C（回転案内、3ファイル）: `animal_kart_v7.html`・`astral_fang_v1.html`・`oukan_monogatari_v1.html`の既存`checkOrient()`/`resizeCanvas()`に、親から送られる`{type:'orientation'}`メッセージ（`useIframeBridge`が全iframeへ常時送信）を追加トリガーとして接続した。sandboxed iframeでは`orientationchange`が発火しないことがあるための信頼性向上であり、既存の向き判定ロジック・見た目・強制回転処理は変更していない。
+- 監査一般化: SAFE_AREAの判定を、`position:fixed`の有無だけでなく実際に`top:`/`bottom:`を持つ端固定ルールかどうかで判定するよう変更した。`inset:0`の全画面センタリング用途と、上下端に張り付くHUD/ボタンを区別し、対応する端が実際に存在する場合のみ`--sat`/`--sab`使用を要求する。route・HTML別のallowlistは使用していない。
+- 監査: active error 6→0、active warning 30→13（モバイル表示 6 error / 17 warning → 0 / 0）。NAV 12、REGISTRY 2（いずれも本Phase以前から存在し変更なし）が残る。STORAGE 0 / 0、Canvas 0、active 39、referenced-secondary 1、archived-or-unused 24を維持した。
+- 検証: 変更した10ファイルの構文（`node --check`相当のインラインscript検証）、safe-areaのcalc()置換パターンの数値整合性、orientationメッセージリスナーの追加のみで既存ロジック不変であることをdiffで確認した。ブラウザでの実機回転・ノッチ確認は本Phaseでは未実施のため、fixture・静的検証で補完した（`docs/NON_STORAGE_REVIEW.md`参照）。
+- 次はPhase 4C-5として、`/mahou-nakama`の`SCHOOL_GAMES num "18"`重複registry warningを扱う。

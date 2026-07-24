@@ -433,13 +433,20 @@ async function inspectHtml(file, text) {
   }
 
   const safeAreaLoaded = /\/games\/safe_area\.js/.test(text);
-  const fixedUi = /position\s*:\s*fixed/i.test(text) && /<(?:button|div|header|nav)\b/i.test(text);
+  // position:fixed だけでは判定しない。inset:0 の全画面センタリング用途と、
+  // 実際に上下端へ張り付く固定UI（top:/bottom: を持つ）を区別する。
+  const fixedRuleBodies = [...text.matchAll(/\{([^{}]*)\}/g)]
+    .map((m) => m[1])
+    .filter((body) => /position\s*:\s*fixed/i.test(body));
+  const hasFixedTopUi = fixedRuleBodies.some((body) => /\btop\s*:/i.test(body));
+  const hasFixedBottomUi = fixedRuleBodies.some((body) => /\bbottom\s*:/i.test(body));
+  const fixedUi = (hasFixedTopUi || hasFixedBottomUi) && /<(?:button|div|header|nav)\b/i.test(text);
   if (fixedUi && !safeAreaLoaded) issue('warning', 'SAFE_AREA', file, '固定 UI がありますが safe_area.js の読込を確認できません');
   if (safeAreaLoaded && !/--sa[trbl]\b/.test(text)) {
     issue('warning', 'SAFE_AREA', file, 'safe_area.js を読み込んでいますが safe-area CSS 変数を使用していません');
   } else if (safeAreaLoaded) {
-    if (!/--sat\b/.test(text)) issue('warning', 'SAFE_AREA', file, 'safe_area.js を読み込んでいますが --sat を使用していません');
-    if (!/--sab\b/.test(text)) issue('warning', 'SAFE_AREA', file, 'safe_area.js を読み込んでいますが --sab を使用していません');
+    if (hasFixedTopUi && !/--sat\b/.test(text)) issue('warning', 'SAFE_AREA', file, 'safe_area.js を読み込んでいますが --sat を使用していません');
+    if (hasFixedBottomUi && !/--sab\b/.test(text)) issue('warning', 'SAFE_AREA', file, 'safe_area.js を読み込んでいますが --sab を使用していません');
   }
 
   const rotateHint = /\/games\/rotate_hint\.js/.test(text);
