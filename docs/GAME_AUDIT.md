@@ -151,3 +151,13 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実�
 - 監査: active error 6維持、warning 61→52。NAV 43→34、STORAGE 0 / 0、CANVAS 0、HTML 64、active 39、referenced-secondary 1、archived-or-unused 24を維持した。
 - fixture: 許容4パターン、非許容8パターンの12 / 12に成功し、別関数・コメント・DOM文字列の`goBack`、誤payload、無条件history、両経路historyを誤って許可しないことを確認した。
 - ゲームHTMLは変更していない。次はPhase 4C-3Bで、親通信未検出、未接続・複合fallback、location代入を含む残存NAV 34 warningを個別に扱う。
+
+## Phase 4C-3C: 戻る導線の設計方針確定・監査再分類（2026-07-24）
+
+- 対象: 実測NAV active warning 36件（4C-3A時点34件から新規ゲーム追加分を含む）を全件、N1（false positive）／N2（HomeChip依存で設計上許容）／N3（未使用コード）／N4（実修正が必要）／N5（用途不明）へ再分類した。ゲームHTML・Reactコードは変更していない。
+- 親側仕様確認: `HomeChip`は全39ゲームルートのReactラッパーで無条件に描画される固定戻るボタンで、`postMessage`実装の有無に依存せず単独で機能する。iframeより後（DOM順）に配置されても`z-index:50`の絶対配置でiframeの上に常時表示される。
+- 監査一般化: `hasOnlyNavigationCalls`によるハンドラ内呼出の純度制限（`stopBgm()`等のcleanup呼出があると誤検出する原因）を撤廃し、`goBack`と`goHome`いずれの`postMessage`型も正式な親通信実装として認識し、`location`直代入にも`goBack()`と同型の`if/else`排他ガード判定を追加した。route・HTML別のallowlistは使用していない。
+- 監査: active error 6維持、warning 52→30。NAV 36→12（N1解消24件、残存はN2 10件・N3 2件）、STORAGE 0 / 0、CANVAS 0、active 39を維持した。
+- `/shabondama`: 未接続`goBack()`は案A（現状維持）を採用。既存の可視ボタンは全て「マップへ」用途でありサイトトップ用ボタンが存在しないため、UI変更なしに接続できる先がない。`HomeChip`が機能的に代替しており実害はないため、コード変更は見送った。
+- 詳細な36件の分類表、HomeChip依存許容条件、監査方針の比較検討は`docs/NON_STORAGE_REVIEW.md`を参照する。
+- 次はPhase 4C-3Dとして、N2/N3として整理した12件について、監査へ「info」重要度階層を追加するかどうかを検討する（今回は追加していない）。

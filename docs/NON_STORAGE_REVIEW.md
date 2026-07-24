@@ -257,3 +257,81 @@ Phase 4C-3Aで候補10件を関数・ハンドラ単位に精査し、監査ル�
 ## 13. Recommended Next Action
 
 次はPhase 4C-3Bとして、親`goBack`未検出12件、実修正・個別確認が必要な`history.back()` 15件、location代入7件から成るNAV 34 warningを、重複ルートをまとめて分割修正する。
+
+## 14. Phase 4C-3C: 戻る導線の設計方針確定・監査再分類（2026-07-24）
+
+### 14.1 親側ナビ仕様
+
+- `HomeChip`（`src/components/HomeChip.jsx`）: `onClick={() => navigate('/')}`で直接トップへ遷移する固定ボタン。`postMessage`や`useGameNav`の実装有無に一切依存しない独立した経路。
+- 配置: 全39ゲームのReactラッパー（`src/games/*.jsx`）が例外なく`<HomeChip />`をレンダリングしている（grep一致39件、route別の欠落なし）。CSSは`position:absolute; z-index:50; top/right: env(safe-area-inset-*)基準`で、iframeの後にDOM配置されてもz-index優先でiframeより前面に表示される。モバイルsafe-area、横画面でも位置は保たれる。
+- `useGameNav`（`src/hooks/useGameNav.js`）: 親`window`の`message`イベントで`{type:'goHome'}`（トップへ）と`{type:'goBack'}`（`sessionStorage`の内部遷移フラグに応じて`navigate(-1)`または`navigate('/')`）を処理する。ゲームHTML側は`goBack`・`goHome`いずれの型を送っても正しく受理される。
+- `useIframeBridge`はorientation・safe-area情報を子へ送るのみで、戻る操作とは無関係。
+- standalone（iframe外で直接HTML表示）時は`window.parent===window`となり、`HomeChip`を含む親UI自体が存在しないため、ゲームHTML側の`history.back()`／`location`フォールバックが唯一の戻り先になる。
+
+### 14.2 N1〜N5 分類基準
+
+| 区分 | 定義 | 今回の扱い |
+| --- | --- | --- |
+| N1 | 正しい`postMessage`実装（`goBack`または`goHome`、`if/else`で排他）が存在し、監査が誤検出していたもの | 監査ルール一般化で警告解消 |
+| N2 | HTML内に戻る実装が一切ない。`HomeChip`が唯一の戻り先で、ゲーム内UIに「サイトへ戻る」ボタン自体が存在しない | 設計上許容。警告は維持（下記14.5参照） |
+| N3 | `goBack()`等の関数は実装されているが、どのボタン・イベントからも呼ばれていない未使用コード | 実害なし。警告は維持し個別要修正として記録 |
+| N4 | 戻るボタンが存在するのに親通信がない、または`postMessage`と`history.back`/`location`が排他されず同時実行されるなど、実際に修正が必要な実装 | 該当0件 |
+| N5 | 戻るの意味（マップ内遷移かサイトトップか）が不明、動的生成で接続判定が困難など個別確認が必要なもの | 該当0件 |
+
+### 14.3 NAV active warning 36件の分類表
+
+| Route | HTML | 元の警告 | 分類 | 判定根拠 |
+| --- | --- | --- | --- | --- |
+| `/block` | `block_kuzushi_v4.html` | history.back依存 | N1 | `homeBtn`クリックで`stopBgm()`後に`goBack`postMessage／`else history.back()`。cleanup呼出があるため旧ルールで誤検出 |
+| `/animal-block` | `doubutsu_block_v3.html` | history.back依存 | N1 | `goBack()`は`home-btn`・`back-btn`双方から呼出。同上理由で誤検出 |
+| `/mahou-nakama` | `mahou_nakama_v1.html` | history.back依存 | N1 | `goBack()`が複数箇所（タイトル判定含む）から呼出。同上 |
+| `/neko-chou` | `neko_chou_v1.html` | history.back依存 | N1 | `try/catch`越しに`goBack` postMessage、`else history.back()` |
+| `/usagi-carrot` | `usagi_carrot_v2.html` | history.back依存 | N1 | 同上パターン |
+| `/okashi-crossing` | `okashi_crossing.html` | history.back依存 | N1 | `#back-btn onclick="goBack()"`から正式実装へ接続済み |
+| `/sora` | `sora_v3.html` | history.back依存×2 | N1 | 2箇所とも`goBack` postMessage／`else history.back()` |
+| `/jewelry-master` | `jewelry_master_v8.html` | location代入依存 | N1 | `goHome()`が`goHome` postMessage／`else location.href='/'`で正式実装 |
+| `/jewelry-master` | `jewelry_master_v8.html` | history.back依存 | **N3** | `goBack()`は分岐は正しいが、どのボタンからも呼ばれていない未使用関数 |
+| `/kudamono-catch` | `kudamono_v2.html` | history.back依存＋location代入依存 | N1 | `#back-btn onclick="goBack()"`＋`goHome()`ともに正式実装 |
+| `/mahou-meiro` | `meiro_v6.html` | history.back依存＋location代入依存 | N1 | `#back-btn onclick="goBack()"`＋`goHome()`ともに正式実装 |
+| `/runner` | `runner_v8.html` | history.back依存＋location代入依存 | N1 | `#back-btn onclick="goBack()"`＋`goHome()`ともに正式実装 |
+| `/shooting` | `shoot3.html` | history.back依存＋location代入依存 | N1 | `onBack()`から`goBack()`呼出、`cancelAnimationFrame`等cleanupを含む。`goHome()`も正式実装 |
+| `/animal-soccer` | `soccer_v7.html` | history.back依存＋location代入依存 | N1 | `#back-btn onclick="goBack()"`＋`goHome()`ともに正式実装 |
+| `/dressup` | `dressup_v2.html` | 親通信未検出＋location代入依存 | N1 | `goHome` postMessage／`else location.href='/'`のみで構成。`goBack`型ではなく`goHome`型のため旧ルールで未検出扱い |
+| `/kokki` | `flag_quiz_v2.html` | 親通信未検出＋location代入依存 | N1 | 同上（`goHome`型のみ） |
+| `/houki` | `mahou_houki_gp_v5.html` | 親通信未検出 | N1 | `homeBtn`が`goHome` postMessageに接続済み。standalone fallbackはないが本番はiframe埋込のみのため実害なし |
+| `/kart` | `animal_kart_v7.html` | 親通信未検出 | **N2** | 戻る実装なし。コード内コメントで「埋め込み時はReactラッパーの『もどる』ボタンを使うため自前の🏠は隠す」と明記、意図的にHomeChip依存 |
+| `/astral-fang` | `astral_fang_v1.html` | 親通信未検出 | N2 | 戻る実装・ボタンともになし |
+| `/ichigo` | `ichigo_v3.html` | 親通信未検出 | N2 | 同上 |
+| `/kakurenbo` | `kakurenbo_v2.html` | 親通信未検出 | N2 | 同上 |
+| `/kazu-asobi` | `kazu_asobi_v3.html` | 親通信未検出 | N2 | 同上 |
+| `/machi` | `machi_v7.html` | 親通信未検出 | N2 | ゲーム内「◀ タイトル」ボタンはステージ内遷移用途で、サイトへ戻るボタンは存在しない |
+| `/mori` | `mori_v4.html` | 親通信未検出 | N2 | 戻る実装・ボタンともになし |
+| `/neon-drive` | `neon_drive_v1.html` | 親通信未検出 | N2 | 同上 |
+| `/oukan-monogatari` | `oukan_monogatari_v1.html` | 親通信未検出 | N2 | 同上 |
+| `/bike` | `wakuwaku_bike_v3.html` | 親通信未検出 | N2 | 同上 |
+| `/shabondama` | `shabondama_v3.html` | history.back依存 | N3 | `goBack()`（871-872行）は分岐は正しいが未接続。可視ボタン4箇所は全て「↩ マップ」（ゲーム内ステージマップ遷移用）で、サイトトップ用ボタンが存在しない |
+
+（N1に分類した15ファイル・24警告は本Phaseの監査ルール一般化により解消済み。N2の10件・N3の2件、計12件は引き続きNAV warningとして残る。）
+
+### 14.4 監査ルール変更内容
+
+`scripts/audit-games.mjs`を以下の通り一般化した（route・HTML別の除外は追加していない）。
+
+1. `hasOnlyNavigationCalls`（ハンドラ内の呼出をナビゲーション系のみに限定する純度チェック）を撤廃した。`stopBgm()`・`cancelAnimationFrame()`等のcleanup呼出が同じハンドラ内にあっても、`postMessage(goBack)`と`history.back()`が`if/else`で排他されていれば正式実装と判定する。
+2. ファイル全体の「親へgoBackを送る実装」チェックを、`goBack`型に加えて`goHome`型のpostMessageも正式な親通信として認識するよう拡張した（`useGameNav`は両方を等しく処理するため）。
+3. `location`直代入（`location.href='/'`等）に対して、`history.back()`と同型の`if/else`排他ガード判定（`isGuardedStandaloneLocationAssign`）を新設した。これにより`goHome()`のstandalone fallbackとして正しく実装されたパターンを誤検出しなくなった。
+4. 上記1〜3はいずれもコード構造（実行可能scriptの排他ガード有無）のみで判定し、ファイル名・route名によるallowlistは使用していない。
+
+### 14.5 N2/N3として残す警告の扱いについて
+
+方針として「HomeChipが常設される以上、HTML内の戻る実装は必須ではない」という考え方（指示書の方針C相当）は妥当と判断した。ただし、この監査スクリプトには現在`error`／`warning`の2階層しかなく、「実害はないが記録は残したい」という`info`相当の重要度を追加するには、集計・出力ロジック（`activeErrors`/`activeWarnings`集計、コンソール出力、JSON出力）への広範な変更が必要になる。今回は設計方針の確定と監査の一般化（false positive解消）に留め、`info`階層の追加はPhase 4C-3Dの検討事項として持ち越した。そのためN2（HomeChip依存で設計上許容）・N3（未使用コード）の12件は、実害のない項目として分類を明記した上で、監査上は引き続き`warning`のまま残している。
+
+### 14.6 `/shabondama`の設計判断
+
+- 案A（現状維持）を採用した。
+- 理由: 既存の可視ボタン4箇所はいずれも「↩ マップ」というゲーム内ステージマップへの遷移用途であり、サイトトップへ戻る用途のボタンがHTML内に存在しない。案C（新規ボタン追加）はUI変更となり本Phaseの制約外。案B（`goBack()`削除）は実装コード変更を伴い、かつ`HomeChip`が既に同じ機能を提供しているため削除の実利がない。
+- `HomeChip`により機能的な戻り先は確保されているため、未接続の`goBack()`はデッドコードとして許容し、次に`shabondama_v3.html`へ手を入れる機会（Canvas・UI等の別修正）に合わせて削除を検討する。
+
+### 14.7 次のPhase
+
+Phase 4C-3Dとして、`info`重要度階層の追加要否と、N2/N3として整理した12件を監査結果からどう表示するか（現状維持 or `info`降格）を検討する。ゲームHTML・Reactコードの変更は依然として不要と判断している。

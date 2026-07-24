@@ -266,7 +266,7 @@ function enclosingBraceBlocks(masked, targetIndex) {
   return blocks;
 }
 
-function goBackPostMessageIndices(source, masked, open, close) {
+function navPostMessageIndices(source, masked, open, close, typePattern = /goBack|goHome/) {
   const indices = [];
   const block = masked.slice(open, close + 1);
   for (const match of block.matchAll(/\b(?:window\.)?parent\.postMessage\s*\(/g)) {
@@ -275,7 +275,8 @@ function goBackPostMessageIndices(source, masked, open, close) {
     const parenClose = matchingDelimiter(masked, parenOpen, '(', ')');
     if (parenClose < 0 || parenClose > close) continue;
     const call = source.slice(callStart, parenClose + 1);
-    if (/\btype\s*:\s*(['"])goBack\1/.test(call)) indices.push(callStart);
+    const typeMatch = call.match(/\btype\s*:\s*(['"])([\w]+)\1/);
+    if (typeMatch && typePattern.test(typeMatch[2])) indices.push(callStart);
   }
   return indices;
 }
@@ -284,16 +285,6 @@ function hasIframeParentCheck(maskedBlock) {
   return /\bwindow\.parent\s*!={1,2}\s*window\b/.test(maskedBlock)
     || /\bwindow\.self\s*!={1,2}\s*window\.top\b/.test(maskedBlock)
     || /\bwindow\.top\s*!={1,2}\s*window\.self\b/.test(maskedBlock);
-}
-
-function hasOnlyNavigationCalls(maskedBlock) {
-  const allowed = new Set([
-    'if', 'window.parent.postMessage', 'parent.postMessage',
-    'history.back', 'window.history.back',
-  ]);
-  const calls = [...maskedBlock.matchAll(/\b([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*\(/g)]
-    .map((match) => match[1]);
-  return calls.every((call) => allowed.has(call));
 }
 
 function handlerIsBound(source, masked, open, close) {
@@ -316,18 +307,41 @@ function handlerIsBound(source, masked, open, close) {
     || inlineBinding.test(outsideSource);
 }
 
+// 「history.back() のみに依存」false positive 対策：
+// stopBgm()/cancelAnimationFrame() 等の後片付け呼び出しが同じブロックに
+// 混在していても、postMessage(goBack) と if/else で排他制御されていれば
+// 正式な親通信フォールバックとみなす（Phase 4C-3C で判定を緩和）。
 function isGuardedStandaloneHistoryBack(source, masked, historyIndex) {
   for (const { open, close } of enclosingBraceBlocks(masked, historyIndex)) {
     const block = masked.slice(open, close + 1);
     const historyCalls = [...block.matchAll(/\bhistory\.back\s*\(/g)];
-    if (historyCalls.length !== 1 || !hasIframeParentCheck(block) || !hasOnlyNavigationCalls(block)) continue;
-    const postMessages = goBackPostMessageIndices(source, masked, open, close);
+    if (historyCalls.length !== 1 || !hasIframeParentCheck(block)) continue;
+    const postMessages = navPostMessageIndices(source, masked, open, close, /^goBack$/);
     if (!postMessages.length || !handlerIsBound(source, masked, open, close)) continue;
     for (const postIndex of postMessages) {
       const between = postIndex < historyIndex
         ? masked.slice(postIndex, historyIndex)
         : masked.slice(historyIndex, postIndex);
       if (/\belse\b/.test(between) || (postIndex < historyIndex && /\breturn\b/.test(between))) return true;
+    }
+  }
+  return false;
+}
+
+// location 直代入版の同型ガード。goBack/goHome いずれの postMessage とも
+// if/else で排他制御されていれば正式なフォールバックとみなす。
+function isGuardedStandaloneLocationAssign(source, masked, locationIndex) {
+  for (const { open, close } of enclosingBraceBlocks(masked, locationIndex)) {
+    const block = masked.slice(open, close + 1);
+    const locationCalls = [...block.matchAll(/location(?:\.href)?\s*=\s*['"]\/?['"]/g)];
+    if (locationCalls.length !== 1 || !hasIframeParentCheck(block)) continue;
+    const postMessages = navPostMessageIndices(source, masked, open, close, /^(?:goBack|goHome)$/);
+    if (!postMessages.length || !handlerIsBound(source, masked, open, close)) continue;
+    for (const postIndex of postMessages) {
+      const between = postIndex < locationIndex
+        ? masked.slice(postIndex, locationIndex)
+        : masked.slice(locationIndex, postIndex);
+      if (/\belse\b/.test(between) || (postIndex < locationIndex && /\breturn\b/.test(between))) return true;
     }
   }
   return false;
@@ -396,9 +410,12 @@ async function inspectHtml(file, text) {
     if (!loaded) issue('error', 'BGM', file, 'WakuwakuBGM を共有ライブラリの読込なしで使用しています', { text, index: bgmNew.index });
   }
 
-  const hasGoBack = /postMessage\s*\(\s*\{[\s\S]{0,160}?type\s*:\s*['"]goBack['"]/.test(text);
+  // goBack はゲーム内マップ等の内部ナビと、goHome はトップへの直行と対応する。
+  // どちらも useGameNav（親側 message ハンドラ）が正式に受理する型なので、
+  // 一方だけの実装でも親通信フォールバックとして有効とみなす。
+  const hasGoBack = /postMessage\s*\(\s*\{[\s\S]{0,160}?type\s*:\s*['"](?:goBack|goHome)['"]/.test(text);
   if (!hasGoBack) {
-    issue('warning', 'NAV', file, '親ページへ goBack メッセージを送る実装を確認できません');
+    issue('warning', 'NAV', file, '親ページへ goBack/goHome メッセージを送る実装を確認できません');
   }
   const executableJavaScript = maskExecutableJavaScript(text);
   for (const match of executableJavaScript.matchAll(/\bhistory\.back\s*\(/g)) {
@@ -406,11 +423,13 @@ async function inspectHtml(file, text) {
       issue('warning', 'NAV', file, 'history.back() に依存する戻る操作があります', { text, index: match.index });
     }
   }
-  for (const [regex, message] of [
-    [/location(?:\.href)?\s*=\s*['"]\/?['"]/g, 'location 代入に依存する戻る操作があります'],
-    [/parent\.(?:location|document|history)\b/g, '親ページを直接操作しています'],
-  ]) {
-    for (const match of text.matchAll(regex)) issue('warning', 'NAV', file, message, { text, index: match.index });
+  for (const match of executableJavaScript.matchAll(/location(?:\.href)?\s*=\s*['"]\/?['"]/g)) {
+    if (!isGuardedStandaloneLocationAssign(text, executableJavaScript, match.index)) {
+      issue('warning', 'NAV', file, 'location 代入に依存する戻る操作があります', { text, index: match.index });
+    }
+  }
+  for (const match of text.matchAll(/parent\.(?:location|document|history)\b/g)) {
+    issue('warning', 'NAV', file, '親ページを直接操作しています', { text, index: match.index });
   }
 
   const safeAreaLoaded = /\/games\/safe_area\.js/.test(text);
