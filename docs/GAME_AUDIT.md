@@ -161,3 +161,12 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実�
 - `/shabondama`: 未接続`goBack()`は案A（現状維持）を採用。既存の可視ボタンは全て「マップへ」用途でありサイトトップ用ボタンが存在しないため、UI変更なしに接続できる先がない。`HomeChip`が機能的に代替しており実害はないため、コード変更は見送った。
 - 詳細な36件の分類表、HomeChip依存許容条件、監査方針の比較検討は`docs/NON_STORAGE_REVIEW.md`を参照する。
 - 次はPhase 4C-3Dとして、N2/N3として整理した12件について、監査へ「info」重要度階層を追加するかどうかを検討する（今回は追加していない）。
+
+## Phase 4C-3D: 残存NAV 12件の最終分類（2026-07-24）
+
+- 対象: Phase 4C-3C後に残ったNAV active warning 12件全件を、function definition・static/dynamic reference・inline onclick・addEventListener・visible site-back UIの実測で最終確認した。ゲームHTML・Reactコードは変更していない。
+- 分類確定: N2（HomeChip依存で設計上許容）10件（`/kart`, `/astral-fang`, `/ichigo`, `/kakurenbo`, `/kazu-asobi`, `/machi`, `/mori`, `/neon-drive`, `/oukan-monogatari`, `/bike`）、N3（未使用の戻るコード）2件（`/shabondama`, `/jewelry-master`）。N4（実修正必要）・N5（用途不明）は0件。
+- 監査方針: 案A（文書上のみ分類し、warningは維持）を採用。案B（N2/N3を監査対象外にする一般化）はHTML単体解析ではReactラッパー側の`HomeChip`有無をroute名なしに安全に跨いで検証できないため見送った。`scripts/audit-games.mjs`は本Phaseで変更していない。
+- 監査: active error 6維持、warning 30維持。NAV 12維持、STORAGE 0 / 0、CANVAS 0、active 39を維持した（分類のみで数値変更なし）。
+- 詳細な12件の全件表、N2/N3の確認項目別根拠、案A/案Bの比較は`docs/NON_STORAGE_REVIEW.md`を参照する。
+- **Phase 4C-3は本Phaseをもって完了と判断する。** 実修正が必要な戻る導線の不具合は残っていない。

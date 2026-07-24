@@ -335,3 +335,69 @@ Phase 4C-3Aで候補10件を関数・ハンドラ単位に精査し、監査ル�
 ### 14.7 次のPhase
 
 Phase 4C-3Dとして、`info`重要度階層の追加要否と、N2/N3として整理した12件を監査結果からどう表示するか（現状維持 or `info`降格）を検討する。ゲームHTML・Reactコードの変更は依然として不要と判断している。
+
+## 15. Phase 4C-3D: 残存NAV 12件の最終分類・監査方針確定（2026-07-24）
+
+### 15.1 残存NAV active warning 12件の全件表
+
+| route | html | warning rule | line | message | visible site-back UI | HomeChip | goBack function | goBack connected | classification |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `/kart` | `animal_kart_v7.html` | 親通信未検出 | - | 親ページへgoBack/goHomeメッセージを送る実装を確認できません | なし（`#backBtn`はコース選択用） | あり | なし | - | N2 |
+| `/astral-fang` | `astral_fang_v1.html` | 親通信未検出 | - | 同上 | なし | あり | なし | - | N2 |
+| `/ichigo` | `ichigo_v3.html` | 親通信未検出 | - | 同上 | なし（`.back-link`はタイトル／キャラ選択画面遷移用） | あり | なし | - | N2 |
+| `/kakurenbo` | `kakurenbo_v2.html` | 親通信未検出 | - | 同上 | なし（`#back-btn`は`toStageSelect()`＝ステージ選択用） | あり | なし | - | N2 |
+| `/kazu-asobi` | `kazu_asobi_v3.html` | 親通信未検出 | - | 同上 | なし（`#back-btn`は`quitToMap()`＝マップ用） | あり | なし | - | N2 |
+| `/machi` | `machi_v7.html` | 親通信未検出 | - | 同上 | なし（`#mapBackBtn`はタイトル遷移用） | あり | なし | - | N2 |
+| `/mori` | `mori_v4.html` | 親通信未検出 | - | 同上 | なし | あり | なし | - | N2 |
+| `/neon-drive` | `neon_drive_v1.html` | 親通信未検出 | - | 同上 | なし | あり | なし | - | N2 |
+| `/oukan-monogatari` | `oukan_monogatari_v1.html` | 親通信未検出 | - | 同上 | なし | あり | なし | - | N2 |
+| `/bike` | `wakuwaku_bike_v3.html` | 親通信未検出 | - | 同上 | なし | あり | なし | - | N2 |
+| `/shabondama` | `shabondama_v3.html` | history.back依存 | 872 | history.back()に依存する戻る操作があります | なし（4箇所とも`goBackToMap()`でゲーム内マップへ） | あり | あり（871-872行） | 未接続 | N3 |
+| `/jewelry-master` | `jewelry_master_v8.html` | history.back依存 | 1912 | history.back()に依存する戻る操作があります | なし | あり | あり（1910-1912行） | 未接続 | N3 |
+
+### 15.2 N2（10件）の確認結果
+
+対象: `/kart`, `/astral-fang`, `/ichigo`, `/kakurenbo`, `/kazu-asobi`, `/machi`, `/mori`, `/neon-drive`, `/oukan-monogatari`, `/bike`
+
+全10件について実測で以下を確認した。
+
+- `goBack`/`goHome`/`postMessage`/`history.back`/`location`代入のいずれも実装が存在しない（grep 0件）。
+- HTML内に「戻る」系の見た目を持つボタンが存在する場合（`/kart`のコース選択、`/ichigo`のタイトル・キャラ選択、`/kakurenbo`のステージ選択、`/kazu-asobi`・`/machi`のマップ／タイトル）も、いずれもゲーム内画面遷移用であり、サイトトップへ戻る用途のUIではない。
+- 各ルートのReactラッパー（`src/games/*.jsx`）は例外なく`<HomeChip/>`を描画しており、`HomeChip.css`の`z-index:50`絶対配置・safe-area基準の座標によりiframeより前面に常時表示される（Phase 4C-3Cで確認済み、本Phaseで変更なし）。
+- 以上により14.5節のN2分類基準をすべて満たすと判断した。
+
+### 15.3 N3（2件）の確認結果
+
+対象: `/shabondama`（`shabondama_v3.html`）, `/jewelry-master`（`jewelry_master_v8.html`）
+
+| 確認項目 | `/shabondama` | `/jewelry-master` |
+| --- | --- | --- |
+| function definition | `function goBack(){...}`（871-872行）。iframe判定つき`postMessage`／`else history.back()`で分岐自体は正しい | `function goBack(){...}`（1910-1912行）。同様に分岐は正しい |
+| static references | `goBack(`という呼出しは自身の定義以外に存在しない（`grep -n "goBack" file`の結果、定義行のみ） | 同左 |
+| dynamic references | template literal・`innerHTML`経由での`goBack`文字列生成なし | 同左 |
+| inline onclick | 可視ボタン4箇所は全て`onclick="goBackToMap()"`（別関数、ゲーム内マップ遷移用）で`goBack()`ではない | `goBack`を参照する`onclick`属性なし |
+| addEventListener | `goBack`を第二引数に渡す`addEventListener`なし | 同左 |
+| template-generated reference | 該当なし | 該当なし |
+| dead-code conclusion | 未接続の未使用関数。ゲームロジック（`cancelAnimationFrame`呼出等）はこの関数内で完結しており、呼ばれないため実行時に一切影響しない | 同左 |
+
+両ファイルとも、静的検索・動的生成・イベント接続のいずれの経路からも呼び出されていないことを確認し、N3（未使用の戻るコード）と最終確定した。`HomeChip`が戻る導線を提供しているため、放置しても機能上の実害はない。
+
+### 15.4 N4／N5
+
+該当0件。残存12件はすべてN2またはN3に分類でき、実修正が必要な項目（N4）・個別確認が必要な項目（N5）は存在しない。
+
+### 15.5 監査方針の最終決定：案A（文書上のみ分類し、warningは維持）
+
+案A・案Bを比較検討し、**案Aを採用**した。監査スクリプトは今回変更していない。
+
+- 理由: 案B（N2/N3を監査対象外にする一般化条件）は、「戻る実装が存在しない」ことと「戻る導線が本当に不要である」ことを静的解析だけで区別する決定的な手段がない。現状の判定はHTMLファイル単体の解析であり、対応するReactラッパーが実際に`HomeChip`をレンダリングしているかは別ファイル（`src/games/*.jsx`）を跨いだ確認が必要になる。ファイル横断の対応関係をroute名に頼らず一般化して安全に検証する仕組みは今回の変更規模を超えるため、「監査結果を減らすだけの例外追加」になるリスクを避けた。
+- 案Aにより、N2・N3は実害なしと文書上明記した上でwarningとして残り、将来HTMLが変更されて誤ってN2/N3の前提が崩れた場合（例: HomeChipを外す・ゲーム内に紛らわしいボタンを追加する等）も、警告が消えずに追跡され続ける。
+- 監査ロジックは変更していないため、`scripts/audit-games.mjs`はPhase 4C-3Cの状態から不変。false positive・false negativeへの新たな影響はない。
+
+### 15.6 実装修正対象は残るか
+
+残らない。N4・N5が0件であるため、今回確認した範囲でコード修正が必要な戻る導線の不具合は存在しないと判断した。
+
+### 15.7 Phase 4C-3の完了可否
+
+**完了と判断する。** Phase 4C-3A（false positive構造判定の一般化）→4C-3B（未実施のまま4C-3Cへ統合）→4C-3C（設計方針確定・監査一般化でNAV 36→12）→4C-3D（残存12件の最終分類、N2 10件・N3 2件、N4/N5 0件）を経て、NAV warningはすべて分類・文書化が完了し、実修正が必要な項目は残っていない。今後HTMLに変更が入った際は、本節の分類表と15.5の判断基準に照らして再評価する。
