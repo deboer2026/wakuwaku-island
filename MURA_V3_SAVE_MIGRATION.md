@@ -207,6 +207,14 @@ Phase 1・2のフィールドは変更していない。
 }
 ```
 
+## Phase 4 schemaVersion 6
+
+Phase 4 adds regional exploration without changing the existing flat `inv` schema. Regional materials live in `gathered`; node cooldowns, regional quests, one-time treasures, and return positions live in `exploration`. `progression` gains `explorationRank` and `explorationXp`. Existing plots, dishes, residents, interiors, wardrobe, and unknown top-level fields remain preserved by `mergeIntoDefaults()`; invalid areas fall back to `village`.
+
+実ブラウザでは、Phase 3相当の `schemaVersion: 5` 状態から探索フィールドを欠いた入力を移行し、既存の村・畑・料理・住民・室内・着せ替えの状態を保持したまま、上記の探索既定値を補完して `schemaVersion: 6` へ更新することを確認した。移行後の通常URL再起動で再移行やコンソール error は発生しなかった。
+
+移行直後の探索値は `explorationRank: 1`、`explorationXp: 0`、空の `gathered`／`exploration.quests` である。地域依頼・採集・宝の結果はこの既定値へ加算され、完了済み依頼は `exploration.quests` のIDで保持されるため、再読み込みや再入場で報酬を二重に得ない。
+
 ### 8-1. 旧6区画の正規化
 
 `mergeIntoDefaults()`は、読み込んだ`plots`を新しい16区画の既定配列へ重ねる。

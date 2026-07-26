@@ -88,6 +88,7 @@
 <div id="hud">
   <div class="chip" id="backBtn">← もどる</div>
   <div class="chip" id="lvChip">むら Lv.<b id="lvNum">1</b></div>
+  <div class="chip" id="exploreChip">🧭 探検 R<b id="exploreRankNum">1</b></div>
   <div class="chip" id="crownChip">👑 <b id="crownNum">0</b></div>
   <div class="chip" id="invBtn">🧺</div>
   <div class="chip" id="bgmBtn">🎵</div>
@@ -329,7 +330,7 @@ const REPEAT_MISSIONS = [
 
 function defaultState(){
   return {
-    schemaVersion:5,
+    schemaVersion:6,
     gender:null,
     crowns:0, totalCrowns:0, level:1,
     plots:makeDefaultPlots(1),
@@ -360,6 +361,9 @@ function defaultState(){
     interiors:{},
     progression:{ farmingRank:1, farmingXp:0, cookingRank:1, cookingXp:0, harvestedCrops:[], cookedRecipes:[] },
     recipeProgress:{},
+    /* Phase 4: 既存の平坦な inv を崩さず、地域採集物だけを別枠で保存する。 */
+    gathered:{ mushroom:0, acorn:0, berry:0, wildHerb:0, riverFish:0, scale:0, shell:0, driftwood:0, seaweed:0 },
+    exploration:{ nodes:{}, quests:{}, treasures:{ "treasure:village":false, "treasure:forest":false, "treasure:river":false, "treasure:beach":false }, returnPositions:{} },
   };
 }
 let S = defaultState();
@@ -415,7 +419,18 @@ function mergeIntoDefaults(d){
     const legacyBest = S.dishes.filter(x=>x && x.id===id).reduce((n,x)=>Math.max(n,x.stars||0),0);
     S.recipeProgress[id] = { bestStars:Math.max(rp.bestStars||0, legacyBest), timesCooked:rp.timesCooked||0 };
   });
-  S.schemaVersion = 5;
+  const gdef = defaultState().gathered;
+  S.gathered = Object.assign({}, gdef, (d.gathered && typeof d.gathered === "object") ? d.gathered : {});
+  const edef = defaultState().exploration;
+  S.exploration = Object.assign({}, edef, (d.exploration && typeof d.exploration === "object") ? d.exploration : {});
+  S.exploration.nodes = Object.assign({}, edef.nodes, S.exploration.nodes || {});
+  S.exploration.quests = Object.assign({}, edef.quests, S.exploration.quests || {});
+  S.exploration.treasures = Object.assign({}, edef.treasures, S.exploration.treasures || {});
+  S.exploration.returnPositions = Object.assign({}, edef.returnPositions, S.exploration.returnPositions || {});
+  S.progression.explorationXp = Number(S.progression.explorationXp || 0);
+  S.progression.explorationRank = Math.max(Number(S.progression.explorationRank || 1), Math.min(5, 1 + Math.floor(S.progression.explorationXp / 30)));
+  if(["village","forest","river","beach"].indexOf(S.currentArea) < 0 && !INTERIORS[S.currentArea]) S.currentArea = "village";
+  S.schemaVersion = 6;
 }
 /* 旧セーブ（mura_progress）からの移行。読み取り専用・冪等（v3セーブが既にあれば何もしない）。 */
 function migrateFromLegacyIfNeeded(){
@@ -620,10 +635,11 @@ const sfx = {
   no(){ ensureAudio(); beep(220,.16,"sawtooth",.06); },
 };
 let _bgm = null;
+const VILLAGE_BGM_THEME = "happy";
 function initBgm(){
   if(_bgm) return;
   if(typeof WakuwakuBGM !== "undefined"){
-    _bgm = new WakuwakuBGM("forest");
+    _bgm = new WakuwakuBGM(VILLAGE_BGM_THEME);
     const on = WakuwakuBGM.loadState(); _bgm.setEnabled(on); if(on) _bgm.start();
   } else {
     _bgm = { enabled:false, toggle(){return false;}, start(){}, stop(){}, setEnabled(){} };
@@ -661,6 +677,7 @@ function showRewardModal(title, bodyHtml){
 }
 function renderStatus(){
   document.getElementById("lvNum").textContent = S.level;
+  document.getElementById("exploreRankNum").textContent = S.progression.explorationRank || 1;
   document.getElementById("crownNum").textContent = S.crowns;
 }
 
@@ -1764,7 +1781,7 @@ function updateSky(){
   else { const k=(t-0.9)/0.1; sky=c.copy(skyNight).lerp(skyDay,k); fogC=fogNight.clone().lerp(fogDay,k); sunI=0.15+k*0.85; hemiI=0.24+k*0.38; nightK=1-k; }
   renderer.setClearColor(sky);
   if(scene.fog) scene.fog.color.copy(fogC);
-  const indoors = S.currentArea !== "village";
+  const indoors = S.currentArea !== "village" && !REGION_CONFIG[S.currentArea];
   sun.intensity = indoors ? 0.18 : sunI;
   hemi.intensity = indoors ? 0.28 : hemiI;
   stars.material.opacity = Math.max(0, nightK - 0.25) * 1.1;
@@ -2510,6 +2527,117 @@ function maybeFriendshipEvent(id){
   showRewardModal("💛 なかよしイベント！", ANIMALS[id].icon+" "+ANIMALS[id].name+"<br>「"+r.dialogue.homeOnly[1]+"」<br>いっしょに おちゃを のんで、なかよく なった きがした！");
 }
 
+/* ================= Phase 4: 地域探索 ================= */
+const REGION_CONFIG = {
+  forest:{ label:"もり", theme:"forest", ground:0x4d9a55, sky:0xbde7c4, entry:new THREE.Vector3(0,0,12), exit:new THREE.Vector3(0,0,-12), unlock:1 },
+  river:{ label:"かわ", theme:"adventure", ground:0x7dbf8f, sky:0xb8e8f0, entry:new THREE.Vector3(0,0,12), exit:new THREE.Vector3(0,0,-12), unlock:1 },
+  beach:{ label:"うみ", theme:"ocean", ground:0xf3d28c, sky:0xbfeaff, entry:new THREE.Vector3(0,0,12), exit:new THREE.Vector3(0,0,-12), unlock:2 }
+};
+const REGION_NODES = {
+  forest:[
+    {id:"forest:mushroom", item:"mushroom", icon:"🍄", label:"きのこを ひろう", pos:[-4,0,2], respawn:45000},
+    {id:"forest:acorn", item:"acorn", icon:"🌰", label:"どんぐりを ひろう", pos:[3,0,0], respawn:35000},
+    {id:"forest:berry", item:"berry", icon:"🫐", label:"ベリーを つむ", pos:[1,0,-5], respawn:60000},
+    {id:"forest:herb", item:"wildHerb", icon:"🌿", label:"野草を つむ", pos:[-3,0,-6], respawn:50000},
+    {id:"forest:chest", item:"treasure", icon:"🧰", label:"森のたからばこ", pos:[5,0,-7], once:true}
+  ],
+  river:[
+    {id:"river:plant", item:"wildHerb", icon:"🌱", label:"水辺の草を つむ", pos:[-4,0,1], respawn:55000},
+    {id:"river:scale", item:"scale", icon:"✨", label:"きらめく うろこ", pos:[3,0,-3], respawn:70000},
+    {id:"river:fish", item:"fish", icon:"🎣", label:"つりを する", pos:[0,0,-6], respawn:15000},
+    {id:"river:chest", item:"treasure", icon:"🧰", label:"川のたからばこ", pos:[5,0,4], once:true}
+  ],
+  beach:[
+    {id:"beach:shell", item:"shell", icon:"🐚", label:"かいがらを ひろう", pos:[-4,0,1], respawn:30000},
+    {id:"beach:driftwood", item:"driftwood", icon:"🪵", label:"流木を ひろう", pos:[3,0,-2], respawn:60000},
+    {id:"beach:seaweed", item:"seaweed", icon:"🌿", label:"海そうを ひろう", pos:[-1,0,-5], respawn:50000},
+    {id:"beach:chest", item:"treasure", icon:"🧰", label:"浜辺のたからばこ", pos:[5,0,-7], once:true}
+  ]
+};
+const REGION_QUESTS = {
+  forest:[{id:"forest:forage", item:"mushroom", count:3, text:"きのこを 3こ 集めよう"},{id:"forest:acorns", item:"acorn", count:4, text:"どんぐりを 4こ 集めよう"}],
+  river:[{id:"river:fish", item:"riverFish", count:2, text:"川のさかなを 2ひき つろう"},{id:"river:scales", item:"scale", count:2, text:"きらめく うろこを 2まい"}],
+  beach:[{id:"beach:shells", item:"shell", count:3, text:"かいがらを 3こ ひろおう"},{id:"beach:driftwood", item:"driftwood", count:2, text:"流木を 2ほん 集めよう"}]
+};
+const regionGroups = {}, regionNodeMeshes = {};
+let fishingState = null;
+let savedVillageRegionVisibility = null;
+function addExplorationXp(n){
+  S.progression.explorationXp += n;
+  const rank = Math.min(5, 1 + Math.floor(S.progression.explorationXp / 30));
+  if(rank > S.progression.explorationRank){ S.progression.explorationRank = rank; toast("🧭 たんけんランク " + rank + "！"); }
+  renderStatus();
+}
+function setBgmTheme(theme){
+  if(!_bgm || typeof WakuwakuBGM === "undefined") return;
+  const enabled = _bgm.enabled;
+  try{ _bgm.stop(); _bgm = new WakuwakuBGM(theme); _bgm.setEnabled(enabled); if(enabled) _bgm.start(); }catch(e){}
+}
+function nodeReady(node){ const at=S.exploration.nodes[node.id]||0; return !at || (node.respawn && Date.now()-at>=node.respawn); }
+function buildRegion(name){
+  if(regionGroups[name]) return regionGroups[name];
+  const cfg=REGION_CONFIG[name], g=new THREE.Group(); g.visible=false; g.userData.name=name;
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(28,28),mat(cfg.ground)); floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; g.add(floor);
+  const exit=new THREE.Mesh(new THREE.CylinderGeometry(1.15,1.15,.12,16),mat(0xfff0a8)); exit.position.copy(cfg.exit); exit.position.y=.07; g.add(exit); g.userData.exit=exit;
+  if(name==="forest"){
+    for(let i=0;i<16;i++){ const t=new THREE.Group(), trunk=new THREE.Mesh(new THREE.CylinderGeometry(.16,.24,1.8,7),mat(0x76502f)), leaf=new THREE.Mesh(new THREE.ConeGeometry(1.0,2.2,8),mat(0x3f8e4c)); trunk.position.y=.9; leaf.position.y=2.2; t.add(trunk,leaf); const a=i*2.4; t.position.set(Math.sin(a)*9,0,Math.cos(a)*9); g.add(t); }
+  } else if(name==="river"){
+    const water=new THREE.Mesh(new THREE.PlaneGeometry(5,28),new THREE.MeshPhongMaterial({color:0x48bde8,transparent:true,opacity:.85})); water.rotation.x=-Math.PI/2; water.position.y=.03; g.add(water);
+    const bridge=new THREE.Mesh(new THREE.BoxGeometry(5.5,.3,1.2),mat(0x9d7043)); bridge.position.set(0,.2,1.8); g.add(bridge);
+    for(let z=-8;z<=8;z+=4){ const stone=new THREE.Mesh(new THREE.CylinderGeometry(.65,.8,.18,8),mat(0x9aa6ad)); stone.position.set((z%8?-.9:.9),.1,z); g.add(stone); }
+  } else {
+    const sea=new THREE.Mesh(new THREE.PlaneGeometry(28,9),new THREE.MeshPhongMaterial({color:0x4cc7ed,transparent:true,opacity:.88})); sea.rotation.x=-Math.PI/2; sea.position.set(0,.03,-9); g.add(sea);
+    const dock=new THREE.Mesh(new THREE.BoxGeometry(2.1,.25,5),mat(0x8d623b)); dock.position.set(0,.18,-7); g.add(dock);
+  }
+  REGION_NODES[name].forEach(node=>{ const m=makeEmojiSprite(node.icon,.85); m.position.set(node.pos[0],.75,node.pos[2]); m.userData.node=node; g.add(m); regionNodeMeshes[node.id]=m; });
+  scene.add(g); regionGroups[name]=g; return g;
+}
+function refreshRegionNodes(){ Object.keys(regionNodeMeshes).forEach(id=>{ const m=regionNodeMeshes[id], n=m.userData.node; m.visible=nodeReady(n) && (!n.once || !S.exploration.nodes[n.id]); }); }
+function enterRegion(name){
+  if(!REGION_CONFIG[name] || S.currentArea!=="village" || S.level<REGION_CONFIG[name].unlock) return;
+  S.exploration.returnPositions.village={x:player.position.x,z:player.position.z};
+  Object.keys(animalMeshes).forEach(id=>animalMeshes[id].group.visible=false);
+  savedVillageRegionVisibility = scene.children.filter(o=>o!==player && o!==petMesh && !o.isLight && o!==regionGroups.forest && o!==regionGroups.river && o!==regionGroups.beach && !String(o.userData && o.userData.interiorId||"").startsWith("interior:")).map(o=>({o:o,visible:o.visible}));
+  savedVillageRegionVisibility.forEach(e=>e.o.visible=false);
+  buildRegion(name).visible=true; S.currentArea=name; player.position.copy(S.exploration.returnPositions[name]||REGION_CONFIG[name].entry); player.position.y=.05;
+  setBgmTheme(REGION_CONFIG[name].theme); refreshRegionNodes(); save(); toast("🌿 "+REGION_CONFIG[name].label+"に きたよ");
+}
+function exitRegion(){
+  const name=S.currentArea; if(!REGION_CONFIG[name]) return;
+  S.exploration.returnPositions[name]={x:player.position.x,z:player.position.z}; regionGroups[name].visible=false;
+  if(savedVillageRegionVisibility){ savedVillageRegionVisibility.forEach(e=>e.o.visible=e.visible); savedVillageRegionVisibility=null; } Object.keys(animalMeshes).forEach(id=>animalMeshes[id].group.visible=true);
+  S.currentArea="village"; const back=S.exploration.returnPositions.village||{x:0,z:6}; player.position.set(back.x,terrainHeight(back.x,back.z),back.z);
+  setBgmTheme(VILLAGE_BGM_THEME); save();
+}
+function collectRegionNode(node){
+  if(!nodeReady(node) || (node.once && S.exploration.nodes[node.id])){ toast("まだ みつからないよ"); return; }
+  if(node.item==="fish"){ startFishing(node); return; }
+  S.exploration.nodes[node.id]=Date.now();
+  if(node.item==="treasure"){
+    const key="treasure:"+S.currentArea; S.exploration.treasures[key]=true; S.crowns+=8; S.totalCrowns+=8; toast("🧰 地域のたからを 見つけた！");
+  } else { S.gathered[node.item]=(S.gathered[node.item]||0)+1; toast(node.icon+" を ひろった！"); }
+  addExplorationXp(3); completeExplorationQuests(S.currentArea); save(); refreshRegionNodes();
+}
+function startFishing(node){
+  if(fishingState){ return; }
+  fishingState={node:node, started:Date.now(), target:.45+Math.random()*.25};
+  openModal('<h2>🎣 つり</h2><p id="fishText">ゲージが まんなかに 来たら ひく！</p><div style="height:18px;background:#d9f5ff;border-radius:9px;overflow:hidden"><div id="fishGauge" style="height:100%;width:0;background:#50bce8"></div></div><button class="mBtn" id="fishPull">ひく！</button><button class="mBtn sub" id="mClose">やめる</button>');
+  const timer=setInterval(()=>{ if(!fishingState){clearInterval(timer);return;} const p=((Date.now()-fishingState.started)%1800)/1800; const el=document.getElementById("fishGauge"); if(el) el.style.width=(p*100)+"%"; },50);
+  document.getElementById("fishPull").addEventListener("click",()=>{ const p=((Date.now()-fishingState.started)%1800)/1800; const ok=Math.abs(p-fishingState.target)<.16; fishingState=null; clearInterval(timer); closeModal(); if(ok){S.gathered.riverFish=(S.gathered.riverFish||0)+1; S.exploration.nodes[node.id]=Date.now(); addExplorationXp(5); completeExplorationQuests("river"); save(); refreshRegionNodes(); toast("🐟 さかなが つれた！");}else toast("にげられちゃった…"); });
+  document.getElementById("mClose").addEventListener("click",()=>{ fishingState=null; clearInterval(timer); closeModal(); });
+}
+function completeExplorationQuests(area){
+  (REGION_QUESTS[area]||[]).forEach(q=>{
+    if(S.exploration.quests[q.id] || (S.gathered[q.item]||0)<q.count) return;
+    S.gathered[q.item] -= q.count;
+    S.exploration.quests[q.id]=true;
+    S.crowns+=5;
+    S.totalCrowns+=5;
+    addExplorationXp(8);
+    showRewardModal("📋 地域のおねがい かんりょう！", q.text+"<br>👑 5こ と 🧭 8XP を もらった！");
+  });
+}
+
 /* ================= インタラクション ================= */
 const actBtn = document.getElementById("actBtn");
 let actTarget = null;
@@ -2521,7 +2649,10 @@ function findInteract(){
     const d = Math.sqrt((p.x-pos.x)**2 + (p.z-pos.z)**2);
     if(d < dist) cands.push({ type, d, label, cls, data });
   }
-  if(S.currentArea !== "village") return findInteriorInteract(push, cands);
+  if(S.currentArea !== "village"){
+    if(REGION_CONFIG[S.currentArea]) return findRegionInteract(push, cands);
+    return findInteriorInteract(push, cands);
+  }
   for(let i=0;i<PLOT_DEFS.length;i++){
     const pp = plotXZ(i);
     const pl = S.plots[i];
@@ -2546,9 +2677,18 @@ function findInteract(){
     }
   });
   if(treasureMark) push("treasure", treasureMark.position, 2.2, "⛏️ ほる！", "", null);
+  push("region", new THREE.Vector3(14,0,8), 2.8, "🌲 もりへ いく", "", "forest");
+  push("region", new THREE.Vector3(-14,0,8), 2.8, "🏞️ かわへ いく", "", "river");
+  push("region", new THREE.Vector3(0,0,-18), 2.8, "🌊 うみへ いく", "", "beach");
   if(!cands.length) return null;
   cands.sort((a,b)=>a.d-b.d);
   return cands[0];
+}
+function findRegionInteract(push, cands){
+  const area=S.currentArea; if(!regionGroups[area]) return null;
+  push("regionExit", REGION_CONFIG[area].exit, 2.0, "🚪 むらへ もどる", "", null);
+  REGION_NODES[area].forEach(node=>{ const m=regionNodeMeshes[node.id]; if(m && m.visible) push("regionNode", m.position, 1.8, node.icon+" "+node.label, "", node); });
+  if(!cands.length) return null; cands.sort((a,b)=>a.d-b.d); return cands[0];
 }
 /* 室内では村と別の候補セット（家具・住民・出口）を使う */
 function findInteriorInteract(push, cands){
@@ -2590,6 +2730,9 @@ function doAction(){
   else if(t.type === "stove") openKitchenModal();
   else if(t.type === "rack") openShopModal();
   else if(t.type === "bookshelf") completeQuest(t.data);
+  else if(t.type === "region") enterRegion(t.data);
+  else if(t.type === "regionExit") exitRegion();
+  else if(t.type === "regionNode") collectRegionNode(t.data);
 }
 actBtn.addEventListener("click", doAction);
 
@@ -2620,8 +2763,12 @@ function tick(now){
       move.normalize().multiplyScalar(4.6 * mvLen * dt);
       let nx = player.position.x + move.x;
       let nz = player.position.z + move.z;
-      if(S.currentArea === "village"){
+      if(S.currentArea === "village" || REGION_CONFIG[S.currentArea]){
         /* 世界の端と川（村の当たり判定） */
+        if(REGION_CONFIG[S.currentArea]){
+          nx = Math.max(-13,Math.min(13,nx)); nz = Math.max(-13,Math.min(13,nz));
+          player.position.set(nx,.05,nz);
+        } else {
         const nd = Math.sqrt(nx*nx + nz*nz);
         if(nd > 42){ nx = nx/nd*42; nz = nz/nd*42; }
         if(nx < -19.5 && !(nz > 0.5 && nz < 3.6)) nx = Math.max(nx, -19.5);  /* 橋以外は川に入れない */
@@ -2629,6 +2776,7 @@ function tick(now){
         player.position.x = nx; player.position.z = nz;
         const onBridge = (nx < -18 && nx > -28 && nz > 0.5 && nz < 3.6);
         player.position.y = onBridge ? 0.72 : terrainHeight(nx, nz);
+        }
       } else {
         /* 室内の当たり判定：小さな部屋の範囲でクランプ（村の判定は使わない） */
         const mx = ROOM_W/2 - 0.5, mz = ROOM_D/2 - 0.4;
@@ -2727,7 +2875,7 @@ function tick(now){
 
   /* --- カメラ（室内は開いた上方から部屋全体を見る共通ドールハウス視点） --- */
   if(player){
-    const indoors = S.currentArea !== "village";
+    const indoors = S.currentArea !== "village" && !REGION_CONFIG[S.currentArea];
     if(lastIndoorCameraMode !== indoors){
       camera.fov = indoors ? INTERIOR_CAMERA.fov : 60;
       camera.updateProjectionMatrix();
@@ -2879,6 +3027,9 @@ function bootWorld(prevLastSeen){
     const target = S.currentArea;
     S.currentArea = "village";
     InteriorSystem.enter(target);
+  }
+  if(S.currentArea && REGION_CONFIG[S.currentArea]){
+    const target=S.currentArea; S.currentArea="village"; enterRegion(target);
   }
   save();
   setTimeout(checkStateMission, 400);

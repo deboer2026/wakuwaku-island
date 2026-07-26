@@ -1,5 +1,14 @@
 # mura_v3.html Phase 1 監査（基盤・セーブ・v1完全互換）
 
+## Phase 4 compatibility notes
+
+- `currentArea` accepts `forest`, `river`, and `beach` in addition to the existing village and interior values.
+- Regional materials are saved separately from the numeric `inv` UI, preserving prior save and rendering assumptions.
+- Regional changes preserve player appearance, pet state, the single game loop, BGM enabled state, and the public `/mura` route remains `mura_v1.html`.
+- 実ブラウザでは3地域の往復、採集・宝・釣り、再出現、schemaVersion 5→6、78回の地域切替、100回相当の採集を確認した。検証専用UIは通常URLに出さず、確認後に削除済みである。
+- 地域依頼は地域単位の `exploration.quests` へ保存し、完了時に対象素材を消費してクラウン5・探索XP8を一度だけ付与する。森・川・海岸の各1件、探索ランクR1→R2、再読み込み後の完了状態維持をブラウザ実行コンテキスト調整で確認した。
+- 時間帯の目視確認では、森・川・海の昼夜でプレイヤー・採集物・宝／出口を視認できた。BGMは村 `happy`、森 `forest`、川 `adventure`、海 `ocean` を実画面で切り替え、村復帰を確認した。テーマはすべて実在値である。
+
 本監査は、実際に `public/games/mura_v1.html`（2777行）と `public/games/mura_v2.html`（1846行）を
 最初から最後まで読んだ上で作成した。ユーザー提供の下書き
 `C:\Users\favor\Downloads\MURA_V3_COMPATIBILITY_AUDIT.md` と
