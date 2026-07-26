@@ -159,6 +159,9 @@ const ANIMALS = {
   kuma:{    name:"くまの ボルト",   icon:"🐻" },
   kitsune:{ name:"きつねの コン",   icon:"🦊" },
   panda:{   name:"ぱんだの タンタン", icon:"🐼" },
+  risu:{    name:"りすの ぺかん",   icon:"🐿️" },
+  fukurou:{ name:"ふくろうの ノノ", icon:"🦉" },
+  kawauso:{ name:"かわうその ラッコロ", icon:"🦦" },
 };
 const EGG_INTERVAL = 90, EGG_MAX = 3;
 const TREASURES = [
@@ -286,13 +289,14 @@ const REPEAT_MISSIONS = [
 
 function defaultState(){
   return {
+    schemaVersion:4,
     gender:null,
     crowns:0, totalCrowns:0, level:1,
     plots:[null,null,null,null,null,null],
     inv:{ninjin:0,tomato:0,ichigo:0,corn:0,komugi:0,egg:0},
     dishes:[],
     orders:[],
-    friends:{neko:0,usagi:0,kuma:0,kitsune:0,panda:0},
+    friends:{neko:0,usagi:0,kuma:0,kitsune:0,panda:0,risu:0,fukurou:0,kawauso:0},
     mapPieces:0, pity:0, treasureReady:false, treasureCount:0,
     decos:[], komugiUnlocked:false,
     lastEggAt:0, lastSeen:Date.now(),
@@ -300,6 +304,20 @@ function defaultState(){
     wardrobe:{ owned:["basic","crown","face_none","neck_none","hand_none","shoes_navy","pet_none","fx_none"],
       outfit:"basic", head:"crown", face:"face_none", neck:"neck_none",
       hand:"hand_none", shoes:"shoes_navy", pet:"pet_none", fx:"fx_none" },
+    /* ===== Phase 2 追加分（既存Phase1セーブには存在しないため defaultState() 側の値で自動補完される） ===== */
+    currentArea:"village",
+    buildings:{ player:{visited:false}, kitchen:{visited:false}, boutique:{visited:false} },
+    residents:{
+      neko:{questDone:false, eventSeen:false, dialogueStage:0},
+      usagi:{questDone:false, eventSeen:false, dialogueStage:0},
+      kuma:{questDone:false, eventSeen:false, dialogueStage:0},
+      kitsune:{questDone:false, eventSeen:false, dialogueStage:0},
+      panda:{questDone:false, eventSeen:false, dialogueStage:0},
+      risu:{questDone:false, eventSeen:false, dialogueStage:0},
+      fukurou:{questDone:false, eventSeen:false, dialogueStage:0},
+      kawauso:{questDone:false, eventSeen:false, dialogueStage:0},
+    },
+    interiors:{},
   };
 }
 let S = defaultState();
@@ -319,6 +337,17 @@ function mergeIntoDefaults(d){
   S.wardrobe = Object.assign({}, wdef, d.wardrobe || {});
   if(!Array.isArray(S.wardrobe.owned)) S.wardrobe.owned = wdef.owned.slice();
   wdef.owned.forEach(id => { if(S.wardrobe.owned.indexOf(id) < 0) S.wardrobe.owned.push(id); });
+  /* Phase 2: residents/buildings/interiors はキー単位でマージし、
+     Phase 1のみのセーブ（これらのキーが存在しない）でも欠損なく既定値が補われるようにする。
+     既存の friends（仲良し度・移住状態の実体）はそのまま維持し、二重の状態源を作らない。 */
+  const rdef = defaultState().residents;
+  S.residents = {};
+  Object.keys(rdef).forEach(id=>{ S.residents[id] = Object.assign({}, rdef[id], (d.residents && d.residents[id]) || {}); });
+  const bdef = defaultState().buildings;
+  S.buildings = Object.assign({}, bdef, d.buildings || {});
+  if(!S.interiors || typeof S.interiors !== "object") S.interiors = {};
+  if(!S.currentArea) S.currentArea = "village";
+  S.schemaVersion = 4;
 }
 /* 旧セーブ（mura_progress）からの移行。読み取り専用・冪等（v3セーブが既にあれば何もしない）。 */
 function migrateFromLegacyIfNeeded(){
@@ -607,6 +636,7 @@ function useWell(){
   S.plots.forEach(p=>{ if(p && cropRatio(p)<1){ p.boost=(p.boost||0)+Math.round(CROPS[p.crop].time*1000*0.3); n++; } });
   if(n){ sfx.water(); toast("⛲ みんなに みずを あげた！"); save(); spawnBurst(wellPos, 0x81d4fa, 20); }
   else toast("みずを あげる さくもつが ないみたい");
+  completeQuestByType("well");
 }
 
 /* ---- クッキング（v1完全互換：切る→焼くの2工程） ---- */
@@ -717,7 +747,9 @@ function finishCook(burnt){
   mini = null;
   save(); renderStatus();
   sfx.cook();
-  spawnBurst(kitchenPos, 0xffcc80, 16);
+  const kg = interiorGroups["interior:kitchen"];
+  const burstPos = (S.currentArea === "interior:kitchen" && kg && kg.userData.dishTableTop) ? kg.userData.dishTableTop : kitchenPos;
+  spawnBurst(burstPos, 0xffcc80, 16);
   const msg = burnt ? "ちょっと こげちゃった！ でも できあがり！" : ("⭐".repeat(stars) + "<br>どうぶつに とどけてあげよう！");
   showRewardModal((DISH_ICON[recipeId]||"🍽️")+" できあがり！", r.name + "<br>" + msg);
   missionEvent("cook");
@@ -725,34 +757,82 @@ function finishCook(burnt){
 }
 
 /* ---- どうぶつ ---- */
+/* 住民ごとの会話：初対面/通常/中間/仲良し最大 のステージを friendship から判定し、
+   RESIDENTS[id].dialogue から個別の台詞を選ぶ（全住民共通の使い回しをやめた）。 */
+function pickResidentLine(animalId){
+  const r = RESIDENTS[animalId];
+  const f = S.friends[animalId] || 0;
+  const rs = S.residents[animalId] || {};
+  if(!rs.metOnce) return r.dialogue.firstMeet;
+  if(f >= 5) return r.dialogue.maxFriend;
+  if(f >= 3) return r.dialogue.midFriend;
+  const arr = r.dialogue.normal;
+  return arr[Math.floor(Math.random()*arr.length)];
+}
 function talkAnimal(animalId){
   ensureOrders();
   sfx.talk();
   const a = ANIMALS[animalId];
+  const r = RESIDENTS[animalId];
   const oi = orderOf(animalId);
   const heart = '<p style="text-align:center;margin:4px 0"><span class="hearts">'+("❤️".repeat(Math.min(5,S.friends[animalId]||0))||"🤍")+'</span></p>';
+  let h = '<h2>'+a.icon+' '+a.name+'</h2>'+heart;
   if(oi >= 0){
     const dish = S.orders[oi].dish;
     const di = bestDishIdx(dish);
-    let h = '<h2>'+a.icon+' '+a.name+'</h2>'+heart+
-      '<p style="text-align:center;font-weight:900;font-size:16px;line-height:1.7">「'+(DISH_ICON[dish]||"")+' '+RECIPES[dish].name+'が<br>たべたいなあ…」</p>';
+    h += '<p style="text-align:center;font-weight:900;font-size:16px;line-height:1.7">'+(r.dialogue.hasOrder)+'</p>';
     if(di >= 0){
       h += '<button class="mBtn" id="mGive">'+(DISH_ICON[dish]||"🍽️")+' とどける！</button>';
     } else {
       h += '<p style="text-align:center;font-weight:900;opacity:.7">キッチンで つくって きてあげよう！</p>';
     }
-    h += '<button class="mBtn sub" id="mClose">またね</button>';
-    openModal(h);
-    const g = document.getElementById("mGive");
-    if(g) g.addEventListener("click", ()=> deliver(animalId, oi));
   } else {
-    const chats = ["きょうも いい てんきだね！","むらが どんどん すてきに なるね！","またあそぼうね！","おはなが きれいだねえ","👑クラウン いっぱい あつまった？"];
-    openModal('<h2>'+a.icon+' '+a.name+'</h2>'+heart+
-      '<p style="text-align:center;font-weight:900;font-size:16px;line-height:1.7">「'+chats[Math.floor(Math.random()*chats.length)]+'」</p>'+
-      '<button class="mBtn sub" id="mClose">またね</button>');
+    h += '<p style="text-align:center;font-weight:900;font-size:16px;line-height:1.7">「'+pickResidentLine(animalId)+'」</p>';
   }
+  /* 個別依頼：inv/dish タイプのみここで受け渡し可能（find/well は別トリガー） */
+  const rs = S.residents[animalId];
+  const q = r.quest;
+  if(q && rs && !rs.questDone && (q.type==="inv" || q.type==="dish")){
+    const ok = q.type==="inv" ? (S.inv[q.item]||0) >= q.count : bestDishIdx(q.item) >= 0;
+    h += '<p style="text-align:center;font-weight:900;font-size:13px;margin:6px 0 0;opacity:.85">📋 '+q.text+'</p>';
+    if(ok) h += '<button class="mBtn" id="mQuest">わたす</button>';
+  }
+  h += '<button class="mBtn sub" id="mClose">またね</button>';
+  openModal(h);
+  if(rs) rs.metOnce = true;
+  const g = document.getElementById("mGive");
+  if(g) g.addEventListener("click", ()=> deliver(animalId, oi));
+  const qb = document.getElementById("mQuest");
+  if(qb) qb.addEventListener("click", ()=> fulfillQuest(animalId));
   const c = document.getElementById("mClose");
   if(c) c.addEventListener("click", closeModal);
+}
+function fulfillQuest(animalId){
+  const q = RESIDENTS[animalId].quest;
+  if(q.type==="inv") S.inv[q.item] -= q.count;
+  else if(q.type==="dish"){ const di=bestDishIdx(q.item); if(di>=0) S.dishes.splice(di,1); }
+  completeQuest(animalId);
+}
+function completeQuest(animalId){
+  const rs = S.residents[animalId];
+  if(!rs || rs.questDone) return;
+  rs.questDone = true;
+  const q = RESIDENTS[animalId].quest;
+  S.crowns += q.reward.crowns; S.totalCrowns += q.reward.crowns;
+  if((S.friends[animalId]||0) < 5) S.friends[animalId] = Math.min(5, (S.friends[animalId]||0) + q.reward.friendship);
+  if(S.friends[animalId] === 5) rebuildFriendHouses();
+  const ig = interiorGroups["interior:resident_"+animalId];
+  if(ig && ig.userData.giftShelf) ig.userData.giftShelf.visible = true;
+  save(); renderStatus(); sfx.crown();
+  closeModal();
+  showRewardModal("📋 おねがい かんりょう！", ANIMALS[animalId].icon+" "+ANIMALS[animalId].name+"<br>👑 "+q.reward.crowns+"こ ゲット！<br>🎁 "+q.giftLabel+"を もらった！");
+}
+function completeQuestByType(type){
+  Object.keys(RESIDENTS).forEach(id=>{
+    const q = RESIDENTS[id].quest;
+    const rs = S.residents[id];
+    if(q && q.type===type && rs && !rs.questDone) completeQuest(id);
+  });
 }
 function deliver(animalId, oi){
   const dish = S.orders[oi].dish;
@@ -1074,7 +1154,9 @@ function placeOnGround(obj, x, z, ry){
   return obj;
 }
 /* プレイヤーの家・キッチン・おみせ */
-placeOnGround(makeHouse(0xfff1d6, 0xf58ea8, 3.6, 3.2, 2.4), -9.5, -12, 0.5);
+const playerHousePos = new THREE.Vector3(-9.5, 0, -12);
+placeOnGround(makeHouse(0xfff1d6, 0xf58ea8, 3.6, 3.2, 2.4), playerHousePos.x, playerHousePos.z, 0.5);
+playerHousePos.y = terrainHeight(playerHousePos.x, playerHousePos.z);
 const kitchenGroup = makeHouse(0xffe3b8, 0xff9e5e, 4.2, 3.6, 2.6);
 const kitchenPos = new THREE.Vector3(11, 0, -11);
 placeOnGround(kitchenGroup, kitchenPos.x, kitchenPos.z, -0.5);
@@ -1259,12 +1341,13 @@ function rebuildDecos(){
 
 /* ---- なかよしハウス ---- */
 const ANIMAL_HOME = {
-  neko:{x:6,z:-15}, usagi:{x:-15,z:-6}, kuma:{x:16,z:12}, kitsune:{x:-8,z:12}, panda:{x:20,z:3}
+  neko:{x:6,z:-15}, usagi:{x:-15,z:-6}, kuma:{x:16,z:12}, kitsune:{x:-8,z:12}, panda:{x:20,z:3},
+  risu:{x:-18,z:14}, fukurou:{x:6,z:19}, kawauso:{x:20,z:-9}
 };
 const friendHouseGroup = new THREE.Group();
 scene.add(friendHouseGroup);
 const builtFriendHouses = {};
-const ANIMAL_COLORS = { neko:0xfff3e0, usagi:0xffd6e8, kuma:0xc98a5a, kitsune:0xf2903c, panda:0xf5f5f5 };
+const ANIMAL_COLORS = { neko:0xfff3e0, usagi:0xffd6e8, kuma:0xc98a5a, kitsune:0xf2903c, panda:0xf5f5f5, risu:0xd48a4a, fukurou:0xa88a6a, kawauso:0x8a6a52 };
 function rebuildFriendHouses(){
   Object.keys(ANIMALS).forEach(a=>{
     if((S.friends[a]||0) >= 5 && !builtFriendHouses[a]){
@@ -1277,6 +1360,117 @@ function rebuildFriendHouses(){
     }
   });
 }
+
+/* ================= Phase 2: 住民データ・室内・依頼・イベント ================= */
+/* 住民ごとの性格・好物・会話・個別依頼をデータ駆動で定義。
+   friendship（仲良し度）・movedIn の実体は引き続き S.friends[id] を単一の情報源とし、
+   S.residents[id] は questDone/eventSeen/dialogueStage のみを持つ（二重の状態源を作らない）。 */
+const RESIDENTS = {
+  neko:{
+    personality:"のんびりや", favoriteDish:"salad", dislikedDish:"soup", furnitureTheme:"cozy",
+    dialogue:{
+      firstMeet:"はじめまして。ミルクだよ。よろしくね。",
+      normal:["きょうも おひるねびよりだね〜","おなか すいてきちゃった","のんびりするのが すきなんだ"],
+      hasOrder:"「サラダが たべたいなあ…」",
+      delivered:"わあ、ありがとう！だいすき！",
+      midFriend:"きみと いると ほっとするんだ。",
+      maxFriend:"ミルクの いちばんの ともだちだね！",
+      homeOnly:["ここが ミルクの おうちだよ。あったかいでしょ？","おひるねする ばしょが おきにいりなんだ。"]
+    },
+    quest:{ id:"neko_q1", type:"inv", item:"corn", count:3, text:"とうもろこしを 3こ とどけてね", reward:{crowns:20,friendship:1}, giftLabel:"とうもろこしの かご" },
+  },
+  usagi:{
+    personality:"げんきいっぱい", favoriteDish:"cake", dislikedDish:"popcorn", furnitureTheme:"bright",
+    dialogue:{
+      firstMeet:"やっほー！モモだよ！なかよくしようね！",
+      normal:["きょうも げんきいっぱい！","にんじん だいすき！","いっしょに あそぼう！"],
+      hasOrder:"「サラダが たべたいな！」",
+      delivered:"やったー！ありがとう！",
+      midFriend:"きみと あそぶの たのしいな！",
+      maxFriend:"モモの いちばんの なかよしさん！",
+      homeOnly:["ここが モモの おうちだよ！","おきにいりの リボンが かざってあるの！"]
+    },
+    quest:{ id:"usagi_q1", type:"dish", item:"salad", count:1, text:"やさいサラダを 1こ とどけてね", reward:{crowns:20,friendship:1}, giftLabel:"リボンの かざり" },
+  },
+  kuma:{
+    personality:"ちからもち", favoriteDish:"soup", dislikedDish:"cake", furnitureTheme:"rustic",
+    dialogue:{
+      firstMeet:"おう、ボルトだ。よろしくな。",
+      normal:["きょうも からだを うごかすぞ","おおきい スープが すきなんだ","むらの みんなを まもるぞ"],
+      hasOrder:"「サラダが くいたいな」",
+      delivered:"うまい！ありがとうな！",
+      midFriend:"きみは たよりに なるな。",
+      maxFriend:"きみは ボルトの いちばんの あいぼうだ！",
+      homeOnly:["ここが おれの いえだ。","でかい テーブルが じまんなんだ。"]
+    },
+    quest:{ id:"kuma_q1", type:"inv", item:"egg", count:2, text:"たまごを 2こ とどけてくれ", reward:{crowns:20,friendship:1}, giftLabel:"おおきな なべ" },
+  },
+  kitsune:{
+    personality:"いたずらずき", favoriteDish:"omelet", dislikedDish:"salad", furnitureTheme:"mystic",
+    dialogue:{
+      firstMeet:"やあ、コンだよ。ふふ、なにか おもしろい こと ない？",
+      normal:["いたずら かんがえちゅう…","オムレツが だいすきなんだ","むらを たんけんしよう？"],
+      hasOrder:"「オムレツが たべたいなあ」",
+      delivered:"へへ、ありがとう！さすがだね！",
+      midFriend:"きみとは いい ともだちに なれそうだ。",
+      maxFriend:"きみは コンの とくべつな ともだちだよ！",
+      homeOnly:["ここが コンの すみかさ。","ふしぎな かざりが たくさん あるでしょ？"]
+    },
+    quest:{ id:"kitsune_q1", type:"inv", item:"ichigo", count:2, text:"いちごを 2こ とどけてね", reward:{crowns:20,friendship:1}, giftLabel:"ふしぎな はこ" },
+  },
+  panda:{
+    personality:"おっとり", favoriteDish:"pan", dislikedDish:"omelet", furnitureTheme:"zen",
+    dialogue:{
+      firstMeet:"こんにちは。タンタンです。よろしくね。",
+      normal:["のんびり すごすのが すきです","パンの においが しあわせです","たけを ながめるのが にっかです"],
+      hasOrder:"「サラダを いただけますか？」",
+      delivered:"ありがとう。うれしいです。",
+      midFriend:"あなたと いると おだやかな きもちに なります。",
+      maxFriend:"あなたは タンタンの たいせつな ひとです。",
+      homeOnly:["ここが わたしの おへやです。","たけの かざりが おきにいりなんです。"]
+    },
+    quest:{ id:"panda_q1", type:"dish", item:"pan", count:1, text:"こむぎパンを 1こ とどけてください", reward:{crowns:20,friendship:1}, giftLabel:"たけの かざり" },
+  },
+  risu:{
+    personality:"しんぱいしょうの あつめずき", favoriteDish:"popcorn", dislikedDish:"cake", furnitureTheme:"cabin",
+    dialogue:{
+      firstMeet:"あ、あの…ぺかんです。よろしく…おねがいします。",
+      normal:["きょうの ぶんの おやつ あつめなきゃ…","ポップコーンが だいすきなんだ","おちついた ばしょが すき…"],
+      hasOrder:"「サラダを ください…」",
+      delivered:"あ、ありがとう…！うれしい…！",
+      midFriend:"きみと はなすの、すこし なれてきたよ。",
+      maxFriend:"きみは ぺかんの だいじな ともだち…！",
+      homeOnly:["ここが ぺかんの おうち…","にんじんを たくわえて あるんだ。"]
+    },
+    quest:{ id:"risu_q1", type:"inv", item:"ninjin", count:2, text:"にんじんを 2こ とどけてほしい…", reward:{crowns:20,friendship:1}, giftLabel:"にんじんの たくわえ" },
+  },
+  fukurou:{
+    personality:"ものしり・よふかし", favoriteDish:"soup", dislikedDish:"popcorn", furnitureTheme:"study",
+    dialogue:{
+      firstMeet:"ホーホー、ノノです。よるは とくいなんですよ。",
+      normal:["よるの むらは しずかで いいですね","ほんを よむのが すきです","なにか しりたい ことは ありますか？"],
+      hasOrder:"「スープが のみたいですね」",
+      delivered:"ホーホー、ありがとうございます。",
+      midFriend:"あなたとの おしゃべりは たのしいですね。",
+      maxFriend:"あなたは ノノの たいせつな ゆうじんです。",
+      homeOnly:["ここが ノノの しょさいです。","この ほんだなを しらべてみて。"]
+    },
+    quest:{ id:"fukurou_q1", type:"find", text:"ほんだなを しらべてみて", reward:{crowns:20,friendship:1}, giftLabel:"ふるい ほん" },
+  },
+  kawauso:{
+    personality:"あまえんぼ", favoriteDish:"cake", dislikedDish:"soup", furnitureTheme:"river",
+    dialogue:{
+      firstMeet:"やあ！ラッコロだよ！なかよくしてね！",
+      normal:["いっしょに あそぼうよ！","かわで あそぶのが だいすき！","おなか すいたなあ"],
+      hasOrder:"「サラダ たべたいなあ」",
+      delivered:"わーい！ありがとう！",
+      midFriend:"きみと いると たのしいなあ！",
+      maxFriend:"きみは ラッコロの だいすきな ともだち！",
+      homeOnly:["ここが ラッコロの おうちだよ！","いどで いっしょに あそんでね！"]
+    },
+    quest:{ id:"kawauso_q1", type:"well", text:"いどで みんなに みずを あげてきてね", reward:{crowns:20,friendship:1}, giftLabel:"かわの ながれいし" },
+  },
+};
 
 /* ---- たからのXじるし ---- */
 let treasureMark = null;
@@ -1353,9 +1547,10 @@ function updateSky(){
   else if(t < 0.9){ const k=Math.min(1,(t-0.65)/0.08); sky=c.copy(skyDusk).lerp(skyNight,k); fogC=fogNight; sunI=0.4-k*0.25; hemiI=0.38-k*0.14; nightK=0.5+k*0.5; }
   else { const k=(t-0.9)/0.1; sky=c.copy(skyNight).lerp(skyDay,k); fogC=fogNight.clone().lerp(fogDay,k); sunI=0.15+k*0.85; hemiI=0.24+k*0.38; nightK=1-k; }
   renderer.setClearColor(sky);
-  scene.fog.color.copy(fogC);
-  sun.intensity = sunI;
-  hemi.intensity = hemiI;
+  if(scene.fog) scene.fog.color.copy(fogC);
+  const indoors = S.currentArea !== "village";
+  sun.intensity = indoors ? 0.18 : sunI;
+  hemi.intensity = indoors ? 0.28 : hemiI;
   stars.material.opacity = Math.max(0, nightK - 0.25) * 1.1;
   const ang = t * Math.PI * 2 - Math.PI/2;
   sunBall.position.set(Math.cos(ang)*80, Math.sin(ang)*55 + 8, -40);
@@ -1695,6 +1890,25 @@ function buildAnimal(id){
       const ear = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 5), mat(id==="panda"?0x3a3a3a:c));
       ear.position.set(ex, 0.24, 0); head.add(ear);
     }
+  } else if(id === "risu"){
+    for(const ex of [-0.14, 0.14]){
+      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.16, 4), mat(c));
+      ear.position.set(ex, 0.28, -0.03); head.add(ear);
+    }
+  } else if(id === "fukurou"){
+    for(const ex of [-0.13, 0.13]){
+      const tuft = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.13, 4), mat(c));
+      tuft.position.set(ex, 0.3, 0.05); head.add(tuft);
+    }
+    for(const ex of [-0.1, 0.1]){
+      const disc = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.02, 5, 10), mat(0xfff3c0));
+      disc.position.set(ex, 0, 0.24); head.add(disc);
+    }
+  } else if(id === "kawauso"){
+    for(const ex of [-0.12, 0.12]){
+      const ear = new THREE.Mesh(new THREE.SphereGeometry(0.055, 5, 4), mat(c));
+      ear.position.set(ex, 0.26, -0.02); head.add(ear);
+    }
   }
   if(id === "panda"){
     for(const ex of [-0.1, 0.1]){
@@ -1702,6 +1916,14 @@ function buildAnimal(id){
       patch.scale.set(1, 1.3, 0.55); patch.position.set(ex, 0.06, 0.235);
       head.add(patch);
     }
+  }
+  if(id === "risu"){
+    const tail = new THREE.Mesh(new THREE.SphereGeometry(0.22, 7, 6), mat(c));
+    tail.scale.set(0.6, 1.3, 0.9); tail.position.set(0, 0.6, -0.4); g.add(tail);
+  }
+  if(id === "kawauso"){
+    const tail = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.55, 6), mat(c));
+    tail.rotation.x = 1.3; tail.position.set(0, 0.28, -0.42); g.add(tail);
   }
   if(id === "kitsune"){
     const tail = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.5, 6), mat(c));
@@ -1805,6 +2027,271 @@ function inputVec(){
   return {x, y};
 }
 
+/* ================= Phase 2: 室内エリア管理（InteriorSystem） ================= */
+function makeEmojiSprite(emoji, scale){
+  const cvs = document.createElement("canvas"); cvs.width = 64; cvs.height = 64;
+  const ctx = cvs.getContext("2d");
+  ctx.font = "44px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(emoji, 32, 36);
+  const tex = new THREE.CanvasTexture(cvs);
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true }));
+  spr.scale.set(scale||0.5, scale||0.5, 1);
+  return spr;
+}
+const FURN_THEME = {
+  cozy:   { floor:0xffe9c7, wall:0xfff3e0, accent:0xffb3c9, bed:0xffd6e8, rug:0xffe0b0 },
+  bright: { floor:0xfff6d0, wall:0xffe9f5, accent:0xffd54f, bed:0xff9ecb, rug:0xbde0ff },
+  rustic: { floor:0xd8b98a, wall:0xe8d2a8, accent:0x8d6e4a, bed:0xc98a5a, rug:0x9a6b45 },
+  mystic: { floor:0x6a5a8a, wall:0x7a5fa0, accent:0xba9df5, bed:0x4a3a6a, rug:0x9a7fd0 },
+  zen:    { floor:0xe8e0cc, wall:0xf3ecd8, accent:0x74c46a, bed:0xcfd8cc, rug:0xa8c49a },
+  cabin:  { floor:0xc9a877, wall:0xdfc39a, accent:0x8a5c3a, bed:0xb5895a, rug:0x8a6a45 },
+  study:  { floor:0x5a5570, wall:0x6a6285, accent:0xffe27a, bed:0x4a4560, rug:0x3f3a55 },
+  river:  { floor:0x8ac9d8, wall:0xb8e3ec, accent:0x5ecbf7, bed:0x6ec6f5, rug:0x9fdcf7 },
+};
+/* エリアID一覧（データ駆動：単一の巨大if文を避ける） */
+const INTERIORS = {
+  "interior:player":   { kind:"player",   buildingId:"player",   doorPos:playerHousePos, label:"おうちに はいる" },
+  "interior:kitchen":  { kind:"kitchen",  buildingId:"kitchen",  doorPos:kitchenPos,     label:"キッチンに はいる" },
+  "interior:boutique": { kind:"boutique", buildingId:"boutique", doorPos:shopPos,        label:"ふくやに はいる" },
+};
+Object.keys(ANIMALS).forEach(id=>{
+  INTERIORS["interior:resident_"+id] = {
+    kind:"resident", residentId:id, doorPos:ANIMAL_HOME[id],
+    label: ANIMALS[id].name.split("の")[0] + "の おうちに はいる"
+  };
+});
+const ROOM_W = 6.2, ROOM_D = 5.6, ROOM_H = 2.6;
+const INTERIOR_CAMERA = {
+  fov: 65,
+  position: { x:0, y:ROOM_H + 3.0, z:0.8 },
+  targetScale: 0.65,
+  targetY: 0.55,
+  minDistance: 4.4
+};
+function buildInteriorShell(theme){
+  const g = new THREE.Group();
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_D), mat(theme.floor));
+  floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; g.add(floor);
+  const rug = new THREE.Mesh(new THREE.CircleGeometry(1.3, 16), mat(theme.rug || theme.accent));
+  rug.rotation.x = -Math.PI/2; rug.position.y = 0.01; g.add(rug);
+  const wallMat = mat(theme.wall, { side: THREE.DoubleSide });
+  const backWall = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_H), wallMat);
+  backWall.position.set(0, ROOM_H/2, -ROOM_D/2); g.add(backWall);
+  const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_D, ROOM_H), wallMat);
+  leftWall.rotation.y = Math.PI/2; leftWall.position.set(-ROOM_W/2, ROOM_H/2, 0); g.add(leftWall);
+  const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_D, ROOM_H), wallMat);
+  rightWall.rotation.y = -Math.PI/2; rightWall.position.set(ROOM_W/2, ROOM_H/2, 0); g.add(rightWall);
+  const winMat = new THREE.MeshBasicMaterial({ color:0xcdeeff, side:THREE.DoubleSide });
+  const win = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W*0.2, ROOM_H*0.3), winMat);
+  win.position.set(ROOM_W*0.28, ROOM_H*0.62, -ROOM_D/2+0.03); g.add(win);
+  const light = new THREE.PointLight(0xffdca8, 0.7, 11, 2);
+  light.position.set(0, ROOM_H*0.88, 0.4); g.add(light);
+  return g;
+}
+function buildFurniturePiece(kind, color){
+  if(kind === "bed"){
+    const g = new THREE.Group();
+    const base = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.35, 0.85), mat(color));
+    base.position.y = 0.175; g.add(base);
+    const pillow = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.14, 0.7), mat(0xffffff));
+    pillow.position.set(-0.42, 0.42, 0); g.add(pillow);
+    return g;
+  } else if(kind === "table"){
+    const g = new THREE.Group();
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.08, 10), mat(color));
+    top.position.y = 0.5; g.add(top);
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.5, 6), mat(0x8d6e4a));
+    leg.position.y = 0.25; g.add(leg);
+    return g;
+  } else if(kind === "shelf"){
+    const g = new THREE.Group();
+    const back = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.1, 0.16), mat(color));
+    back.position.y = 0.55; g.add(back);
+    for(let i=0;i<2;i++){
+      const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.04, 0.16), mat(0x8d6e4a));
+      shelf.position.set(0, 0.35+i*0.35, 0); g.add(shelf);
+    }
+    return g;
+  }
+  return new THREE.Group();
+}
+/* ---- 室内ごとの家具構築 ---- */
+function buildInteriorContent(interiorId){
+  const cfg = INTERIORS[interiorId];
+  let g;
+  if(cfg.kind === "player"){
+    g = buildInteriorShell(FURN_THEME.cozy);
+    const bed = buildFurniturePiece("bed", FURN_THEME.cozy.bed);
+    bed.position.set(-1.9, 0, -1.6); bed.rotation.y = 0.3; g.add(bed);
+    const table = buildFurniturePiece("table", 0xe8d2a8);
+    table.position.set(1.6, 0, -1.4); g.add(table);
+    const storage = buildFurniturePiece("shelf", 0xf3d6ff);
+    storage.position.set(2.5, 0, 1.4); storage.rotation.y = -Math.PI/2; g.add(storage);
+    const memoryShelf = buildFurniturePiece("shelf", 0xffe0b0);
+    memoryShelf.position.set(-2.6, 0, 1.6); memoryShelf.rotation.y = Math.PI/2; g.add(memoryShelf);
+    /* すがたみ（Phase1のワードローブ処理を再利用） */
+    const mirrorFrame = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.5, 0.1), mat(0xd9c98e));
+    const mirrorGlass = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 1.25), new THREE.MeshBasicMaterial({ color:0xdff3ff }));
+    mirrorGlass.position.z = 0.06;
+    const mirrorGroup = new THREE.Group();
+    mirrorGroup.add(mirrorFrame); mirrorGroup.add(mirrorGlass);
+    mirrorGroup.position.set(0, 0.75, -ROOM_D/2 + 0.12);
+    g.add(mirrorGroup);
+    g.userData.mirrorPos = new THREE.Vector3(0, 0, -ROOM_D/2 + 0.9);
+  } else if(cfg.kind === "kitchen"){
+    g = buildInteriorShell({ floor:0xffe3b8, wall:0xfff0d8, accent:0xff9e5e, rug:0xffd6a8 });
+    const stove = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.85, 0.6), mat(0xcfcfd6));
+    body.position.y = 0.425; stove.add(body);
+    const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.05, 10), mat(0xef5350));
+    plate.position.set(0, 0.88, 0); stove.add(plate);
+    stove.position.set(-1.6, 0, -1.7);
+    g.add(stove);
+    g.userData.stovePos = new THREE.Vector3(-1.6, 0, -0.9);
+    const dishTable = buildFurniturePiece("table", 0xffe3b8);
+    dishTable.position.set(1.6, 0, -1.2); g.add(dishTable);
+    g.userData.dishTableTop = new THREE.Vector3(1.6, 0.5, -1.2);
+    const cabinet = buildFurniturePiece("shelf", 0xffcc80);
+    cabinet.position.set(2.6, 0, 1.4); cabinet.rotation.y = -Math.PI/2; g.add(cabinet);
+  } else if(cfg.kind === "boutique"){
+    g = buildInteriorShell({ floor:0xf3d6ff, wall:0xf9ecff, accent:0xb98ae0, rug:0xe8c2ff });
+    const rack = new THREE.Group();
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.06, 0.06), mat(0x9a6f45));
+    bar.position.y = 1.1; rack.add(bar);
+    const cols = [0xffd6e8, 0x9fdcf7, 0xffd54f, 0xba9df5];
+    for(let i=0;i<4;i++){
+      const cloth = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.5, 6, 1, true), mat(cols[i]));
+      cloth.position.set(-0.6 + i*0.4, 0.8, 0); g.add(cloth);
+    }
+    rack.position.set(0, 0, -1.9);
+    g.add(rack);
+    g.userData.rackPos = new THREE.Vector3(0, 0, -1.1);
+    const counter = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.7, 0.5), mat(0xffe9f5));
+    counter.position.set(2.1, 0.35, 1.5); g.add(counter);
+    const clerk = new THREE.Group();
+    const cb = new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.28,0.6,8), mat(0xb98ae0));
+    cb.position.y = 0.5; clerk.add(cb);
+    const ch = new THREE.Mesh(new THREE.SphereGeometry(0.22,8,7), mat(0xffe3c9));
+    ch.position.y = 0.95; clerk.add(ch);
+    clerk.position.set(2.1, 0, 1.0);
+    g.add(clerk);
+  } else if(cfg.kind === "resident"){
+    const id = cfg.residentId;
+    const r = RESIDENTS[id];
+    const theme = FURN_THEME[r.furnitureTheme] || FURN_THEME.cozy;
+    g = buildInteriorShell(theme);
+    const bed = buildFurniturePiece("bed", theme.bed);
+    bed.position.set(-1.9, 0, -1.6); bed.rotation.y = 0.25; g.add(bed);
+    const table = buildFurniturePiece("table", theme.accent);
+    table.position.set(1.7, 0, -1.3); g.add(table);
+    const favSprite = makeEmojiSprite(DISH_ICON[r.favoriteDish] || "🍽️", 0.42);
+    favSprite.position.set(1.7, 0.85, -1.3);
+    g.add(favSprite);
+    const shelf = buildFurniturePiece("shelf", theme.accent);
+    shelf.position.set(2.6, 0, 1.4); shelf.rotation.y = -Math.PI/2; g.add(shelf);
+    /* ぬし本人（Phase1のbuildAnimalを再利用） */
+    const residentMesh = buildAnimal(id);
+    residentMesh.position.set(0, 0, 0.3);
+    residentMesh.userData.baseY = 0;
+    g.add(residentMesh);
+    g.userData.residentMesh = residentMesh;
+    /* おくりもの棚：個別依頼クリア後にだけ表示 */
+    const giftShelf = new THREE.Group();
+    const gs = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.4), mat(0xffd54f));
+    gs.position.y = 0.2; giftShelf.add(gs);
+    giftShelf.add(makeEmojiSprite("🎁", 0.3));
+    giftShelf.children[1].position.y = 0.55;
+    giftShelf.position.set(-2.6, 0, 1.6); giftShelf.rotation.y = Math.PI/2;
+    giftShelf.visible = !!(S.residents[id] && S.residents[id].questDone);
+    g.add(giftShelf);
+    g.userData.giftShelf = giftShelf;
+    /* ふくろうの ほんだな（find型の個別依頼） */
+    if(id === "fukurou"){
+      const book = buildFurniturePiece("shelf", 0x8a6a52);
+      book.position.set(0, 0, -ROOM_D/2 + 0.4); g.add(book);
+      g.userData.bookshelfPos = new THREE.Vector3(0, 0, -ROOM_D/2 + 1.2);
+    }
+  }
+  g.userData.isInterior = true;
+  g.userData.kind = cfg.kind;
+  g.visible = false;
+  g.userData.entrance = new THREE.Vector3(0, 0, ROOM_D/2 - 0.6);
+  scene.add(g);
+  return g;
+}
+const interiorGroups = {};
+let savedVillageVisibility = null;
+let savedFogRef = null;
+const InteriorSystem = {
+  build(interiorId){
+    if(interiorGroups[interiorId]) return interiorGroups[interiorId];
+    const g = buildInteriorContent(interiorId);
+    interiorGroups[interiorId] = g;
+    return g;
+  },
+  enter(interiorId){
+    if(!INTERIORS[interiorId] || S.currentArea === interiorId) return;
+    const cfg = INTERIORS[interiorId];
+    this.build(interiorId);
+    const g = interiorGroups[interiorId];
+    /* 村の全オブジェクトを非表示にし、対象の室内グループだけ表示する */
+    savedVillageVisibility = [];
+    scene.children.forEach(o=>{
+      if(o === player || o === petMesh) return;
+      if(o.userData && o.userData.isInterior) return;
+      if(o instanceof THREE.Light) return; /* hemi/sun はグローバル照明なので村を隠しても消さない */
+      savedVillageVisibility.push({ o, vis:o.visible });
+      o.visible = false;
+    });
+    g.visible = true;
+    savedFogRef = scene.fog;
+    scene.fog = null; /* 室内はfogの影響を受けない（近距離が白飛びしないように） */
+    S.outdoorPos = { x:player.position.x, z:player.position.z, ry:player.rotation.y };
+    player.position.set(g.userData.entrance.x, 0.05, g.userData.entrance.z);
+    player.rotation.y = Math.PI;
+    S.currentArea = interiorId;
+    if(cfg.buildingId){ S.buildings[cfg.buildingId] = S.buildings[cfg.buildingId] || {visited:false}; S.buildings[cfg.buildingId].visited = true; }
+    if(cfg.residentId){
+      S.interiors[interiorId] = S.interiors[interiorId] || { visited:false };
+      S.interiors[interiorId].visited = true;
+      maybeFriendshipEvent(cfg.residentId);
+    }
+    save();
+    sfx.talk();
+  },
+  exit(){
+    const interiorId = S.currentArea;
+    const cfg = INTERIORS[interiorId];
+    if(!cfg) return;
+    if(interiorGroups[interiorId]) interiorGroups[interiorId].visible = false;
+    if(savedVillageVisibility){ savedVillageVisibility.forEach(e=>{ e.o.visible = e.vis; }); savedVillageVisibility = null; }
+    scene.fog = savedFogRef;
+    S.currentArea = "village";
+    const dp = cfg.doorPos;
+    const ex = dp.x, ez = dp.z + 1.8;
+    player.position.set(ex, terrainHeight(ex, ez), ez);
+    player.rotation.y = S.outdoorPos ? S.outdoorPos.ry : 0;
+    save();
+  },
+  update(dt, now){
+    const interiorId = S.currentArea;
+    if(interiorId === "village") return;
+    const g = interiorGroups[interiorId];
+    if(!g) return;
+    if(g.userData.residentMesh) g.userData.residentMesh.position.y = Math.abs(Math.sin(now/500))*0.04;
+  }
+};
+/* 仲良しイベント：移住済み(friendship>=5)かつ個別依頼クリア後、自宅への初回入室で一度だけ発生 */
+function maybeFriendshipEvent(id){
+  const rs = S.residents[id];
+  if(!rs || rs.eventSeen) return;
+  if((S.friends[id]||0) < 5 || !rs.questDone) return;
+  rs.eventSeen = true;
+  save();
+  const r = RESIDENTS[id];
+  showRewardModal("💛 なかよしイベント！", ANIMALS[id].icon+" "+ANIMALS[id].name+"<br>「"+r.dialogue.homeOnly[1]+"」<br>いっしょに おちゃを のんで、なかよく なった きがした！");
+}
+
 /* ================= インタラクション ================= */
 const actBtn = document.getElementById("actBtn");
 let actTarget = null;
@@ -1816,6 +2303,7 @@ function findInteract(){
     const d = Math.sqrt((p.x-pos.x)**2 + (p.z-pos.z)**2);
     if(d < dist) cands.push({ type, d, label, cls, data });
   }
+  if(S.currentArea !== "village") return findInteriorInteract(push, cands);
   for(let i=0;i<maxPlots();i++){
     const pp = plotXZ(i);
     const pl = S.plots[i];
@@ -1823,8 +2311,9 @@ function findInteract(){
     if(pl) label = cropRatio(pl) >= 1 ? "しゅうかく！" : "みずを あげる";
     push("plot", pp, 2.3, "🌱 " + label, "", i);
   }
-  push("kitchen", kitchenPos, 3.1, "🍳 りょうりする", "", null);
-  push("shop", shopPos, 3.0, "🛍️ おかいもの", "", null);
+  push("door", playerHousePos, 2.6, "🚪 " + INTERIORS["interior:player"].label, "", "interior:player");
+  push("door", kitchenPos, 2.9, "🍳 " + INTERIORS["interior:kitchen"].label, "", "interior:kitchen");
+  push("door", shopPos, 2.8, "🛍️ " + INTERIORS["interior:boutique"].label, "", "interior:boutique");
   if(wellGroup) push("well", wellPos, 2.4, "⛲ みんなに みず", "", null);
   if(coopGroup){
     const n = pendingEggs();
@@ -1832,8 +2321,37 @@ function findInteract(){
   }
   Object.keys(animalMeshes).forEach(id=>{
     push("animal", animalMeshes[id].group.position, 2.2, ANIMALS[id].icon + " はなす", "talk", id);
+    if(builtFriendHouses[id]){
+      const home = ANIMAL_HOME[id];
+      push("door", home, 2.6, "🚪 " + INTERIORS["interior:resident_"+id].label, "", "interior:resident_"+id);
+    }
   });
   if(treasureMark) push("treasure", treasureMark.position, 2.2, "⛏️ ほる！", "", null);
+  if(!cands.length) return null;
+  cands.sort((a,b)=>a.d-b.d);
+  return cands[0];
+}
+/* 室内では村と別の候補セット（家具・住民・出口）を使う */
+function findInteriorInteract(push, cands){
+  const interiorId = S.currentArea;
+  const cfg = INTERIORS[interiorId];
+  const g = interiorGroups[interiorId];
+  if(!cfg || !g) return null;
+  push("exit", g.userData.entrance, 1.6, "🚪 そとに でる", "", null);
+  if(cfg.kind === "player" && g.userData.mirrorPos){
+    push("mirror", g.userData.mirrorPos, 1.4, "🪞 きせかえを みる", "", null);
+  } else if(cfg.kind === "kitchen" && g.userData.stovePos){
+    push("stove", g.userData.stovePos, 1.5, "🍳 りょうりする", "", null);
+  } else if(cfg.kind === "boutique" && g.userData.rackPos){
+    push("rack", g.userData.rackPos, 1.6, "🛍️ おかいもの", "", null);
+  } else if(cfg.kind === "resident"){
+    const id = cfg.residentId;
+    if(g.userData.residentMesh) push("animal", g.userData.residentMesh.position, 1.8, ANIMALS[id].icon + " はなす", "talk", id);
+    if(g.userData.bookshelfPos){
+      const rs = S.residents[id];
+      if(rs && !rs.questDone) push("bookshelf", g.userData.bookshelfPos, 1.4, "📚 ほんだなを しらべる", "", id);
+    }
+  }
   if(!cands.length) return null;
   cands.sort((a,b)=>a.d-b.d);
   return cands[0];
@@ -1843,17 +2361,22 @@ function doAction(){
   ensureAudio(); initBgm();
   const t = actTarget;
   if(t.type === "plot") interactPlot(t.data);
-  else if(t.type === "kitchen") openKitchenModal();
-  else if(t.type === "shop") openShopModal();
   else if(t.type === "well") useWell();
   else if(t.type === "coop") collectEggs();
   else if(t.type === "animal") talkAnimal(t.data);
   else if(t.type === "treasure") digTreasure();
+  else if(t.type === "door") InteriorSystem.enter(t.data);
+  else if(t.type === "exit") InteriorSystem.exit();
+  else if(t.type === "mirror") openShopModal();
+  else if(t.type === "stove") openKitchenModal();
+  else if(t.type === "rack") openShopModal();
+  else if(t.type === "bookshelf") completeQuest(t.data);
 }
 actBtn.addEventListener("click", doAction);
 
 /* ================= ループ ================= */
 const camTarget = new THREE.Vector3();
+let lastIndoorCameraMode = null;
 let camAngle = 0;
 let walkPhase = 0, stepTimer = 0;
 const fxTrail = [];
@@ -1878,14 +2401,23 @@ function tick(now){
       move.normalize().multiplyScalar(4.6 * mvLen * dt);
       let nx = player.position.x + move.x;
       let nz = player.position.z + move.z;
-      /* 世界の端と川 */
-      const nd = Math.sqrt(nx*nx + nz*nz);
-      if(nd > 42){ nx = nx/nd*42; nz = nz/nd*42; }
-      if(nx < -19.5 && !(nz > 0.5 && nz < 3.6)) nx = Math.max(nx, -19.5);  /* 橋以外は川に入れない */
-      if(nx < -26.5) nx = -26.5;
-      player.position.x = nx; player.position.z = nz;
-      const onBridge = (nx < -18 && nx > -28 && nz > 0.5 && nz < 3.6);
-      player.position.y = onBridge ? 0.72 : terrainHeight(nx, nz);
+      if(S.currentArea === "village"){
+        /* 世界の端と川（村の当たり判定） */
+        const nd = Math.sqrt(nx*nx + nz*nz);
+        if(nd > 42){ nx = nx/nd*42; nz = nz/nd*42; }
+        if(nx < -19.5 && !(nz > 0.5 && nz < 3.6)) nx = Math.max(nx, -19.5);  /* 橋以外は川に入れない */
+        if(nx < -26.5) nx = -26.5;
+        player.position.x = nx; player.position.z = nz;
+        const onBridge = (nx < -18 && nx > -28 && nz > 0.5 && nz < 3.6);
+        player.position.y = onBridge ? 0.72 : terrainHeight(nx, nz);
+      } else {
+        /* 室内の当たり判定：小さな部屋の範囲でクランプ（村の判定は使わない） */
+        const mx = ROOM_W/2 - 0.5, mz = ROOM_D/2 - 0.4;
+        nx = Math.max(-mx, Math.min(mx, nx));
+        nz = Math.max(-mz, Math.min(mz, nz));
+        player.position.x = nx; player.position.z = nz;
+        player.position.y = 0.05;
+      }
       const targetRot = Math.atan2(move.x, move.z);
       let dr = targetRot - player.rotation.y;
       while(dr > Math.PI) dr -= Math.PI*2;
@@ -1930,7 +2462,8 @@ function tick(now){
     if(petMesh.userData.spin) petMesh.rotation.y = now/500;
   }
 
-  /* --- どうぶつAI --- */
+  /* --- どうぶつAI（村のみ更新。室内では停止） --- */
+  if(S.currentArea === "village")
   Object.keys(animalMeshes).forEach(id=>{
     const a = animalMeshes[id];
     const g = a.group;
@@ -1973,21 +2506,49 @@ function tick(now){
     if(u.mark.visible){ u.mark.position.y = 1.75 + Math.sin(now/300)*0.09; u.markDot.position.y = 1.5 + Math.sin(now/300)*0.09; }
   });
 
-  /* --- カメラ --- */
+  /* --- カメラ（室内は開いた上方から部屋全体を見る共通ドールハウス視点） --- */
   if(player){
-    camTarget.lerp(new THREE.Vector3(player.position.x, player.position.y + 1.2, player.position.z), Math.min(1, dt*5));
-    const camPos = new THREE.Vector3(
-      camTarget.x + Math.sin(camAngle)*8.5,
-      camTarget.y + 5.2,
-      camTarget.z + Math.cos(camAngle)*8.5
-    );
-    camera.position.lerp(camPos, Math.min(1, dt*4));
+    const indoors = S.currentArea !== "village";
+    if(lastIndoorCameraMode !== indoors){
+      camera.fov = indoors ? INTERIOR_CAMERA.fov : 60;
+      camera.updateProjectionMatrix();
+      lastIndoorCameraMode = indoors;
+    }
+    if(indoors){
+      camTarget.lerp(new THREE.Vector3(
+        player.position.x * INTERIOR_CAMERA.targetScale,
+        INTERIOR_CAMERA.targetY,
+        player.position.z * INTERIOR_CAMERA.targetScale
+      ), Math.min(1, dt*5));
+      const camPos = new THREE.Vector3(
+        INTERIOR_CAMERA.position.x,
+        INTERIOR_CAMERA.position.y,
+        INTERIOR_CAMERA.position.z
+      );
+      const fromTarget = camPos.clone().sub(camTarget);
+      if(fromTarget.length() < INTERIOR_CAMERA.minDistance){
+        camPos.copy(camTarget).add(fromTarget.normalize().multiplyScalar(INTERIOR_CAMERA.minDistance));
+      }
+      camera.position.lerp(camPos, Math.min(1, dt*4));
+    } else {
+      camTarget.lerp(new THREE.Vector3(player.position.x, player.position.y + 1.2, player.position.z), Math.min(1, dt*5));
+      const camPos = new THREE.Vector3(
+        camTarget.x + Math.sin(camAngle)*8.5,
+        camTarget.y + 5.2,
+        camTarget.z + Math.cos(camAngle)*8.5
+      );
+      camera.position.lerp(camPos, Math.min(1, dt*4));
+    }
     camera.lookAt(camTarget);
     sun.target.position.copy(player.position);
   }
 
-  /* --- 環境 --- */
+  /* --- 室内更新 --- */
+  InteriorSystem.update(dt, now);
+
+  /* --- 環境（村の演出は村にいる時だけ） --- */
   updateSky();
+  if(S.currentArea === "village"){
   swayTrees.forEach(t=>{ t.leaves.rotation.z = Math.sin(now/1300 + t.phase)*0.045; });
   clouds.forEach(c=>{ c.g.position.x += c.speed*dt; if(c.g.position.x > 70) c.g.position.x = -70; });
   if(waterMesh){
@@ -2015,6 +2576,22 @@ function tick(now){
     s.m.material.opacity = s.life*0.6;
     if(s.life <= 0){ scene.remove(s.m); smokes.splice(i,1); }
   }
+  /* --- さくもつ更新（間引き） --- */
+  if(Math.floor(now/500) !== Math.floor((now-dt*1000)/500)) refreshCrops();
+  /* きらきら（収穫可能） */
+  for(let i=0;i<maxPlots();i++){
+    const p = S.plots[i];
+    if(p && cropRatio(p) >= 1 && Math.random() < dt*2.2){
+      const pp = plotPos(i);
+      pp.x += (Math.random()-0.5)*1.8; pp.z += (Math.random()-0.5)*1.8;
+      const m = new THREE.Mesh(new THREE.OctahedronGeometry(0.06), new THREE.MeshBasicMaterial({ color:0xfff59d, transparent:true, opacity:1 }));
+      m.position.copy(pp);
+      scene.add(m);
+      fxTrail.push({ m, life:0.8 });
+    }
+  }
+  } /* --- 村限定の演出ここまで --- */
+  /* bursts/fxTrailの残留処理は村・室内どちらでも継続して減衰・破棄する */
   for(let i=bursts.length-1;i>=0;i--){
     const b = bursts[i];
     b.life -= dt*1.4;
@@ -2029,21 +2606,6 @@ function tick(now){
     f.m.position.y += dt*0.5;
     f.m.material.opacity = Math.max(0, f.life*0.9);
     if(f.life <= 0){ scene.remove(f.m); fxTrail.splice(i,1); }
-  }
-
-  /* --- さくもつ更新（間引き） --- */
-  if(Math.floor(now/500) !== Math.floor((now-dt*1000)/500)) refreshCrops();
-  /* きらきら（収穫可能） */
-  for(let i=0;i<maxPlots();i++){
-    const p = S.plots[i];
-    if(p && cropRatio(p) >= 1 && Math.random() < dt*2.2){
-      const pp = plotPos(i);
-      pp.x += (Math.random()-0.5)*1.8; pp.z += (Math.random()-0.5)*1.8;
-      const m = new THREE.Mesh(new THREE.OctahedronGeometry(0.06), new THREE.MeshBasicMaterial({ color:0xfff59d, transparent:true, opacity:1 }));
-      m.position.copy(pp);
-      scene.add(m);
-      fxTrail.push({ m, life:0.8 });
-    }
   }
 
   /* --- アクションボタン --- */
@@ -2093,6 +2655,12 @@ function bootWorld(prevLastSeen){
   initAnimals();
   if(S.treasureReady) placeTreasure();
   updateAnimalMarks();
+  /* 再読み込み時に室内にいた場合は、その室内エリアへ復元する（入口付近に配置） */
+  if(S.currentArea && S.currentArea !== "village" && INTERIORS[S.currentArea]){
+    const target = S.currentArea;
+    S.currentArea = "village";
+    InteriorSystem.enter(target);
+  }
   save();
   setTimeout(checkStateMission, 400);
   setTimeout(()=>showWelcomeBack(prevLastSeen), 600);

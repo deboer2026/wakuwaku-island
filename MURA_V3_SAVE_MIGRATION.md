@@ -110,3 +110,74 @@ function migrateFromLegacyIfNeeded(){
 - 旧キー `mura_progress` への書き込み・削除は一切行わない（読み取りのみ）。
 - v1が持たなかったデータ（新規畑・新規料理・新規住民など）をv3側で水増しして移行することはしない
   （Phase 1のスコープはv1完全互換であり、拡張はPhase 3以降）。
+
+## 7. Phase 2 追加分（schemaVersion:4）
+
+Phase 2では住民8体・室内11か所・個別依頼・仲良しイベントを追加した。
+セーブ形式は以下のフィールドを追加している。
+
+```js
+{
+  schemaVersion: 4,
+  ...(Phase 1までの全フィールド、変更なし)...
+  currentArea: "village",   // 現在地。village または "interior:xxx"
+  buildings: { player:{visited}, kitchen:{visited}, boutique:{visited} },
+  residents: {
+    // 8体分。各要素は { questDone, eventSeen, dialogueStage, metOnce }
+    neko:{...}, usagi:{...}, kuma:{...}, kitsune:{...}, panda:{...},
+    risu:{...}, fukurou:{...}, kawauso:{...}
+  },
+  interiors: { "interior:resident_xxx": {visited} },
+}
+```
+
+### 7-1. 仲良し度・移住状態は二重の情報源を作らない
+
+Phase 1の `S.friends[id]`（仲良し度・移住判定の実体、`>=5` で移住済み）は Phase 2でも
+唯一の情報源のまま変更していない。`S.residents[id]` は **依頼進行・イベント既読・
+会話段階のみ** を持ち、仲良し度そのものは持たない。これにより「村側と室内側で
+仲良し度が食い違う」という状態分裂を構造的に防いでいる。
+
+### 7-2. マージ方法
+
+`mergeIntoDefaults(d)` に以下を追加した（Phase 1のinv/friends/wardrobeマージと同じ方式）。
+
+```js
+const rdef = defaultState().residents;
+S.residents = {};
+Object.keys(rdef).forEach(id=>{
+  S.residents[id] = Object.assign({}, rdef[id], (d.residents && d.residents[id]) || {});
+});
+const bdef = defaultState().buildings;
+S.buildings = Object.assign({}, bdef, d.buildings || {});
+if(!S.interiors || typeof S.interiors !== "object") S.interiors = {};
+if(!S.currentArea) S.currentArea = "village";
+```
+
+`residents` は住民IDをキー単位でマージするため、Phase 1オンリーのセーブ（`residents`
+キー自体が存在しない）でも8体分すべてが `questDone:false, eventSeen:false` などの
+既定値で欠損なく補完される。新規3住民（risu/fukurou/kawauso）は `friends` 側も
+`defaultState().friends` に追加済みのため、Phase 1セーブでは自動的に `0`（未接触）
+として補完される。
+
+### 7-3. 冪等性・現在地の復元
+
+`currentArea` がセーブされているため、室内にいる状態でページを再読み込みしても
+同じ室内へ復元される（`bootWorld()` 内で `S.currentArea !== "village"` を検出した場合、
+一度 `"village"` に戻してから `InteriorSystem.enter()` を呼び直すことで、
+`enter()` 内部の「既に同じエリアなら何もしない」ガードを回避しつつ入口位置へ配置する）。
+これは実ブラウザで「室内でセーブ→リロード→同じ室内かつ仲良し度・依頼進行を維持」
+することを確認済み（`MURA_V3_PHASE2_TEST_PLAN.md` 参照）。
+
+### 7-4. 検証済みの互換シナリオ
+
+実ブラウザで、Phase 1形式（`residents`/`buildings`/`currentArea`キーを持たない
+`mura_v3_progress`）を直接 `localStorage` に投入して読み込ませ、以下を確認した。
+
+- crowns/level/inv/dishes/komugiUnlocked/wardrobe が完全維持
+- 既存5住民の仲良し度（neko:5, usagi:2, kuma:0, kitsune:0, panda:0）が維持
+- 新規3住民（risu/fukurou/kawauso）の仲良し度が `0` で安全に補完
+- `residents`/`buildings`/`currentArea` が欠損なく既定値で補完（`village` 起動）
+- `schemaVersion` が `4` に更新
+- 一度 `S.residents.usagi.questDone = true` にしてセーブ→再読み込みしても、
+  再移行によって上書きされず維持される（冪等性）
