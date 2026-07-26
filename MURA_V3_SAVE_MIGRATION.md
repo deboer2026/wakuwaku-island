@@ -181,3 +181,73 @@ if(!S.currentArea) S.currentArea = "village";
 - `schemaVersion` が `4` に更新
 - 一度 `S.residents.usagi.questDone = true` にしてセーブ→再読み込みしても、
   再移行によって上書きされず維持される（冪等性）
+
+## 8. Phase 3 追加分（schemaVersion:5）
+
+Phase 3では畑・作物・料理を拡張するため、schemaVersionを5へ更新した。保存キーと
+Phase 1・2のフィールドは変更していない。
+
+```js
+{
+  schemaVersion: 5,
+  plots: [
+    {
+      id, areaId, type, unlocked,
+      cropId, plantedAt, wateredAt, boost, quality, harvestCount
+    }
+  ],
+  progression: {
+    farmingRank, farmingXp,
+    cookingRank, cookingXp,
+    harvestedCrops, cookedRecipes
+  },
+  recipeProgress: {
+    [recipeId]: { bestStars, timesCooked }
+  }
+}
+```
+
+### 8-1. 旧6区画の正規化
+
+`mergeIntoDefaults()`は、読み込んだ`plots`を新しい16区画の既定配列へ重ねる。
+
+- Phase 3形式で`id`がある要素は、保存値を維持しつつ正規の`id/areaId/type`へ揃える。
+- schemaVersion 4以前の`{crop, plantedAt, boost}`形式は、先頭6区画だけ
+  `{cropId, plantedAt, boost}`へ変換する。
+- 旧セーブに存在しない追加10区画は未解放・空の既定値で補完する。
+- 既存6区画のレベル解放条件は従来どおりで、旧データを再購入させない。
+- 変換後も旧キーを削除せず、保存時に新しいv3キーへschemaVersion 5として書き出す。
+
+### 8-2. 在庫・料理の互換性
+
+`inv`は従来のキーをそのままマージし、新作物6種を0で補完する。`dishes`は
+従来どおり`[{id, stars}]`の配列を維持する。既存料理については、保存済みの最高星を
+`recipeProgress[id].bestStars`の初期値へ反映するが、元の料理を削除・変換しない。
+
+`progression`がない旧セーブは両ランク1・経験値0で開始する。これは既存の村レベル、
+小麦解放、在庫、料理、仲良し度、着せ替え、現在地を変更しない安全な既定値である。
+
+### 8-3. Phase 2状態の維持
+
+`residents`、`buildings`、`interiors`は従来どおりキー単位でマージする。
+実ブラウザfixtureでは、schemaVersion 4のサンプルを読み込み、次を確認した。
+
+- 6要素畑が16要素へ変換され、先頭区画の`ninjin`と植付情報を維持
+- `inv.tomato: 9`、`dishes`の`salad: ★3`を維持
+- `residents.usagi.questDone/eventSeen: true`を維持
+- schemaVersionが5になり、追加区画・進行・レシピ履歴が安全に補完
+
+通常URLで再読み込みした場合も、解放済み区画、在庫、料理、ランクが保持された。
+
+### 8-4. 離脱中の成長と冪等性
+
+作物の成長は保存済み`plantedAt`と`boost`から現在時刻との差を計算し、`cropRatio()`で
+最大1へ制限する。通常畑、果樹、ハーブは同じ`S.plots`配列と計算経路を使う。
+
+実ブラウザでは、じゃがいもを途中成長、ハーブとりんごを成熟時刻にして通常起動し、
+途中段階と成熟2件、おかえり通知の件数が一致することを確認した。直後の再読み込みでは
+`bootWorld()`が保存した新しい`lastSeen`により通知を再表示しない。りんご収穫後は
+`cropId:apple`を保持して`plantedAt`だけを更新し、離脱後の再成長も同じ計算で成熟した。
+
+30日相当の時刻でも成長率は1を超えない。schemaVersion 4の旧plots形式に保存された
+にんじんも`plot_001`へ正規化後、保存済み`plantedAt`から成熟状態を復元した。
