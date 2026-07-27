@@ -17,8 +17,8 @@ export default function AstralFang() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/astral_fang_v1.html"
-          title="アストラルファング 星喰いの城"
+          src="/games/starry_animal_rescue_v1.html"
+          title="ほしぞらアニマルレスキュー"
           allow="autoplay; fullscreen"
           allowFullScreen
           sandbox="allow-scripts allow-same-origin allow-popups"

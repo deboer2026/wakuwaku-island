@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>ほしぞらアニマルレスキュー</title>
+  <style>
+    :root{ --sky1:#3a4a9e; --sky2:#7b6fd8; --pink:#ff9ecb; --mint:#7be0c8; --lemon:#fff2a8; --lav:#c9b8ff; }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#232a5c;color:#fff;font-family:"Hiragino Maru Gothic ProN","M PLUS Rounded 1c",system-ui,sans-serif}
+    canvas{display:block}
+    #game{position:fixed;inset:0}
+    .screen{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:calc(16px + var(--sat,0px)) calc(16px + var(--sar,0px)) calc(16px + var(--sab,0px)) calc(16px + var(--sal,0px));background:linear-gradient(160deg,var(--sky1),var(--sky2));transition:.3s;overflow-y:auto}
+    .hidden{display:none!important}
+    h1.tt{font-size:clamp(26px,6vw,42px);font-weight:900;margin:0;color:#fff8d8;text-shadow:0 3px 0 rgba(60,40,120,.5)}
+    .sub{font-size:14px;font-weight:800;color:#eaf0ff;margin:0}
+    .bigbtn{font-family:inherit;font-weight:900;font-size:18px;color:#4a3a10;background:linear-gradient(180deg,#fff2a8,#ffd35a);border:none;border-radius:20px;padding:14px 40px;cursor:pointer;box-shadow:0 6px 0 #d69a2a;touch-action:manipulation;min-height:52px}
+    .bigbtn:active{transform:translateY(4px);box-shadow:0 2px 0 #d69a2a}
+    .bigbtn.sub2{background:linear-gradient(180deg,#dff0ff,#a8d0ff);color:#1a3a6a;box-shadow:0 6px 0 #6a97cc}
+    .bigbtn.sub2:active{box-shadow:0 2px 0 #6a97cc}
+    .bigbtn:disabled{opacity:.4;cursor:default}
+    .rowwrap{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:900px}
+    .charcard{width:150px;background:rgba(255,255,255,.92);border-radius:20px;padding:12px 8px;cursor:pointer;border:4px solid transparent;color:#333}
+    .charcard.sel{border-color:#ffd35a;background:#fff9e0}
+    .charcard canvas{width:100%;height:110px;display:block;border-radius:12px;background:radial-gradient(circle,#eaf3ff,#cfe0ff)}
+    .charcard .cn{font-weight:900;font-size:16px;margin-top:6px}
+    .charcard .cf{font-size:11px;color:#666;margin-top:2px;line-height:1.5}
+    #stageGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;max-width:760px;width:100%}
+    .stagecard{background:rgba(255,255,255,.92);border-radius:18px;padding:12px;cursor:pointer;color:#333;text-align:center}
+    .stagecard.locked{opacity:.55;cursor:default}
+    .stagecard canvas{width:100%;height:80px;border-radius:10px;display:block}
+    .stagecard .sn{font-weight:900;font-size:13px;margin-top:6px}
+    .stagecard .ss{font-size:15px;letter-spacing:2px;margin-top:2px}
+    .stagecard .lockrow{font-size:11px;color:#888;margin-top:4px}
+    #hud{position:fixed;inset:0;z-index:12;pointer-events:none;opacity:0;transition:.3s}
+    #hud.show{opacity:1}
+    .hudtop{position:absolute;left:calc(10px + var(--sal,0px));right:calc(10px + var(--sar,0px));top:calc(8px + var(--sat,0px));display:flex;align-items:center;gap:8px;pointer-events:auto}
+    .chip{background:rgba(20,20,60,.55);border:1px solid rgba(255,255,255,.4);border-radius:14px;padding:5px 11px;font-weight:900;font-size:12px;color:#fff;white-space:nowrap}
+    .spacer{flex:1}
+    #goalTxt{position:absolute;left:50%;top:calc(52px + var(--sat,0px));transform:translateX(-50%);background:rgba(20,20,60,.55);border:1px solid rgba(255,255,255,.35);border-radius:14px;padding:6px 16px;font-size:12px;font-weight:800;white-space:nowrap;pointer-events:none}
+    #toastMsg{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%) scale(.85);opacity:0;transition:.25s;font-weight:900;font-size:clamp(18px,4vw,26px);color:#fff8d8;text-shadow:0 3px 10px rgba(0,0,0,.4);text-align:center;pointer-events:none;white-space:nowrap}
+    #toastMsg.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+    #joyBase{position:absolute;left:calc(18px + var(--sal,0px));bottom:calc(18px + var(--sab,0px));width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);pointer-events:auto;touch-action:none}
+    #joyNub{position:absolute;left:31px;top:31px;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.75)}
+    #sparkleBtn{position:absolute;right:calc(20px + var(--sar,0px));bottom:calc(26px + var(--sab,0px));width:84px;height:84px;border-radius:50%;border:3px solid #fff;background:radial-gradient(circle at 35% 30%,#fff6c8,#ffce4a);color:#7a5200;font-family:inherit;font-weight:900;font-size:13px;pointer-events:auto;display:none;box-shadow:0 5px 0 #c98a1e;touch-action:manipulation}
+    #sparkleBtn.show{display:block}
+    #sparkleBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #c98a1e}
+    #backChip{pointer-events:auto;background:rgba(20,20,60,.55);border:1px solid rgba(255,255,255,.4);border-radius:14px;padding:6px 12px;font-weight:900;font-size:12px;color:#fff;cursor:pointer;min-height:34px}
+    #bgmChip{pointer-events:auto;background:rgba(20,20,60,.55);border:1px solid rgba(255,255,255,.4);border-radius:14px;padding:6px 10px;font-size:15px;cursor:pointer;min-height:34px}
+    .resultbox{background:rgba(255,255,255,.95);border-radius:22px;padding:22px 20px;max-width:420px;width:100%;color:#333}
+    .starsrow{font-size:40px;letter-spacing:6px;margin:6px 0}
+    .starsrow .off{color:#ddd}
+    .starsrow .on{color:#ffc93c}
+    #dressGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:10px;max-width:560px;width:100%}
+    .ditem{background:rgba(255,255,255,.92);border-radius:14px;padding:10px 6px;color:#333;cursor:pointer;border:3px solid transparent;font-size:11px;font-weight:800}
+    .ditem.eq{border-color:#7be0c8;background:#e6fff6}
+    .ditem.locked{opacity:.45;cursor:default}
+    .ditem .di-ico{font-size:26px;display:block;margin-bottom:4px}
+    #rotate{position:fixed;inset:0;z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;background:linear-gradient(160deg,#3a4a9e,#7b6fd8);color:#fff;font-weight:800;font-size:14px;line-height:1.9}
+    #rotate .ph{font-size:52px;animation:tilt 1.4s ease-in-out infinite}
+    @keyframes tilt{0%,100%{transform:rotate(0)}50%{transform:rotate(90deg)}}
+    body.portrait #rotate{display:flex}
+    a11y-hidden{display:none}
+    @media(max-width:480px){ .bigbtn{padding:12px 28px;font-size:16px} }
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+
+  <div id="scrTitle" class="screen">
+    <h1 class="tt">ほしぞらアニマルレスキュー</h1>
+    <p class="sub">どうぶつたちを たすけにいこう！</p>
+    <button class="bigbtn" id="btnStart" aria-label="はじめる">はじめる</button>
+    <button class="bigbtn sub2 hidden" id="btnContinue" aria-label="つづきから">つづきから</button>
+    <button class="bigbtn sub2" id="btnMusicTitle" aria-label="おんがく">🎵 おんがく</button>
+  </div>
+
+  <div id="scrChar" class="screen hidden">
+    <h1 class="tt" style="font-size:24px">どうぶつを えらんでね</h1>
+    <div class="rowwrap" id="charGrid"></div>
+    <div style="display:flex;gap:10px">
+      <button class="bigbtn sub2" id="btnCharBack" aria-label="もどる">← もどる</button>
+      <button class="bigbtn" id="btnCharGo" aria-label="きめた">きめた！</button>
+    </div>
+  </div>
+
+  <div id="scrStage" class="screen hidden">
+    <h1 class="tt" style="font-size:22px">ステージを えらんでね</h1>
+    <div id="stageGrid"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+      <button class="bigbtn sub2" id="btnStageBack" aria-label="もどる">← もどる</button>
+      <button class="bigbtn sub2" id="btnOpenDress" aria-label="おしゃれ">✨ おしゃれ</button>
+    </div>
+  </div>
+
+  <div id="scrResult" class="screen hidden">
+    <div class="resultbox">
+      <h1 class="tt" style="font-size:22px;color:#7a5200">クリア！</h1>
+      <div class="starsrow" id="resStars">☆☆☆</div>
+      <p id="resDetail" style="font-weight:800;line-height:1.8;font-size:13px"></p>
+      <p id="resNewItem" style="font-weight:900;color:#c98a1e;font-size:13px"></p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px">
+        <button class="bigbtn sub2" id="btnRetry" aria-label="もういちど">もういちど</button>
+        <button class="bigbtn sub2" id="btnToStages" aria-label="ステージをえらぶ">ステージをえらぶ</button>
+        <button class="bigbtn hidden" id="btnNext" aria-label="つぎへ">つぎへ</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="scrDress" class="screen hidden">
+    <h1 class="tt" style="font-size:22px">おしゃれ</h1>
+    <canvas id="dressPreview" width="200" height="150" style="border-radius:16px;background:radial-gradient(circle,#eaf3ff,#cfe0ff)"></canvas>
+    <div id="dressTabs" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center"></div>
+    <div id="dressGrid"></div>
+    <button class="bigbtn sub2" id="btnDressBack" aria-label="もどる">← もどる</button>
+  </div>
+
+  <div id="hud">
+    <div class="hudtop">
+      <button id="backChip" aria-label="もどる">← もどる</button>
+      <span class="chip" id="stageNameChip">ステージ</span>
+      <span class="spacer"></span>
+      <span class="chip" id="starChip">⭐0</span>
+      <span class="chip" id="rescueChip">🐾0</span>
+      <button id="bgmChip" aria-label="おんがく">🔊</button>
+    </div>
+    <div id="goalTxt">すすもう！</div>
+    <div id="toastMsg"></div>
+    <div id="joyBase"><div id="joyNub"></div></div>
+    <button id="sparkleBtn" aria-label="きらきらアクション">✨<br>きらきら</button>
+  </div>
+
+  <div id="rotate"><div class="ph">📱</div><div>よこむきにして<br>あそんでね</div></div>
+
+  <script src="/games/wakuwaku_bgm.js"></script>
+  <script src="/games/safe_area.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+/* ================= ほしぞらアニマルレスキュー =================
+   戦闘・ダメージ・ゲームオーバーなしの新規タイトル。
+   星を集め、まいごの どうぶつを たすける やさしい3Dアドベンチャー。 */
+"use strict";
+
+/* ---------- SAFE_LS（sandboxed iframe対応・メモリフォールバック） ---------- */
+var SAFE_LS = (function(){
+  var ok = true;
+  try { var t = "__sar_t"; localStorage.setItem(t,"1"); localStorage.removeItem(t); } catch(e){ ok = false; }
+  var mem = {};
+  return {
+    getItem: function(k){ try{ return ok ? localStorage.getItem(k) : (k in mem ? mem[k] : null); }catch(e){ return k in mem ? mem[k] : null; } },
+    setItem: function(k,v){ try{ if(ok) localStorage.setItem(k,v); else mem[k]=String(v); }catch(e){ mem[k]=String(v); } },
+    removeItem: function(k){ try{ if(ok) localStorage.removeItem(k); }catch(e){} delete mem[k]; }
+  };
+})();
+var SAVE_KEY = "starry_animal_rescue_v1";
+var LEGACY_KEY = "astral_fang_best"; /* 旧ゲームのキー（読み取りのみ、上書き・削除しない） */
+
+function defaultState(){
+  return {
+    version: 1,
+    selectedCharacter: "lulu",
+    unlockedStage: 0,
+    stageStars: [0,0,0,0,0],
+    rescued: [0,0,0,0,0],
+    collected: [0,0,0,0,0],
+    totalStars: 0,
+    unlockedItems: [],
+    equipped: { head:"none", cape:"none", wand:"default", pet:"none", trail:"none" },
+    settings: { cameraAssist:true },
+    lastStage: 0,
+    updatedAt: 0,
+    _legacyBonusGiven:false
+  };
+}
+var S = defaultState();
+function saveGame(){
+  S.updatedAt = Date.now();
+  try{ SAFE_LS.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){}
+}
+function loadGame(){
+  try{
+    var raw = SAFE_LS.getItem(SAVE_KEY);
+    if(raw){
+      var d = JSON.parse(raw);
+      S = Object.assign(defaultState(), d);
+      if(!Array.isArray(S.stageStars) || S.stageStars.length !== 5) S.stageStars = [0,0,0,0,0];
+      if(!Array.isArray(S.rescued) || S.rescued.length !== 5) S.rescued = [0,0,0,0,0];
+      if(!Array.isArray(S.collected) || S.collected.length !== 5) S.collected = [0,0,0,0,0];
+      if(!Array.isArray(S.unlockedItems)) S.unlockedItems = [];
+      S.equipped = Object.assign(defaultState().equipped, d.equipped||{});
+      S.settings = Object.assign(defaultState().settings, d.settings||{});
+      return;
+    }
+  }catch(e){ S = defaultState(); return; }
+  /* 新規プレイヤー：旧セーブがあれば記念アイテムのみ付与（進行は移行しない） */
+  S = defaultState();
+  try{
+    var legacy = SAFE_LS.getItem(LEGACY_KEY);
+    if(legacy !== null){
+      if(S.unlockedItems.indexOf("medal_kishi") < 0) S.unlockedItems.push("medal_kishi");
+      S._legacyBonusGiven = true;
+    }
+  }catch(e){}
+  saveGame();
+}
+
+/* ---------- データ定義 ---------- */
+var CHARACTERS = {
+  lulu:{ name:"ルル", species:"ねこ", flavor:"ほしを すこし\nひきよせる", color:0xffcf7a, ear:"cat", speed:1.0, pushMul:1.0, magnet:2.2, sense:false },
+  mimi:{ name:"ミミ", species:"うさぎ", flavor:"はやく うごけて\nジャンプが かるい", color:0xffe6f0, ear:"rabbit", speed:1.22, pushMul:1.0, magnet:0, sense:false },
+  popo:{ name:"ポポ", species:"こぐま", flavor:"おもい しかけを\nすぐ うごかせる", color:0xc98a5a, ear:"bear", speed:0.92, pushMul:1.6, magnet:0, sense:false },
+  kon: { name:"コン", species:"きつね", flavor:"ちかくの ひみつを\nおしえてくれる", color:0xff9a52, ear:"fox", speed:1.05, pushMul:1.0, magnet:0, sense:true }
+};
+var CHAR_ORDER = ["lulu","mimi","popo","kon"];
+
+var REWARD_TABLE = [
+  { at:3,  id:"head_star",  slot:"head",  name:"きいろい ほしの ぼうし" },
+  { at:6,  id:"cape_blue",  slot:"cape",  name:"あおい マント" },
+  { at:9,  id:"pet_cloud",  slot:"pet",   name:"くもの ペット" },
+  { at:12, id:"trail_rainbow", slot:"trail", name:"にじの あしあと" },
+  { at:15, id:"pet_whale",  slot:"pet",   name:"ほしくじらの ミニペット" }
+];
+var ITEM_LIB = {
+  none:{ name:"なし" },
+  default:{ name:"ふつうの ステッキ" },
+  medal_kishi:{ name:"ほしのきしメダル", slot:"head" },
+  head_star:{ name:"きいろい ほしの ぼうし", slot:"head" },
+  cape_blue:{ name:"あおい マント", slot:"cape" },
+  pet_cloud:{ name:"くもの ペット", slot:"pet" },
+  trail_rainbow:{ name:"にじの あしあと", slot:"trail" },
+  pet_whale:{ name:"ほしくじらの ミニペット", slot:"pet" }
+};
+var DRESS_SLOTS = ["head","cape","wand","pet","trail"];
+
+/* ステージ定義。すべて「星を集める＋救助/浄化系＋ゴール」の共通エンジンをテーマ違いで使う。 */
+var STAGES = [
+  { id:0, name:"おほしさまの丘", bgm:"magical", sky:0x596bd0, fog:0x596bd0, floor:0x4f8f5c,
+    arena:26, starTarget:10, rescueTarget:3, taskTarget:0, taskType:"none",
+    rescueLabel:"ひよこ", rescueColor:0xfff3b0, propTheme:"hill" },
+  { id:1, name:"ふわふわ雲の道", bgm:"sky", sky:0x8fc6ff, fog:0xbfe0ff, floor:0xdfeeff,
+    arena:24, starTarget:15, rescueTarget:1, taskTarget:3, taskType:"cloud",
+    rescueLabel:"こいぬ", rescueColor:0xf0e0c0, propTheme:"cloud" },
+  { id:2, name:"お月さま遊園地", bgm:"happy", sky:0x2c2560, fog:0x2c2560, floor:0x3a2f70,
+    arena:26, starTarget:20, rescueTarget:1, taskTarget:3, taskType:"switch",
+    rescueLabel:"こねこ", rescueColor:0xf5f5f5, propTheme:"park" },
+  { id:3, name:"にじいろ星の森", bgm:"forest", sky:0x6a4fa0, fog:0x6a4fa0, floor:0x4a3a7a,
+    arena:28, starTarget:12, rescueTarget:3, taskTarget:5, taskType:"flower",
+    rescueLabel:"どうぶつ", rescueColor:0xb0e0b0, propTheme:"forest" },
+  { id:4, name:"おおきな星くじら", bgm:"magical", sky:0x1c1a44, fog:0x1c1a44, floor:0x2a2860,
+    arena:22, starTarget:5, rescueTarget:0, taskTarget:6, taskType:"moya",
+    rescueLabel:"", rescueColor:0x000000, propTheme:"whale" }
+];
+
+/* ---------- Three.js 基本セットアップ ---------- */
+var canEl;
+var renderer=null, scene=null, camera=null, clock=null;
+var webglOK = true;
+try{
+  canEl = document.createElement("canvas");
+  document.getElementById("game").appendChild(canEl);
+  renderer = new THREE.WebGLRenderer({ canvas:canEl, antialias:true, alpha:false, powerPreference:"high-performance" });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+  renderer.setSize(innerWidth, innerHeight);
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(58, innerWidth/innerHeight, 0.1, 260);
+  clock = new THREE.Clock();
+}catch(e){
+  webglOK = false;
+  console.error("[starry_animal_rescue] WebGL init failed:", e);
+}
+if(!webglOK){
+  var fallback = document.createElement("div");
+  fallback.style.cssText = "position:fixed;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;background:#3a4a9e;color:#fff;font-weight:800;font-size:15px;line-height:1.8;z-index:99998;";
+  fallback.textContent = "ごめんね、この きさくでは あそべないみたい。べつの ブラウザで ためしてね。";
+  document.body.appendChild(fallback);
+}
+window.addEventListener("error", function(e){ console.error("[starry_animal_rescue] error:", e.message, e.filename, e.lineno); });
+window.addEventListener("unhandledrejection", function(e){ console.error("[starry_animal_rescue] unhandled rejection:", e.reason); });
+
+/* ---------- 共有ジオメトリ・マテリアル（パフォーマンス対策） ---------- */
+var GEO = {
+  sphere: new THREE.SphereGeometry(1,12,10),
+  sphereLo: new THREE.SphereGeometry(1,7,6),
+  cone: new THREE.ConeGeometry(1,1,10),
+  cyl: new THREE.CylinderGeometry(1,1,1,10),
+  box: new THREE.BoxGeometry(1,1,1),
+  torus: new THREE.TorusGeometry(1,0.16,8,20),
+  octa: new THREE.OctahedronGeometry(1,0),
+  ring: new THREE.RingGeometry(0.8,1,24),
+  plane: new THREE.PlaneGeometry(1,1)
+};
+var MATCACHE = {};
+function mat(color, opt){
+  var key = color + JSON.stringify(opt||{});
+  if(!MATCACHE[key]) MATCACHE[key] = new THREE.MeshLambertMaterial(Object.assign({color:color}, opt||{}));
+  return MATCACHE[key];
+}
+function meshOf(geo, m, castShadow){
+  var o = new THREE.Mesh(geo, m);
+  o.castShadow = !!castShadow; o.receiveShadow = false;
+  return o;
+}
+
+/* ---------- ライト（軽量：影は最小限） ---------- */
+var hemi = new THREE.HemisphereLight(0xffffff, 0x556b2f, 1.05); scene.add(hemi);
+var sun = new THREE.DirectionalLight(0xfff6d8, 0.85); sun.position.set(10,20,8); scene.add(sun);
+
+/* ---------- パーティクル（単一Pointsバッファ・プール化） ---------- */
+var P_MAX = 120;
+var pGeo = new THREE.BufferGeometry();
+var pPos = new Float32Array(P_MAX*3), pCol = new Float32Array(P_MAX*3);
+pGeo.setAttribute("position", new THREE.BufferAttribute(pPos,3));
+pGeo.setAttribute("color", new THREE.BufferAttribute(pCol,3));
+var pMat = new THREE.PointsMaterial({ size:0.5, vertexColors:true, transparent:true, opacity:0.95, depthWrite:false, sizeAttenuation:true });
+var pPoints = new THREE.Points(pGeo, pMat); pPoints.frustumCulled=false; scene.add(pPoints);
+var pData = []; for(var pi=0;pi<P_MAX;pi++){ pData.push({life:0,x:0,y:-999,z:0,vx:0,vy:0,vz:0}); pPos[pi*3+1]=-999; }
+var pNext = 0;
+function burst(x,y,z,color,count,speed){
+  var col = new THREE.Color(color);
+  for(var i=0;i<count;i++){
+    var idx = pNext; pNext=(pNext+1)%P_MAX;
+    var d = pData[idx];
+    d.life = 0.5+Math.random()*0.4; d.x=x; d.y=y; d.z=z;
+    var th=Math.random()*Math.PI*2, ph=(Math.random()-0.3)*Math.PI*0.5, sp=(speed||4)*(0.5+Math.random());
+    d.vx=Math.cos(th)*Math.cos(ph)*sp; d.vy=Math.sin(ph)*sp+2; d.vz=Math.sin(th)*Math.cos(ph)*sp;
+    pCol[idx*3]=col.r; pCol[idx*3+1]=col.g; pCol[idx*3+2]=col.b;
+  }
+}
+function updateParticles(dt){
+  for(var i=0;i<P_MAX;i++){
+    var d = pData[i];
+    if(d.life>0){
+      d.life-=dt; d.x+=d.vx*dt; d.y+=d.vy*dt; d.z+=d.vz*dt; d.vy-=5*dt;
+      pPos[i*3]=d.x; pPos[i*3+1]=d.life>0?d.y:-999; pPos[i*3+2]=d.z;
+    }
+  }
+  pGeo.attributes.position.needsUpdate = true;
+}
+
+/* ---------- キャラクター生成（共通形状、耳の形だけ種別で変更） ---------- */
+function buildCharacterMesh(charId, equipped){
+  var c = CHARACTERS[charId];
+  var g = new THREE.Group();
+  var bodyMat = mat(c.color);
+  var body = meshOf(GEO.sphere, bodyMat, true); body.scale.set(0.62,0.55,0.7); body.position.y=0.5; g.add(body);
+  var head = meshOf(GEO.sphere, bodyMat, true); head.scale.set(0.46,0.44,0.46); head.position.y=1.02; g.add(head);
+  var cheekMat = mat(0xffb3c9);
+  [-0.18,0.18].forEach(function(sx){ var ch=meshOf(GEO.sphereLo, cheekMat); ch.scale.setScalar(0.07); ch.position.set(sx,0.94,0.36); g.add(ch); });
+  var eyeMat = mat(0x333333);
+  [-0.15,0.15].forEach(function(sx){ var ey=meshOf(GEO.sphereLo, eyeMat); ey.scale.setScalar(0.045); ey.position.set(sx,1.02,0.42); g.add(ey); });
+  /* 耳 */
+  if(c.ear==="cat" || c.ear==="fox"){
+    [-1,1].forEach(function(s){ var ear=meshOf(GEO.cone, bodyMat); ear.scale.set(0.16,0.24,0.16); ear.position.set(0.24*s,1.32,0); g.add(ear); });
+  } else if(c.ear==="rabbit"){
+    [-1,1].forEach(function(s){ var ear=meshOf(GEO.cyl, mat(0xffffff)); ear.scale.set(0.07,0.42,0.07); ear.position.set(0.15*s,1.5,0); g.add(ear); });
+  } else if(c.ear==="bear"){
+    [-1,1].forEach(function(s){ var ear=meshOf(GEO.sphereLo, bodyMat); ear.scale.setScalar(0.14); ear.position.set(0.26*s,1.3,0); g.add(ear); });
+  }
+  if(c.ear==="fox"){ var tail=meshOf(GEO.cone, bodyMat); tail.scale.set(0.18,0.5,0.18); tail.rotation.x=1.2; tail.position.set(0,0.55,-0.5); g.add(tail); }
+  var legMat = mat(0xffffff);
+  [-0.2,0.2].forEach(function(sx){ var leg=meshOf(GEO.sphereLo, legMat); leg.scale.set(0.13,0.1,0.13); leg.position.set(sx,0.14,0.05); g.add(leg); });
+
+  /* 装備（見た目のみ） */
+  var eq = equipped || {};
+  var extras = {};
+  if(eq.head && eq.head!=="none" && ITEM_LIB[eq.head]){
+    var hat = meshOf(GEO.cone, mat(0xffd35a)); hat.scale.set(0.24,0.32,0.24); hat.position.y=1.42; g.add(hat);
+    var hatTip = meshOf(GEO.octa, mat(0xfff6c8)); hatTip.scale.setScalar(0.06); hatTip.position.y=1.62; g.add(hatTip);
+  }
+  if(eq.cape && eq.cape!=="none" && ITEM_LIB[eq.cape]){
+    var cape = meshOf(GEO.plane, mat(0x5a8dff, {side:THREE.DoubleSide, transparent:true, opacity:0.9})); cape.scale.set(0.5,0.7,1); cape.position.set(0,0.62,-0.32); cape.rotation.x=0.15; g.add(cape);
+  }
+  if(eq.pet && eq.pet!=="none" && ITEM_LIB[eq.pet]){
+    var petCol = eq.pet==="pet_whale" ? 0x8fc6ff : 0xffffff;
+    var pet = meshOf(GEO.sphere, mat(petCol)); pet.scale.setScalar(0.16); pet.position.set(0.45,0.5,-0.45); g.add(pet);
+    extras.pet = pet;
+  }
+  var wandGroup = new THREE.Group();
+  var stick = meshOf(GEO.cyl, mat(0xd8b070)); stick.scale.set(0.03,0.5,0.03); wandGroup.add(stick);
+  var star = meshOf(GEO.octa, mat(0xfff2a8, {emissive:0x998030, emissiveIntensity:0.4})); star.scale.setScalar(0.09); star.position.y=0.28; wandGroup.add(star);
+  wandGroup.position.set(0.42,0.55,0.15); wandGroup.rotation.z=-0.3; g.add(wandGroup);
+  extras.wandStar = star;
+
+  g.userData.headY = 1.02; g.userData.extras = extras;
+  return g;
+}
+
+/* ---------- ステージ内オブジェクト生成ヘルパー（共有ジオメトリ使用） ---------- */
+function makeTree(colorTrunk, colorLeaf, scale){
+  var g = new THREE.Group();
+  var trunk = meshOf(GEO.cyl, mat(colorTrunk)); trunk.scale.set(0.16,1.1,0.16); trunk.position.y=0.55; g.add(trunk);
+  var leaf = meshOf(GEO.sphere, mat(colorLeaf), true); leaf.scale.setScalar(0.75); leaf.position.y=1.35; g.add(leaf);
+  g.scale.setScalar(scale||1);
+  return g;
+}
+function makeCloudDeco(color){
+  var g = new THREE.Group();
+  for(var i=0;i<3;i++){ var p=meshOf(GEO.sphere, mat(color||0xffffff)); p.scale.setScalar(0.5-i*0.08); p.position.set(i*0.5-0.5, Math.sin(i)*0.12, 0); g.add(p); }
+  return g;
+}
+function makeFlowerDeco(petalColor){
+  var g = new THREE.Group();
+  var stem = meshOf(GEO.cyl, mat(0x3aa04a)); stem.scale.set(0.03,0.5,0.03); stem.position.y=0.25; g.add(stem);
+  var bud = meshOf(GEO.sphere, mat(petalColor)); bud.scale.setScalar(0.16); bud.position.y=0.56; g.add(bud);
+  g.userData.bud = bud;
+  return g;
+}
+function makeStarPickup(){
+  var g = meshOf(GEO.octa, mat(0xffe36a, {emissive:0xb8901a, emissiveIntensity:0.35}));
+  g.scale.setScalar(0.28);
+  return g;
+}
+function makeGoalRing(color){
+  var ring = meshOf(GEO.ring, new THREE.MeshBasicMaterial({color:color||0x9ff7c8, transparent:true, opacity:0.75, side:THREE.DoubleSide}));
+  ring.rotation.x=-Math.PI/2; ring.scale.setScalar(1.6);
+  return ring;
+}
+function makeGuideBeam(color){
+  var beam = meshOf(GEO.cyl, new THREE.MeshBasicMaterial({color:color||0xfff2a8, transparent:true, opacity:0.28}));
+  beam.scale.set(0.22,4,0.22); beam.position.y=2;
+  return beam;
+}
+function makeAnimalNPC(color){
+  var g = new THREE.Group();
+  var body = meshOf(GEO.sphere, mat(color), true); body.scale.set(0.34,0.3,0.4); body.position.y=0.3; g.add(body);
+  var head = meshOf(GEO.sphere, mat(color), true); head.scale.set(0.24,0.24,0.24); head.position.set(0,0.56,0.18); g.add(head);
+  [-1,1].forEach(function(s){ var ear=meshOf(GEO.cone, mat(color)); ear.scale.set(0.08,0.12,0.08); ear.position.set(0.11*s,0.7,0.14); g.add(ear); });
+  return g;
+}
+function makeSwitchDeco(){
+  var g = new THREE.Group();
+  var pole = meshOf(GEO.cyl, mat(0x8a8aa0)); pole.scale.set(0.12,0.8,0.12); pole.position.y=0.4; g.add(pole);
+  var orb = meshOf(GEO.sphere, mat(0x555577, {emissive:0x111122})); orb.scale.setScalar(0.22); orb.position.y=0.92; g.add(orb);
+  g.userData.orb = orb;
+  return g;
+}
+function makeMoyaCloud(){
+  var g = new THREE.Group();
+  for(var i=0;i<4;i++){ var p=meshOf(GEO.sphere, mat(0x2a2440, {transparent:true, opacity:0.85})); p.scale.setScalar(0.4+Math.random()*0.2); p.position.set((Math.random()-0.5)*0.7, (Math.random()-0.5)*0.4, (Math.random()-0.5)*0.5); g.add(p); }
+  return g;
+}
+function makeWhale(){
+  var g = new THREE.Group();
+  var body = meshOf(GEO.sphere, mat(0x6a8dff, {emissive:0x1a2a55, emissiveIntensity:0.15}), true);
+  body.scale.set(2.4,1.4,1.1); g.add(body);
+  var tail = meshOf(GEO.cone, mat(0x6a8dff)); tail.scale.set(0.9,1.0,0.15); tail.rotation.z=Math.PI/2; tail.position.x=-2.6; g.add(tail);
+  [-1,1].forEach(function(s){ var fin=meshOf(GEO.cone, mat(0x5a7de0)); fin.scale.set(0.5,0.7,0.12); fin.rotation.z=Math.PI/2 - 0.6*s; fin.position.set(0.4, -0.5, 0.9*s); g.add(fin); });
+  var belly = meshOf(GEO.sphere, mat(0xdfe8ff)); belly.scale.set(2.0,0.8,0.95); belly.position.y=-0.35; g.add(belly);
+  g.userData.body = body;
+  return g;
+}
+
+/* ---------- SFX（Web Audio、軽量・不快音なし） ---------- */
+var audioCtx=null;
+function ensureAudio(){ if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(audioCtx && audioCtx.state==="suspended") audioCtx.resume(); }
+function beep(freq,dur,type,vol,when,slide){
+  if(!audioCtx) return;
+  var o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type=type||"sine"; o.frequency.setValueAtTime(freq, audioCtx.currentTime+(when||0));
+  if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(40,freq+slide), audioCtx.currentTime+(when||0)+dur);
+  g.gain.setValueAtTime(0.0001, audioCtx.currentTime+(when||0));
+  g.gain.exponentialRampToValueAtTime(vol||0.08, audioCtx.currentTime+(when||0)+0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+(when||0)+dur);
+  o.connect(g); g.connect(audioCtx.destination); o.start(audioCtx.currentTime+(when||0)); o.stop(audioCtx.currentTime+(when||0)+dur+0.03);
+}
+var sfx = {
+  star: function(){ beep(720,.08,"triangle",.07); beep(980,.1,"triangle",.06,.06); },
+  rescue: function(){ [660,880,1100].forEach(function(f,i){ beep(f,.14,"triangle",.07,i*.08); }); },
+  sparkle: function(){ beep(880,.06,"sine",.05); },
+  clean: function(){ beep(300,.12,"sine",.05); beep(500,.14,"sine",.04,.05); },
+  bloom: function(){ beep(520,.1,"triangle",.06); beep(760,.14,"triangle",.05,.07); },
+  fix: function(){ beep(440,.1,"sine",.06); beep(660,.12,"sine",.05,.06); beep(880,.16,"sine",.05,.12); },
+  reward: function(){ [523,659,784,1046].forEach(function(f,i){ beep(f,.16,"square",.05,i*.09); }); },
+  clear: function(){ [440,554,659,880].forEach(function(f,i){ beep(f,.2,"triangle",.06,i*.1); }); },
+  tap: function(){ beep(500,.05,"sine",.04); },
+  fall: function(){ beep(260,.2,"sine",.06,0,-60); }
+};
+
+/* ---------- BGM ---------- */
+var bgmInst=null, bgmOn = (typeof WakuwakuBGM!=="undefined" && WakuwakuBGM.loadState) ? WakuwakuBGM.loadState() : true;
+function playBGM(theme){
+  if(typeof WakuwakuBGM === "undefined") return;
+  if(bgmInst){ bgmInst.stop(); bgmInst=null; }
+  try{
+    bgmInst = new WakuwakuBGM(theme);
+    bgmInst.setEnabled(bgmOn);
+    if(bgmOn) bgmInst.start();
+  }catch(e){}
+  syncBgmIcons();
+}
+function toggleBGM(){
+  bgmOn = !bgmOn;
+  if(bgmInst) bgmInst.setEnabled(bgmOn);
+  if(typeof WakuwakuBGM!=="undefined" && WakuwakuBGM.saveState) WakuwakuBGM.saveState(bgmOn);
+  syncBgmIcons();
+}
+function syncBgmIcons(){
+  var icon = bgmOn ? "🔊" : "🔇";
+  var a=document.getElementById("bgmChip"); if(a) a.textContent=icon;
+}
+
+/* ---------- 画面制御 ---------- */
+var screens = ["scrTitle","scrChar","scrStage","scrResult","scrDress"];
+function showScreen(id){
+  screens.forEach(function(s){ document.getElementById(s).classList.toggle("hidden", s!==id); });
+  document.getElementById("hud").classList.toggle("show", id===null);
+}
+function $(id){ return document.getElementById(id); }
+
+/* ---------- 戻る（親フレームへ通知） ---------- */
+function goBack(){
+  if(window.parent !== window){ try{ window.parent.postMessage({type:"goBack"}, "*"); }catch(e){} }
+  else { history.back(); }
+}
+function goHome(){
+  if(window.parent !== window){ try{ window.parent.postMessage({type:"goHome"}, "*"); }catch(e){} }
+}
+
+/* ---------- 横向き案内（既存プロジェクトの landscape 3Dゲーム方針に合わせる） ---------- */
+function checkOrient(){
+  var portrait = window.innerHeight > window.innerWidth && Math.min(window.innerWidth, window.innerHeight) < 600;
+  document.body.classList.toggle("portrait", portrait);
+}
+window.addEventListener("resize", checkOrient);
+window.addEventListener("orientationchange", checkOrient);
+window.addEventListener("message", function(e){ if(e.data && e.data.type==="orientation") checkOrient(); });
+checkOrient();
+
+/* ---------- 画面リサイズ ---------- */
+function onResize(){
+  if(!renderer) return;
+  var w=innerWidth, h=innerHeight;
+  renderer.setSize(w,h,false);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  camera.aspect = w/h; camera.updateProjectionMatrix();
+}
+window.addEventListener("resize", onResize);
+
+/* ================= キャラクター選択画面 ================= */
+var pickedChar = S.selectedCharacter;
+var charGridBuilt = false;
+function buildCharGrid(){
+  if(charGridBuilt){ updateCharSelection(); return; }
+  var grid = $("charGrid"); grid.innerHTML="";
+  CHAR_ORDER.forEach(function(id){
+    var c = CHARACTERS[id];
+    var card = document.createElement("div");
+    card.className = "charcard" + (id===pickedChar?" sel":"");
+    card.dataset.id = id;
+    card.innerHTML = '<canvas width="140" height="110"></canvas><div class="cn">'+c.name+'（'+c.species+'）</div><div class="cf">'+c.flavor.replace(/\n/g,"<br>")+'</div>';
+    card.addEventListener("click", function(){ pickedChar=this.dataset.id; updateCharSelection(); });
+    grid.appendChild(card);
+  });
+  charGridBuilt = true;
+  renderAllCharPreviews();
+}
+function updateCharSelection(){
+  document.querySelectorAll("#charGrid .charcard").forEach(function(card){
+    card.classList.toggle("sel", card.dataset.id===pickedChar);
+  });
+}
+/* プレビュー用の固定レンダラー群（キャラ4体固定・画面再表示のたびに再生成しない） */
+var charPreviewCtx = {};
+function getCharPreviewCtx(canvas, id){
+  if(charPreviewCtx[id]) return charPreviewCtx[id];
+  var r = new THREE.WebGLRenderer({canvas:canvas, alpha:true, antialias:true});
+  r.setSize(canvas.width, canvas.height, false);
+  var sc = new THREE.Scene();
+  var cam = new THREE.PerspectiveCamera(32, canvas.width/canvas.height, 0.1, 20);
+  cam.position.set(0,1.1,3.0); cam.lookAt(0,0.6,0);
+  sc.add(new THREE.HemisphereLight(0xffffff,0x888888,1.2));
+  var d = new THREE.DirectionalLight(0xffffff,0.6); d.position.set(2,3,3); sc.add(d);
+  var ctx = { renderer:r, scene:sc, cam:cam };
+  charPreviewCtx[id] = ctx;
+  return ctx;
+}
+function renderAllCharPreviews(){
+  var cards = document.querySelectorAll("#charGrid .charcard");
+  cards.forEach(function(card){
+    var id = card.dataset.id;
+    var canvas = card.querySelector("canvas");
+    requestAnimationFrame(function(){
+      var ctx = getCharPreviewCtx(canvas, id);
+      if(!ctx.mesh){ ctx.mesh = buildCharacterMesh(id,{}); ctx.mesh.position.y=-0.55; ctx.scene.add(ctx.mesh); }
+      ctx.renderer.render(ctx.scene, ctx.cam);
+    });
+  });
+}
+
+/* ================= ステージ選択画面 ================= */
+var stageGridBuilt = false;
+var stageCards = [];
+function buildStageGrid(){
+  if(stageGridBuilt){ updateStageGrid(); return; }
+  var grid = $("stageGrid"); grid.innerHTML=""; stageCards = [];
+  STAGES.forEach(function(st, i){
+    var card = document.createElement("div");
+    card.innerHTML = '<canvas width="160" height="90"></canvas>' +
+      '<div class="sn"></div><div class="ss"></div><div class="lockrow"></div>';
+    grid.appendChild(card);
+    stageCards[i] = { card:card, clickBound:false };
+  });
+  stageGridBuilt = true;
+  updateStageGrid();
+}
+function updateStageGrid(){
+  STAGES.forEach(function(st, i){
+    var entry = stageCards[i];
+    var card = entry.card;
+    var unlocked = i <= S.unlockedStage;
+    card.className = "stagecard" + (unlocked?"":" locked");
+    var stars = S.stageStars[i]||0;
+    var starStr = "";
+    for(var k=0;k<3;k++) starStr += (k<stars?"★":"☆");
+    card.querySelector(".sn").textContent = unlocked?st.name:"？？？";
+    card.querySelector(".ss").textContent = unlocked?starStr:"🔒";
+    card.querySelector(".lockrow").textContent = unlocked? (S.rescued[i]||0)+"/"+st.rescueTarget+" たすけた" : "まえの ステージを クリアしてね";
+    if(unlocked && !entry.clickBound){
+      entry.clickBound = true;
+      card.addEventListener("click", function(){ startStage(i); });
+      var cv = card.querySelector("canvas");
+      requestAnimationFrame(function(){ renderStageThumb(cv, i); });
+    }
+  });
+}
+var stageThumbCtx = {};
+function renderStageThumb(canvas, idx){
+  if(!stageThumbCtx[idx]){
+    var r = new THREE.WebGLRenderer({canvas:canvas, alpha:true, antialias:true});
+    r.setSize(canvas.width, canvas.height, false);
+    var sc = new THREE.Scene();
+    var cam = new THREE.PerspectiveCamera(38, canvas.width/canvas.height, 0.1, 40);
+    cam.position.set(0,3,6); cam.lookAt(0,0,0);
+    sc.add(new THREE.HemisphereLight(0xffffff,0x556b2f,1.1));
+    var st = STAGES[idx];
+    var floor = meshOf(GEO.cyl, mat(st.floor)); floor.scale.set(3.4,0.2,3.4); floor.position.y=-0.1; sc.add(floor);
+    var star = makeStarPickup(); star.position.set(-0.8,0.6,0); sc.add(star);
+    var deco = st.propTheme==="cloud" ? makeCloudDeco(0xffffff) : st.propTheme==="park" ? makeSwitchDeco() : st.propTheme==="whale" ? makeWhale() : makeTree(0x8a5a2a,0x3aa04a,1);
+    deco.position.set(0.9,0,0); if(st.propTheme==="whale") deco.scale.setScalar(0.4);
+    sc.add(deco);
+    stageThumbCtx[idx] = {renderer:r, scene:sc, cam:cam};
+  }
+  var ctx = stageThumbCtx[idx];
+  ctx.renderer.render(ctx.scene, ctx.cam);
+}
+
+/* ================= おしゃれ画面 ================= */
+var dressTab = "head";
+function buildDressScreen(){
+  var tabs = $("dressTabs"); tabs.innerHTML="";
+  DRESS_SLOTS.forEach(function(slot){
+    var b = document.createElement("button");
+    b.className = "bigbtn sub2"; b.style.padding="8px 14px"; b.style.fontSize="12px";
+    b.textContent = ({head:"ぼうし",cape:"マント",wand:"ステッキ",pet:"ペット",trail:"あしあと"})[slot];
+    b.addEventListener("click", function(){ dressTab=slot; renderDressGrid(); });
+    tabs.appendChild(b);
+  });
+  renderDressGrid();
+  renderDressPreview();
+}
+function itemsForSlot(slot){
+  var ids = Object.keys(ITEM_LIB).filter(function(id){
+    if(slot==="wand") return id==="default";
+    if(slot==="cape" || slot==="head" || slot==="pet" || slot==="trail") return ITEM_LIB[id].slot===slot;
+    return false;
+  });
+  return ids;
+}
+function renderDressGrid(){
+  var grid = $("dressGrid"); grid.innerHTML="";
+  var ids = ["none"].concat(itemsForSlot(dressTab)).filter(function(v,i,a){return a.indexOf(v)===i;});
+  ids.forEach(function(id){
+    var owned = id==="none" || id==="default" || S.unlockedItems.indexOf(id)>=0;
+    var div = document.createElement("div");
+    div.className = "ditem" + (S.equipped[dressTab]===id?" eq":"") + (owned?"":" locked");
+    div.innerHTML = '<span class="di-ico">'+(owned?"✨":"🔒")+'</span>'+(ITEM_LIB[id]?ITEM_LIB[id].name:id);
+    if(owned){
+      div.addEventListener("click", function(){
+        S.equipped[dressTab] = id; saveGame(); renderDressGrid(); renderDressPreview();
+      });
+    }
+    grid.appendChild(div);
+  });
+}
+var dressPreviewCtx = null;
+function renderDressPreview(){
+  var canvas = $("dressPreview");
+  if(!dressPreviewCtx){
+    var r = new THREE.WebGLRenderer({canvas:canvas, alpha:true, antialias:true});
+    r.setSize(canvas.width, canvas.height, false);
+    var sc = new THREE.Scene();
+    var cam = new THREE.PerspectiveCamera(34, canvas.width/canvas.height, 0.1, 20);
+    cam.position.set(0,1.1,3.1); cam.lookAt(0,0.6,0);
+    sc.add(new THREE.HemisphereLight(0xffffff,0x888888,1.2));
+    var d = new THREE.DirectionalLight(0xffffff,0.6); d.position.set(2,3,3); sc.add(d);
+    dressPreviewCtx = {renderer:r, scene:sc, cam:cam, mesh:null};
+  }
+  var ctx = dressPreviewCtx;
+  if(ctx.mesh){ ctx.scene.remove(ctx.mesh); }
+  ctx.mesh = buildCharacterMesh(S.selectedCharacter, S.equipped);
+  ctx.mesh.position.y = -0.55;
+  ctx.scene.add(ctx.mesh);
+  ctx.renderer.render(ctx.scene, ctx.cam);
+}
+
+/* ================= ステージ実行エンジン ================= */
+var curStageIdx = -1, stageObjs = null, player=null, playerParts=null;
+var joyActive=false, joyId=null, joyOrigin={x:0,y:0}, joyVec={x:0,y:0};
+var keys = {};
+var camYaw=0, camDist=7.2, camHeight=3.6;
+var lastSafe = new THREE.Vector3(0,0,0);
+var lastSafeTimer = 0;
+var runState = { stars:0, rescued:0, task:0, done:false, finishing:false };
+var activeAction = null;
+
+function clearStageObjs(){
+  if(stageObjs){
+    scene.remove(stageObjs.group);
+    stageObjs.group.traverse(function(o){
+      if(o.geometry && GEO_VALUES.indexOf(o.geometry) < 0) o.geometry.dispose();
+      if(o.material && o.material.dispose && !isSharedMat(o.material)) o.material.dispose();
+    });
+  }
+  stageObjs = null;
+}
+var GEO_VALUES = Object.keys(GEO).map(function(k){return GEO[k];});
+function isSharedMat(m){ for(var k in MATCACHE){ if(MATCACHE[k]===m) return true; } return false; }
+
+function startStage(idx){
+  ensureAudio();
+  curStageIdx = idx;
+  var st = STAGES[idx];
+  S.lastStage = idx; saveGame();
+  clearStageObjs();
+  buildStageWorld(st);
+  runState = { stars:0, rescued:0, task:0, done:false, finishing:false };
+  updateHud();
+  showScreen(null);
+  $("stageNameChip").textContent = st.name;
+  playBGM(st.bgm);
+  showToast(st.name);
+  updateGoalText(st);
+}
+
+function buildStageWorld(st){
+  scene.fog = new THREE.Fog(st.fog, 22, st.arena*2.4);
+  renderer.setClearColor(st.sky);
+  var group = new THREE.Group();
+  scene.add(group);
+  stageObjs = { group:group, stars:[], rescues:[], tasks:[], goal:null, whale:null };
+
+  var floor = meshOf(GEO.cyl, mat(st.floor)); floor.scale.set(st.arena, 0.4, st.arena); floor.position.y=-0.2; floor.receiveShadow=false; group.add(floor);
+  var edgeGlow = meshOf(GEO.ring, new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.12, side:THREE.DoubleSide}));
+  edgeGlow.rotation.x=-Math.PI/2; edgeGlow.scale.setScalar(st.arena*0.98); group.add(edgeGlow);
+
+  /* 装飾（テーマ別、共有ジオメトリのみ使用） */
+  var decoCount = 16;
+  for(var i=0;i<decoCount;i++){
+    var a = (i/decoCount)*Math.PI*2, r = st.arena*0.75 + (Math.random()-0.5)*st.arena*0.15;
+    var x=Math.cos(a)*r, z=Math.sin(a)*r;
+    var deco;
+    if(st.propTheme==="hill") deco = makeTree(0x8a5a2a, 0x4fae5a, 0.8+Math.random()*0.4);
+    else if(st.propTheme==="cloud") deco = makeCloudDeco(0xffffff);
+    else if(st.propTheme==="park") deco = makeSwitchDeco();
+    else if(st.propTheme==="forest") deco = makeTree(0x5a4a80, 0x9a7fe0, 0.8+Math.random()*0.5);
+    else if(st.propTheme==="whale") deco = makeStarPickup();
+    else deco = makeTree(0x8a5a2a, 0x4fae5a, 0.9);
+    deco.position.set(x, 0, z);
+    if(st.propTheme==="whale"){ deco.scale.setScalar(0.35); }
+    group.add(deco);
+  }
+
+  /* 星（自動収集） */
+  for(var s=0;s<st.starTarget;s++){
+    var sa=Math.random()*Math.PI*2, sr=Math.random()*st.arena*0.7;
+    var star = makeStarPickup();
+    star.position.set(Math.cos(sa)*sr, 0.7, Math.sin(sa)*sr);
+    star.userData.spin = true;
+    group.add(star); stageObjs.stars.push(star);
+  }
+
+  /* 迷子どうぶつ（きらきらボタンで救助） */
+  for(var rIdx=0; rIdx<st.rescueTarget; rIdx++){
+    var ra=Math.random()*Math.PI*2, rr=Math.random()*st.arena*0.6;
+    var an = makeAnimalNPC(st.rescueColor);
+    an.position.set(Math.cos(ra)*rr, 0, Math.sin(ra)*rr);
+    an.userData.rescued=false;
+    var beam = makeGuideBeam(0xfff2a8); an.add(beam);
+    group.add(an); stageObjs.rescues.push(an);
+  }
+
+  /* タスク（雲/スイッチ/花/モヤ） */
+  for(var tIdx=0; tIdx<st.taskTarget; tIdx++){
+    var ta=Math.random()*Math.PI*2, tr=Math.random()*st.arena*0.55;
+    var task;
+    if(st.taskType==="cloud"){ task = makeCloudDeco(0x2a2a44); task.userData.kind="cloud"; }
+    else if(st.taskType==="switch"){ task = makeSwitchDeco(); task.userData.kind="switch"; }
+    else if(st.taskType==="flower"){ task = makeFlowerDeco(0xff9ecb); task.userData.kind="flower"; }
+    else if(st.taskType==="moya"){ task = makeMoyaCloud(); task.userData.kind="moya"; }
+    else { task = new THREE.Group(); task.userData.kind="none"; }
+    task.position.set(Math.cos(ta)*tr, task.userData.kind==="flower"?0:0.7, Math.sin(ta)*tr);
+    task.userData.done=false;
+    var beam2 = makeGuideBeam(0x9ff7c8); task.add(beam2);
+    group.add(task); stageObjs.tasks.push(task);
+  }
+
+  /* ゴール */
+  var goal = makeGoalRing(0x9ff7c8);
+  var ga = Math.random()*Math.PI*2, gr = st.arena*0.55;
+  goal.position.set(Math.cos(ga)*gr, 0.05, Math.sin(ga)*gr);
+  goal.userData.active = (st.taskTarget===0 && st.rescueTarget===0);
+  group.add(goal); stageObjs.goal = goal;
+
+  /* 星くじら（最終ステージ） */
+  if(st.propTheme==="whale"){
+    var whale = makeWhale();
+    whale.position.set(0,2.4,-st.arena*0.4);
+    whale.scale.setScalar(0.01);
+    group.add(whale); stageObjs.whale = whale;
+    stageObjs.whaleAwake = false;
+  }
+
+  /* プレイヤー配置 */
+  if(player){ scene.remove(player); }
+  playerParts = null;
+  player = buildCharacterMesh(S.selectedCharacter, S.equipped);
+  player.position.set(0, 0, st.arena*0.3);
+  scene.add(player);
+  lastSafe.copy(player.position);
+  camYaw = 0;
+}
+
+function updateGoalText(st){
+  var txt = "";
+  if(st.taskType==="moya" && stageObjs){
+    if(runState.task < st.taskTarget) txt = "くろい モヤを きらきらで きれいにしよう ("+runState.task+"/"+st.taskTarget+")";
+    else if(runState.stars < st.starTarget) txt = "ほしの かけらを あつめよう ("+runState.stars+"/"+st.starTarget+")";
+    else if(stageObjs.whale && !stageObjs.whaleAwake) txt = "ほしくじらに ひかりを とどけよう";
+    else txt = "みんな げんきに なったよ！";
+  } else {
+    var parts = [];
+    if(st.starTarget>0) parts.push("ほし "+runState.stars+"/"+st.starTarget);
+    if(st.rescueTarget>0) parts.push("まいご "+runState.rescued+"/"+st.rescueTarget);
+    if(st.taskTarget>0) parts.push((st.taskType==="cloud"?"くも":st.taskType==="switch"?"あかり":"はな")+" "+runState.task+"/"+st.taskTarget);
+    txt = parts.join("　");
+    if(stageObjs && stageObjs.goal && stageObjs.goal.userData.active) txt = "ひかる わっかへ すすもう！";
+  }
+  $("goalTxt").textContent = txt;
+}
+function updateHud(){
+  $("starChip").textContent = "⭐"+runState.stars;
+  $("rescueChip").textContent = "🐾"+runState.rescued;
+}
+var toastTimer=null;
+function showToast(msg, ms){
+  var t=$("toastMsg"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(function(){ t.classList.remove("show"); }, ms||1600);
+}
+
+/* ---------- 入力 ---------- */
+var joyBase = $("joyBase"), joyNub = $("joyNub");
+function joyStart(x,y,id){ joyActive=true; joyId=id; joyOrigin={x:x,y:y}; }
+function joyMove(x,y){
+  var dx=x-joyOrigin.x, dy=y-joyOrigin.y, len=Math.sqrt(dx*dx+dy*dy), max=40;
+  if(len>max){ dx=dx/len*max; dy=dy/len*max; }
+  joyNub.style.transform = "translate("+dx+"px,"+dy+"px)";
+  joyVec = {x:dx/max, y:dy/max};
+}
+function joyEnd(){ joyActive=false; joyId=null; joyVec={x:0,y:0}; joyNub.style.transform="translate(0,0)"; }
+joyBase.addEventListener("touchstart", function(e){ ensureAudio(); var t=e.changedTouches[0]; joyStart(t.clientX,t.clientY,t.identifier); e.preventDefault(); }, {passive:false});
+window.addEventListener("touchmove", function(e){ if(!joyActive) return; for(var i=0;i<e.changedTouches.length;i++){ var t=e.changedTouches[i]; if(t.identifier===joyId){ joyMove(t.clientX,t.clientY); e.preventDefault(); } } }, {passive:false});
+window.addEventListener("touchend", function(e){ for(var i=0;i<e.changedTouches.length;i++){ if(e.changedTouches[i].identifier===joyId) joyEnd(); } });
+joyBase.addEventListener("mousedown", function(e){ ensureAudio(); joyStart(e.clientX,e.clientY,"m"); });
+window.addEventListener("mousemove", function(e){ if(joyActive && joyId==="m") joyMove(e.clientX,e.clientY); });
+window.addEventListener("mouseup", function(){ if(joyId==="m") joyEnd(); });
+window.addEventListener("keydown", function(e){
+  keys[e.key.toLowerCase()]=true;
+  if(e.code==="Space" || e.key==="Enter"){ doSparkleAction(); e.preventDefault(); }
+  if(e.key==="Escape"){ if(stageObjs) backFromStage(); }
+  ensureAudio();
+});
+window.addEventListener("keyup", function(e){ keys[e.key.toLowerCase()]=false; });
+function inputVec(){
+  var x=joyVec.x, y=joyVec.y;
+  if(keys["arrowleft"]||keys["a"]) x-=1;
+  if(keys["arrowright"]||keys["d"]) x+=1;
+  if(keys["arrowup"]||keys["w"]) y-=1;
+  if(keys["arrowdown"]||keys["s"]) y+=1;
+  var len=Math.sqrt(x*x+y*y); if(len>1){x/=len;y/=len;}
+  return {x:x,y:y};
+}
+$("sparkleBtn").addEventListener("click", function(){ ensureAudio(); doSparkleAction(); });
+$("backChip").addEventListener("click", function(){ ensureAudio(); backFromStage(); });
+$("bgmChip").addEventListener("click", function(){ ensureAudio(); toggleBGM(); });
+
+function backFromStage(){
+  if(bgmInst){ bgmInst.stop(); bgmInst=null; }
+  clearStageObjs();
+  if(player){ scene.remove(player); player=null; }
+  buildStageGrid();
+  showScreen("scrStage");
+  playBGM("magical");
+}
+
+/* ---------- アクション判定（近くの1つだけに反応、複数ボタン化しない） ---------- */
+function findNearbyAction(){
+  if(!player || !stageObjs) return null;
+  var p = player.position;
+  var best=null, bestD=1e9;
+  stageObjs.rescues.forEach(function(a){
+    if(a.userData.rescued) return;
+    var d = p.distanceTo(a.position);
+    if(d<1.8 && d<bestD){ bestD=d; best={type:"rescue", obj:a}; }
+  });
+  stageObjs.tasks.forEach(function(t){
+    if(t.userData.done) return;
+    var d = p.distanceTo(t.position);
+    if(d<1.8 && d<bestD){ bestD=d; best={type:"task", obj:t}; }
+  });
+  if(stageObjs.whale && stageObjs.whaleAwake===false && runState.stars>=STAGES[curStageIdx].starTarget && runState.task>=STAGES[curStageIdx].taskTarget){
+    var dw = p.distanceTo(stageObjs.whale.position);
+    if(dw<4.5){ best={type:"whale", obj:stageObjs.whale}; }
+  }
+  return best;
+}
+function doSparkleAction(){
+  if(!activeAction) return;
+  var st = STAGES[curStageIdx];
+  if(activeAction.type==="rescue"){
+    activeAction.obj.userData.rescued = true;
+    activeAction.obj.visible = false;
+    runState.rescued++;
+    sfx.rescue();
+    burst(activeAction.obj.position.x, activeAction.obj.position.y+0.5, activeAction.obj.position.z, 0xffd6e8, 20, 4);
+    showToast("たすけたよ！");
+  } else if(activeAction.type==="task"){
+    activeAction.obj.userData.done = true;
+    activeAction.obj.visible = false;
+    runState.task++;
+    if(st.taskType==="cloud"){ sfx.clean(); burst(activeAction.obj.position.x,activeAction.obj.position.y,activeAction.obj.position.z,0xffffff,18,3); showToast("くもが きれいに なったよ！"); }
+    else if(st.taskType==="switch"){ sfx.fix(); burst(activeAction.obj.position.x,activeAction.obj.position.y,activeAction.obj.position.z,0xfff2a8,16,3); showToast("あかりが ついたよ！"); }
+    else if(st.taskType==="flower"){ sfx.bloom(); burst(activeAction.obj.position.x,activeAction.obj.position.y+0.5,activeAction.obj.position.z,0xff9ecb,16,3); showToast("はなが さいたよ！"); }
+    else if(st.taskType==="moya"){ sfx.clean(); burst(activeAction.obj.position.x,activeAction.obj.position.y,activeAction.obj.position.z,0x9ff7c8,20,3); showToast("モヤが きえたよ！"); }
+  } else if(activeAction.type==="whale"){
+    stageObjs.whaleAwake = true;
+    sfx.fix();
+    showToast("ほしくじらに ひかりが とどいたよ！");
+  }
+  updateHud(); updateGoalText(st);
+  checkStageComplete();
+}
+
+/* ---------- 落下復帰 ---------- */
+function checkFallRecovery(dt){
+  lastSafeTimer -= dt;
+  if(player && lastSafeTimer<=0){
+    var d = Math.sqrt(player.position.x*player.position.x + player.position.z*player.position.z);
+    var st = STAGES[curStageIdx];
+    if(d < st.arena*0.95 && player.position.y > -3){ lastSafe.copy(player.position); }
+    lastSafeTimer = 0.4;
+  }
+  if(player && player.position.y < -6){
+    sfx.fall();
+    player.position.copy(lastSafe); player.position.y = 0;
+    showToast("だいじょうぶ！ ここから もういちど");
+  }
+}
+
+/* ---------- ステージクリア判定 ---------- */
+function checkStageComplete(){
+  var st = STAGES[curStageIdx];
+  if(runState.done) return;
+  if(st.taskType==="moya"){
+    if(runState.task>=st.taskTarget && runState.stars>=st.starTarget && stageObjs.whaleAwake){
+      finishWhaleSequence();
+    }
+    return;
+  }
+  if(runState.rescued>=st.rescueTarget && runState.task>=st.taskTarget){
+    if(stageObjs.goal && !stageObjs.goal.userData.active){
+      stageObjs.goal.userData.active = true;
+      showToast("ひかる わっかへ すすもう！");
+    }
+  }
+}
+function finishWhaleSequence(){
+  runState.done = true; runState.finishing = true;
+  showToast("みんな げんきに なったよ！", 2400);
+  sfx.clear();
+  var t0 = performance.now();
+  (function grow(){
+    var el = (performance.now()-t0)/1800;
+    if(stageObjs.whale) stageObjs.whale.scale.setScalar(Math.min(1, el));
+    if(el<1){ requestAnimationFrame(grow); } else { setTimeout(function(){ completeStage(); }, 900); }
+  })();
+}
+function reachGoal(){
+  if(runState.done) return;
+  runState.done = true;
+  sfx.clear();
+  burst(player.position.x, player.position.y+0.6, player.position.z, 0xffe36a, 30, 5);
+  setTimeout(function(){ completeStage(); }, 500);
+}
+
+function completeStage(){
+  var st = STAGES[curStageIdx];
+  var stars = 1; /* クリアで必ず★1 */
+  var rescueOk = st.rescueTarget===0 ? true : (runState.rescued>=st.rescueTarget);
+  var taskOk = st.taskTarget===0 ? true : (runState.task>=st.taskTarget);
+  var collectOk = runState.stars >= st.starTarget;
+  if(rescueOk && taskOk) stars++;
+  if(collectOk) stars++;
+  stars = Math.min(3, Math.max(1, stars));
+
+  if(stars > (S.stageStars[curStageIdx]||0)) S.stageStars[curStageIdx] = stars;
+  S.rescued[curStageIdx] = Math.max(S.rescued[curStageIdx]||0, runState.rescued);
+  S.collected[curStageIdx] = Math.max(S.collected[curStageIdx]||0, runState.stars);
+  if(curStageIdx+1 > S.unlockedStage && curStageIdx+1 < STAGES.length) S.unlockedStage = curStageIdx+1;
+  S.totalStars = S.stageStars.reduce(function(a,b){return a+b;},0);
+
+  var newItem = null;
+  REWARD_TABLE.forEach(function(r){
+    if(S.totalStars>=r.at && S.unlockedItems.indexOf(r.id)<0){
+      S.unlockedItems.push(r.id); newItem = r;
+    }
+  });
+  saveGame();
+
+  if(bgmInst){ bgmInst.stop(); bgmInst=null; }
+  showResultScreen(stars, newItem);
+}
+
+function showResultScreen(stars, newItem){
+  var st = STAGES[curStageIdx];
+  var starHtml = "";
+  for(var i=0;i<3;i++) starHtml += '<span class="'+(i<stars?"on":"off")+'">★</span>';
+  $("resStars").innerHTML = starHtml;
+  var lines = [st.name+" クリア！"];
+  if(st.rescueTarget>0) lines.push("たすけた どうぶつ："+runState.rescued+"/"+st.rescueTarget);
+  lines.push("あつめた ほし："+runState.stars+"/"+st.starTarget);
+  $("resDetail").innerHTML = lines.join("<br>");
+  $("resNewItem").textContent = newItem ? ("あたらしい ごほうび："+newItem.name+"！") : "";
+  if(newItem) sfx.reward();
+  $("btnNext").classList.toggle("hidden", curStageIdx+1>=STAGES.length);
+  showScreen("scrResult");
+}
+
+/* ---------- メインループ ---------- */
+var lastT = performance.now();
+function tick(now){
+  requestAnimationFrame(tick);
+  if(!renderer) return;
+  var dt = Math.min(0.05, (now-lastT)/1000);
+  lastT = now;
+  if(document.hidden) return;
+
+  if(player && stageObjs && !runState.finishing){
+    var iv = inputVec();
+    var mvLen = Math.sqrt(iv.x*iv.x+iv.y*iv.y);
+    var c = CHARACTERS[S.selectedCharacter];
+    if(mvLen>0.08){
+      var fw = new THREE.Vector3(Math.sin(camYaw),0,Math.cos(camYaw));
+      var right = new THREE.Vector3(fw.z,0,-fw.x);
+      var move = new THREE.Vector3().addScaledVector(right, iv.x).addScaledVector(fw, -iv.y);
+      move.normalize().multiplyScalar(5.2*c.speed*mvLen*dt);
+      player.position.add(move);
+      var targetRot = Math.atan2(move.x, move.z);
+      var dr = targetRot - player.rotation.y;
+      while(dr>Math.PI) dr-=Math.PI*2; while(dr<-Math.PI) dr+=Math.PI*2;
+      player.rotation.y += dr*Math.min(1,dt*10);
+      player.position.y = Math.abs(Math.sin(now*0.008))*0.06;
+    }
+    /* 星の自動収集（磁石半径） */
+    var st = STAGES[curStageIdx];
+    var magnetR = 1.1 + (c.magnet||0);
+    for(var i=stageObjs.stars.length-1;i>=0;i--){
+      var star = stageObjs.stars[i];
+      if(!star.visible) continue;
+      star.rotation.y += dt*2.2;
+      var d = player.position.distanceTo(star.position);
+      if(d<magnetR){
+        star.visible=false; runState.stars++; sfx.star();
+        burst(star.position.x,star.position.y,star.position.z,0xffe36a,8,3);
+        updateHud(); updateGoalText(st); checkStageComplete();
+      }
+    }
+    /* ゴール判定 */
+    if(stageObjs.goal && stageObjs.goal.userData.active && !runState.done){
+      var dg = player.position.distanceTo(stageObjs.goal.position);
+      stageObjs.goal.rotation.z += dt*1.2;
+      if(dg < 1.6) reachGoal();
+    }
+    /* タスクの見た目アニメ（軽量） */
+    stageObjs.tasks.forEach(function(t){ if(t.visible) t.rotation.y += dt*0.5; });
+    stageObjs.rescues.forEach(function(a){ if(a.visible) a.position.y = Math.abs(Math.sin(now*0.006 + a.id))*0.08; });
+    if(stageObjs.whale && stageObjs.whaleAwake){ stageObjs.whale.position.y = 2.4 + Math.sin(now*0.0012)*0.4; stageObjs.whale.rotation.y += dt*0.15; }
+
+    checkFallRecovery(dt);
+
+    /* コンテキストアクション検出 */
+    activeAction = findNearbyAction();
+    $("sparkleBtn").classList.toggle("show", !!activeAction);
+
+    /* カメラ */
+    var camTargetPos = new THREE.Vector3(player.position.x, player.position.y+1.1, player.position.z);
+    var camPos = new THREE.Vector3(camTargetPos.x - Math.sin(camYaw)*camDist, camTargetPos.y+camHeight, camTargetPos.z - Math.cos(camYaw)*camDist);
+    camera.position.lerp(camPos, Math.min(1,dt*4));
+    camera.lookAt(camTargetPos);
+  }
+
+  updateParticles(dt);
+  if(player && player.userData.extras && player.userData.extras.wandStar) player.userData.extras.wandStar.rotation.y += dt*3;
+
+  renderer.render(scene, camera);
+}
+
+/* ================= 画面遷移ハンドラ ================= */
+$("btnStart").addEventListener("click", function(){ ensureAudio(); pickedChar=S.selectedCharacter; buildCharGrid(); showScreen("scrChar"); });
+$("btnContinue").addEventListener("click", function(){ ensureAudio(); buildStageGrid(); showScreen("scrStage"); playBGM("magical"); });
+$("btnMusicTitle").addEventListener("click", function(){ ensureAudio(); toggleBGM(); });
+$("btnCharBack").addEventListener("click", function(){ showScreen("scrTitle"); });
+$("btnCharGo").addEventListener("click", function(){
+  S.selectedCharacter = pickedChar; saveGame();
+  buildStageGrid(); showScreen("scrStage"); playBGM("magical");
+});
+$("btnStageBack").addEventListener("click", function(){ showScreen("scrTitle"); if(bgmInst){bgmInst.stop();bgmInst=null;} });
+$("btnOpenDress").addEventListener("click", function(){ buildDressScreen(); showScreen("scrDress"); });
+$("btnDressBack").addEventListener("click", function(){ buildStageGrid(); showScreen("scrStage"); });
+$("btnRetry").addEventListener("click", function(){ startStage(curStageIdx); });
+$("btnToStages").addEventListener("click", function(){ if(bgmInst){bgmInst.stop();bgmInst=null;} clearStageObjs(); if(player){scene.remove(player);player=null;} buildStageGrid(); showScreen("scrStage"); playBGM("magical"); });
+$("btnNext").addEventListener("click", function(){ startStage(curStageIdx+1); });
+
+/* ---------- 初期化 ---------- */
+(function init(){
+  loadGame();
+  var hasProgress = (S.unlockedStage>0) || (S.totalStars>0) || S.stageStars.some(function(v){return v>0;});
+  if(hasProgress) $("btnContinue").classList.remove("hidden");
+  syncBgmIcons();
+  onResize();
+  if(webglOK) requestAnimationFrame(tick);
+  showScreen("scrTitle");
+})();
+  </script>
+</body>
+</html>

@@ -60,18 +60,23 @@ const MASCOT_LINES = {
 const GAME_SVGS = {
   g_astral: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0" y="0" width="100" height="85" rx="12" fill="#0a1226"/>
-      <circle cx="18" cy="15" r="1.5" fill="#bfe0ff" opacity=".9"/>
-      <circle cx="82" cy="13" r="1.3" fill="#bfe0ff" opacity=".8"/>
-      <circle cx="70" cy="24" r="1" fill="#bfe0ff" opacity=".7"/>
-      <circle cx="30" cy="26" r="1" fill="#bfe0ff" opacity=".7"/>
-      <circle cx="50" cy="21" r="10" fill="none" stroke="#7cecff" strokeWidth="1.4" opacity=".5"/>
-      <path d="M50 8 L52.4 16 L60 16 L53.8 20.6 L56 28 L50 23.4 L44 28 L46.2 20.6 L40 16 L47.6 16 Z" fill="#ffd982"/>
-      <path d="M50 34 L54 41 L46 41 Z" fill="#f5e6bd"/>
-      <rect x="47.6" y="40" width="4.8" height="30" rx="2" fill="#e8f3ff"/>
-      <path d="M50 40 L52 55 L50 70 L48 55 Z" fill="#7cecff" opacity=".45"/>
-      <rect x="40" y="52" width="20" height="5" rx="2.5" fill="#ffd982"/>
-      <rect x="47.6" y="70" width="4.8" height="8" rx="2" fill="#8a6a2a"/>
+      <rect x="0" y="0" width="100" height="85" rx="12" fill="#4a5abf"/>
+      <circle cx="16" cy="14" r="1.5" fill="#fff6c8" opacity=".9"/>
+      <circle cx="84" cy="12" r="1.3" fill="#fff6c8" opacity=".8"/>
+      <circle cx="70" cy="20" r="1" fill="#fff6c8" opacity=".7"/>
+      <circle cx="26" cy="24" r="1" fill="#fff6c8" opacity=".7"/>
+      <path d="M25 55 Q35 40 50 40 Q65 40 75 55" fill="none" stroke="#ff9ecb" strokeWidth="4" strokeLinecap="round" opacity=".85"/>
+      <path d="M30 55 Q38 44 50 44 Q62 44 70 55" fill="none" stroke="#fff2a8" strokeWidth="4" strokeLinecap="round" opacity=".85"/>
+      <path d="M35 55 Q41 48 50 48 Q59 48 65 55" fill="none" stroke="#9ff7c8" strokeWidth="4" strokeLinecap="round" opacity=".85"/>
+      <ellipse cx="60" cy="66" rx="18" ry="10" fill="#8fc6ff"/>
+      <path d="M42 66 L34 62 L38 68 L34 72 Z" fill="#8fc6ff"/>
+      <circle cx="70" cy="62" r="1.6" fill="#1c1a44"/>
+      <path d="M50 20 L52 26 L58 26 L53.2 29.6 L55 36 L50 32.2 L45 36 L46.8 29.6 L42 26 L48 26 Z" fill="#fff2a8"/>
+      <circle cx="20" cy="66" r="7" fill="#ffcf7a"/>
+      <circle cx="17" cy="64" r="1.6" fill="#3a2a10"/>
+      <circle cx="23" cy="64" r="1.6" fill="#3a2a10"/>
+      <path d="M15 60 L17 57 L19 60 Z" fill="#ffcf7a"/>
+      <path d="M21 60 L23 57 L25 60 Z" fill="#ffcf7a"/>
     </svg>
   ),
 
@@ -1205,12 +1210,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'霓虹夜间兜风',       desc:'在夜晚的城市里兜风，\n收集星星吧！' },
     ko:{ name:'반짝반짝 드라이브', desc:'밤의 도시를 달리며\n별을 모아요!' },
     es:{ name:'Paseo de Neón',     desc:'¡Recorre la ciudad nocturna\ny recoge las estrellas!' } },
-  { id:'g_astral', route:'/astral-fang', icon:'⚔️', num:23, color:'#7cecff', stars:5, isNew:true, category:'アクション',
-    ja:{ name:'アストラルファング',   desc:'かげのけものに いどむ\n本格3Dアクション！' },
-    en:{ name:'Astral Fang',          desc:'A cinematic 3D action\nadventure in the sky castle!' },
-    zh:{ name:'星辉之牙',             desc:'挑战暗影之兽的\n正统3D动作游戏！' },
-    ko:{ name:'아스트랄 팽',          desc:'그림자 짐승에 맞서는\n본격 3D 액션!' },
-    es:{ name:'Colmillo Astral',      desc:'¡Acción 3D en el\ncastillo del cielo!' } },
+  { id:'g_astral', route:'/astral-fang', icon:'🌟', num:23, color:'#7cecff', stars:5, isNew:true, category:'アクション',
+    ja:{ name:'ほしぞらアニマルレスキュー', desc:'ほしをあつめて\nまいごのどうぶつをたすけよう！' },
+    en:{ name:'Starry Animal Rescue',       desc:'Collect the stars\nand rescue lost animals!' },
+    zh:{ name:'星空动物救援队',             desc:'收集星星，\n帮助迷路的小动物！' },
+    ko:{ name:'별빛 동물 구조대',           desc:'별을 모아\n길 잃은 동물을 도와요!' },
+    es:{ name:'Rescate Animal Estelar',     desc:'¡Recoge estrellas\ny ayuda a los animales!' } },
   { id:'g_block', route:'/block', icon:'🏰', num:10, color:'#ec407a', stars:3, isNew:true, category:'アクション',
     ja:{ name:'おしろブロックくずし', desc:'パドルでボールをはじいて\nブロックをこわそう！' },
     en:{ name:'Castle Breakout',   desc:'Bounce the ball and\nbreak all the blocks!' },
