@@ -337,28 +337,51 @@ function updateParticles(dt){
   pGeo.attributes.position.needsUpdate = true;
 }
 
-/* ---------- キャラクター生成（共通形状、耳の形だけ種別で変更） ---------- */
+/* ---------- キャラクター生成（頭・胴・手足・しっぽを分離、背面からも動物と分かる形状） ---------- */
 function buildCharacterMesh(charId, equipped){
   var c = CHARACTERS[charId];
   var g = new THREE.Group();
   var bodyMat = mat(c.color);
-  var body = meshOf(GEO.sphere, bodyMat, true); body.scale.set(0.62,0.55,0.7); body.position.y=0.5; g.add(body);
-  var head = meshOf(GEO.sphere, bodyMat, true); head.scale.set(0.46,0.44,0.46); head.position.y=1.02; g.add(head);
+  var body = meshOf(GEO.sphere, bodyMat, true); body.scale.set(0.56,0.46,0.62); body.position.y=0.42; g.add(body);
+  /* 頭と胴の境界をはっきりさせるため、間に小さな首を挟んで隙間を作る */
+  var neck = meshOf(GEO.sphereLo, bodyMat); neck.scale.set(0.26,0.16,0.28); neck.position.y=0.74; g.add(neck);
+  var head = meshOf(GEO.sphere, bodyMat, true); head.scale.set(0.48,0.46,0.48); head.position.y=1.04; g.add(head);
+  var muzzle = meshOf(GEO.sphereLo, mat(0xffffff)); muzzle.scale.set(0.2,0.16,0.22); muzzle.position.set(0,0.97,0.4); g.add(muzzle);
   var cheekMat = mat(0xffb3c9);
-  [-0.18,0.18].forEach(function(sx){ var ch=meshOf(GEO.sphereLo, cheekMat); ch.scale.setScalar(0.07); ch.position.set(sx,0.94,0.36); g.add(ch); });
+  [-0.19,0.19].forEach(function(sx){ var ch=meshOf(GEO.sphereLo, cheekMat); ch.scale.setScalar(0.075); ch.position.set(sx,0.96,0.38); g.add(ch); });
   var eyeMat = mat(0x333333);
-  [-0.15,0.15].forEach(function(sx){ var ey=meshOf(GEO.sphereLo, eyeMat); ey.scale.setScalar(0.045); ey.position.set(sx,1.02,0.42); g.add(ey); });
-  /* 耳 */
+  [-0.16,0.16].forEach(function(sx){ var ey=meshOf(GEO.sphereLo, eyeMat); ey.scale.setScalar(0.05); ey.position.set(sx,1.05,0.44); g.add(ey); });
+  /* 耳（大きめ・種別ごとの形） */
+  var ears=[];
   if(c.ear==="cat" || c.ear==="fox"){
-    [-1,1].forEach(function(s){ var ear=meshOf(GEO.cone, bodyMat); ear.scale.set(0.16,0.24,0.16); ear.position.set(0.24*s,1.32,0); g.add(ear); });
+    [-1,1].forEach(function(s){ var ear=meshOf(GEO.cone, bodyMat); ear.scale.set(0.2,0.32,0.2); ear.position.set(0.27*s,1.4,0); ear.rotation.z=-0.15*s; g.add(ear); ears.push(ear); });
   } else if(c.ear==="rabbit"){
-    [-1,1].forEach(function(s){ var ear=meshOf(GEO.cyl, mat(0xffffff)); ear.scale.set(0.07,0.42,0.07); ear.position.set(0.15*s,1.5,0); g.add(ear); });
+    [-1,1].forEach(function(s){ var ear=meshOf(GEO.cyl, mat(0xffffff)); ear.scale.set(0.09,0.58,0.09); ear.position.set(0.17*s,1.62,0); ear.rotation.z=-0.08*s; g.add(ear); ears.push(ear); });
   } else if(c.ear==="bear"){
-    [-1,1].forEach(function(s){ var ear=meshOf(GEO.sphereLo, bodyMat); ear.scale.setScalar(0.14); ear.position.set(0.26*s,1.3,0); g.add(ear); });
+    [-1,1].forEach(function(s){ var ear=meshOf(GEO.sphereLo, bodyMat); ear.scale.setScalar(0.18); ear.position.set(0.29*s,1.38,0); g.add(ear); ears.push(ear); });
   }
-  if(c.ear==="fox"){ var tail=meshOf(GEO.cone, bodyMat); tail.scale.set(0.18,0.5,0.18); tail.rotation.x=1.2; tail.position.set(0,0.55,-0.5); g.add(tail); }
+  /* しっぽ（全キャラ共通で用意し、背面からも動物と分かるようにする） */
+  var tail;
+  if(c.ear==="fox"){ tail=meshOf(GEO.cone, bodyMat); tail.scale.set(0.2,0.62,0.2); tail.rotation.x=1.25; tail.position.set(0,0.5,-0.56); }
+  else if(c.ear==="cat"){ tail=meshOf(GEO.cyl, bodyMat); tail.scale.set(0.08,0.5,0.08); tail.rotation.x=0.9; tail.position.set(0,0.55,-0.5); }
+  else if(c.ear==="rabbit"){ tail=meshOf(GEO.sphereLo, mat(0xffffff)); tail.scale.setScalar(0.14); tail.position.set(0,0.42,-0.52); }
+  else { tail=meshOf(GEO.sphereLo, bodyMat); tail.scale.setScalar(0.17); tail.position.set(0,0.44,-0.5); }
+  g.add(tail);
+  /* 手足（円柱の脚＋足先） */
   var legMat = mat(0xffffff);
-  [-0.2,0.2].forEach(function(sx){ var leg=meshOf(GEO.sphereLo, legMat); leg.scale.set(0.13,0.1,0.13); leg.position.set(sx,0.14,0.05); g.add(leg); });
+  var legs=[];
+  [[-0.22,0.22],[0.22,0.22],[-0.22,-0.18],[0.22,-0.18]].forEach(function(p){
+    var legGroup = new THREE.Group(); legGroup.position.set(p[0],0.22,p[1]);
+    var leg = meshOf(GEO.cyl, legMat); leg.scale.set(0.1,0.22,0.1); leg.position.y=-0.06; legGroup.add(leg);
+    var foot = meshOf(GEO.sphereLo, legMat); foot.scale.set(0.12,0.08,0.14); foot.position.y=-0.17; legGroup.add(foot);
+    g.add(legGroup); legs.push(legGroup);
+  });
+  /* 前あし（腕）を少し高い位置にも用意し、正面からも手足があると分かるようにする */
+  var arms=[];
+  [-0.32,0.32].forEach(function(sx){
+    var arm = meshOf(GEO.cyl, legMat); arm.scale.set(0.08,0.22,0.08); arm.position.set(sx,0.42,0.28); arm.rotation.x=-0.25;
+    g.add(arm); arms.push(arm);
+  });
 
   /* 装備（見た目のみ） */
   var eq = equipped || {};
@@ -381,8 +404,29 @@ function buildCharacterMesh(charId, equipped){
   wandGroup.position.set(0.42,0.55,0.15); wandGroup.rotation.z=-0.3; g.add(wandGroup);
   extras.wandStar = star;
 
-  g.userData.headY = 1.02; g.userData.extras = extras;
+  g.userData.headY = 1.04; g.userData.extras = extras;
+  g.userData.legs = legs; g.userData.arms = arms; g.userData.tail = tail; g.userData.ears = ears; g.userData.body = body;
+  g.userData.animPhase = Math.random()*Math.PI*2;
   return g;
+}
+/* ---------- キャラクターの歩行・待機アニメーション ---------- */
+function animateCharacterMesh(g, dt, now, moving){
+  if(!g || !g.userData) return;
+  var ph = g.userData.animPhase||0;
+  var legs = g.userData.legs, arms = g.userData.arms, tail = g.userData.tail, ears = g.userData.ears, body = g.userData.body;
+  if(moving){
+    var w = now*0.012;
+    if(legs) legs.forEach(function(lg, i){ lg.rotation.x = Math.sin(w + (i%2?Math.PI:0))*0.6; });
+    if(arms) arms.forEach(function(ar, i){ ar.rotation.x = -0.25 + Math.sin(w + (i%2?Math.PI:0))*0.35; });
+    if(tail) tail.rotation.y = Math.sin(w*1.4)*0.35;
+    if(body) body.scale.y = body.scale.y; /* 走行中は呼吸アニメを止め、脚の動きを優先 */
+  } else {
+    if(legs) legs.forEach(function(lg){ lg.rotation.x = 0; });
+    if(arms) arms.forEach(function(ar){ ar.rotation.x = -0.25; });
+    if(tail) tail.rotation.y = Math.sin(now*0.002+ph)*0.15;
+    if(ears) ears.forEach(function(e,i){ e.rotation.x = Math.sin(now*0.0025+ph+i)*0.08; });
+    if(body){ var baseY=0.46; body.scale.y = baseY + Math.sin(now*0.003+ph)*0.02; }
+  }
 }
 
 /* ---------- ステージ内オブジェクト生成ヘルパー（共有ジオメトリ使用） ---------- */
@@ -447,6 +491,83 @@ function makeWhale(){
   [-1,1].forEach(function(s){ var fin=meshOf(GEO.cone, mat(0x5a7de0)); fin.scale.set(0.5,0.7,0.12); fin.rotation.z=Math.PI/2 - 0.6*s; fin.position.set(0.4, -0.5, 0.9*s); g.add(fin); });
   var belly = meshOf(GEO.sphere, mat(0xdfe8ff)); belly.scale.set(2.0,0.8,0.95); belly.position.y=-0.35; g.add(belly);
   g.userData.body = body;
+  return g;
+}
+
+/* ---------- 追加の景観アセット（ステージを賑やかにする） ---------- */
+function makeWindmill(){
+  var g = new THREE.Group();
+  var pole = meshOf(GEO.cyl, mat(0xd8c39a)); pole.scale.set(0.14,2.2,0.14); pole.position.y=1.1; g.add(pole);
+  var hub = meshOf(GEO.sphere, mat(0xffffff)); hub.scale.setScalar(0.18); hub.position.y=2.15; g.add(hub);
+  var blades = new THREE.Group(); blades.position.y=2.15;
+  var bladeColors=[0xff9ecb,0xfff2a8,0x9ff7c8,0x9ecbff];
+  for(var i=0;i<4;i++){
+    var holder = new THREE.Group(); holder.rotation.z = i*Math.PI/2;
+    var blade = meshOf(GEO.box, mat(bladeColors[i]));
+    blade.scale.set(0.16,0.9,0.05); blade.position.y=0.5;
+    holder.add(blade); blades.add(holder);
+  }
+  g.add(blades); g.userData.blades = blades;
+  return g;
+}
+function makeRainbowGate(){
+  var g = new THREE.Group();
+  var colors=[0xff6b6b,0xffb86b,0xfff06b,0x9ff7c8,0x6bc8ff,0xb08bff];
+  colors.forEach(function(c,i){
+    var arc = meshOf(GEO.torus, new THREE.MeshBasicMaterial({color:c, transparent:true, opacity:0.92}));
+    arc.scale.setScalar(2.7 - i*0.13);
+    arc.position.y = 1.7;
+    g.add(arc);
+  });
+  return g;
+}
+function makeBush(color){
+  var g = new THREE.Group();
+  for(var i=0;i<3;i++){ var b=meshOf(GEO.sphereLo, mat(color||0x4fae5a), true); b.scale.setScalar(0.36-i*0.05); b.position.set((i-1)*0.24,0.24,(Math.random()-0.5)*0.15); g.add(b); }
+  return g;
+}
+function makeRock(scale){
+  var g = meshOf(GEO.octa, mat(0x9a978c));
+  var s = scale||1;
+  g.scale.set(s*0.9, s*0.6, s*0.9);
+  g.rotation.y = Math.random()*Math.PI;
+  return g;
+}
+function makeGrassTuft(color){
+  var g = new THREE.Group();
+  for(var i=0;i<3;i++){
+    var blade = meshOf(GEO.cone, mat(color||0x4fae5a));
+    blade.scale.set(0.05, 0.3+Math.random()*0.15, 0.05);
+    blade.position.set((i-1)*0.08, 0.15, 0);
+    blade.rotation.z = (Math.random()-0.5)*0.3;
+    g.add(blade);
+  }
+  g.userData.sway = Math.random()*Math.PI*2;
+  return g;
+}
+function makeFootprintMarker(){
+  var m = meshOf(GEO.ring, new THREE.MeshBasicMaterial({color:0xfff2a8, transparent:true, opacity:0.55, side:THREE.DoubleSide}));
+  m.rotation.x=-Math.PI/2; m.scale.setScalar(0.35);
+  return m;
+}
+function makeBridge(len){
+  var g = new THREE.Group();
+  var plank = meshOf(GEO.box, mat(0xc79a5a)); plank.scale.set(2.2,0.15,len); plank.position.y=0.15; g.add(plank);
+  [-1,1].forEach(function(s){ var rail=meshOf(GEO.box, mat(0xa9793f)); rail.scale.set(0.1,0.5,len); rail.position.set(1.05*s,0.4,0); g.add(rail); });
+  return g;
+}
+function makeStream(width, len){
+  var m = meshOf(GEO.plane, new THREE.MeshBasicMaterial({color:0x6bc8ff, transparent:true, opacity:0.72}));
+  m.rotation.x=-Math.PI/2; m.scale.set(width, len, 1); m.position.y=0.015;
+  return m;
+}
+function makeRescueBase(){
+  var g = new THREE.Group();
+  var base = meshOf(GEO.cyl, mat(0xffe9b0)); base.scale.set(1.7,0.1,1.7); base.position.y=0.05; g.add(base);
+  var tent = meshOf(GEO.cone, mat(0xff9ecb), true); tent.scale.set(1.1,1.3,1.1); tent.position.y=0.75; g.add(tent);
+  var pole = meshOf(GEO.cyl, mat(0xffffff)); pole.scale.set(0.05,1.9,0.05); pole.position.set(1.35,0.95,0); g.add(pole);
+  var flag = meshOf(GEO.plane, new THREE.MeshBasicMaterial({color:0xffe36a, side:THREE.DoubleSide})); flag.scale.set(0.5,0.32,1); flag.position.set(1.6,1.6,0); g.add(flag);
+  g.userData.flag = flag;
   return g;
 }
 
@@ -707,7 +828,7 @@ function renderDressPreview(){
 var curStageIdx = -1, stageObjs = null, player=null, playerParts=null;
 var joyActive=false, joyId=null, joyOrigin={x:0,y:0}, joyVec={x:0,y:0};
 var keys = {};
-var camYaw=0, camDist=7.2, camHeight=3.6;
+var camYaw=0, camDist=6.0, camHeight=2.9;
 var lastSafe = new THREE.Vector3(0,0,0);
 var lastSafeTimer = 0;
 var runState = { stars:0, rescued:0, task:0, done:false, finishing:false };
@@ -742,92 +863,259 @@ function startStage(idx){
   updateGoalText(st);
 }
 
+function addAmbientScenery(group, st, anim){
+  /* 遠景の山（大きな低ポリの円錐を輪状に配置、常に霧の中でシルエットのみ見える） */
+  var mountainColor = mat(0x6c7ec9);
+  var mountainColorFar = mat(0x8a97d8);
+  var mCount = 14, mRadius = st.arena*1.55;
+  for(var i=0;i<mCount;i++){
+    var ma = (i/mCount)*Math.PI*2 + (Math.random()-0.5)*0.15;
+    var h = 16+Math.random()*12;
+    var mt = meshOf(GEO.cone, i%2? mountainColor : mountainColorFar);
+    mt.scale.set(11+Math.random()*7, h, 11+Math.random()*7);
+    mt.position.set(Math.cos(ma)*mRadius, h*0.4-2, Math.sin(ma)*mRadius);
+    group.add(mt);
+  }
+  /* 月 */
+  var moon = meshOf(GEO.sphere, new THREE.MeshBasicMaterial({color:0xfff8e0}));
+  moon.scale.setScalar(3.4);
+  moon.position.set(-st.arena*1.1, 22, -st.arena*1.3);
+  group.add(moon);
+  /* 流れる雲（空） */
+  for(var ci=0;ci<6;ci++){
+    var cloud = new THREE.Group();
+    for(var pi=0;pi<4;pi++){ var p=meshOf(GEO.sphereLo, new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.88})); var sc=(0.9-pi*0.12)*(1+Math.random()*0.6); p.scale.setScalar(sc); p.position.set((pi-1.5)*0.9, Math.sin(pi)*0.15, (Math.random()-0.5)*0.4); cloud.add(p); }
+    var range = st.arena*1.3;
+    cloud.position.set((Math.random()*2-1)*range, 13+Math.random()*6, (Math.random()*2-1)*st.arena*0.9);
+    cloud.userData.speed = 0.35+Math.random()*0.4; cloud.userData.range = range;
+    group.add(cloud); anim.clouds.push(cloud);
+  }
+  /* 光の粒・蝶（円運動） */
+  var moteColors=[0xfff2a8,0xffd6e8,0x9ff7c8,0xbfe0ff];
+  for(var mi=0;mi<7;mi++){
+    var mote = meshOf(GEO.sphereLo, new THREE.MeshBasicMaterial({color:moteColors[mi%moteColors.length]}));
+    mote.scale.setScalar(0.08+Math.random()*0.05);
+    var cx=(Math.random()*2-1)*st.arena*0.6, cz=(Math.random()*2-1)*st.arena*0.6;
+    mote.userData = { cx:cx, cy:0.6+Math.random()*0.8, cz:cz, r:0.8+Math.random()*1.2, phase:Math.random()*Math.PI*2 };
+    group.add(mote); anim.motes.push(mote);
+  }
+}
+function scatterGrass(group, anim, cx, cz, radius, count, color){
+  for(var i=0;i<count;i++){
+    var a=Math.random()*Math.PI*2, r=Math.random()*radius;
+    var tuft = makeGrassTuft(color);
+    tuft.position.set(cx+Math.cos(a)*r, 0, cz+Math.sin(a)*r);
+    tuft.rotation.y = Math.random()*Math.PI*2;
+    group.add(tuft); anim.grass.push(tuft);
+  }
+}
+function buildHillStage(group, st, anim){
+  /* おほしさまの丘：レスキュー基地 → 光る足あと → 1羽目 → 橋 → 風車 → 花畑で2羽目 → 丘で3羽目 → 星10個 → 虹のゲート */
+  var stars=[], rescues=[], tasks=[];
+
+  /* レスキュー基地（スタート地点） */
+  var base = makeRescueBase(); base.position.set(0,0,18); group.add(base);
+  scatterGrass(group, anim, 0, 18, 4, 6, 0x4fae5a);
+
+  /* 光る足あと（基地→1羽目） */
+  for(var f=0; f<6; f++){
+    var fp = makeFootprintMarker();
+    fp.position.set(-1.2 + f*0.5, 0.03, 16 - f*1.5);
+    group.add(fp); anim.footprints.push(fp);
+  }
+
+  /* 1羽目：光の柱つき */
+  var chick1 = makeAnimalNPC(st.rescueColor);
+  chick1.position.set(-3, 0, 7.5);
+  chick1.userData.rescued=false;
+  var beam1 = makeGuideBeam(0xfff2a8); chick1.add(beam1); chick1.userData.beam = beam1;
+  group.add(chick1); rescues.push(chick1);
+
+  /* 小川と橋 */
+  var stream = makeStream(st.arena*2.1, 3.6); stream.position.set(0,0,2.5); group.add(stream);
+  var bridge = makeBridge(4.2); bridge.position.set(0,0,2.5); group.add(bridge);
+
+  /* 風車（橋を渡った先） */
+  var windmill = makeWindmill(); windmill.position.set(5.5,0,0.5); group.add(windmill);
+  anim.windmillBlades.push(windmill.userData.blades);
+
+  /* 花畑と2羽目 */
+  scatterGrass(group, anim, -1, -8, 6, 14, 0xff9ecb);
+  for(var fl=0; fl<8; fl++){
+    var flower = makeFlowerDeco([0xff9ecb,0xffe36a,0xbfe0ff][fl%3]);
+    flower.position.set(-4+Math.random()*8, 0, -5+Math.random()*7);
+    group.add(flower);
+  }
+  var chick2 = makeAnimalNPC(st.rescueColor);
+  chick2.position.set(4, 0, -8);
+  chick2.userData.rescued=false;
+  var beam2 = makeGuideBeam(0xfff2a8); chick2.add(beam2); chick2.userData.beam = beam2;
+  group.add(chick2); rescues.push(chick2);
+
+  /* 小さな丘（3〜4か所）と3羽目 */
+  var hillSpots = [[-6,-15],[3,-17],[-2,-13],[7,-14]];
+  hillSpots.forEach(function(p, i){
+    var mound = meshOf(GEO.sphereLo, mat(0x6bb85a));
+    mound.scale.set(2.4+Math.random(), 1.0+Math.random()*0.4, 2.4+Math.random());
+    mound.position.set(p[0], -0.3, p[1]);
+    group.add(mound);
+    var tree = makeTree(0x8a5a2a, [0x4fae5a,0x5fcf6f,0x3f9a4f][i%3], 0.7+Math.random()*0.3);
+    tree.position.set(p[0]+(Math.random()-0.5)*1.5, mound.scale.y*0.4-0.3, p[1]+(Math.random()-0.5)*1.5);
+    group.add(tree);
+  });
+  var chick3 = makeAnimalNPC(st.rescueColor);
+  chick3.position.set(-6, 0.5, -15);
+  chick3.userData.rescued=false;
+  var beam3 = makeGuideBeam(0xfff2a8); chick3.add(beam3); chick3.userData.beam = beam3;
+  group.add(chick3); rescues.push(chick3);
+
+  /* 木・茂み・岩をランダム配置（種類・大きさ・色・回転をばらけさせる） */
+  for(var d=0; d<18; d++){
+    var a=Math.random()*Math.PI*2, r=8+Math.random()*(st.arena*0.85);
+    var x=Math.cos(a)*r, z=Math.sin(a)*r;
+    if(Math.abs(z-2.5)<3 && Math.abs(x)<st.arena) continue; /* 川の上には置かない */
+    var pick = Math.random();
+    var deco;
+    if(pick<0.45) deco = makeTree(0x8a5a2a, [0x4fae5a,0x5fcf6f,0x3f9a4f,0x6fdf7f][Math.floor(Math.random()*4)], 0.7+Math.random()*0.6);
+    else if(pick<0.7) deco = makeBush([0x4fae5a,0x5fcf6f,0x6fdf7f][Math.floor(Math.random()*3)]);
+    else deco = makeRock(0.7+Math.random()*0.8);
+    deco.position.set(x,0,z); deco.rotation.y = Math.random()*Math.PI*2;
+    group.add(deco);
+  }
+  scatterGrass(group, anim, 0, 0, st.arena*0.9, 30, 0x4fae5a);
+
+  /* 星10個：道・橋・花畑・丘へ誘導するように配置（ランダム散布ではない） */
+  var starSpots = [
+    [-0.6,15],[-2,11],[0,8.8], /* 基地→1羽目 */
+    [0,4.5],[0.6,1.2], /* 橋周辺 */
+    [-2,-4],[2,-6],[-3,-9],[4,-10], /* 花畑 */
+    [-5,-13] /* 丘 */
+  ];
+  starSpots.forEach(function(p){
+    var star = makeStarPickup();
+    star.userData.baseY = 0.7;
+    star.position.set(p[0], 0.7, p[1]);
+    group.add(star); stars.push(star);
+  });
+
+  /* 虹のゲート（ゴール、装飾は縦のアーチ、判定用の平たいリングは従来通り足元に） */
+  var goal = makeGoalRing(0x9ff7c8);
+  goal.position.set(0, 0.05, -21);
+  goal.userData.active = false;
+  group.add(goal);
+  var gate = makeRainbowGate(); gate.position.set(0,0,-21); group.add(gate);
+  scatterGrass(group, anim, 0, -21, 5, 8, 0x6fdf7f);
+
+  return { stars:stars, rescues:rescues, tasks:tasks, goal:goal, playerStart:new THREE.Vector3(0,0,16) };
+}
 function buildStageWorld(st){
   scene.fog = new THREE.Fog(st.fog, 22, st.arena*2.4);
   renderer.setClearColor(st.sky);
   var group = new THREE.Group();
   scene.add(group);
-  stageObjs = { group:group, stars:[], rescues:[], tasks:[], goal:null, whale:null };
+  var anim = { grass:[], clouds:[], motes:[], footprints:[], windmillBlades:[] };
+  stageObjs = { group:group, stars:[], rescues:[], tasks:[], goal:null, whale:null, followers:[], anim:anim };
 
   var floor = meshOf(GEO.cyl, mat(st.floor)); floor.scale.set(st.arena, 0.4, st.arena); floor.position.y=-0.2; floor.receiveShadow=false; group.add(floor);
   var edgeGlow = meshOf(GEO.ring, new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.12, side:THREE.DoubleSide}));
   edgeGlow.rotation.x=-Math.PI/2; edgeGlow.scale.setScalar(st.arena*0.98); group.add(edgeGlow);
 
-  /* 装飾（テーマ別、共有ジオメトリのみ使用） */
-  var decoCount = 16;
-  for(var i=0;i<decoCount;i++){
-    var a = (i/decoCount)*Math.PI*2, r = st.arena*0.75 + (Math.random()-0.5)*st.arena*0.15;
-    var x=Math.cos(a)*r, z=Math.sin(a)*r;
-    var deco;
-    if(st.propTheme==="hill") deco = makeTree(0x8a5a2a, 0x4fae5a, 0.8+Math.random()*0.4);
-    else if(st.propTheme==="cloud") deco = makeCloudDeco(0xffffff);
-    else if(st.propTheme==="park") deco = makeSwitchDeco();
-    else if(st.propTheme==="forest") deco = makeTree(0x5a4a80, 0x9a7fe0, 0.8+Math.random()*0.5);
-    else if(st.propTheme==="whale") deco = makeStarPickup();
-    else deco = makeTree(0x8a5a2a, 0x4fae5a, 0.9);
-    deco.position.set(x, 0, z);
-    if(st.propTheme==="whale"){ deco.scale.setScalar(0.35); }
-    group.add(deco);
-  }
+  addAmbientScenery(group, st, anim);
 
-  /* 星（自動収集） */
-  for(var s=0;s<st.starTarget;s++){
-    var sa=Math.random()*Math.PI*2, sr=Math.random()*st.arena*0.7;
-    var star = makeStarPickup();
-    star.position.set(Math.cos(sa)*sr, 0.7, Math.sin(sa)*sr);
-    star.userData.spin = true;
-    group.add(star); stageObjs.stars.push(star);
-  }
+  var playerStart = new THREE.Vector3(0,0,st.arena*0.3);
 
-  /* 迷子どうぶつ（きらきらボタンで救助） */
-  for(var rIdx=0; rIdx<st.rescueTarget; rIdx++){
-    var ra=Math.random()*Math.PI*2, rr=Math.random()*st.arena*0.6;
-    var an = makeAnimalNPC(st.rescueColor);
-    an.position.set(Math.cos(ra)*rr, 0, Math.sin(ra)*rr);
-    an.userData.rescued=false;
-    var beam = makeGuideBeam(0xfff2a8); an.add(beam);
-    group.add(an); stageObjs.rescues.push(an);
-  }
+  if(st.id===0){
+    var built = buildHillStage(group, st, anim);
+    stageObjs.stars = built.stars; stageObjs.rescues = built.rescues; stageObjs.tasks = built.tasks; stageObjs.goal = built.goal;
+    playerStart = built.playerStart;
+  } else {
+    /* 装飾（テーマ別、種類・大きさ・色・回転をばらけさせる） */
+    var decoCount = 20;
+    for(var i=0;i<decoCount;i++){
+      var a = (i/decoCount)*Math.PI*2, r = st.arena*(0.55+Math.random()*0.35);
+      var x=Math.cos(a)*r, z=Math.sin(a)*r;
+      var deco;
+      var pick = Math.random();
+      if(st.propTheme==="hill") deco = pick<0.7? makeTree(0x8a5a2a, [0x4fae5a,0x5fcf6f,0x3f9a4f][Math.floor(Math.random()*3)], 0.7+Math.random()*0.5) : (pick<0.88? makeBush(0x4fae5a) : makeRock(0.8));
+      else if(st.propTheme==="cloud") deco = makeCloudDeco(0xffffff);
+      else if(st.propTheme==="park") deco = makeSwitchDeco();
+      else if(st.propTheme==="forest") deco = pick<0.7? makeTree(0x5a4a80, [0x9a7fe0,0xb08bff,0x7f9ae0][Math.floor(Math.random()*3)], 0.7+Math.random()*0.6) : makeBush(0x8a6fd0);
+      else if(st.propTheme==="whale") deco = makeStarPickup();
+      else deco = makeTree(0x8a5a2a, 0x4fae5a, 0.9);
+      deco.position.set(x, 0, z);
+      deco.rotation.y = Math.random()*Math.PI*2;
+      if(st.propTheme==="whale"){ deco.scale.setScalar(0.35); }
+      group.add(deco);
+    }
+    scatterGrass(group, anim, 0, 0, st.arena*0.9, 22, 0x4fae5a);
 
-  /* タスク（雲/スイッチ/花/モヤ） */
-  for(var tIdx=0; tIdx<st.taskTarget; tIdx++){
-    var ta=Math.random()*Math.PI*2, tr=Math.random()*st.arena*0.55;
-    var task;
-    if(st.taskType==="cloud"){ task = makeCloudDeco(0x2a2a44); task.userData.kind="cloud"; }
-    else if(st.taskType==="switch"){ task = makeSwitchDeco(); task.userData.kind="switch"; }
-    else if(st.taskType==="flower"){ task = makeFlowerDeco(0xff9ecb); task.userData.kind="flower"; }
-    else if(st.taskType==="moya"){ task = makeMoyaCloud(); task.userData.kind="moya"; }
-    else { task = new THREE.Group(); task.userData.kind="none"; }
-    task.position.set(Math.cos(ta)*tr, task.userData.kind==="flower"?0:0.7, Math.sin(ta)*tr);
-    task.userData.done=false;
-    var beam2 = makeGuideBeam(0x9ff7c8); task.add(beam2);
-    group.add(task); stageObjs.tasks.push(task);
-  }
+    /* 星（自動収集） */
+    for(var s=0;s<st.starTarget;s++){
+      var sa=Math.random()*Math.PI*2, sr=Math.random()*st.arena*0.7;
+      var star = makeStarPickup();
+      star.userData.baseY = 0.7;
+      star.position.set(Math.cos(sa)*sr, 0.7, Math.sin(sa)*sr);
+      star.userData.spin = true;
+      group.add(star); stageObjs.stars.push(star);
+    }
 
-  /* ゴール */
-  var goal = makeGoalRing(0x9ff7c8);
-  var ga = Math.random()*Math.PI*2, gr = st.arena*0.55;
-  goal.position.set(Math.cos(ga)*gr, 0.05, Math.sin(ga)*gr);
-  goal.userData.active = (st.taskTarget===0 && st.rescueTarget===0);
-  group.add(goal); stageObjs.goal = goal;
+    /* 迷子どうぶつ（きらきらボタンで救助） */
+    for(var rIdx=0; rIdx<st.rescueTarget; rIdx++){
+      var ra=Math.random()*Math.PI*2, rr=Math.random()*st.arena*0.6;
+      var anpc = makeAnimalNPC(st.rescueColor);
+      anpc.position.set(Math.cos(ra)*rr, 0, Math.sin(ra)*rr);
+      anpc.userData.rescued=false;
+      var beam = makeGuideBeam(0xfff2a8); anpc.add(beam); anpc.userData.beam = beam;
+      group.add(anpc); stageObjs.rescues.push(anpc);
+    }
 
-  /* 星くじら（最終ステージ） */
-  if(st.propTheme==="whale"){
-    var whale = makeWhale();
-    whale.position.set(0,2.4,-st.arena*0.4);
-    whale.scale.setScalar(0.01);
-    group.add(whale); stageObjs.whale = whale;
-    stageObjs.whaleAwake = false;
+    /* タスク（雲/スイッチ/花/モヤ） */
+    for(var tIdx=0; tIdx<st.taskTarget; tIdx++){
+      var ta=Math.random()*Math.PI*2, tr=Math.random()*st.arena*0.55;
+      var task;
+      if(st.taskType==="cloud"){ task = makeCloudDeco(0x2a2a44); task.userData.kind="cloud"; }
+      else if(st.taskType==="switch"){ task = makeSwitchDeco(); task.userData.kind="switch"; }
+      else if(st.taskType==="flower"){ task = makeFlowerDeco(0xff9ecb); task.userData.kind="flower"; }
+      else if(st.taskType==="moya"){ task = makeMoyaCloud(); task.userData.kind="moya"; }
+      else { task = new THREE.Group(); task.userData.kind="none"; }
+      task.position.set(Math.cos(ta)*tr, task.userData.kind==="flower"?0:0.7, Math.sin(ta)*tr);
+      task.userData.done=false;
+      var beam2 = makeGuideBeam(0x9ff7c8); task.add(beam2);
+      group.add(task); stageObjs.tasks.push(task);
+    }
+
+    /* ゴール */
+    var goal = makeGoalRing(0x9ff7c8);
+    var ga = Math.random()*Math.PI*2, gr = st.arena*0.55;
+    goal.position.set(Math.cos(ga)*gr, 0.05, Math.sin(ga)*gr);
+    goal.userData.active = (st.taskTarget===0 && st.rescueTarget===0);
+    group.add(goal); stageObjs.goal = goal;
+    var gate = makeRainbowGate(); gate.position.copy(goal.position); gate.position.y=0; group.add(gate);
+
+    /* 星くじら（最終ステージ） */
+    if(st.propTheme==="whale"){
+      var whale = makeWhale();
+      whale.position.set(0,2.4,-st.arena*0.4);
+      whale.scale.setScalar(0.01);
+      group.add(whale); stageObjs.whale = whale;
+      stageObjs.whaleAwake = false;
+    }
   }
 
   /* プレイヤー配置 */
   if(player){ scene.remove(player); }
   playerParts = null;
   player = buildCharacterMesh(S.selectedCharacter, S.equipped);
-  player.position.set(0, 0, st.arena*0.3);
+  player.scale.setScalar(1.4);
+  player.position.copy(playerStart);
   scene.add(player);
   lastSafe.copy(player.position);
   camYaw = 0;
+
+  /* 足元のやわらかい影 */
+  var shadow = meshOf(GEO.sphereLo, new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.25}));
+  shadow.scale.set(0.55,0.02,0.4); shadow.position.set(playerStart.x,0.02,playerStart.z);
+  group.add(shadow); stageObjs.playerShadow = shadow;
 }
 
 function updateGoalText(st){
@@ -928,11 +1216,13 @@ function doSparkleAction(){
   var st = STAGES[curStageIdx];
   if(activeAction.type==="rescue"){
     activeAction.obj.userData.rescued = true;
-    activeAction.obj.visible = false;
+    if(activeAction.obj.userData.beam){ activeAction.obj.remove(activeAction.obj.userData.beam); activeAction.obj.userData.beam=null; }
+    stageObjs.followers = stageObjs.followers || [];
+    stageObjs.followers.push(activeAction.obj);
     runState.rescued++;
     sfx.rescue();
     burst(activeAction.obj.position.x, activeAction.obj.position.y+0.5, activeAction.obj.position.z, 0xffd6e8, 20, 4);
-    showToast("たすけたよ！");
+    showToast("たすけたよ！ ついてくるよ");
   } else if(activeAction.type==="task"){
     activeAction.obj.userData.done = true;
     activeAction.obj.visible = false;
@@ -1059,17 +1349,25 @@ function tick(now){
     var mvLen = Math.sqrt(iv.x*iv.x+iv.y*iv.y);
     var c = CHARACTERS[S.selectedCharacter];
     if(mvLen>0.08){
-      var fw = new THREE.Vector3(Math.sin(camYaw),0,Math.cos(camYaw));
-      var right = new THREE.Vector3(fw.z,0,-fw.x);
-      var move = new THREE.Vector3().addScaledVector(right, iv.x).addScaledVector(fw, -iv.y);
-      move.normalize().multiplyScalar(5.2*c.speed*mvLen*dt);
-      player.position.add(move);
-      var targetRot = Math.atan2(move.x, move.z);
-      var dr = targetRot - player.rotation.y;
-      while(dr>Math.PI) dr-=Math.PI*2; while(dr<-Math.PI) dr+=Math.PI*2;
-      player.rotation.y += dr*Math.min(1,dt*10);
+      var camFwd = new THREE.Vector3();
+      camera.getWorldDirection(camFwd);
+      camFwd.y = 0; camFwd.normalize();
+      var camRight = new THREE.Vector3().crossVectors(camFwd, camera.up).normalize();
+      var mx = Math.min(1, mvLen);
+      var move = new THREE.Vector3()
+        .addScaledVector(camFwd, -iv.y)
+        .addScaledVector(camRight, iv.x);
+      if(move.lengthSq()>0.0001){
+        move.normalize().multiplyScalar(5.2*c.speed*mx*dt);
+        player.position.add(move);
+        var targetRot = Math.atan2(move.x, move.z);
+        var dr = targetRot - player.rotation.y;
+        while(dr>Math.PI) dr-=Math.PI*2; while(dr<-Math.PI) dr+=Math.PI*2;
+        player.rotation.y += dr*Math.min(1,dt*10);
+      }
       player.position.y = Math.abs(Math.sin(now*0.008))*0.06;
     }
+    animateCharacterMesh(player, dt, now, mvLen>0.08);
     /* 星の自動収集（磁石半径） */
     var st = STAGES[curStageIdx];
     var magnetR = 1.1 + (c.magnet||0);
@@ -1077,6 +1375,7 @@ function tick(now){
       var star = stageObjs.stars[i];
       if(!star.visible) continue;
       star.rotation.y += dt*2.2;
+      star.position.y = (star.userData.baseY!==undefined?star.userData.baseY:0.7) + Math.sin(now*0.0025+i)*0.12;
       var d = player.position.distanceTo(star.position);
       if(d<magnetR){
         star.visible=false; runState.stars++; sfx.star();
@@ -1092,17 +1391,52 @@ function tick(now){
     }
     /* タスクの見た目アニメ（軽量） */
     stageObjs.tasks.forEach(function(t){ if(t.visible) t.rotation.y += dt*0.5; });
-    stageObjs.rescues.forEach(function(a){ if(a.visible) a.position.y = Math.abs(Math.sin(now*0.006 + a.id))*0.08; });
+    /* 迷子どうぶつ：待機中はプレイヤーを見て小さく跳ね、救助後は後ろをついてくる */
+    stageObjs.rescues.forEach(function(a){
+      if(a.userData.rescued) return;
+      a.position.y = Math.abs(Math.sin(now*0.006 + a.id))*0.08;
+      var toPlayer = new THREE.Vector3().subVectors(player.position, a.position); toPlayer.y=0;
+      if(toPlayer.lengthSq()>0.01){
+        var lookRot = Math.atan2(toPlayer.x, toPlayer.z);
+        var dr = lookRot - a.rotation.y; while(dr>Math.PI) dr-=Math.PI*2; while(dr<-Math.PI) dr+=Math.PI*2;
+        a.rotation.y += dr*Math.min(1,dt*2);
+      }
+    });
+    if(stageObjs.followers && stageObjs.followers.length){
+      var behind = new THREE.Vector3(-Math.sin(player.rotation.y),0,-Math.cos(player.rotation.y));
+      stageObjs.followers.forEach(function(f, idx){
+        var tp = player.position.clone().addScaledVector(behind, 0.75+idx*0.55);
+        tp.y = Math.abs(Math.sin(now*0.006+idx*1.7))*0.1;
+        f.position.lerp(tp, Math.min(1,dt*4));
+        var faceDir = new THREE.Vector3().subVectors(player.position, f.position); faceDir.y=0;
+        if(faceDir.lengthSq()>0.02) f.rotation.y = Math.atan2(faceDir.x, faceDir.z);
+      });
+    }
     if(stageObjs.whale && stageObjs.whaleAwake){ stageObjs.whale.position.y = 2.4 + Math.sin(now*0.0012)*0.4; stageObjs.whale.rotation.y += dt*0.15; }
+
+    /* 足元のやわらかい影 */
+    if(stageObjs.playerShadow){ stageObjs.playerShadow.position.x = player.position.x; stageObjs.playerShadow.position.z = player.position.z; }
+
+    /* 情景アニメーション（草花の揺れ・風車・雲の移動・光の粒） */
+    if(stageObjs.anim){
+      var an = stageObjs.anim;
+      if(an.grass) an.grass.forEach(function(gr){ gr.rotation.z = Math.sin(now*0.0016+gr.userData.sway)*0.12; });
+      if(an.windmillBlades) an.windmillBlades.forEach(function(bl){ bl.rotation.z += dt*1.6; });
+      if(an.clouds) an.clouds.forEach(function(cl){ cl.position.x += dt*cl.userData.speed; if(cl.position.x>cl.userData.range) cl.position.x=-cl.userData.range; });
+      if(an.motes) an.motes.forEach(function(m){ var t=now*0.0009+m.userData.phase; m.position.set(m.userData.cx+Math.cos(t)*m.userData.r, m.userData.cy+Math.sin(t*1.6)*0.3, m.userData.cz+Math.sin(t)*m.userData.r); });
+      if(an.footprints) an.footprints.forEach(function(fp,i){ fp.material.opacity = 0.35+Math.abs(Math.sin(now*0.002+i*0.6))*0.3; });
+    }
 
     checkFallRecovery(dt);
 
     /* コンテキストアクション検出 */
+    var prevAction = activeAction;
     activeAction = findNearbyAction();
     $("sparkleBtn").classList.toggle("show", !!activeAction);
+    if(activeAction && !prevAction) showToast("ちかづいて きらきら してね！", 1300);
 
     /* カメラ */
-    var camTargetPos = new THREE.Vector3(player.position.x, player.position.y+1.1, player.position.z);
+    var camTargetPos = new THREE.Vector3(player.position.x, player.position.y+1.2, player.position.z);
     var camPos = new THREE.Vector3(camTargetPos.x - Math.sin(camYaw)*camDist, camTargetPos.y+camHeight, camTargetPos.z - Math.cos(camYaw)*camDist);
     camera.position.lerp(camPos, Math.min(1,dt*4));
     camera.lookAt(camTargetPos);
