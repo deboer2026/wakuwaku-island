@@ -42,9 +42,11 @@
     #toastMsg.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
     #joyBase{position:absolute;left:calc(18px + var(--sal,0px));bottom:calc(18px + var(--sab,0px));width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);pointer-events:auto;touch-action:none}
     #joyNub{position:absolute;left:31px;top:31px;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.75)}
-    #sparkleBtn{position:absolute;right:calc(20px + var(--sar,0px));bottom:calc(26px + var(--sab,0px));width:84px;height:84px;border-radius:50%;border:3px solid #fff;background:radial-gradient(circle at 35% 30%,#fff6c8,#ffce4a);color:#7a5200;font-family:inherit;font-weight:900;font-size:13px;pointer-events:auto;display:none;box-shadow:0 5px 0 #c98a1e;touch-action:manipulation}
-    #sparkleBtn.show{display:block}
-    #sparkleBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #c98a1e}
+    #sparkleBtn{position:absolute;left:50%;bottom:calc(34px + var(--sab,0px));width:132px;height:132px;border-radius:50%;border:4px solid #fff;background:radial-gradient(circle at 35% 30%,#fff6c8,#ffce4a);color:#7a5200;font-family:inherit;font-weight:900;pointer-events:auto;display:none;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 7px 0 #c98a1e,0 0 0 9px rgba(255,206,74,.22);touch-action:manipulation;opacity:0;transform:translateX(-50%) scale(.7);transition:opacity .18s ease,transform .18s ease}
+    #sparkleBtn.show{display:flex;opacity:1;transform:translateX(-50%) scale(1)}
+    #sparkleBtn.pressed{transform:translateX(-50%) scale(.85)}
+    #sparkleBtn .sp-ico{font-size:38px;line-height:1}
+    #sparkleBtn .sp-label{font-size:14px}
     #backChip{pointer-events:auto;background:rgba(20,20,60,.55);border:1px solid rgba(255,255,255,.4);border-radius:14px;padding:6px 12px;font-weight:900;font-size:12px;color:#fff;cursor:pointer;min-height:34px}
     #bgmChip{pointer-events:auto;background:rgba(20,20,60,.55);border:1px solid rgba(255,255,255,.4);border-radius:14px;padding:6px 10px;font-size:15px;cursor:pointer;min-height:34px}
     .resultbox{background:rgba(255,255,255,.95);border-radius:22px;padding:22px 20px;max-width:420px;width:100%;color:#333}
@@ -127,7 +129,7 @@
     <div id="goalTxt">すすもう！</div>
     <div id="toastMsg"></div>
     <div id="joyBase"><div id="joyNub"></div></div>
-    <button id="sparkleBtn" aria-label="きらきらアクション">✨<br>きらきら</button>
+    <button id="sparkleBtn" aria-label="きらきらアクション"><span class="sp-ico">✨</span><span class="sp-label" id="sparkleLabel">キラキラ</span></button>
   </div>
 
   <div id="rotate"><div class="ph">📱</div><div>よこむきにして<br>あそんでね</div></div>
@@ -289,10 +291,29 @@ var GEO = {
   ring: new THREE.RingGeometry(0.8,1,24),
   plane: new THREE.PlaneGeometry(1,1)
 };
+/* トゥーン寄りのやわらかい質感（3段グラデーションテクスチャ） */
+var TOON_GRADIENT = (function(){
+  var c = document.createElement("canvas"); c.width=4; c.height=1;
+  var ctx = c.getContext("2d");
+  ctx.fillStyle="#7d7d7d"; ctx.fillRect(0,0,1,1);
+  ctx.fillStyle="#aeaeae"; ctx.fillRect(1,0,1,1);
+  ctx.fillStyle="#dcdcdc"; ctx.fillRect(2,0,1,1);
+  ctx.fillStyle="#ffffff"; ctx.fillRect(3,0,1,1);
+  var tex = new THREE.CanvasTexture(c);
+  tex.minFilter = THREE.NearestFilter; tex.magFilter = THREE.NearestFilter;
+  return tex;
+})();
 var MATCACHE = {};
+MATCACHE.__shadow = new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.22, depthWrite:false});
+var SHADOW_MAT = MATCACHE.__shadow;
+function addGroundShadow(group, x, z, sx, sz){
+  var sh = meshOf(GEO.sphereLo, SHADOW_MAT);
+  sh.scale.set(sx, 0.02, sz); sh.position.set(x, 0.02, z);
+  group.add(sh); return sh;
+}
 function mat(color, opt){
   var key = color + JSON.stringify(opt||{});
-  if(!MATCACHE[key]) MATCACHE[key] = new THREE.MeshLambertMaterial(Object.assign({color:color}, opt||{}));
+  if(!MATCACHE[key]) MATCACHE[key] = new THREE.MeshToonMaterial(Object.assign({color:color, gradientMap:TOON_GRADIENT}, opt||{}));
   return MATCACHE[key];
 }
 function meshOf(geo, m, castShadow){
@@ -432,8 +453,13 @@ function animateCharacterMesh(g, dt, now, moving){
 /* ---------- ステージ内オブジェクト生成ヘルパー（共有ジオメトリ使用） ---------- */
 function makeTree(colorTrunk, colorLeaf, scale){
   var g = new THREE.Group();
-  var trunk = meshOf(GEO.cyl, mat(colorTrunk)); trunk.scale.set(0.16,1.1,0.16); trunk.position.y=0.55; g.add(trunk);
-  var leaf = meshOf(GEO.sphere, mat(colorLeaf), true); leaf.scale.setScalar(0.75); leaf.position.y=1.35; g.add(leaf);
+  var lean = (Math.random()-0.5)*0.14;
+  var trunk = meshOf(GEO.cyl, mat(colorTrunk)); trunk.scale.set(0.15+Math.random()*0.05,1.0+Math.random()*0.25,0.15+Math.random()*0.05); trunk.position.y=trunk.scale.y*0.5; trunk.rotation.z=lean; g.add(trunk);
+  var leafMat = mat(colorLeaf);
+  var topY = trunk.scale.y+0.3;
+  var clusters = [[0,topY,0,0.6],[0.3,topY-0.22,0.14,0.4],[-0.26,topY-0.16,-0.18,0.38]];
+  clusters.forEach(function(c){ var leaf=meshOf(GEO.sphere, leafMat, true); leaf.scale.setScalar(c[3]); leaf.position.set(c[0],c[1],c[2]); g.add(leaf); });
+  addGroundShadow(g, 0, 0, 0.5, 0.4);
   g.scale.setScalar(scale||1);
   return g;
 }
@@ -467,8 +493,12 @@ function makeGuideBeam(color){
 function makeAnimalNPC(color){
   var g = new THREE.Group();
   var body = meshOf(GEO.sphere, mat(color), true); body.scale.set(0.34,0.3,0.4); body.position.y=0.3; g.add(body);
-  var head = meshOf(GEO.sphere, mat(color), true); head.scale.set(0.24,0.24,0.24); head.position.set(0,0.56,0.18); g.add(head);
-  [-1,1].forEach(function(s){ var ear=meshOf(GEO.cone, mat(color)); ear.scale.set(0.08,0.12,0.08); ear.position.set(0.11*s,0.7,0.14); g.add(ear); });
+  var head = meshOf(GEO.sphere, mat(color), true); head.scale.set(0.25,0.24,0.25); head.position.set(0,0.57,0.2); g.add(head);
+  [-1,1].forEach(function(s){ var ear=meshOf(GEO.cone, mat(color)); ear.scale.set(0.09,0.13,0.09); ear.position.set(0.12*s,0.72,0.16); g.add(ear); });
+  var eyeMat = mat(0x333333);
+  [-0.09,0.09].forEach(function(sx){ var eye=meshOf(GEO.sphereLo, eyeMat); eye.scale.setScalar(0.03); eye.position.set(sx,0.6,0.42); g.add(eye); });
+  var tail = meshOf(GEO.sphereLo, mat(color)); tail.scale.setScalar(0.1); tail.position.set(0,0.34,-0.36); g.add(tail);
+  addGroundShadow(g, 0, 0, 0.32, 0.26);
   return g;
 }
 function makeSwitchDeco(){
@@ -624,7 +654,7 @@ function makeBalloon(color){
 }
 function makeRainCloudTask(){
   var g = new THREE.Group();
-  var chargeMat = new THREE.MeshLambertMaterial({color:0x8f97b0});
+  var chargeMat = new THREE.MeshToonMaterial({color:0x8f97b0, gradientMap:TOON_GRADIENT});
   for(var i=0;i<4;i++){ var p=meshOf(GEO.sphereLo, chargeMat); p.scale.setScalar(0.42-i*0.05); p.position.set((i-1.5)*0.5, Math.sin(i)*0.1, 0); g.add(p); }
   g.userData.chargeMat = chargeMat;
   g.userData.dimColor = new THREE.Color(0x8f97b0);
@@ -639,7 +669,7 @@ function makeUpdraftPillar(){
 }
 function makeCarousel(){
   var g = new THREE.Group();
-  var chargeMat = new THREE.MeshLambertMaterial({color:0x555577});
+  var chargeMat = new THREE.MeshToonMaterial({color:0x555577, gradientMap:TOON_GRADIENT});
   var base = meshOf(GEO.cyl, chargeMat); base.scale.set(1.8,0.2,1.8); base.position.y=0.1; g.add(base);
   var pole = meshOf(GEO.cyl, mat(0xffffff)); pole.scale.set(0.1,1.6,0.1); pole.position.y=0.9; g.add(pole);
   var roof = meshOf(GEO.cone, new THREE.MeshBasicMaterial({color:0xff9ecb})); roof.scale.set(2.0,0.8,2.0); roof.position.y=1.9; g.add(roof);
@@ -654,7 +684,7 @@ function makeCarousel(){
 }
 function makeMiniTrain(){
   var g = new THREE.Group();
-  var chargeMat = new THREE.MeshLambertMaterial({color:0x555577});
+  var chargeMat = new THREE.MeshToonMaterial({color:0x555577, gradientMap:TOON_GRADIENT});
   var rail = meshOf(GEO.cyl, mat(0x8a8aa0)); rail.scale.set(1.9,0.05,1.9); rail.position.y=0.03; g.add(rail);
   var spin = new THREE.Group();
   var body = meshOf(GEO.box, chargeMat); body.scale.set(0.5,0.35,0.9); body.position.set(1.2,0.3,0); spin.add(body);
@@ -668,7 +698,7 @@ function makeMiniTrain(){
 }
 function makeTeacups(){
   var g = new THREE.Group();
-  var chargeMat = new THREE.MeshLambertMaterial({color:0x555577});
+  var chargeMat = new THREE.MeshToonMaterial({color:0x555577, gradientMap:TOON_GRADIENT});
   var base = meshOf(GEO.cyl, mat(0x8a8aa0)); base.scale.set(1.6,0.15,1.6); base.position.y=0.08; g.add(base);
   var spin = new THREE.Group(); spin.position.y=0.35;
   [0,1,2].forEach(function(i){ var a=i/3*Math.PI*2; var cup=meshOf(GEO.sphereLo, chargeMat); cup.scale.set(0.4,0.28,0.4); cup.position.set(Math.cos(a)*1.0,0,Math.sin(a)*1.0); spin.add(cup); });
@@ -1004,7 +1034,9 @@ function renderDressPreview(){
 var curStageIdx = -1, stageObjs = null, player=null, playerParts=null;
 var joyActive=false, joyId=null, joyOrigin={x:0,y:0}, joyVec={x:0,y:0};
 var keys = {};
-var camYaw=0, camDist=6.0, camHeight=2.9;
+var camYaw=0, camDist=7.6, camHeight=3.7;
+var camZoom=1, camZoomTarget=1;
+var CAM_ZOOM_MIN=0.72, CAM_ZOOM_MAX=1.55;
 var lastSafe = new THREE.Vector3(0,0,0);
 var lastSafeTimer = 0;
 var runState = { stars:0, rescued:0, task:0, done:false, finishing:false };
@@ -1030,6 +1062,7 @@ function startStage(idx){
   S.lastStage = idx; saveGame();
   clearStageObjs();
   buildStageWorld(st);
+  camZoom = 1; camZoomTarget = 1;
   runState = { stars:0, rescued:0, task:0, done:false, finishing:false };
   updateHud();
   showScreen(null);
@@ -1039,6 +1072,49 @@ function startStage(idx){
   updateGoalText(st);
 }
 
+/* ---------- 空のグラデーション（常設ドーム、ステージごとに色だけ差し替え） ---------- */
+var skyDome = null;
+function lightenColor(hex, amt){ var c = new THREE.Color(hex); c.lerp(new THREE.Color(0xffffff), amt); return c; }
+function updateSkyDome(topColor){
+  if(!skyDome){
+    var geo = new THREE.SphereGeometry(140, 16, 12);
+    var m = new THREE.MeshBasicMaterial({side:THREE.BackSide, fog:false, depthWrite:false});
+    skyDome = new THREE.Mesh(geo, m);
+    skyDome.renderOrder = -1;
+    scene.add(skyDome);
+  }
+  if(skyDome.material.map) skyDome.material.map.dispose();
+  var c = document.createElement("canvas"); c.width=8; c.height=64;
+  var ctx = c.getContext("2d");
+  var grad = ctx.createLinearGradient(0,0,0,64);
+  grad.addColorStop(0, "#"+lightenColor(topColor,0.12).getHexString());
+  grad.addColorStop(1, "#"+lightenColor(topColor,0.55).getHexString());
+  ctx.fillStyle = grad; ctx.fillRect(0,0,8,64);
+  var tex = new THREE.CanvasTexture(c);
+  skyDome.material.map = tex; skyDome.material.needsUpdate = true;
+}
+/* ---------- 地面の色ムラ・道（頂点色の代わりに大きな半透明パッチを重ねる） ---------- */
+function addGroundPatches(group, st, pathColor){
+  var patchMat1 = new THREE.MeshBasicMaterial({color: lightenColor(st.floor,0.12).getHex(), transparent:true, opacity:0.35, depthWrite:false});
+  var darkMat = new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.14, depthWrite:false});
+  for(var i=0;i<9;i++){
+    var a=Math.random()*Math.PI*2, r=Math.random()*st.arena*0.85;
+    var patch = meshOf(GEO.cyl, Math.random()<0.5?patchMat1:darkMat);
+    patch.scale.set(2.6+Math.random()*3.2, 0.02, 2.6+Math.random()*3.2);
+    patch.position.set(Math.cos(a)*r, 0.012, Math.sin(a)*r);
+    patch.rotation.y = Math.random()*Math.PI*2;
+    group.add(patch);
+  }
+  if(pathColor!==false){
+    var pathMat = new THREE.MeshBasicMaterial({color: pathColor||0xd8c39a, transparent:true, opacity:0.4, depthWrite:false});
+    for(var p=0;p<14;p++){
+      var seg = meshOf(GEO.cyl, pathMat);
+      seg.scale.set(2.0,0.02,2.6);
+      seg.position.set(0, 0.014, st.arena*0.85 - p*2.3);
+      group.add(seg);
+    }
+  }
+}
 function addAmbientScenery(group, st, anim){
   /* 遠景の山（大きな低ポリの円錐を輪状に配置、常に霧の中でシルエットのみ見える） */
   var mountainColor = mat(0x6c7ec9);
@@ -1472,7 +1548,9 @@ function buildStageWorld(st){
   var floor = meshOf(GEO.cyl, mat(st.floor)); floor.scale.set(st.arena, 0.4, st.arena); floor.position.y=-0.2; floor.receiveShadow=false; group.add(floor);
   var edgeGlow = meshOf(GEO.ring, new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.12, side:THREE.DoubleSide}));
   edgeGlow.rotation.x=-Math.PI/2; edgeGlow.scale.setScalar(st.arena*0.98); group.add(edgeGlow);
+  addGroundPatches(group, st, st.id===0 ? 0xc79a5a : (st.id===2 ? 0x8a8aa0 : false));
 
+  updateSkyDome(st.sky);
   addAmbientScenery(group, st, anim);
 
   var playerStart = new THREE.Vector3(0,0,st.arena*0.3);
@@ -1553,9 +1631,32 @@ window.addEventListener("keydown", function(e){
   keys[e.key.toLowerCase()]=true;
   if(e.code==="Space" || e.key==="Enter"){ doSparkleAction(); e.preventDefault(); }
   if(e.key==="Escape"){ if(stageObjs) backFromStage(); }
+  if(e.key==="+" || e.key==="="){ camZoomTarget = clampZoom(camZoomTarget-0.1); }
+  if(e.key==="-" || e.key==="_"){ camZoomTarget = clampZoom(camZoomTarget+0.1); }
   ensureAudio();
 });
 window.addEventListener("keyup", function(e){ keys[e.key.toLowerCase()]=false; });
+
+/* ---------- ズーム（PC: ホイール／スマホ: ピンチ） ---------- */
+function clampZoom(z){ return Math.max(CAM_ZOOM_MIN, Math.min(CAM_ZOOM_MAX, z)); }
+window.addEventListener("wheel", function(e){
+  if(!stageObjs) return;
+  camZoomTarget = clampZoom(camZoomTarget + e.deltaY*0.0012);
+  e.preventDefault();
+}, {passive:false});
+var pinchStartDist=null, pinchStartZoom=1;
+function touchDist(t0,t1){ var dx=t0.clientX-t1.clientX, dy=t0.clientY-t1.clientY; return Math.sqrt(dx*dx+dy*dy); }
+window.addEventListener("touchstart", function(e){
+  if(e.touches.length===2){ pinchStartDist = touchDist(e.touches[0],e.touches[1]); pinchStartZoom = camZoomTarget; }
+}, {passive:true});
+window.addEventListener("touchmove", function(e){
+  if(e.touches.length===2 && pinchStartDist && stageObjs){
+    var d = touchDist(e.touches[0],e.touches[1]);
+    camZoomTarget = clampZoom(pinchStartZoom * (pinchStartDist/d));
+    e.preventDefault();
+  }
+}, {passive:false});
+window.addEventListener("touchend", function(e){ if(e.touches.length<2) pinchStartDist=null; });
 function inputVec(){
   var x=joyVec.x, y=joyVec.y;
   if(keys["arrowleft"]||keys["a"]) x-=1;
@@ -1566,6 +1667,26 @@ function inputVec(){
   return {x:x,y:y};
 }
 $("sparkleBtn").addEventListener("click", function(){ ensureAudio(); doSparkleAction(); });
+(function(){
+  var sb = $("sparkleBtn");
+  var press = function(){ sb.classList.add("pressed"); };
+  var release = function(){ sb.classList.remove("pressed"); };
+  sb.addEventListener("mousedown", press); sb.addEventListener("mouseup", release); sb.addEventListener("mouseleave", release);
+  sb.addEventListener("touchstart", press, {passive:true}); sb.addEventListener("touchend", release);
+})();
+function sparkleLabelFor(action){
+  if(!action) return "キラキラ";
+  if(action.type==="rescue") return "たすける";
+  if(action.type==="whale") return "ひかりをとどける";
+  if(action.type==="task"){
+    var k = action.obj.userData.kind;
+    if(k==="cloud") return "きれいにする";
+    if(k==="switch") return "なおす";
+    if(k==="flower") return "さかせる";
+    if(k==="moya") return "きれいにする";
+  }
+  return "キラキラ";
+}
 $("backChip").addEventListener("click", function(){ ensureAudio(); backFromStage(); });
 $("bgmChip").addEventListener("click", function(){ ensureAudio(); toggleBGM(); });
 
@@ -1954,11 +2075,14 @@ function tick(now){
     var prevAction = activeAction;
     activeAction = findNearbyAction();
     $("sparkleBtn").classList.toggle("show", !!activeAction);
+    $("sparkleLabel").textContent = sparkleLabelFor(activeAction);
     if(activeAction && !prevAction) showToast("ちかづいて きらきら してね！", 1300);
 
-    /* カメラ */
+    /* カメラ（ズーム補間つき） */
+    camZoom += (camZoomTarget-camZoom)*Math.min(1,dt*6);
     var camTargetPos = new THREE.Vector3(player.position.x, player.position.y+1.2, player.position.z);
-    var camPos = new THREE.Vector3(camTargetPos.x - Math.sin(camYaw)*camDist, camTargetPos.y+camHeight, camTargetPos.z - Math.cos(camYaw)*camDist);
+    var zd = camDist*camZoom, zh = camHeight*(0.75+0.25*camZoom);
+    var camPos = new THREE.Vector3(camTargetPos.x - Math.sin(camYaw)*zd, camTargetPos.y+zh, camTargetPos.z - Math.cos(camYaw)*zd);
     camera.position.lerp(camPos, Math.min(1,dt*4));
     camera.lookAt(camTargetPos);
   }
