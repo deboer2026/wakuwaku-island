@@ -1428,17 +1428,33 @@ function renderPartnerPreview(canvas,key){
   ctx.scene.add(an);ctx.anMesh=an;
   ctx.renderer.render(ctx.scene,ctx.cam);
 }
+/* あいぼうカードは初回のみ生成（canvas・WebGLRendererを使い回すため）。
+   クリック時はpartner変数と選択中CSSだけを更新し、canvas/rendererは再生成しない。 */
+let partnerGridBuilt=false;
 function renderPartnerGrid(){
-  const grid=document.getElementById('partner-grid');grid.innerHTML='';
-  VALID_PARTNERS.forEach(key=>{
-    const card=document.createElement('button');
-    card.className='pt-card'+(key===partner?' sel':'');
-    card.innerHTML='<canvas width="120" height="90"></canvas>'+
-      '<div class="pt-name">'+PARTNERS[key].name+'</div>'+
-      '<div class="pt-flavor">'+PARTNERS[key].flavor+'</div>';
-    card.addEventListener('click',()=>{partner=key;renderPartnerGrid();});
-    grid.appendChild(card);
-    requestAnimationFrame(()=>renderPartnerPreview(card.querySelector('canvas'),key));
+  const grid=document.getElementById('partner-grid');
+  if(!partnerGridBuilt){
+    grid.innerHTML='';
+    VALID_PARTNERS.forEach(key=>{
+      const card=document.createElement('button');
+      card.className='pt-card'+(key===partner?' sel':'');
+      card.dataset.partner=key;
+      card.innerHTML='<canvas width="120" height="90"></canvas>'+
+        '<div class="pt-name">'+PARTNERS[key].name+'</div>'+
+        '<div class="pt-flavor">'+PARTNERS[key].flavor+'</div>';
+      card.addEventListener('click',()=>{partner=key;updatePartnerGridSelection();});
+      grid.appendChild(card);
+      requestAnimationFrame(()=>renderPartnerPreview(card.querySelector('canvas'),key));
+    });
+    partnerGridBuilt=true;
+  } else {
+    updatePartnerGridSelection();
+  }
+}
+function updatePartnerGridSelection(){
+  const grid=document.getElementById('partner-grid');
+  grid.querySelectorAll('.pt-card').forEach(card=>{
+    card.classList.toggle('sel', card.dataset.partner===partner);
   });
 }
 function renderCurPartnerPreview(){
