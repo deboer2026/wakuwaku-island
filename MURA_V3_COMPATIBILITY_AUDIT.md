@@ -253,6 +253,16 @@ Phase 1要件（v1完全互換）は料理の2工程化を含んでおり、実�
   成長率は1を上限とした。schemaVersion 4の旧plots作物も固定IDへ移行して成熟した。
 - 上記一連の通常起動・料理・復帰操作後、ブラウザコンソールerrorは0件だった。
 
+## Phase 5 — 図鑑・実績・長期進行
+
+- `mura_v3_progress` の既存キー、`inv`、`plots`、`dishes`、住民、室内、着せ替え、地域探索を維持したまま schema 7 を追加する。
+- 図鑑と実績はイベント駆動で更新し、毎フレーム評価・重複した reward 付与・未知 ID の自動登録を行わない。
+- Phase 4 の schema 6 セーブは既存データを保持したまま図鑑・実績・むらレベルの既定値を得る。
+- 公開ルート `/mura`、SEO、TopPage、v1/v2 HTML は変更しない。
+- 実ブラウザでは図鑑・実績の表示／閉じる／既読化／並べ替え／報酬受取済み状態と、50 回の開閉負荷を確認した。
+- 書換え可能な実ブラウザ環境で、schema 6 fixture の投入・実イベント起点の作物/料理/採集物/魚/住民登録・再読込後の永続性・冪等性を確認した（前回セッションで未確定だった項目）。
+- 破損・型不正セーブへの防御として、`crowns`・`totalCrowns`・`level`・`inv` 所持数・`mapPieces`・`pity`・`treasureCount`・`mIdx`・`mProg` および `progression` 配下の経済・進行系数値を `safeNumber()` で型検証・範囲補正する数値正規化を実施した。文字列化された数値・`null`・オブジェクト・負数・`NaN`/`Infinity` を安全な既定値または範囲内へ補正し、起動不能や報酬加算の文字列結合を防ぐことを実ブラウザで確認した。
+
 ## 15. 変更していない範囲
 
 `src/games/MuraGame.jsx`、`src/seo/gameMeta.js`、`src/pages/TopPage.jsx`、

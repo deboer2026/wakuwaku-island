@@ -89,8 +89,11 @@
   <div class="chip" id="backBtn">← もどる</div>
   <div class="chip" id="lvChip">むら Lv.<b id="lvNum">1</b></div>
   <div class="chip" id="exploreChip">🧭 探検 R<b id="exploreRankNum">1</b></div>
+  <div class="chip" id="villageChip">🏡 むら <b id="villageLevelNum">1</b></div>
   <div class="chip" id="crownChip">👑 <b id="crownNum">0</b></div>
   <div class="chip" id="invBtn">🧺</div>
+  <div class="chip" id="bookBtn">📖</div>
+  <div class="chip" id="achievementBtn">🏅</div>
   <div class="chip" id="bgmBtn">🎵</div>
 </div>
 <div id="missionBar">…</div>
@@ -330,7 +333,7 @@ const REPEAT_MISSIONS = [
 
 function defaultState(){
   return {
-    schemaVersion:6,
+    schemaVersion:7,
     gender:null,
     crowns:0, totalCrowns:0, level:1,
     plots:makeDefaultPlots(1),
@@ -359,24 +362,42 @@ function defaultState(){
       kawauso:{questDone:false, eventSeen:false, dialogueStage:0},
     },
     interiors:{},
-    progression:{ farmingRank:1, farmingXp:0, cookingRank:1, cookingXp:0, harvestedCrops:[], cookedRecipes:[] },
+    progression:{ farmingRank:1, farmingXp:0, cookingRank:1, cookingXp:0, harvestedCrops:[], cookedRecipes:[], explorationRank:1, explorationXp:0, villageLevel:1, villageXp:0, title:"はじまりの なかま" },
     recipeProgress:{},
     /* Phase 4: 既存の平坦な inv を崩さず、地域採集物だけを別枠で保存する。 */
     gathered:{ mushroom:0, acorn:0, berry:0, wildHerb:0, riverFish:0, scale:0, shell:0, driftwood:0, seaweed:0 },
     exploration:{ nodes:{}, quests:{}, treasures:{ "treasure:village":false, "treasure:forest":false, "treasure:river":false, "treasure:beach":false }, returnPositions:{} },
+    encyclopedia:{ entries:{}, newEntries:[], rewards:{} },
+    achievements:{ progress:{}, records:{}, unlocked:{}, rewardsClaimed:{}, mementos:[] },
   };
 }
 let S = defaultState();
 function save(){ S.lastSeen = Date.now(); try{ SAFE_LS.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
+function safeNumber(value, fallback, min, max){
+  const n=Number(value);
+  if(!Number.isFinite(n)) return fallback;
+  return Math.max(min, Math.min(max, n));
+}
 /* v1/v2 の "mura_progress" と同じ寛容な Object.assign マージパターンを踏襲。
    d（読み込んだ生データ）を defaultState() の上にマージし、配列/オブジェクト型の
    フィールドは個別に安全側マージする。壊れたJSON・欠損フィールドはすべて既定値で補う。 */
 function mergeIntoDefaults(d){
   S = Object.assign(defaultState(), d);
+  /* 経済・進行系の数値は壊れたセーブ（文字列/NaN/Infinity/負数/オブジェクト/配列）でも
+     安全な範囲へ補正する。正常な既存値はsafeNumberが素通しするため変化しない。 */
+  S.crowns = safeNumber(S.crowns, 0, 0, 999999);
+  S.totalCrowns = safeNumber(S.totalCrowns, 0, 0, 999999);
+  S.level = Math.floor(safeNumber(S.level, 1, 1, MAX_LV));
+  S.mapPieces = safeNumber(S.mapPieces, 0, 0, 999999);
+  S.pity = safeNumber(S.pity, 0, 0, 999999);
+  S.treasureCount = safeNumber(S.treasureCount, 0, 0, 999999);
+  S.mIdx = safeNumber(S.mIdx, 0, 0, 999999);
+  S.mProg = safeNumber(S.mProg, 0, 0, 999999);
   S.inv = Object.assign(defaultState().inv, d.inv || {});
+  Object.keys(defaultState().inv).forEach(id=>{ S.inv[id] = safeNumber(S.inv[id], 0, 0, 999999); });
   S.friends = Object.assign(defaultState().friends, d.friends || {});
   const sourcePlots = Array.isArray(d.plots) ? d.plots : [];
-  const normalizedPlots = makeDefaultPlots(d.level || 1);
+  const normalizedPlots = makeDefaultPlots(S.level);
   PLOT_DEFS.forEach((def,i)=>{
     const old = sourcePlots[i];
     if(!old) return;
@@ -411,8 +432,10 @@ function mergeIntoDefaults(d){
   S.progression = Object.assign({}, pdef, d.progression || {});
   if(!Array.isArray(S.progression.harvestedCrops)) S.progression.harvestedCrops = [];
   if(!Array.isArray(S.progression.cookedRecipes)) S.progression.cookedRecipes = [];
-  S.progression.farmingRank = Math.max(S.progression.farmingRank||1, rankFromXp(S.progression.farmingXp||0, FARM_RANK_XP));
-  S.progression.cookingRank = Math.max(S.progression.cookingRank||1, rankFromXp(S.progression.cookingXp||0, COOK_RANK_XP));
+  S.progression.farmingXp = safeNumber(S.progression.farmingXp,0,0,1000000);
+  S.progression.cookingXp = safeNumber(S.progression.cookingXp,0,0,1000000);
+  S.progression.farmingRank = Math.max(safeNumber(S.progression.farmingRank,1,1,5), rankFromXp(S.progression.farmingXp, FARM_RANK_XP));
+  S.progression.cookingRank = Math.max(safeNumber(S.progression.cookingRank,1,1,5), rankFromXp(S.progression.cookingXp, COOK_RANK_XP));
   S.recipeProgress = (d.recipeProgress && typeof d.recipeProgress === "object") ? d.recipeProgress : {};
   Object.keys(RECIPES).forEach(id=>{
     const rp = S.recipeProgress[id] || {};
@@ -421,16 +444,32 @@ function mergeIntoDefaults(d){
   });
   const gdef = defaultState().gathered;
   S.gathered = Object.assign({}, gdef, (d.gathered && typeof d.gathered === "object") ? d.gathered : {});
+  Object.keys(gdef).forEach(id=>{ S.gathered[id]=safeNumber(S.gathered[id],0,0,1000000); });
   const edef = defaultState().exploration;
   S.exploration = Object.assign({}, edef, (d.exploration && typeof d.exploration === "object") ? d.exploration : {});
   S.exploration.nodes = Object.assign({}, edef.nodes, S.exploration.nodes || {});
   S.exploration.quests = Object.assign({}, edef.quests, S.exploration.quests || {});
   S.exploration.treasures = Object.assign({}, edef.treasures, S.exploration.treasures || {});
   S.exploration.returnPositions = Object.assign({}, edef.returnPositions, S.exploration.returnPositions || {});
-  S.progression.explorationXp = Number(S.progression.explorationXp || 0);
-  S.progression.explorationRank = Math.max(Number(S.progression.explorationRank || 1), Math.min(5, 1 + Math.floor(S.progression.explorationXp / 30)));
+  S.progression.explorationXp = safeNumber(S.progression.explorationXp,0,0,1000000);
+  S.progression.explorationRank = Math.max(safeNumber(S.progression.explorationRank,1,1,5), Math.min(5, 1 + Math.floor(S.progression.explorationXp / 30)));
+  S.progression.villageXp = safeNumber(S.progression.villageXp,0,0,1000000);
+  S.progression.villageLevel = Math.floor(safeNumber(S.progression.villageLevel,1,1,12));
+  if(typeof S.progression.title !== "string") S.progression.title = "はじまりの なかま";
+  const p5def = defaultState();
+  S.encyclopedia = Object.assign({}, p5def.encyclopedia, (d.encyclopedia && typeof d.encyclopedia === "object") ? d.encyclopedia : {});
+  S.encyclopedia.entries = Object.assign({}, p5def.encyclopedia.entries, S.encyclopedia.entries || {});
+  if(!Array.isArray(S.encyclopedia.newEntries)) S.encyclopedia.newEntries = [];
+  S.encyclopedia.rewards = Object.assign({}, p5def.encyclopedia.rewards, S.encyclopedia.rewards || {});
+  S.achievements = Object.assign({}, p5def.achievements, (d.achievements && typeof d.achievements === "object") ? d.achievements : {});
+  S.achievements.progress = Object.assign({}, p5def.achievements.progress, S.achievements.progress || {});
+  S.achievements.records = Object.assign({}, p5def.achievements.records, S.achievements.records || {});
+  S.achievements.unlocked = Object.assign({}, p5def.achievements.unlocked, S.achievements.unlocked || {});
+  S.achievements.rewardsClaimed = Object.assign({}, p5def.achievements.rewardsClaimed, S.achievements.rewardsClaimed || {});
+  Object.keys(S.achievements.progress).forEach(id=>{ S.achievements.progress[id]=safeNumber(S.achievements.progress[id],0,0,1000000); });
+  if(!Array.isArray(S.achievements.mementos)) S.achievements.mementos = [];
   if(["village","forest","river","beach"].indexOf(S.currentArea) < 0 && !INTERIORS[S.currentArea]) S.currentArea = "village";
-  S.schemaVersion = 6;
+  S.schemaVersion = 7;
 }
 /* 旧セーブ（mura_progress）からの移行。読み取り専用・冪等（v3セーブが既にあれば何もしない）。 */
 function migrateFromLegacyIfNeeded(){
@@ -474,6 +513,7 @@ function addFarmingXp(n, firstCrop){
   if(firstCrop && p.harvestedCrops.indexOf(firstCrop)<0){ p.harvestedCrops.push(firstCrop); p.farmingXp += 4; }
   const next = rankFromXp(p.farmingXp, FARM_RANK_XP);
   if(next > p.farmingRank){ p.farmingRank = next; toast("🌱 のうぎょうランク " + next + "！"); refreshPlotLocks(); }
+  if(typeof evaluateAchievements === "function") evaluateAchievements();
 }
 function addCookingXp(n, firstRecipe){
   const p = S.progression;
@@ -481,6 +521,7 @@ function addCookingXp(n, firstRecipe){
   if(firstRecipe && p.cookedRecipes.indexOf(firstRecipe)<0){ p.cookedRecipes.push(firstRecipe); p.cookingXp += 4; }
   const next = rankFromXp(p.cookingXp, COOK_RANK_XP);
   if(next > p.cookingRank) { p.cookingRank = next; toast("🍳 りょうりランク " + next + "！"); }
+  if(typeof evaluateAchievements === "function") evaluateAchievements();
 }
 function addCrowns(n){
   S.crowns += n; S.totalCrowns += n;
@@ -658,12 +699,16 @@ window.addEventListener("message", (e)=>{
 });
 
 /* ================= UI 共通 ================= */
-let toastTimer = null;
+let toastTimer = null, toastBusy = false;
+const toastQueue = [];
 function toast(msg){
-  const el = document.getElementById("toast");
-  el.textContent = msg; el.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>el.classList.remove("show"), 2200);
+  toastQueue.push(msg);
+  if(toastBusy) return;
+  const next=()=>{
+    const text=toastQueue.shift(); if(!text){ toastBusy=false; return; }
+    toastBusy=true; const el=document.getElementById("toast"); el.textContent=text; el.classList.add("show");
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>{ el.classList.remove("show"); setTimeout(next,120); },2200);
+  }; next();
 }
 const modalWrap = document.getElementById("modalWrap");
 const modalEl = document.getElementById("modal");
@@ -671,6 +716,7 @@ let modalOpen = false;
 function openModal(html){ modalEl.innerHTML = html; modalWrap.classList.add("show"); modalOpen = true; }
 function closeModal(){ modalWrap.classList.remove("show"); modalOpen = false; modalEl.innerHTML=""; cookStop(); mini = null; }
 modalWrap.addEventListener("click", (e)=>{ if(e.target===modalWrap) closeModal(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&modalOpen){ e.preventDefault(); closeModal(); } });
 function showRewardModal(title, bodyHtml){
   openModal('<h2>'+title+'</h2><p style="text-align:center;font-weight:900;line-height:1.7">'+bodyHtml+'</p><button class="mBtn" id="mOk">やったー！</button>');
   document.getElementById("mOk").addEventListener("click", closeModal);
@@ -678,8 +724,11 @@ function showRewardModal(title, bodyHtml){
 function renderStatus(){
   document.getElementById("lvNum").textContent = S.level;
   document.getElementById("exploreRankNum").textContent = S.progression.explorationRank || 1;
+  document.getElementById("villageLevelNum").textContent = S.progression.villageLevel || 1;
   document.getElementById("crownNum").textContent = S.crowns;
 }
+document.getElementById("bookBtn").addEventListener("click",()=>openEncyclopedia());
+document.getElementById("achievementBtn").addEventListener("click",()=>openAchievements());
 
 /* ---- もちものモーダル ---- */
 function openInvModal(){
@@ -750,6 +799,7 @@ function openSeedModal(idx){
       S.crowns -= cr.seedPrice||0;
       Object.assign(plot, { cropId:crop, plantedAt:Date.now(), wateredAt:0, boost:0, quality:0 });
       addFarmingXp(1);
+      updateAchievementProgress("plant");
       sfx.plant(); save(); closeModal();
       toast("🌱 " + CROPS[crop].name + "の たねを まいたよ！");
       missionEvent("plant");
@@ -775,6 +825,10 @@ function interactPlot(idx){
       Object.assign(p, { cropId:null, plantedAt:0, wateredAt:0, boost:0, quality });
     }
     sfx.harvest(); save(); renderStatus();
+    incrementDiscovery("crops",cropId,got,{bestQuality:quality});
+    updateAchievementProgress("harvest",got);
+    addVillageXp(got);
+    save(); renderStatus();
     toast(CROP_ICON[cropId]+" "+cr.name+"を "+got+"こ しゅうかく！"+(quality===2?" ✨":""));
     spawnBurst(plotPos(idx), 0xa5d6a7, 12);
     for(let i=0;i<got;i++) missionEvent("harvest");
@@ -930,6 +984,8 @@ function finishCook(){
   const rp=S.recipeProgress[recipeId]||(S.recipeProgress[recipeId]={bestStars:0,timesCooked:0});
   rp.bestStars=Math.max(rp.bestStars,stars); rp.timesCooked++;
   addCookingXp(2+(stars>=2?1:0)+(stars===3?2:0),recipeId);
+  incrementDiscovery("dishes",recipeId,1,{bestQuality:stars});
+  updateAchievementProgress("cook"); if(stars===3) updateAchievementProgress("star3"); addVillageXp(2);
   mini=null; save(); renderStatus(); sfx.cook();
   const kg=interiorGroups["interior:kitchen"], burstPos=(S.currentArea==="interior:kitchen"&&kg&&kg.userData.dishTableTop)?kg.userData.dishTableTop:kitchenPos;
   spawnBurst(burstPos,stars===3?0xffd54f:0xffcc80,stars===3?30:16); showCookingDisplay(recipeId,stars);
@@ -982,7 +1038,7 @@ function talkAnimal(animalId){
   }
   h += '<button class="mBtn sub" id="mClose">またね</button>';
   openModal(h);
-  if(rs) rs.metOnce = true;
+  if(rs){ const first=!rs.metOnce; rs.metOnce = true; registerDiscovery("residents",animalId,{count:1,bestQuality:S.friends[animalId]||0}); if(first){ updateAchievementProgress("talk"); addVillageXp(1); } save(); }
   const g = document.getElementById("mGive");
   if(g) g.addEventListener("click", ()=> deliver(animalId, oi));
   const qb = document.getElementById("mQuest");
@@ -1004,6 +1060,9 @@ function completeQuest(animalId){
   S.crowns += q.reward.crowns; S.totalCrowns += q.reward.crowns;
   if((S.friends[animalId]||0) < 5) S.friends[animalId] = Math.min(5, (S.friends[animalId]||0) + q.reward.friendship);
   if(S.friends[animalId] === 5) rebuildFriendHouses();
+  registerDiscovery("memories",animalId,{count:1});
+  updateDiscoveryBest("residents",animalId,S.friends[animalId]||0);
+  updateAchievementProgress("quest"); addVillageXp(3);
   const ig = interiorGroups["interior:resident_"+animalId];
   if(ig && ig.userData.giftShelf) ig.userData.giftShelf.visible = true;
   save(); renderStatus(); sfx.crown();
@@ -1071,6 +1130,9 @@ function digTreasure(){
   if(tr.id === "komugi") S.komugiUnlocked = true;
   else if(tr.id === "crown30") addCrowns(30);
   else if(S.decos.indexOf(tr.id) < 0){ S.decos.push(tr.id); rebuildDecos(); }
+  registerDiscovery("treasures", "village:"+tr.id, {count:1});
+  updateAchievementProgress("treasure");
+  addVillageXp(3);
   save();
   spawnBurst(treasureMark ? treasureMark.position : null, 0xffd54f, 30);
   removeTreasure();
@@ -2522,6 +2584,9 @@ function maybeFriendshipEvent(id){
   if(!rs || rs.eventSeen) return;
   if((S.friends[id]||0) < 5 || !rs.questDone) return;
   rs.eventSeen = true;
+  registerDiscovery("memories", id, {count:1});
+  updateAchievementProgress("event");
+  addVillageXp(4);
   save();
   const r = RESIDENTS[id];
   showRewardModal("💛 なかよしイベント！", ANIMALS[id].icon+" "+ANIMALS[id].name+"<br>「"+r.dialogue.homeOnly[1]+"」<br>いっしょに おちゃを のんで、なかよく なった きがした！");
@@ -2566,6 +2631,7 @@ function addExplorationXp(n){
   S.progression.explorationXp += n;
   const rank = Math.min(5, 1 + Math.floor(S.progression.explorationXp / 30));
   if(rank > S.progression.explorationRank){ S.progression.explorationRank = rank; toast("🧭 たんけんランク " + rank + "！"); }
+  if(typeof evaluateAchievements === "function") evaluateAchievements();
   renderStatus();
 }
 function setBgmTheme(theme){
@@ -2600,6 +2666,10 @@ function enterRegion(name){
   savedVillageRegionVisibility = scene.children.filter(o=>o!==player && o!==petMesh && !o.isLight && o!==regionGroups.forest && o!==regionGroups.river && o!==regionGroups.beach && !String(o.userData && o.userData.interiorId||"").startsWith("interior:")).map(o=>({o:o,visible:o.visible}));
   savedVillageRegionVisibility.forEach(e=>e.o.visible=false);
   buildRegion(name).visible=true; S.currentArea=name; player.position.copy(S.exploration.returnPositions[name]||REGION_CONFIG[name].entry); player.position.y=.05;
+  const areas=S.achievements.progress.areaIds=Array.isArray(S.achievements.progress.areaIds)?S.achievements.progress.areaIds:[];
+  if(areas.indexOf(name)<0){ areas.push(name); updateAchievementProgress("visit"); }
+  S.achievements.progress.areas=areas.length;
+  addVillageXp(1);
   setBgmTheme(REGION_CONFIG[name].theme); refreshRegionNodes(); save(); toast("🌿 "+REGION_CONFIG[name].label+"に きたよ");
 }
 function exitRegion(){
@@ -2615,7 +2685,8 @@ function collectRegionNode(node){
   S.exploration.nodes[node.id]=Date.now();
   if(node.item==="treasure"){
     const key="treasure:"+S.currentArea; S.exploration.treasures[key]=true; S.crowns+=8; S.totalCrowns+=8; toast("🧰 地域のたからを 見つけた！");
-  } else { S.gathered[node.item]=(S.gathered[node.item]||0)+1; toast(node.icon+" を ひろった！"); }
+    registerDiscovery("treasures",S.currentArea+":chest",{count:1}); updateAchievementProgress("treasure"); addVillageXp(3);
+  } else { S.gathered[node.item]=(S.gathered[node.item]||0)+1; incrementDiscovery("gathered",node.item,1); updateAchievementProgress("gather"); addVillageXp(1); toast(node.icon+" を ひろった！"); }
   addExplorationXp(3); completeExplorationQuests(S.currentArea); save(); refreshRegionNodes();
 }
 function startFishing(node){
@@ -2623,7 +2694,7 @@ function startFishing(node){
   fishingState={node:node, started:Date.now(), target:.45+Math.random()*.25};
   openModal('<h2>🎣 つり</h2><p id="fishText">ゲージが まんなかに 来たら ひく！</p><div style="height:18px;background:#d9f5ff;border-radius:9px;overflow:hidden"><div id="fishGauge" style="height:100%;width:0;background:#50bce8"></div></div><button class="mBtn" id="fishPull">ひく！</button><button class="mBtn sub" id="mClose">やめる</button>');
   const timer=setInterval(()=>{ if(!fishingState){clearInterval(timer);return;} const p=((Date.now()-fishingState.started)%1800)/1800; const el=document.getElementById("fishGauge"); if(el) el.style.width=(p*100)+"%"; },50);
-  document.getElementById("fishPull").addEventListener("click",()=>{ const p=((Date.now()-fishingState.started)%1800)/1800; const ok=Math.abs(p-fishingState.target)<.16; fishingState=null; clearInterval(timer); closeModal(); if(ok){S.gathered.riverFish=(S.gathered.riverFish||0)+1; S.exploration.nodes[node.id]=Date.now(); addExplorationXp(5); completeExplorationQuests("river"); save(); refreshRegionNodes(); toast("🐟 さかなが つれた！");}else toast("にげられちゃった…"); });
+  document.getElementById("fishPull").addEventListener("click",()=>{ const p=((Date.now()-fishingState.started)%1800)/1800; const ok=Math.abs(p-fishingState.target)<.16; fishingState=null; clearInterval(timer); closeModal(); if(ok){S.gathered.riverFish=(S.gathered.riverFish||0)+1; S.exploration.nodes[node.id]=Date.now(); incrementDiscovery("fish","riverFish",1); updateAchievementProgress("fish"); updateAchievementProgress("gather"); addVillageXp(2); addExplorationXp(5); completeExplorationQuests("river"); save(); refreshRegionNodes(); toast("🐟 さかなが つれた！");}else toast("にげられちゃった…"); });
   document.getElementById("mClose").addEventListener("click",()=>{ fishingState=null; clearInterval(timer); closeModal(); });
 }
 function completeExplorationQuests(area){
@@ -2634,9 +2705,138 @@ function completeExplorationQuests(area){
     S.crowns+=5;
     S.totalCrowns+=5;
     addExplorationXp(8);
+    updateAchievementProgress("quest"); addVillageXp(3);
     showRewardModal("📋 地域のおねがい かんりょう！", q.text+"<br>👑 5こ と 🧭 8XP を もらった！");
   });
 }
+
+/* ================= Phase 5: 図鑑・実績・長期進行 ================= */
+const ENCYCLOPEDIA_CATEGORY_LABELS = { crops:"🌱 作物", dishes:"🍳 料理", gathered:"🧺 採集物", fish:"🎣 魚", residents:"🐾 住民", treasures:"🧰 宝もの", memories:"🎁 記念品" };
+const ENCYCLOPEDIA_CATALOG = [];
+function addCatalog(category,id,name,description,icon,sourceArea,hint){ ENCYCLOPEDIA_CATALOG.push({id,category,name,description,iconType:icon,sourceArea,hint}); }
+Object.keys(CROPS).forEach(id=>{ const c=CROPS[id]; addCatalog("crops",id,c.name,"はたけで そだてる おいしい やさいだよ。",CROP_ICON[id],c.category,"たねを まいて しゅうかくしよう"); });
+Object.keys(RECIPES).forEach(id=>{ const r=RECIPES[id]; addCatalog("dishes",id,r.name,"キッチンで つくれる りょうりだよ。",DISH_ICON[id],"kitchen","ざいりょうを あつめて つくろう"); });
+const GATHERED_INFO = { mushroom:["きのこ","🍄","forest"], acorn:["どんぐり","🌰","forest"], berry:["もりの ベリー","🫐","forest"], wildHerb:["みずべの くさ","🌿","river"], scale:["きらめく うろこ","✨","river"], shell:["かいがら","🐚","beach"], driftwood:["りゅうぼく","🪵","beach"], seaweed:["うみそう","🌿","beach"] };
+Object.keys(GATHERED_INFO).forEach(id=>{ const x=GATHERED_INFO[id]; addCatalog("gathered",id,x[0],"ちいきで みつかる しぜんの たからもの。",x[1],x[2],"ちいきを たんけんしよう"); });
+addCatalog("fish","riverFish","かわの さかな","かわで つれる げんきな さかな。","🐟","river","つりに ちょうせんしよう");
+Object.keys(ANIMALS).forEach(id=>{ const a=ANIMALS[id]; addCatalog("residents",id,a.name,"むらで くらす おともだち。",a.icon,"village","おはなしして なかよくなろう"); });
+TREASURES.forEach(t=>addCatalog("treasures","village:"+t.id,t.label,"むらで みつかる とくべつな たから。","🧰","village","ちずを かんせいさせよう"));
+["forest","river","beach"].forEach(area=>addCatalog("treasures",area+":chest",REGION_CONFIG[area].label+"の たから","ちいきで みつかる ひみつの たからばこ。","🧰",area,"ちいきを すみずみまで たんけんしよう"));
+Object.keys(RESIDENTS).forEach(id=>addCatalog("memories",id,RESIDENTS[id].giftLabel||"おもいで","おともだちからの たいせつな おくりもの。","🎁","village","おねがいを かなえよう"));
+const CATALOG_BY_KEY = Object.fromEntries(ENCYCLOPEDIA_CATALOG.map(x=>[x.category+":"+x.id,x]));
+const VILLAGE_LEVEL_REWARDS = [null,{title:"はじまりの なかま",crowns:0},{title:"たねまき みならい",crowns:3},{title:"おりょうり みならい",crowns:4},{title:"もりの ともだち",crowns:5},{title:"むらの おてつだい",crowns:6},{title:"たんけん だいすき",crowns:7},{title:"あつめもの はかせ",crowns:8,item:"hand_flag"},{title:"みんなの なかま",crowns:10,item:"hana"},{title:"むらの じまん",crowns:12},{title:"わくわく リーダー",crowns:15,item:"neck_capestar"},{title:"でんせつの なかま",crowns:18},{title:"むらの ものがたり",crowns:25,item:"fx_star"}];
+const ACHIEVEMENTS = [
+  {id:"farm_plant_1",title:"はじめての たね",description:"たねを 1こ まこう",category:"farm",target:1,reward:{crowns:3},value:()=>S.achievements.progress.plant||0},
+  {id:"farm_harvest_1",title:"はじめての しゅうかく",description:"さくもつを 1こ しゅうかく",category:"farm",target:1,reward:{crowns:3},value:()=>S.achievements.progress.harvest||0},
+  {id:"farm_harvest_10",title:"はたけの てだれ",description:"しゅうかくを 10こ",category:"farm",target:10,reward:{crowns:6},value:()=>S.achievements.progress.harvest||0},
+  {id:"farm_harvest_100",title:"ひゃくにんりき",description:"しゅうかくを 100こ",category:"farm",target:100,reward:{memento:"きんいろの じょうろ"},value:()=>S.achievements.progress.harvest||0},
+  {id:"farm_crops_all",title:"やさい ずかん",description:"作物を ぜんぶ みつけよう",category:"farm",target:1,reward:{item:"hana"},value:()=>categoryRate("crops")>=100?1:0},
+  {id:"farm_rank",title:"のうぎょう せんぱい",description:"のうぎょうランク 3",category:"farm",target:3,reward:{crowns:8},value:()=>S.progression.farmingRank||1},
+  {id:"cook_first",title:"はじめての りょうり",description:"りょうりを 1こ つくろう",category:"cook",target:1,reward:{crowns:3},value:()=>S.achievements.progress.cook||0},
+  {id:"cook_star3",title:"ぴかぴか シェフ",description:"★3の りょうりを つくろう",category:"cook",target:1,reward:{crowns:6},value:()=>S.achievements.progress.star3||0},
+  {id:"cook_10",title:"おりょうり じょうず",description:"りょうりを 10こ",category:"cook",target:10,reward:{memento:"シェフの おたま"},value:()=>S.achievements.progress.cook||0},
+  {id:"cook_50",title:"まほうの キッチン",description:"りょうりを 50こ",category:"cook",target:50,reward:{item:"neck_cape"},value:()=>S.achievements.progress.cook||0},
+  {id:"cook_all",title:"りょうり ずかん",description:"料理を ぜんぶ みつけよう",category:"cook",target:1,reward:{crowns:12},value:()=>categoryRate("dishes")>=100?1:0},
+  {id:"cook_rank",title:"シェフ せんぱい",description:"りょうりランク 3",category:"cook",target:3,reward:{crowns:8},value:()=>S.progression.cookingRank||1},
+  {id:"social_talk",title:"こんにちは！",description:"住民と おはなししよう",category:"social",target:1,reward:{crowns:3},value:()=>S.achievements.progress.talk||0},
+  {id:"social_quest",title:"おねがい だいせいこう",description:"依頼を 1こ かなえよう",category:"social",target:1,reward:{crowns:6},value:()=>S.achievements.progress.quest||0},
+  {id:"social_friend",title:"なかよし ハート",description:"仲良し度 5に なろう",category:"social",target:1,reward:{memento:"なかよしの リボン"},value:()=>Object.values(S.friends).some(x=>x>=5)?1:0},
+  {id:"social_all",title:"むらの みんな",description:"8人の住民を ずかんに のせよう",category:"social",target:8,reward:{item:"hand_flag"},value:()=>categoryDiscovered("residents")},
+  {id:"social_events",title:"ひみつの おはなし",description:"固有イベントを 2こ",category:"social",target:2,reward:{crowns:10},value:()=>Object.values(S.residents).filter(x=>x&&x.eventSeen).length},
+  {id:"explore_first",title:"はじめての ぼうけん",description:"むらの そとへ でよう",category:"explore",target:1,reward:{crowns:4},value:()=>S.achievements.progress.visit||0},
+  {id:"explore_areas",title:"3つの ちいき",description:"森・川・海を たずねよう",category:"explore",target:3,reward:{memento:"たんけんの ちず"},value:()=>S.achievements.progress.areas||0},
+  {id:"explore_fish",title:"つりびと",description:"さかなを 1ひき つろう",category:"explore",target:1,reward:{crowns:5},value:()=>S.achievements.progress.fish||0},
+  {id:"explore_gather_100",title:"しぜんの めぐみ",description:"採集を 100こ",category:"explore",target:100,reward:{item:"fx_kira"},value:()=>S.achievements.progress.gather||0},
+  {id:"explore_treasures",title:"たからさがし",description:"地域の宝を 3こ",category:"explore",target:3,reward:{crowns:12},value:()=>S.achievements.progress.treasure||0},
+  {id:"explore_rank",title:"たんけん せんぱい",description:"探検ランク 2",category:"explore",target:2,reward:{crowns:8},value:()=>S.progression.explorationRank||1},
+  {id:"collection_25",title:"ずかん 25%",description:"図鑑を 25% うめよう",category:"collection",target:25,reward:{crowns:5},value:()=>overallRate()},
+  {id:"collection_50",title:"ずかん 50%",description:"図鑑を 半分 うめよう",category:"collection",target:50,reward:{memento:"ずかん バッジ"},value:()=>overallRate()},
+  {id:"collection_75",title:"ずかん 75%",description:"図鑑を 75% うめよう",category:"collection",target:75,reward:{item:"hand_wand"},value:()=>overallRate()},
+  {id:"collection_100",title:"ずかん コンプリート",description:"図鑑を ぜんぶ うめよう",category:"collection",target:100,reward:{item:"fx_star"},value:()=>overallRate()},
+  {id:"secret_best_friends",title:"みんなの えいゆう",description:"8人の住民と さいこうの なかよしになろう",category:"secret",hidden:true,target:8,reward:{title:"みんなの えいゆう"},value:()=>Object.values(S.friends).filter(x=>x>=5).length}
+];
+function catalogItems(category){ return ENCYCLOPEDIA_CATALOG.filter(x=>x.category===category); }
+function categoryDiscovered(category){ return catalogItems(category).filter(x=>S.encyclopedia.entries[category+":"+x.id]&&S.encyclopedia.entries[category+":"+x.id].discovered).length; }
+function categoryRate(category){ const total=catalogItems(category).length; return total?Math.floor(categoryDiscovered(category)*100/total):0; }
+function overallRate(){ const total=ENCYCLOPEDIA_CATALOG.length; return total?Math.floor(ENCYCLOPEDIA_CATALOG.filter(x=>S.encyclopedia.entries[x.category+":"+x.id]&&S.encyclopedia.entries[x.category+":"+x.id].discovered).length*100/total):0; }
+function registerDiscovery(category,id,payload){
+  const key=category+":"+id, def=CATALOG_BY_KEY[key]; if(!def) return false;
+  const old=S.encyclopedia.entries[key]||{}; const isNew=!old.discovered;
+  const entry=Object.assign({id,category,name:def.name,description:def.description,iconType:def.iconType,discovered:false,firstDiscoveredAt:0,count:0,bestQuality:0,sourceArea:def.sourceArea,hint:def.hint,rewardClaimed:false},old,payload||{});
+  /* count/bestQualityは「これまでの最良」を表すため、再読込時の再登録（bootstrapPhase5等）で
+     現在の所持数・状態を渡しても既存の蓄積値より下がらないようにする（後退防止）。 */
+  entry.count=Math.max(Number(old.count||0),Number(entry.count||0));
+  entry.bestQuality=Math.max(Number(old.bestQuality||0),Number(entry.bestQuality||0));
+  entry.discovered=true; if(!entry.firstDiscoveredAt) entry.firstDiscoveredAt=Date.now();
+  S.encyclopedia.entries[key]=entry;
+  if(isNew){ if(S.encyclopedia.newEntries.indexOf(key)<0) S.encyclopedia.newEntries.push(key); toast("📖 あたらしい 図鑑！ "+def.iconType+" "+def.name); addVillageXp(1); }
+  evaluateAchievements(); return isNew;
+}
+function incrementDiscovery(category,id,amount,payload){ registerDiscovery(category,id,payload); const e=S.encyclopedia.entries[category+":"+id]; if(e) e.count=Math.max(0,Number(e.count||0)+(amount||1)); evaluateAchievements(); }
+function updateDiscoveryBest(category,id,value){ registerDiscovery(category,id); const e=S.encyclopedia.entries[category+":"+id]; if(e) e.bestQuality=Math.max(Number(e.bestQuality||0),Number(value||0)); evaluateAchievements(); }
+function addVillageXp(amount){
+  const p=S.progression; p.villageXp=Math.max(0,(p.villageXp||0)+amount); const level=Math.min(12,1+Math.floor(p.villageXp/20));
+  if(level>p.villageLevel){ for(let n=p.villageLevel+1;n<=level;n++){ const r=VILLAGE_LEVEL_REWARDS[n]; p.title=r.title; S.crowns+=r.crowns||0; S.totalCrowns+=r.crowns||0; if(r.item&&S.wardrobe.owned.indexOf(r.item)<0) S.wardrobe.owned.push(r.item); toast("🏡 むらレベル "+n+"！ "+r.title); } p.villageLevel=level; renderStatus(); }
+}
+function achievementRecord(a, value){
+  const old=S.achievements.records[a.id]||{};
+  const record=Object.assign({id:a.id,title:a.title,description:a.description,category:a.category,hidden:!!a.hidden,progressType:a.category,target:a.target,reward:a.reward||{},progress:0,unlockedAt:0,rewardClaimed:false},old);
+  record.progress=Math.min(a.target,Math.max(0,Number(value||0)));
+  if(S.achievements.unlocked[a.id]) record.unlockedAt=S.achievements.unlocked[a.id];
+  if(S.achievements.rewardsClaimed[a.id]) record.rewardClaimed=true;
+  S.achievements.records[a.id]=record;
+  return record;
+}
+function evaluateAchievements(){
+  ACHIEVEMENTS.forEach(a=>{ const value=a.value(), record=achievementRecord(a,value); if(S.achievements.unlocked[a.id]) return; if(value>=a.target){ const unlockedAt=Date.now(); S.achievements.unlocked[a.id]=unlockedAt; record.unlockedAt=unlockedAt; addVillageXp(3); toast("🏅 じっせき かいほう！ "+(a.hidden?"ひみつの じっせき":a.title)); } });
+}
+function updateAchievementProgress(type,amount){ const p=S.achievements.progress; p[type]=Math.max(0,Number(p[type]||0)+(amount||1)); evaluateAchievements(); }
+function claimAchievement(id){ const a=ACHIEVEMENTS.find(x=>x.id===id); if(!a||!S.achievements.unlocked[id]||S.achievements.rewardsClaimed[id]) return; const r=a.reward||{}; S.achievements.rewardsClaimed[id]=true; achievementRecord(a,a.value()).rewardClaimed=true; if(r.crowns){ S.crowns+=r.crowns; S.totalCrowns+=r.crowns; } if(r.item&&S.wardrobe.owned.indexOf(r.item)<0) S.wardrobe.owned.push(r.item); if(r.memento&&S.achievements.mementos.indexOf(r.memento)<0) S.achievements.mementos.push(r.memento); if(r.title) S.progression.title=r.title; save(); renderStatus(); toast("🎁 じっせきの ごほうびを もらったよ！"); }
+function collectionRewardKey(category,rate){ return category+":"+rate; }
+function claimCollectionReward(category,rate){ const key=collectionRewardKey(category,rate); if((category==="all"?overallRate():categoryRate(category))<rate||S.encyclopedia.rewards[key]) return; S.encyclopedia.rewards[key]=true; const crowns=rate===100?12:rate===75?8:rate===50?5:3; S.crowns+=crowns; S.totalCrowns+=crowns; addVillageXp(2); save(); renderStatus(); toast("🎀 図鑑ごほうび 👑"+crowns+"！"); }
+function bootstrapPhase5(){
+  Object.keys(S.encyclopedia.entries).forEach(key=>{ if(!CATALOG_BY_KEY[key]) delete S.encyclopedia.entries[key]; });
+  S.encyclopedia.newEntries=S.encyclopedia.newEntries.filter(key=>!!CATALOG_BY_KEY[key]);
+  const achievementIds=new Set(ACHIEVEMENTS.map(a=>a.id));
+  [S.achievements.records,S.achievements.unlocked,S.achievements.rewardsClaimed].forEach(map=>Object.keys(map).forEach(id=>{ if(!achievementIds.has(id)) delete map[id]; }));
+  S.progression.harvestedCrops.forEach(id=>registerDiscovery("crops",id,{count:1}));
+  Object.keys(CROPS).forEach(id=>{ const planted=S.plots.some(p=>p&&p.cropId===id), inBag=Number(S.inv[id]||0); if(planted||inBag>0) registerDiscovery("crops",id,{count:Math.max(1,inBag)}); });
+  S.dishes.forEach(d=>{ if(d&&d.id) registerDiscovery("dishes",d.id,{count:1,bestQuality:d.stars||0}); });
+  Object.keys(S.recipeProgress).forEach(id=>{ const rp=S.recipeProgress[id]; if(rp&&rp.timesCooked) registerDiscovery("dishes",id,{count:rp.timesCooked,bestQuality:rp.bestStars||0}); });
+  Object.keys(S.gathered).forEach(id=>{ if(id==="riverFish") return; if(S.gathered[id]>0) registerDiscovery("gathered",id,{count:S.gathered[id]}); });
+  if(S.gathered.riverFish>0) registerDiscovery("fish","riverFish",{count:S.gathered.riverFish});
+  Object.keys(S.residents).forEach(id=>{ const rs=S.residents[id]||{}; if(rs.metOnce||(S.friends[id]||0)>0) registerDiscovery("residents",id,{count:1,bestQuality:S.friends[id]||0}); if(rs.questDone) registerDiscovery("memories",id,{count:1}); });
+  TREASURES.slice(0,Math.min(Number(S.treasureCount||0),TREASURES.length)).forEach(t=>registerDiscovery("treasures","village:"+t.id,{count:1}));
+  ["forest","river","beach"].forEach(area=>{ if(S.exploration.treasures["treasure:"+area]) registerDiscovery("treasures",area+":chest",{count:1}); });
+  S.achievements.progress.plant=Math.max(Number(S.achievements.progress.plant||0),S.plots.filter(p=>p&&p.cropId).length);
+  S.achievements.progress.harvest=Math.max(Number(S.achievements.progress.harvest||0),S.plots.reduce((n,p)=>n+(p&&p.harvestCount||0),0));
+  S.achievements.progress.cook=Math.max(Number(S.achievements.progress.cook||0),Object.values(S.recipeProgress).reduce((n,x)=>n+(x.timesCooked||0),0));
+  S.achievements.progress.talk=Math.max(Number(S.achievements.progress.talk||0),Object.values(S.residents).filter(x=>x&&x.metOnce).length);
+  S.achievements.progress.quest=Math.max(Number(S.achievements.progress.quest||0),Object.values(S.residents).filter(x=>x&&x.questDone).length+Object.keys(S.exploration.quests).length);
+  S.achievements.progress.event=Math.max(Number(S.achievements.progress.event||0),Object.values(S.residents).filter(x=>x&&x.eventSeen).length);
+  S.achievements.progress.gather=Math.max(Number(S.achievements.progress.gather||0),Object.values(S.gathered).reduce((n,x)=>n+(Number(x)||0),0));
+  S.achievements.progress.fish=Math.max(Number(S.achievements.progress.fish||0),Number(S.gathered.riverFish||0));
+  S.achievements.progress.treasure=Math.max(Number(S.achievements.progress.treasure||0),Object.values(S.exploration.treasures).filter(Boolean).length);
+  S.achievements.progress.areas=Math.max(Number(S.achievements.progress.areas||0),Object.keys(S.exploration.returnPositions).filter(x=>REGION_CONFIG[x]).length);
+  evaluateAchievements();
+}
+let encyclopediaSort = "new";
+function openEncyclopedia(category){
+  const cats=Object.keys(ENCYCLOPEDIA_CATEGORY_LABELS).filter(x=>catalogItems(x).length); category=category||cats[0]; const rate=categoryRate(category);
+  let h='<h2>📖 むらの 図鑑</h2><p style="text-align:center;font-weight:900">ぜんぶ '+overallRate()+'%　/　'+ENCYCLOPEDIA_CATEGORY_LABELS[category]+' '+categoryDiscovered(category)+'/'+catalogItems(category).length+' ('+rate+'%)</p><div class="tabs">';
+  cats.forEach(c=>{ h+='<button class="tab '+(c===category?'on':'')+'" data-ec="'+c+'">'+ENCYCLOPEDIA_CATEGORY_LABELS[c]+' '+categoryDiscovered(c)+'/'+catalogItems(c).length+'</button>'; }); h+='</div><div class="tabs"><button class="tab '+(encyclopediaSort==='new'?'on':'')+'" data-es="new">あたらしい順</button><button class="tab '+(encyclopediaSort==='name'?'on':'')+'" data-es="name">なまえ順</button></div><div class="cardGrid">';
+  const entries=catalogItems(category).slice().sort((a,b)=>{ const ae=S.encyclopedia.entries[a.category+":"+a.id]||{},be=S.encyclopedia.entries[b.category+":"+b.id]||{}; return encyclopediaSort==='name'?a.name.localeCompare(b.name,'ja'):(Number(be.firstDiscoveredAt||0)-Number(ae.firstDiscoveredAt||0)||a.name.localeCompare(b.name,'ja')); });
+  entries.forEach(def=>{ const key=def.category+":"+def.id,e=S.encyclopedia.entries[key],found=e&&e.discovered,isNew=S.encyclopedia.newEntries.indexOf(key)>=0; h+='<div class="card" data-ed="'+key+'"><span class="big">'+(found?def.iconType:'❔')+'</span>'+(found?def.name:'？？？')+'<small>'+(found?('×'+(e.count||0)+(e.bestQuality?"　★".repeat(e.bestQuality):"")):(def.hint||"みつけてみよう"))+(isNew?'　🆕':'')+'</small></div>'; });
+  h+='</div><p style="text-align:center;font-size:12px">カテゴリごほうび　25% / 50% / 75% / 100%</p><div class="tabs">'; [25,50,75,100].forEach(n=>h+='<button class="tab" data-er="'+n+'" '+(rate<n?'disabled':'')+'>'+n+'% '+(S.encyclopedia.rewards[collectionRewardKey(category,n)]?'✅':'🎁')+'</button>'); h+='</div><p style="text-align:center;font-size:12px">ぜんたいごほうび</p><div class="tabs">'; [25,50,75,100].forEach(n=>h+='<button class="tab" data-eall="'+n+'" '+(overallRate()<n?'disabled':'')+'>'+n+'% '+(S.encyclopedia.rewards[collectionRewardKey("all",n)]?'✅':'🎁')+'</button>'); h+='</div><button class="mBtn sub" id="mClose">とじる</button>';
+  openModal(h); document.getElementById("mClose").addEventListener("click",closeModal); modalEl.querySelectorAll("[data-ec]").forEach(b=>b.addEventListener("click",()=>openEncyclopedia(b.dataset.ec))); modalEl.querySelectorAll("[data-es]").forEach(b=>b.addEventListener("click",()=>{encyclopediaSort=b.dataset.es;openEncyclopedia(category);})); modalEl.querySelectorAll("[data-er]").forEach(b=>b.addEventListener("click",()=>{claimCollectionReward(category,Number(b.dataset.er)); openEncyclopedia(category);})); modalEl.querySelectorAll("[data-eall]").forEach(b=>b.addEventListener("click",()=>{claimCollectionReward("all",Number(b.dataset.eall)); openEncyclopedia(category);})); modalEl.querySelectorAll("[data-ed]").forEach(b=>b.addEventListener("click",()=>{ const key=b.dataset.ed,e=S.encyclopedia.entries[key]; if(e){S.encyclopedia.newEntries=S.encyclopedia.newEntries.filter(x=>x!==key); save(); openEncyclopedia(category);} }));
+}
+function openAchievements(category){
+  const cats=["farm","cook","social","explore","collection","secret"]; category=category||cats[0]; let h='<h2>🏅 じっせき</h2><p style="text-align:center;font-weight:900">🏡 '+S.progression.title+'　未受取 '+ACHIEVEMENTS.filter(a=>S.achievements.unlocked[a.id]&&!S.achievements.rewardsClaimed[a.id]).length+'こ</p><div class="tabs">';
+  cats.forEach(c=>h+='<button class="tab '+(c===category?'on':'')+'" data-ac="'+c+'">'+({farm:"農業",cook:"料理",social:"交流",explore:"探索",collection:"図鑑",secret:"ひみつ"}[c])+'</button>'); h+='</div><div class="cardGrid">';
+  ACHIEVEMENTS.filter(a=>a.category===category).forEach(a=>{ const unlocked=!!S.achievements.unlocked[a.id], hidden=a.hidden&&!unlocked, value=Math.min(a.target,a.value()), percent=Math.round(value*100/a.target); h+='<div class="card"><span class="big">'+(unlocked?'🏅':'🔒')+'</span>'+(hidden?'？？？':a.title)+'<small>'+(hidden?'ひみつの じっせき':a.description+'　'+value+'/'+a.target)+'</small><span aria-label="進捗 '+percent+'%" style="display:block;height:6px;margin:5px 0;border-radius:5px;background:#ece7ff;overflow:hidden"><i style="display:block;height:100%;width:'+percent+'%;background:#8a6cff"></i></span>'+(unlocked?'<button class="mBtn" data-ar="'+a.id+'" '+(S.achievements.rewardsClaimed[a.id]?'disabled':'')+'>'+(S.achievements.rewardsClaimed[a.id]?'うけとった':'ごほうび')+'</button>':'')+'</div>'; });
+  h+='</div><button class="mBtn sub" id="mClose">とじる</button>'; openModal(h); document.getElementById("mClose").addEventListener("click",closeModal); modalEl.querySelectorAll("[data-ac]").forEach(b=>b.addEventListener("click",()=>openAchievements(b.dataset.ac))); modalEl.querySelectorAll("[data-ar]").forEach(b=>b.addEventListener("click",()=>{claimAchievement(b.dataset.ar);openAchievements(category);}));
+}
+const PHASE5_DEFINITION_ISSUES = (()=>{ const ids=ENCYCLOPEDIA_CATALOG.map(x=>x.category+":"+x.id), aids=ACHIEVEMENTS.map(x=>x.id); return { duplicateCatalog:ids.filter((x,i)=>ids.indexOf(x)!==i), duplicateAchievements:aids.filter((x,i)=>aids.indexOf(x)!==i), missingCatalog:ENCYCLOPEDIA_CATALOG.filter(x=>!x.name).map(x=>x.id) }; })();
 
 /* ================= インタラクション ================= */
 const actBtn = document.getElementById("actBtn");
@@ -3037,11 +3237,14 @@ function bootWorld(prevLastSeen){
 }
 (function init(){
   load();
+  bootstrapPhase5();
+  if(PHASE5_DEFINITION_ISSUES.duplicateCatalog.length || PHASE5_DEFINITION_ISSUES.duplicateAchievements.length || PHASE5_DEFINITION_ISSUES.missingCatalog.length) console.warn("Phase 5 definition issues", PHASE5_DEFINITION_ISSUES);
   /* save() は毎回 lastSeen を現在時刻へ上書きするため、復帰判定用に
      load() 直後（まだ一度も save() していない時点）の値を確保しておく。
      以後 startBtn クリック時の save() や bootWorld() 内の save() が
      何度呼ばれても、この値だけは離脱前の本来の lastSeen を保つ。 */
   const prevLastSeen = S.lastSeen;
+  save();
   const ov = document.getElementById("startOv");
   const startBtn = document.getElementById("startBtn");
   let picked = S.gender;
