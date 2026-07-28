@@ -215,7 +215,7 @@ const TREASURES = [
   { id:"crown30",label:"クラウン 30こ！ やったね！" },
 ];
 const OUTFITS = {
-  basic:    { name:"はじまりの ふく", price:0,  p:"#5b8def", d:"#ff9ecb" },
+  basic:    { name:"はじまりの ふく", price:0,  p:"#5f9ed0", d:"#3976aa" },
   sora:     { name:"そらいろの ふく", price:15, p:"#5ecbf7", d:"#9fdcf7" },
   midori:   { name:"もりの ふく",     price:15, p:"#4caf50", d:"#8fd6a3" },
   himawari: { name:"ひまわりの ふく", price:20, p:"#f2a93c", d:"#ffd24d" },
@@ -1198,10 +1198,12 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
+renderer.toneMappingExposure = 0.68;
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0xbfe9ff, 40, 95);
+/* 白霧感の解消(第2段): カメラが高く見下ろす角度のため、地面までの実距離がnearを超えて
+   手前にもフォグがかかっていた。near/farをさらに遠ざけ、手前をフォグの影響外にする。 */
+scene.fog = new THREE.Fog(0x86c8cf, 110, 240);
 const camera = new THREE.PerspectiveCamera(52, 1, 0.1, 220);
 
 function onResize(){
@@ -1211,10 +1213,10 @@ function onResize(){
 }
 window.addEventListener("resize", onResize); onResize();
 
-/* ライト */
-const hemi = new THREE.HemisphereLight(0xcfefff, 0x9ccc65, 0.62);
+/* ライト: 環境光をさらに弱め、太陽光は上げすぎない。陰影は環境光を下げることで相対的に強める。 */
+const hemi = new THREE.HemisphereLight(0xcfefff, 0x8fbf58, 0.15);
 scene.add(hemi);
-const sun = new THREE.DirectionalLight(0xfff2cc, 1.0);
+const sun = new THREE.DirectionalLight(0xfff2cc, 0.82);
 sun.position.set(18, 30, 12);
 sun.castShadow = true;
 sun.shadow.mapSize.set(1024, 1024);
@@ -1242,7 +1244,7 @@ function terrainHeight(x, z){
   g.rotateX(-Math.PI/2);
   const pos = g.attributes.position;
   const colors = [];
-  const c1 = new THREE.Color(0x9fdc7e), c2 = new THREE.Color(0x7cc95f), c3 = new THREE.Color(0xb8e698);
+  const c1 = new THREE.Color(0x4f9f3d), c2 = new THREE.Color(0x347f2c), c3 = new THREE.Color(0x70b953);
   for(let i=0;i<pos.count;i++){
     const x = pos.getX(i), z = pos.getZ(i);
     pos.setY(i, terrainHeight(x, z));
@@ -1262,7 +1264,7 @@ function addPath(x1,z1,x2,z2,w){
   const dx=x2-x1, dz=z2-z1, len=Math.sqrt(dx*dx+dz*dz);
   const g=new THREE.PlaneGeometry(w||1.6, len, 1, Math.max(2,Math.round(len/2)));
   g.rotateX(-Math.PI/2);
-  const m=new THREE.Mesh(g, mat(0xb89a68));
+  const m=new THREE.Mesh(g, mat(0xb78345));
   m.position.set((x1+x2)/2, 0, (z1+z2)/2);
   m.rotation.y = Math.atan2(dx, dz);
   const pos=m.geometry.attributes.position;
@@ -1283,10 +1285,10 @@ let waterMesh;
 (function buildRiver(){
   const g = new THREE.PlaneGeometry(6.5, WORLD_R*2.4, 8, 60);
   g.rotateX(-Math.PI/2);
-  waterMesh = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ color:0x6ec6f5, transparent:true, opacity:0.88 }));
+  waterMesh = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ color:0x2e9fe0, transparent:true, opacity:0.92 }));
   waterMesh.position.set(-23, 0.12, 0);
   scene.add(waterMesh);
-  const bank = new THREE.Mesh(new THREE.PlaneGeometry(9, WORLD_R*2.4).rotateX(-Math.PI/2), mat(0xd9c98e));
+  const bank = new THREE.Mesh(new THREE.PlaneGeometry(9, WORLD_R*2.4).rotateX(-Math.PI/2), mat(0xc9b578));
   bank.position.set(-23, 0.06, 0);
   scene.add(bank);
   /* 橋 */
@@ -1310,12 +1312,12 @@ const swayTrees = [];
 function addTree(x, z, kind){
   const g = new THREE.Group();
   const h = terrainHeight(x, z);
-  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.32, 1.4, 6), mat(0x8d6e4a));
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.32, 1.4, 6), mat(0x593c28));
   trunk.position.y = 0.7; trunk.castShadow = true; g.add(trunk);
-  const leafColor = kind==="sakura" ? 0xffc2d6 : (kind==="dark" ? 0x5da653 : 0x74c46a);
+  const leafColors = kind==="sakura" ? [0xe6adc1, 0xd991aa, 0xc97897] : (kind==="dark" ? [0x2f7632, 0x3f913d, 0x55a84d] : [0x3f913d, 0x55a84d, 0x6bbf5e]);
   const leaves = new THREE.Group();
   for(let i=0;i<3;i++){
-    const cone = new THREE.Mesh(new THREE.ConeGeometry(1.35-0.32*i, 1.25, 7), mat(leafColor));
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(1.35-0.32*i, 1.25, 7), mat(leafColors[i]));
     cone.position.y = 1.7 + i*0.78;
     cone.castShadow = true;
     leaves.add(cone);
@@ -1406,16 +1408,16 @@ function placeOnGround(obj, x, z, ry){
 }
 /* プレイヤーの家・キッチン・おみせ */
 const playerHousePos = new THREE.Vector3(-9.5, 0, -12);
-placeOnGround(makeHouse(0xfff1d6, 0xf58ea8, 3.6, 3.2, 2.4), playerHousePos.x, playerHousePos.z, 0.5);
+placeOnGround(makeHouse(0xe3a9ba, 0xc9506f, 3.6, 3.2, 2.4), playerHousePos.x, playerHousePos.z, 0.5);
 playerHousePos.y = terrainHeight(playerHousePos.x, playerHousePos.z);
-const kitchenGroup = makeHouse(0xffe3b8, 0xff9e5e, 4.2, 3.6, 2.6);
+const kitchenGroup = makeHouse(0xeacb96, 0xd66a2c, 4.2, 3.6, 2.6);
 const kitchenPos = new THREE.Vector3(11, 0, -11);
 placeOnGround(kitchenGroup, kitchenPos.x, kitchenPos.z, -0.5);
 kitchenPos.y = terrainHeight(kitchenPos.x, kitchenPos.z) + 1;
 /* えんとつ */
 const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.5,1.1,0.5), mat(0xc98a6a));
 chimney.position.set(1.1, 3.4, -0.6); kitchenGroup.add(chimney);
-const shopGroup = makeHouse(0xf3d6ff, 0xb98ae0, 3.8, 3.2, 2.5);
+const shopGroup = makeHouse(0xc5aed8, 0x8a4fc2, 3.8, 3.2, 2.5);
 const shopPos = new THREE.Vector3(-13, 0, 2);
 placeOnGround(shopGroup, shopPos.x, shopPos.z, 1.1);
 shopPos.y = terrainHeight(shopPos.x, shopPos.z) + 1;
@@ -1642,12 +1644,18 @@ const ANIMAL_HOME = {
 const friendHouseGroup = new THREE.Group();
 scene.add(friendHouseGroup);
 const builtFriendHouses = {};
-const ANIMAL_COLORS = { neko:0xfff3e0, usagi:0xffd6e8, kuma:0xc98a5a, kitsune:0xf2903c, panda:0xf5f5f5, risu:0xd48a4a, fukurou:0xa88a6a, kawauso:0x8a6a52 };
+const ANIMAL_COLORS = { neko:0xc9925f, usagi:0xd8d6d0, kuma:0x8f6848, kitsune:0xd97838, panda:0xd8dad7, risu:0xb97845, fukurou:0x88705b, kawauso:0x76563f };
+/* キャラクターを単色にしないための追加配色: 口元(muzzle)・耳内側/濃色部(earInner) */
+const ANIMAL_MUZZLE = { neko:0xe5bf91, usagi:0xeee9df, kuma:0xc9a37e, kitsune:0xf0c69b, panda:0xe9e5dc, risu:0xe2b78d, fukurou:0xd8c5a3, kawauso:0xd2ad86 };
+const ANIMAL_EAR_INNER = { neko:0xc96f82, usagi:0xd98fa7, kuma:0x6f4b35, kitsune:0xa84e2d, risu:0x8f4f32, fukurou:0x584536, kawauso:0x4d372c };
+const PANDA_BLACK = 0x34383b;
+const ANIMAL_HOME_WALLS = { neko:0xeacb96, usagi:0xe3a9ba, kuma:0xaecbd9, kitsune:0xeacb96, panda:0xc5aed8, risu:0xafd0b3, fukurou:0xaecbd9, kawauso:0xe3a9ba };
+const ANIMAL_HOME_ROOFS = { neko:0xc9793f, usagi:0xc9688f, kuma:0xa8663f, kitsune:0xd67128, panda:0x7f93ab, risu:0xb56a30, fukurou:0x876a4d, kawauso:0x6e5138 };
 function rebuildFriendHouses(){
   Object.keys(ANIMALS).forEach(a=>{
     if((S.friends[a]||0) >= 5 && !builtFriendHouses[a]){
       const home = ANIMAL_HOME[a];
-      const h = makeHouse(0xfffaf0, ANIMAL_COLORS[a], 2.6, 2.3, 1.9);
+      const h = makeHouse(ANIMAL_HOME_WALLS[a]||0xfff0d9, ANIMAL_HOME_ROOFS[a]||0xc9835a, 2.6, 2.3, 1.9);
       h.position.set(home.x, terrainHeight(home.x, home.z), home.z);
       h.rotation.y = Math.atan2(-home.x, -home.z);
       friendHouseGroup.add(h);
@@ -1882,6 +1890,13 @@ function spawnSmoke(){
 
 /* ================= キャラクター ================= */
 function makeEye(x, y, z, r){ const e = new THREE.Mesh(new THREE.SphereGeometry(r||0.045, 5, 4), new THREE.MeshBasicMaterial({ color:0x3a2c22 })); e.position.set(x, y===undefined?0.05:y, z===undefined?0.24:z); return e; }
+/* 接地感: キャラクター足元に小さな半透明の楕円影を追加し、地面から浮いて見えないようにする */
+function addContactShadow(group, rx, rz){
+  const sh = new THREE.Mesh(new THREE.CircleGeometry(1, 12), new THREE.MeshBasicMaterial({ color:0x35583a, transparent:true, opacity:0.22, depthWrite:false }));
+  sh.rotation.x = -Math.PI/2; sh.scale.set(rx, rz, 1); sh.position.y = 0.02;
+  group.add(sh);
+  return sh;
+}
 /* ---- プレイヤー ---- */
 let player = null, playerBody = null, playerParts = null;
 function buildPlayerMesh(){
@@ -1889,65 +1904,127 @@ function buildPlayerMesh(){
   const w = S.wardrobe;
   const outfit = OUTFITS[w.outfit] || OUTFITS.basic;
   const bodyColor = new THREE.Color(outfit.p);
+  const accentColor = new THREE.Color(outfit.d || outfit.p);
   const princess = S.gender !== "prince";
-  /* からだ */
-  const bodyGeo = princess
-    ? new THREE.CylinderGeometry(0.24, 0.5, 0.72, 10)
-    : new THREE.CylinderGeometry(0.27, 0.3, 0.68, 10);
+  addContactShadow(g, 0.28, 0.22);
+  const skinMat = mat(0xe2b98e);
   const bodyMat = new THREE.MeshLambertMaterial({ color: bodyColor });
-  const body = new THREE.Mesh(bodyGeo, bodyMat);
-  body.position.y = 0.55; body.castShadow = true; g.add(body);
-  /* あたま */
-  const head = new THREE.Group();
-  const skull = new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 9), mat(0xffe3c9));
-  skull.castShadow = true; head.add(skull);
-  head.add(makeEye(-0.1)); head.add(makeEye(0.1));
-  const blushL = new THREE.Mesh(new THREE.SphereGeometry(0.05,5,4), new THREE.MeshBasicMaterial({color:0xffb3c1}));
-  blushL.position.set(-0.18,-0.03,0.22); head.add(blushL);
-  const blushR = blushL.clone(); blushR.position.x = 0.18; head.add(blushR);
-  /* かみのけ */
-  const hairColor = princess ? 0xc9873e : 0x8a5a3b;
-  const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.315, 10, 9, 0, Math.PI*2, 0, Math.PI*0.55), mat(hairColor));
-  hairCap.position.y = 0.02; head.add(hairCap);
-  if(princess){
-    for(const hx of [-0.3, 0.3]){
-      const bun = new THREE.Mesh(new THREE.SphereGeometry(0.12, 7, 6), mat(hairColor));
-      bun.position.set(hx, 0.1, -0.05); head.add(bun);
-    }
-    const back = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 7), mat(hairColor));
-    back.scale.set(1, 1.5, 0.7); back.position.set(0, -0.12, -0.18); head.add(back);
-  }
-  head.position.y = 1.18;
-  g.add(head);
-  /* うで */
-  for(const ax of [-0.32, 0.32]){
-    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.4, 6), bodyMat);
-    arm.position.set(ax, 0.72, 0); arm.rotation.z = ax > 0 ? -0.4 : 0.4;
-    g.add(arm);
-  }
-  /* くつ */
+  const accentMat = new THREE.MeshLambertMaterial({ color: accentColor });
   const shoeDef = SHOES[w.shoes] || SHOES.shoes_navy;
   const shoeMat = shoeDef.niji ? new THREE.MeshLambertMaterial({ color:0xff8fb3 }) : mat(shoeDef.col);
-  for(const sx of [-0.14, 0.14]){
-    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.12, 0.24), shoeMat);
-    shoe.position.set(sx, 0.06, 0.05); shoe.castShadow = true; g.add(shoe);
-  }
   if(shoeDef.niji) g.userData.rainbowShoeMat = shoeMat;
-  /* くびもと */
+
+  /* あし: 股関節ピボットで前後スイングできるよう脚+くつをグループ化。移動時に足が見える。 */
+  const legPivots = [];
+  for(const lx of [-0.1, 0.1]){
+    const pivot = new THREE.Group(); pivot.position.set(lx, 0.34, 0);
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.065, 0.22, 6), skinMat);
+    leg.position.y = -0.11; leg.castShadow = true; pivot.add(leg);
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.11, 0.19), shoeMat);
+    shoe.position.set(0, -0.24, 0.03); shoe.castShadow = true; pivot.add(shoe);
+    g.add(pivot); legPivots.push(pivot);
+  }
+
+  /* からだ: 胴を短くし、プリンセスは上半身(bodice)と裾の広いスカートを分離。プリンスは上着とズボンを分離。 */
+  let skirtOrPants;
+  if(princess){
+    const bodice = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.2, 0.2, 10), bodyMat);
+    bodice.position.y = 0.56; bodice.castShadow = true; g.add(bodice);
+    skirtOrPants = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.44, 0.2, 10), bodyMat);
+    skirtOrPants.position.y = 0.46; skirtOrPants.castShadow = true; g.add(skirtOrPants);
+  } else {
+    const jacket = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.21, 0.22, 10), bodyMat);
+    jacket.position.y = 0.57; jacket.castShadow = true; g.add(jacket);
+    skirtOrPants = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.15, 0.16, 10), accentMat);
+    skirtOrPants.position.y = 0.42; skirtOrPants.castShadow = true; g.add(skirtOrPants);
+  }
+  const torsoTopY = princess ? 0.66 : 0.68;
+  /* おび・えり: 最低2種のアクセントで前後にも情報を持たせる */
+  const belt = new THREE.Mesh(new THREE.TorusGeometry(princess?0.205:0.21, 0.025, 6, 12), accentMat);
+  belt.rotation.x = Math.PI/2; belt.position.y = 0.48; g.add(belt);
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(0.135, 0.022, 6, 10), mat(0xfaf6ee));
+  collar.rotation.x = Math.PI/2; collar.position.y = torsoTopY; g.add(collar);
+  if(princess){
+    const ribbon = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 5), accentMat);
+    ribbon.scale.set(1.5, 0.8, 0.6); ribbon.position.set(0, torsoTopY - 0.06, 0.19); g.add(ribbon);
+  } else {
+    /* マント: プリンスは後ろ姿でも一目で分かるように短いマントを追加 */
+    const cape = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.36, 0.03), accentMat);
+    cape.position.set(0, 0.5, -0.15); cape.rotation.x = 0.18; cape.castShadow = true;
+    g.add(cape); g.userData.cape = cape;
+  }
+
+  /* うで: 服のアクセント色(outfit.d)。肩ピボットでスイングできるようグループ化し、先はミトン型の手。 */
+  const armMat = accentMat;
+  const armPivots = [];
+  for(const ax of [-0.26, 0.26]){
+    const pivot = new THREE.Group(); pivot.position.set(ax, torsoTopY - 0.06, 0);
+    pivot.rotation.z = ax > 0 ? -0.22 : 0.22;
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.065, 0.26, 6), armMat);
+    arm.position.y = -0.13; arm.castShadow = true; pivot.add(arm);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.075, 7, 6), skinMat);
+    hand.scale.set(1, 0.85, 1); hand.position.y = -0.27; pivot.add(hand);
+    g.add(pivot); armPivots.push(pivot);
+  }
+
+  /* あたま: 全高の4割強を占める大きめの頭。表情パーツも大きく・広めに。 */
+  const head = new THREE.Group();
+  const headR = 0.36;
+  const skull = new THREE.Mesh(new THREE.SphereGeometry(headR, 12, 10), skinMat);
+  skull.castShadow = true; head.add(skull);
+  head.add(makeEye(-0.15, 0.06, 0.29, 0.075)); head.add(makeEye(0.15, 0.06, 0.29, 0.075));
+  const mouth = new THREE.Mesh(new THREE.SphereGeometry(0.02, 5, 4), new THREE.MeshBasicMaterial({ color:0x6e4530 }));
+  mouth.position.set(0, -0.1, 0.32); head.add(mouth);
+  const blushL = new THREE.Mesh(new THREE.SphereGeometry(0.06,5,4), new THREE.MeshBasicMaterial({color:0xffb3c1}));
+  blushL.position.set(-0.23,-0.03,0.26); head.add(blushL);
+  const blushR = blushL.clone(); blushR.position.x = 0.23; head.add(blushR);
+  /* かみのけ */
+  const hairColor = princess ? 0xb27a3e : 0x7a5139;
+  const hairCap = new THREE.Mesh(new THREE.SphereGeometry(headR*1.03, 10, 9, 0, Math.PI*2, 0, Math.PI*(princess?0.56:0.46)), mat(hairColor));
+  hairCap.position.y = 0.02; head.add(hairCap);
+  if(princess){
+    /* 左右の大きな髪の房 + 後頭部のボリューム + 前髪の房で、後ろ姿でも個性が分かるようにする */
+    for(const hx of [-0.4, 0.4]){
+      const bunch = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 7), mat(hairColor));
+      bunch.scale.set(0.85, 1.3, 0.85); bunch.position.set(hx, 0.06, -0.03); head.add(bunch);
+    }
+    const back = new THREE.Mesh(new THREE.SphereGeometry(0.28, 9, 8), mat(hairColor));
+    back.scale.set(1, 1.5, 0.85); back.position.set(0, -0.16, -0.2); head.add(back);
+    for(const fx of [-0.09, 0.09]){
+      const fringe = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.14, 5), mat(hairColor));
+      fringe.rotation.x = 2.5; fringe.position.set(fx, 0.2, 0.32); head.add(fringe);
+    }
+  } else {
+    /* 前髪の跳ねと短い後頭部で、マントと合わせて後ろ姿でも区別できるようにする */
+    for(const fx of [-0.12, 0, 0.12]){
+      const tuft = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.16, 5), mat(hairColor));
+      tuft.rotation.x = -0.5; tuft.position.set(fx, 0.28, 0.16); head.add(tuft);
+    }
+    const back = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 7), mat(hairColor));
+    back.scale.set(1, 1.1, 0.7); back.position.set(0, 0.02, -0.2); head.add(back);
+  }
+  head.position.y = princess ? 0.86 : 0.88;
+  g.add(head);
+
+  /* くびもと(既存アクセサリ) */
   const neckAcc = buildNeckAcc(w.neck);
-  if(neckAcc){ neckAcc.position.y = 0.86; g.add(neckAcc); }
+  if(neckAcc){ neckAcc.position.y = torsoTopY + 0.02; g.add(neckAcc); }
   /* てのアイテム */
   const handAcc = buildHandAcc(w.hand);
-  if(handAcc){ handAcc.position.set(0.34, 0.66, 0.05); g.add(handAcc); g.userData.handAcc = handAcc; }
+  if(handAcc){ handAcc.position.set(0.34, 0.44, 0.08); g.add(handAcc); g.userData.handAcc = handAcc; }
   /* かおのアイテム */
   const faceAcc = buildFaceAcc(w.face);
-  if(faceAcc){ faceAcc.position.set(0, 0.05, 0.27); head.add(faceAcc); }
-  /* ぼうし */
+  if(faceAcc){ faceAcc.position.set(0, 0.07, 0.33); head.add(faceAcc); }
+  /* ぼうし: 頭が大きくなった分だけ既存ぼうしの位置も比例して上げる。crownは内部で別途高さを確保。 */
   const hat = buildHat(w.head);
-  if(hat){ hat.position.y = 0.26; head.add(hat); }
+  if(hat){ hat.position.y = 0.315; head.add(hat); }
   /* にじいろ */
   if(outfit.rainbow) g.userData.rainbowMat = bodyMat;
   g.userData.head = head;
+  g.userData.armPivots = armPivots;
+  g.userData.legPivots = legPivots;
+  g.userData.skirtOrPants = skirtOrPants;
+  g.userData.idleBaseY = head.position.y;
   return g;
 }
 function buildFaceAcc(id){
@@ -2030,11 +2107,12 @@ function buildHandAcc(id){
 function buildHat(id){
   const g = new THREE.Group();
   if(id === "crown"){
-    const band = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.12, 8), mat(0xffc93c));
-    g.add(band);
+    /* 頭が大きくなった分、王冠は約30%拡大し、頭頂部に埋め込まず明確なシルエットになる高さへ */
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(0.234, 0.26, 0.156, 8), mat(0xd6a91f));
+    band.position.y = 0.16; g.add(band);
     for(let i=0;i<4;i++){
-      const spike = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.12, 4), mat(0xffc93c));
-      spike.position.set(Math.cos(i*1.57)*0.16, 0.11, Math.sin(i*1.57)*0.16);
+      const spike = new THREE.Mesh(new THREE.ConeGeometry(0.065, 0.156, 4), mat(0xd6a91f));
+      spike.position.set(Math.cos(i*1.57)*0.208, 0.3, Math.sin(i*1.57)*0.208);
       g.add(spike);
     }
   } else if(id === "beret"){
@@ -2161,73 +2239,140 @@ const animalMeshes = {};
 function buildAnimal(id){
   const g = new THREE.Group();
   const c = ANIMAL_COLORS[id];
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.38, 9, 8), mat(c));
-  body.position.y = 0.38; body.scale.set(1, 0.92, 1.06); body.castShadow = true; g.add(body);
+  addContactShadow(g, 0.3, 0.24);
+  /* 第1弾造形改善の対象(うさぎ・りす・ふくろう): 「球を2つ重ねただけ」を解消するため、
+     胴を洋梨型(下広がり)にし、頭と胴の接続部を少し絞り、小さな前あし・あしを追加する。
+     他5種(ねこ・くま・きつね・パンダ・かわうそ)は今回は形状未変更、色のみ既存のまま。 */
+  const remodeled = (id === "usagi" || id === "risu" || id === "fukurou");
+  const headR = remodeled ? 0.36 : 0.3;
+  let neckTopY;
+  if(remodeled){
+    const belly = new THREE.Mesh(new THREE.SphereGeometry(0.32, 9, 8), mat(c));
+    belly.position.y = 0.3; belly.scale.set(1, 0.95, 1.02); belly.castShadow = true; g.add(belly);
+    const chest = new THREE.Mesh(new THREE.SphereGeometry(0.23, 9, 8), mat(c));
+    chest.position.y = 0.52; chest.scale.set(1, 0.95, 0.95); chest.castShadow = true; g.add(chest);
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.19, 0.1, 8), mat(c));
+    neck.position.y = 0.63; g.add(neck);
+    neckTopY = 0.66;
+    /* 小さな前あし */
+    for(const ax of [-0.24, 0.24]){
+      const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.16, 6), mat(c));
+      arm.position.set(ax, 0.36, 0.14); arm.rotation.x = 0.5; arm.castShadow = true; g.add(arm);
+      const paw = new THREE.Mesh(new THREE.SphereGeometry(0.045, 5, 4), mat(ANIMAL_MUZZLE[id] || c));
+      paw.position.set(ax, 0.28, 0.22); g.add(paw);
+    }
+    /* あし(足先) */
+    for(const fx of [-0.13, 0.13]){
+      const foot = new THREE.Mesh(new THREE.SphereGeometry(id==="usagi"?0.09:0.07, 6, 5), mat(c));
+      foot.scale.set(1, 0.7, 1.3); foot.position.set(fx, 0.07, 0.06); foot.castShadow = true; g.add(foot);
+    }
+  } else {
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.38, 9, 8), mat(c));
+    body.position.y = 0.38; body.scale.set(1, 0.92, 1.06); body.castShadow = true; g.add(body);
+    neckTopY = 0.95;
+  }
   const head = new THREE.Group();
-  const skull = new THREE.Mesh(new THREE.SphereGeometry(0.3, 9, 8), mat(c));
+  const skull = new THREE.Mesh(new THREE.SphereGeometry(headR, 9, 8), mat(c));
+  if(id === "fukurou") skull.scale.set(1, 1, 0.85); /* 球形ではなく少し平たい顔 */
   skull.castShadow = true; head.add(skull);
-  head.add(makeEye(-0.1)); head.add(makeEye(0.1));
-  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.045, 5, 4), new THREE.MeshBasicMaterial({ color: id==="usagi"?0xff8fb3:0x5d4037 }));
-  nose.position.set(0, -0.04, 0.28); head.add(nose);
+  const eyeR = remodeled ? 0.075 : 0.045, eyeX = remodeled ? 0.145 : 0.1, eyeZ = remodeled ? headR*0.8 : 0.24;
+  head.add(makeEye(-eyeX, 0.05, eyeZ, eyeR)); head.add(makeEye(eyeX, 0.05, eyeZ, eyeR));
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(remodeled?0.055:0.045, 5, 4), new THREE.MeshBasicMaterial({ color: id==="usagi"?0xff8fb3:0x5d4037 }));
+  nose.position.set(0, remodeled?-0.05:-0.04, headR*0.86); head.add(nose);
+  /* 口元(muzzle): 現在の俯瞰カメラ距離でも判別できる大きさへ。目・鼻より前に出ないよう浅く保つ。 */
+  if(ANIMAL_MUZZLE[id]){
+    const muzzleR = remodeled ? 0.17 : 0.13;
+    const muzzle = new THREE.Mesh(new THREE.SphereGeometry(muzzleR, 7, 6), mat(ANIMAL_MUZZLE[id]));
+    muzzle.scale.set(1, 0.6, 0.5); muzzle.position.set(0, remodeled?-0.07:-0.06, headR*0.62); head.add(muzzle);
+  }
   if(id === "neko" || id === "kitsune"){
     for(const ex of [-0.17, 0.17]){
       const ear = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.2, 4), mat(c));
       ear.position.set(ex, 0.26, 0); head.add(ear);
+      const earInner = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.1, 4), mat(ANIMAL_EAR_INNER[id]));
+      earInner.position.set(ex, 0.24, 0.02); head.add(earInner);
     }
   } else if(id === "usagi"){
-    for(const ex of [-0.11, 0.11]){
-      const ear = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.45, 6), mat(c));
-      ear.position.set(ex, 0.42, 0); head.add(ear);
-      const inner = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.36, 5), mat(0xffb3c9));
-      inner.position.set(ex, 0.43, 0.035); head.add(inner);
+    /* 現在より太く長い耳。耳内側も大きく。 */
+    for(const ex of [-0.13, 0.13]){
+      const ear = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.09, 0.58, 6), mat(c));
+      ear.position.set(ex, 0.5, 0); ear.rotation.z = ex>0?-0.08:0.08; ear.castShadow = true; head.add(ear);
+      const inner = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.05, 0.48, 5), mat(ANIMAL_EAR_INNER.usagi));
+      inner.position.set(ex, 0.5, 0.045); inner.rotation.z = ex>0?-0.08:0.08; head.add(inner);
     }
+    const tail = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 5), mat(0xfaf6ee));
+    tail.position.set(0, 0.32, -0.32); g.add(tail);
   } else if(id === "kuma" || id === "panda"){
     for(const ex of [-0.2, 0.2]){
-      const ear = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 5), mat(id==="panda"?0x3a3a3a:c));
+      const ear = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 5), mat(id==="panda"?PANDA_BLACK:c));
       ear.position.set(ex, 0.24, 0); head.add(ear);
+      if(id === "kuma"){
+        const earInner = new THREE.Mesh(new THREE.SphereGeometry(0.05, 5, 4), mat(ANIMAL_EAR_INNER.kuma));
+        earInner.position.set(ex, 0.23, 0.04); head.add(earInner);
+      }
     }
   } else if(id === "risu"){
-    for(const ex of [-0.14, 0.14]){
-      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.16, 4), mat(c));
-      ear.position.set(ex, 0.28, -0.03); head.add(ear);
+    /* 小さな丸耳。頬をやや大きくする。 */
+    for(const ex of [-0.15, 0.15]){
+      const ear = new THREE.Mesh(new THREE.SphereGeometry(0.065, 6, 5), mat(c));
+      ear.position.set(ex, 0.28, -0.02); head.add(ear);
+      const earInner = new THREE.Mesh(new THREE.SphereGeometry(0.035, 5, 4), mat(ANIMAL_EAR_INNER.risu));
+      earInner.position.set(ex, 0.27, 0.02); head.add(earInner);
+      const cheek = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 5), mat(c));
+      cheek.scale.set(1, 0.8, 0.7); cheek.position.set(ex*1.5, -0.04, 0.2); head.add(cheek);
     }
   } else if(id === "fukurou"){
-    for(const ex of [-0.13, 0.13]){
-      const tuft = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.13, 4), mat(c));
-      tuft.position.set(ex, 0.3, 0.05); head.add(tuft);
+    for(const ex of [-0.15, 0.15]){
+      const tuft = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.16, 4), mat(c));
+      tuft.position.set(ex, 0.34, 0.06); tuft.rotation.z = ex>0?-0.15:0.15; head.add(tuft);
     }
-    for(const ex of [-0.1, 0.1]){
-      const disc = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.02, 5, 10), mat(0xfff3c0));
-      disc.position.set(ex, 0, 0.24); head.add(disc);
+    for(const ex of [-0.13, 0.13]){
+      const disc = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.025, 5, 10), mat(0xfff3c0));
+      disc.position.set(ex, 0, headR*0.75); head.add(disc);
+      const eyeAround = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.015, 5, 10), mat(ANIMAL_EAR_INNER.fukurou));
+      eyeAround.position.set(ex, 0, headR*0.77); head.add(eyeAround);
     }
   } else if(id === "kawauso"){
     for(const ex of [-0.12, 0.12]){
       const ear = new THREE.Mesh(new THREE.SphereGeometry(0.055, 5, 4), mat(c));
       ear.position.set(ex, 0.26, -0.02); head.add(ear);
+      const earInner = new THREE.Mesh(new THREE.SphereGeometry(0.03, 5, 4), mat(ANIMAL_EAR_INNER.kawauso));
+      earInner.position.set(ex, 0.26, 0.01); head.add(earInner);
     }
   }
   if(id === "panda"){
     for(const ex of [-0.1, 0.1]){
-      const patch = new THREE.Mesh(new THREE.SphereGeometry(0.075, 6, 5), mat(0x3a3a3a));
+      const patch = new THREE.Mesh(new THREE.SphereGeometry(0.075, 6, 5), mat(PANDA_BLACK));
       patch.scale.set(1, 1.3, 0.55); patch.position.set(ex, 0.06, 0.235);
       head.add(patch);
     }
   }
   if(id === "risu"){
-    const tail = new THREE.Mesh(new THREE.SphereGeometry(0.22, 7, 6), mat(c));
-    tail.scale.set(0.6, 1.3, 0.9); tail.position.set(0, 0.6, -0.4); g.add(tail);
+    /* 身体と同程度の大きな尾を背中側へ立ち上げる */
+    const tail = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 7), mat(c));
+    tail.scale.set(0.55, 1.3, 0.85); tail.position.set(0, 0.78, -0.32); tail.rotation.x = -0.3; tail.castShadow = true; g.add(tail);
+    const tailDark = new THREE.Mesh(new THREE.SphereGeometry(0.17, 7, 6), mat(ANIMAL_EAR_INNER.risu));
+    tailDark.scale.set(0.5, 1.15, 0.65); tailDark.position.set(0, 0.96, -0.36); tailDark.rotation.x = -0.3; g.add(tailDark);
+  }
+  if(id === "fukurou"){
+    for(const ex of [-0.3, 0.3]){
+      const wing = new THREE.Mesh(new THREE.SphereGeometry(0.2, 6, 5), mat(ANIMAL_EAR_INNER.fukurou));
+      wing.scale.set(0.4, 1.0, 0.65); wing.position.set(ex, 0.44, -0.02); wing.castShadow = true; g.add(wing);
+    }
   }
   if(id === "kawauso"){
     const tail = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.55, 6), mat(c));
     tail.rotation.x = 1.3; tail.position.set(0, 0.28, -0.42); g.add(tail);
+    const tailDark = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.22, 5), mat(ANIMAL_EAR_INNER.kawauso));
+    tailDark.rotation.x = 1.3; tailDark.position.set(0, 0.16, -0.6); g.add(tailDark);
   }
   if(id === "kitsune"){
     const tail = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.5, 6), mat(c));
     tail.rotation.x = 1.1; tail.position.set(0, 0.5, -0.42); g.add(tail);
-    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.09, 5, 4), mat(0xffffff));
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.09, 5, 4), mat(0xf0ece2));
     tip.position.set(0, 0.32, -0.56); g.add(tip);
   }
-  head.position.y = 0.95;
+  head.position.y = remodeled ? neckTopY + headR*0.5 : 0.95;
   g.add(head);
   /* ちゅうもんマーク */
   const mark = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.28, 5), new THREE.MeshBasicMaterial({ color:0xffc93c }));
@@ -2364,24 +2509,46 @@ const INTERIOR_CAMERA = {
   targetY: 0.55,
   minDistance: 4.4
 };
-function buildInteriorShell(theme){
+/* キッチンのみ床面積を拡張した専用サイズ。横長の料理工房にするため横幅をさらに1.2倍。
+   左右壁は奥壁より低くし(sideWallH)、真上視点にならないカメラで手前が塞がれないようにする。
+   他の室内(プレイヤー宅・店・住民宅)は今回未変更のためROOM_W/D/Hをそのまま使う。 */
+const KITCHEN_ROOM = { w: ROOM_W * 1.68 * 1.2 * 1.3, d: ROOM_D * 1.68 * 1.3, h: ROOM_H * 1.08, sideWallH: ROOM_H * 1.08 * 0.65 };
+const INTERIOR_CAMERA_KITCHEN = {
+  fov: 52,
+  position: { x:0, y:5.5, z:6.8 },
+  targetScale: 0.28,
+  targetY: 0.9,
+  minDistance: 7.0
+};
+function currentRoomDims(){
+  const cfg = INTERIORS[S.currentArea];
+  return (cfg && cfg.kind === "kitchen") ? KITCHEN_ROOM : { w:ROOM_W, d:ROOM_D, h:ROOM_H };
+}
+function currentInteriorCamera(){
+  const cfg = INTERIORS[S.currentArea];
+  return (cfg && cfg.kind === "kitchen") ? INTERIOR_CAMERA_KITCHEN : INTERIOR_CAMERA;
+}
+function buildInteriorShell(theme, dims){
+  dims = dims || { w:ROOM_W, d:ROOM_D, h:ROOM_H };
+  const rw = dims.w, rd = dims.d, rh = dims.h;
+  const swh = dims.sideWallH || rh; /* 左右壁だけ低くできる(ドールハウス断面のように見せる) */
   const g = new THREE.Group();
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_D), mat(theme.floor));
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(rw, rd), mat(theme.floor));
   floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; g.add(floor);
-  const rug = new THREE.Mesh(new THREE.CircleGeometry(1.3, 16), mat(theme.rug || theme.accent));
+  const rug = new THREE.Mesh(new THREE.CircleGeometry(1.3 * (rw/ROOM_W), 16), mat(theme.rug || theme.accent));
   rug.rotation.x = -Math.PI/2; rug.position.y = 0.01; g.add(rug);
   const wallMat = mat(theme.wall, { side: THREE.DoubleSide });
-  const backWall = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_H), wallMat);
-  backWall.position.set(0, ROOM_H/2, -ROOM_D/2); g.add(backWall);
-  const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_D, ROOM_H), wallMat);
-  leftWall.rotation.y = Math.PI/2; leftWall.position.set(-ROOM_W/2, ROOM_H/2, 0); g.add(leftWall);
-  const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_D, ROOM_H), wallMat);
-  rightWall.rotation.y = -Math.PI/2; rightWall.position.set(ROOM_W/2, ROOM_H/2, 0); g.add(rightWall);
+  const backWall = new THREE.Mesh(new THREE.PlaneGeometry(rw, rh), wallMat);
+  backWall.position.set(0, rh/2, -rd/2); g.add(backWall);
+  const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(rd, swh), wallMat);
+  leftWall.rotation.y = Math.PI/2; leftWall.position.set(-rw/2, swh/2, 0); g.add(leftWall);
+  const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(rd, swh), wallMat);
+  rightWall.rotation.y = -Math.PI/2; rightWall.position.set(rw/2, swh/2, 0); g.add(rightWall);
   const winMat = new THREE.MeshBasicMaterial({ color:0xcdeeff, side:THREE.DoubleSide });
-  const win = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W*0.2, ROOM_H*0.3), winMat);
-  win.position.set(ROOM_W*0.28, ROOM_H*0.62, -ROOM_D/2+0.03); g.add(win);
-  const light = new THREE.PointLight(0xffdca8, 0.7, 11, 2);
-  light.position.set(0, ROOM_H*0.88, 0.4); g.add(light);
+  const win = new THREE.Mesh(new THREE.PlaneGeometry(rw*0.2, rh*0.3), winMat);
+  win.position.set(rw*0.28, rh*0.62, -rd/2+0.03); g.add(win);
+  const light = new THREE.PointLight(0xffdca8, 0.7, 11 * (rw/ROOM_W), 2);
+  light.position.set(0, rh*0.88, 0.4); g.add(light);
   return g;
 }
 function buildFurniturePiece(kind, color){
@@ -2435,20 +2602,162 @@ function buildInteriorContent(interiorId){
     g.add(mirrorGroup);
     g.userData.mirrorPos = new THREE.Vector3(0, 0, -ROOM_D/2 + 0.9);
   } else if(cfg.kind === "kitchen"){
-    g = buildInteriorShell({ floor:0xffe3b8, wall:0xfff0d8, accent:0xff9e5e, rug:0xffd6a8 });
-    const stove = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.85, 0.6), mat(0xcfcfd6));
-    body.position.y = 0.425; stove.add(body);
-    const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.05, 10), mat(0xef5350));
-    plate.position.set(0, 0.88, 0); stove.add(plate);
-    stove.position.set(-1.6, 0, -1.7);
-    g.add(stove);
-    g.userData.stovePos = new THREE.Vector3(-1.6, 0, -0.9);
+    /* 「レストラン厨房＋かわいい料理工房」。5つの作業ゾーン(火/下ごしらえ/洗い場/盛り付け/食材保管)＋
+       主役の大型中央アイランドで構成し、大きな家具の色分けで遠目にも用途が分かるようにする。 */
+    const dims = KITCHEN_ROOM;
+    g = buildInteriorShell({ floor:0xe8c99a, wall:0xfff5e0, accent:0xff9e5e, rug:0xffd6e8 }, dims);
+    const win2 = new THREE.Mesh(new THREE.PlaneGeometry(dims.d*0.14, dims.h*0.26), new THREE.MeshBasicMaterial({ color:0xcdeeff, side:THREE.DoubleSide }));
+    win2.rotation.y = Math.PI/2; win2.position.set(-dims.w/2+0.03, dims.h*0.55, -1.2); g.add(win2);
+    const steamSprites = [];
+
+    /* 市松タイルの床アクセント(中央アイランドまわり) */
+    for(let ix=-1; ix<=1; ix++){
+      for(let iz=-1; iz<=0; iz++){
+        const tile = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.7), mat((ix+iz)%2===0 ? 0xfff0d0 : 0xafd0b3));
+        tile.rotation.x = -Math.PI/2; tile.position.set(ix*1.72, 0.012, -0.7+iz*1.72); g.add(tile);
+      }
+    }
+
+    /* ===== 中央アイランド: 厨房の主役。横長・厚めの天板・下部に棚/引き出し ===== */
+    const island = new THREE.Group();
+    const islandBase = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.6, 1.6), mat(0x6dc98a));
+    islandBase.position.y = 0.3; islandBase.castShadow = true; island.add(islandBase);
+    for(let i=0;i<3;i++){
+      const drawer = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.22, 0.06), mat(0x8fbf8f));
+      drawer.position.set(-1.1+i*1.1, 0.32, 0.83); island.add(drawer);
+      const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.3,5), mat(0x5a5a5a));
+      handle.rotation.z = Math.PI/2; handle.position.set(-1.1+i*1.1, 0.32, 0.87); island.add(handle);
+    }
+    const islandTop = new THREE.Mesh(new THREE.BoxGeometry(3.75, 0.12, 1.75), mat(0xc9a877));
+    islandTop.position.y = 0.66; islandTop.castShadow = true; island.add(islandTop);
+    const cuttingBoard = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.05, 0.46), mat(0xe8cf9e));
+    cuttingBoard.position.set(-1.3, 0.74, 0.3); island.add(cuttingBoard);
+    const doughBall = new THREE.Mesh(new THREE.SphereGeometry(0.19, 8, 6), mat(0xf3e2c0));
+    doughBall.scale.y = 0.65; doughBall.position.set(-1.3, 0.8, 0.3); island.add(doughBall);
+    ["🍅","🥕","🌽"].forEach((emj,i)=>{ const s=makeEmojiSprite(emj,0.26); s.position.set(-0.2+i*0.32, 0.82, -0.4); island.add(s); });
+    const bowl1 = new THREE.Mesh(new THREE.SphereGeometry(0.24, 9, 6, 0, Math.PI*2, 0, Math.PI*0.55), mat(0x5ecbf7));
+    bowl1.position.set(1.2, 0.72, 0.35); bowl1.castShadow = true; island.add(bowl1);
+    const bowl2 = new THREE.Mesh(new THREE.SphereGeometry(0.2, 9, 6, 0, Math.PI*2, 0, Math.PI*0.55), mat(0xffe27a));
+    bowl2.position.set(1.55, 0.7, -0.35); bowl2.castShadow = true; island.add(bowl2);
+    island.position.set(0, 0, -0.5);
+    g.add(island);
+
+    /* ===== 火を使うエリア(奥壁ひだり): コンロ2口＋オーブン＋レンジフード＋湯気 ===== */
+    const fireZone = new THREE.Group();
+    for(const fx of [-0.95, 0.95]){
+      const burner = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.0, 0.75), mat(0xff7a3c));
+      body.position.y = 0.5; body.castShadow = true; burner.add(body);
+      const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.06, 12), mat(0xef5350));
+      plate.position.set(0, 1.03, 0); burner.add(plate);
+      const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.34, 12), mat(fx<0?0xb0bec9:0xff8fb3));
+      pot.position.set(0, 1.23, 0); pot.castShadow = true; burner.add(pot);
+      const potLid = new THREE.Mesh(new THREE.SphereGeometry(0.33, 9, 6, 0, Math.PI*2, 0, Math.PI*0.4), mat(0x90a4ae));
+      potLid.position.set(0, 1.4, 0); burner.add(potLid);
+      burner.position.set(fx, 0, 0);
+      fireZone.add(burner);
+      const steam = makeEmojiSprite("💨", 0.32); steam.position.set(fx, 1.7, 0); fireZone.add(steam); steamSprites.push(steam);
+    }
+    const oven = new THREE.Group();
+    const ovenBody = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.15, 0.85), mat(0xe07a4a));
+    ovenBody.position.y = 0.575; ovenBody.castShadow = true; oven.add(ovenBody);
+    const ovenWindow = new THREE.Mesh(new THREE.CircleGeometry(0.28, 14), new THREE.MeshBasicMaterial({ color:0xffc266, transparent:true, opacity:0.6 }));
+    ovenWindow.position.set(0, 0.6, 0.43); oven.add(ovenWindow);
+    oven.position.set(2.3, 0, 0);
+    fireZone.add(oven);
+    g.userData.ovenGlow = ovenWindow;
+    const hood = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 1.0, 0.4, 4), mat(0xcfcfd6));
+    hood.rotation.y = Math.PI/4; hood.position.set(0, 1.95, 0); fireZone.add(hood);
+    /* 奥壁ぞいに横並び(回転なし: burners±0.95・oven+2.3をworld xへそのまま反映) */
+    fireZone.position.set(-5.8, 0, -dims.d/2+1.4);
+    g.add(fireZone);
+    g.userData.stovePos = new THREE.Vector3(-5.8, 0, -dims.d/2+1.4+1.7);
+    g.userData.steamSprites = steamSprites;
+
+    /* ===== 食材保管エリア(奥壁みぎ): 大型棚＋冷蔵庫＋野菜箱＋果物かご ===== */
+    const storeZone = new THREE.Group();
+    const bigShelf = buildFurniturePiece("shelf", 0xffe0b0);
+    bigShelf.scale.set(1.6, 1.6, 1.5);
+    bigShelf.position.set(-1.4, 0, 0); storeZone.add(bigShelf);
+    ["🥕","🍅","🌽","🥬"].forEach((emj,i)=>{
+      const spr = makeEmojiSprite(emj, 0.36);
+      spr.position.set(-1.4-0.7+i*0.46, 0.6+(i%2)*0.42, 0.5); storeZone.add(spr);
+    });
+    const fridge = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.9, 0.9), mat(0xbde0ff));
+    fridge.position.set(0.9, 0.95, 0); fridge.castShadow = true; storeZone.add(fridge);
+    const fridgeHandle = new THREE.Mesh(new THREE.BoxGeometry(0.05,0.4,0.05), mat(0x6a6a6a));
+    fridgeHandle.position.set(1.35, 1.1, 0.48); storeZone.add(fridgeHandle);
+    const veggieBox = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.5), mat(0xe07a4a));
+    veggieBox.position.set(2.0, 0.2, 0.1); veggieBox.castShadow = true; storeZone.add(veggieBox);
+    const fruitBasket = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.24, 0.32, 10), mat(0xd9a066));
+    fruitBasket.position.set(2.7, 0.16, 0); storeZone.add(fruitBasket);
+    ["🍎","🍊"].forEach((emj,i)=>{ const s=makeEmojiSprite(emj,0.24); s.position.set(2.7-0.1+i*0.2, 0.36, 0); storeZone.add(s); });
+    storeZone.position.set(1.6, 0, -dims.d/2+0.8);
+    g.add(storeZone);
+    const sparkle = makeEmojiSprite("✨", 0.22); sparkle.position.set(bigShelf.position.x+1.6, 1.4, -dims.d/2+0.8+0.5); g.add(sparkle);
+    g.userData.shelfSparkle = sparkle;
+
+    /* ===== 下ごしらえエリア(左壁): 大きな台＋まな板＋包丁＋ボウル＋小麦粉＋卵＋生地 ===== */
+    const prepBench = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.9, 2.3), mat(0xeacb96));
+    prepBench.position.set(-dims.w/2+0.6, 0.45, 0.2); prepBench.castShadow = true; g.add(prepBench);
+    const prepBoard = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.05, 0.9), mat(0xe8cf9e));
+    prepBoard.rotation.y = Math.PI/2; prepBoard.position.set(-dims.w/2+0.62, 0.93, 0.2); g.add(prepBoard);
+    const knife = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.03, 0.35), mat(0xb0bec9));
+    knife.rotation.y = Math.PI/2; knife.position.set(-dims.w/2+0.62, 0.97, -0.3); g.add(knife);
+    ["🥚","🌾"].forEach((emj,i)=>{
+      const spr = makeEmojiSprite(emj, 0.3);
+      spr.position.set(-dims.w/2+0.62, 0.98, 0.7-i*0.4); g.add(spr);
+    });
+
+    /* ===== 洗い場(右壁・奥): 大きめのシンク＋蛇口＋皿＋食器かご＋水滴 ===== */
+    const sink = new THREE.Group();
+    const sinkBody = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.9, 0.8), mat(0x5ecbf7));
+    sinkBody.position.y = 0.45; sinkBody.castShadow = true; sink.add(sinkBody);
+    const basin = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.3, 0.18, 12), mat(0xdfeef4));
+    basin.position.y = 0.92; sink.add(basin);
+    const tap = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.026, 5, 10, Math.PI), mat(0x9aa5ab));
+    tap.rotation.z = Math.PI/2; tap.rotation.y = Math.PI/2; tap.position.set(-0.18, 1.12, 0); sink.add(tap);
+    const dishBasket = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.2, 0.14, 10), mat(0xffd6e8));
+    dishBasket.position.set(0.55, 0.98, 0); sink.add(dishBasket);
+    const waterDrop = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 5), new THREE.MeshBasicMaterial({ color:0x8ecae6, transparent:true, opacity:0.85 }));
+    waterDrop.position.set(-0.18, 1.0, 0); sink.add(waterDrop);
+    g.userData.waterDrop = waterDrop; g.userData.waterDropBaseY = 1.0;
+    sink.rotation.y = -Math.PI/2;
+    sink.position.set(dims.w/2-0.65, 0, -dims.d/2+1.6);
+    g.add(sink);
+
+    /* ===== 盛り付けエリア(右壁・入口ちかく): カウンター＋お皿＋ケーキスタンド＋料理サンプル ===== */
     const dishTable = buildFurniturePiece("table", 0xffe3b8);
-    dishTable.position.set(1.15, 0, -0.45); g.add(dishTable);
-    g.userData.dishTableTop = new THREE.Vector3(1.15, 0.5, -0.45);
-    const cabinet = buildFurniturePiece("shelf", 0xffcc80);
-    cabinet.position.set(2.6, 0, 1.4); cabinet.rotation.y = -Math.PI/2; g.add(cabinet);
+    dishTable.scale.set(1.3, 1.2, 1.3);
+    dishTable.position.set(dims.w/2-0.9, 0, 2.6); g.add(dishTable);
+    g.userData.dishTableTop = new THREE.Vector3(dims.w/2-0.9, 0.58, 2.6);
+    const cakeStand = new THREE.Group();
+    const standBase = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.14, 0.28, 10), mat(0xff8fb3));
+    standBase.position.y = 0.14; cakeStand.add(standBase);
+    const cakeTop = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.14, 10), mat(0xffe27a));
+    cakeTop.position.y = 0.35; cakeStand.add(cakeTop);
+    cakeStand.position.set(dims.w/2-1.5, 0.58, 2.9); g.add(cakeStand);
+    const dishCabinet = buildFurniturePiece("shelf", 0xff8fb3);
+    dishCabinet.scale.set(1.4, 1.55, 1.3);
+    dishCabinet.position.set(dims.w/2-0.6, 0, 1.3); dishCabinet.rotation.y = -Math.PI/2; g.add(dishCabinet);
+    ["🥗","🍰","🧁","🍞"].forEach((emj,i)=>{
+      const spr = makeEmojiSprite(emj, 0.34);
+      spr.position.set(dims.w/2-0.6+0.55, 0.5+i*0.32, 1.3-0.6+i*0.35); g.add(spr);
+    });
+    /* 壁の飾り皿(メニュー風パネル) */
+    const menuPanel = new THREE.Mesh(new THREE.CircleGeometry(0.32, 16), mat(0xfaf6ee));
+    menuPanel.position.set(dims.w/2-0.03, 1.7, 3.4); menuPanel.rotation.y = -Math.PI/2; g.add(menuPanel);
+    const menuIcon = makeEmojiSprite("🍽️", 0.3); menuIcon.position.set(dims.w/2-0.05, 1.7, 3.4); g.add(menuIcon);
+
+    /* 水色・ピンクのアクセントラグ */
+    const accentRug = new THREE.Mesh(new THREE.CircleGeometry(0.85, 14), mat(0xbde0ff));
+    accentRug.rotation.x = -Math.PI/2; accentRug.position.set(dims.w/2-1.8, 0.015, -0.3); g.add(accentRug);
+
+    /* 料理開始地点マーカー: 常時はやわらかい光、近づくと少し明るくなる */
+    const cookMarker = new THREE.Mesh(new THREE.RingGeometry(0.32, 0.46, 20), new THREE.MeshBasicMaterial({ color:0xffe27a, transparent:true, opacity:0.35, side:THREE.DoubleSide }));
+    cookMarker.rotation.x = -Math.PI/2; cookMarker.position.copy(g.userData.stovePos); cookMarker.position.y = 0.02;
+    g.add(cookMarker);
+    g.userData.cookMarker = cookMarker;
   } else if(cfg.kind === "boutique"){
     g = buildInteriorShell({ floor:0xf3d6ff, wall:0xf9ecff, accent:0xb98ae0, rug:0xe8c2ff });
     const rack = new THREE.Group();
@@ -2511,7 +2820,8 @@ function buildInteriorContent(interiorId){
   g.userData.isInterior = true;
   g.userData.kind = cfg.kind;
   g.visible = false;
-  g.userData.entrance = new THREE.Vector3(0, 0, ROOM_D/2 - 0.6);
+  const entranceD = cfg.kind === "kitchen" ? KITCHEN_ROOM.d : ROOM_D;
+  g.userData.entrance = new THREE.Vector3(0, 0, entranceD/2 - 0.7);
   scene.add(g);
   return g;
 }
@@ -2576,6 +2886,30 @@ const InteriorSystem = {
     const g = interiorGroups[interiorId];
     if(!g) return;
     if(g.userData.residentMesh) g.userData.residentMesh.position.y = Math.abs(Math.sin(now/500))*0.04;
+    /* 料理開始地点マーカー: 常時は控えめに、近づいたときだけ少し明るくする */
+    if(g.userData.cookMarker && player){
+      const near = player.position.distanceTo(g.userData.cookMarker.position) < 1.6;
+      const base = 0.28 + Math.sin(now/500)*0.06;
+      g.userData.cookMarker.material.opacity = near ? base + 0.35 : base;
+    }
+    /* キッチンの軽量な常時演出: 湯気・オーブンの弱い光・水滴・棚のきらめき・完成料理のわずかな上下動 */
+    if(g.userData.steamSprites){
+      g.userData.steamSprites.forEach((s,i)=>{
+        const ph = (now/900 + i*1.5) % 3;
+        s.position.y = 1.7 + ph*0.35;
+        s.material.opacity = Math.max(0, 0.55 - ph*0.22);
+      });
+    }
+    if(g.userData.ovenGlow) g.userData.ovenGlow.material.opacity = 0.45 + Math.sin(now/650)*0.15;
+    if(g.userData.waterDrop){
+      const ph = (now/1400) % 1;
+      g.userData.waterDrop.position.y = g.userData.waterDropBaseY - ph*0.55;
+      g.userData.waterDrop.material.opacity = ph < 0.85 ? 0.85 : 0;
+    }
+    if(g.userData.shelfSparkle) g.userData.shelfSparkle.material.opacity = 0.3 + Math.max(0, Math.sin(now/700))*0.5;
+    if(cookingDisplay && g.userData.dishTableTop){
+      cookingDisplay.position.y = g.userData.dishTableTop.y + 0.08 + Math.sin(now/450)*0.025;
+    }
   }
 };
 /* 仲良しイベント：移住済み(friendship>=5)かつ個別依頼クリア後、自宅への初回入室で一度だけ発生 */
@@ -2978,8 +3312,9 @@ function tick(now){
         player.position.y = onBridge ? 0.72 : terrainHeight(nx, nz);
         }
       } else {
-        /* 室内の当たり判定：小さな部屋の範囲でクランプ（村の判定は使わない） */
-        const mx = ROOM_W/2 - 0.5, mz = ROOM_D/2 - 0.4;
+        /* 室内の当たり判定：部屋の範囲でクランプ（キッチンは拡張後の実サイズを使う） */
+        const rd = currentRoomDims();
+        const mx = rd.w/2 - 0.5, mz = rd.d/2 - 0.4;
         nx = Math.max(-mx, Math.min(mx, nx));
         nz = Math.max(-mz, Math.min(mz, nz));
         player.position.x = nx; player.position.z = nz;
@@ -2992,6 +3327,20 @@ function tick(now){
       player.rotation.y += dr * Math.min(1, dt*12);
       walkPhase += dt * 11 * mvLen;
       player.position.y += Math.abs(Math.sin(walkPhase)) * 0.07;
+      /* 歩行アニメ: 左右の腕・脚を交互に振り、酔いにくい小さめの振幅にする */
+      if(player.userData.armPivots){
+        const swing = Math.sin(walkPhase) * 0.5;
+        player.userData.armPivots[0].rotation.x = swing;
+        player.userData.armPivots[1].rotation.x = -swing;
+      }
+      if(player.userData.legPivots){
+        const legSwing = Math.sin(walkPhase) * 0.45;
+        player.userData.legPivots[0].rotation.x = -legSwing;
+        player.userData.legPivots[1].rotation.x = legSwing;
+      }
+      if(player.userData.skirtOrPants) player.userData.skirtOrPants.rotation.z = Math.sin(walkPhase*0.5)*0.05 - dr*0.15;
+      if(player.userData.cape) player.userData.cape.rotation.x = 0.18 + Math.sin(walkPhase*0.5)*0.05 - dr*0.1;
+      if(player.userData.head) player.userData.head.position.y = player.userData.idleBaseY;
       stepTimer -= dt;
       if(stepTimer <= 0){ sfx.step(); stepTimer = 0.28; }
       /* FXトレイル */
@@ -3005,6 +3354,10 @@ function tick(now){
       }
     } else {
       walkPhase = 0;
+      /* 待機中のごく小さな上下動。player.position.yには触れず頭の局所オフセットのみで表現する */
+      if(player.userData.armPivots){ player.userData.armPivots[0].rotation.x = 0; player.userData.armPivots[1].rotation.x = 0; }
+      if(player.userData.legPivots){ player.userData.legPivots[0].rotation.x = 0; player.userData.legPivots[1].rotation.x = 0; }
+      if(player.userData.head) player.userData.head.position.y = player.userData.idleBaseY + Math.sin(now/900) * 0.012;
     }
     /* にじいろのふく */
     if(player.userData.rainbowMat){
@@ -3073,28 +3426,35 @@ function tick(now){
     if(u.mark.visible){ u.mark.position.y = 1.75 + Math.sin(now/300)*0.09; u.markDot.position.y = 1.5 + Math.sin(now/300)*0.09; }
   });
 
-  /* --- カメラ（室内は開いた上方から部屋全体を見る共通ドールハウス視点） --- */
+  /* --- カメラ（室内は室内ごとの固定斜め俯瞰。屋外の旋回ロジックは使わない） --- */
   if(player){
     const indoors = S.currentArea !== "village" && !REGION_CONFIG[S.currentArea];
+    const IC = indoors ? currentInteriorCamera() : null;
     if(lastIndoorCameraMode !== indoors){
-      camera.fov = indoors ? INTERIOR_CAMERA.fov : 60;
+      camera.fov = indoors ? IC.fov : 60;
       camera.updateProjectionMatrix();
+      if(indoors){
+        /* 屋外→室内の切替直後に直線補間で壁を突き抜けて見えないよう、目的地へ即座にスナップする。
+           以後は通常の小さな追従のみ（yaw回転なし・室内ごとに固定）。 */
+        camTarget.set(player.position.x * IC.targetScale, IC.targetY, player.position.z * IC.targetScale);
+        camera.position.set(IC.position.x, IC.position.y, IC.position.z);
+      }
       lastIndoorCameraMode = indoors;
     }
     if(indoors){
       camTarget.lerp(new THREE.Vector3(
-        player.position.x * INTERIOR_CAMERA.targetScale,
-        INTERIOR_CAMERA.targetY,
-        player.position.z * INTERIOR_CAMERA.targetScale
+        player.position.x * IC.targetScale,
+        IC.targetY,
+        player.position.z * IC.targetScale
       ), Math.min(1, dt*5));
       const camPos = new THREE.Vector3(
-        INTERIOR_CAMERA.position.x,
-        INTERIOR_CAMERA.position.y,
-        INTERIOR_CAMERA.position.z
+        IC.position.x,
+        IC.position.y,
+        IC.position.z
       );
       const fromTarget = camPos.clone().sub(camTarget);
-      if(fromTarget.length() < INTERIOR_CAMERA.minDistance){
-        camPos.copy(camTarget).add(fromTarget.normalize().multiplyScalar(INTERIOR_CAMERA.minDistance));
+      if(fromTarget.length() < IC.minDistance){
+        camPos.copy(camTarget).add(fromTarget.normalize().multiplyScalar(IC.minDistance));
       }
       camera.position.lerp(camPos, Math.min(1, dt*4));
     } else {
