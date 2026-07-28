@@ -263,8 +263,16 @@ Phase 1要件（v1完全互換）は料理の2工程化を含んでおり、実�
 - 書換え可能な実ブラウザ環境で、schema 6 fixture の投入・実イベント起点の作物/料理/採集物/魚/住民登録・再読込後の永続性・冪等性を確認した（前回セッションで未確定だった項目）。
 - 破損・型不正セーブへの防御として、`crowns`・`totalCrowns`・`level`・`inv` 所持数・`mapPieces`・`pity`・`treasureCount`・`mIdx`・`mProg` および `progression` 配下の経済・進行系数値を `safeNumber()` で型検証・範囲補正する数値正規化を実施した。文字列化された数値・`null`・オブジェクト・負数・`NaN`/`Infinity` を安全な既定値または範囲内へ補正し、起動不能や報酬加算の文字列結合を防ぐことを実ブラウザで確認した。
 
+## 公開切替
+
+- `src/games/MuraGame.jsx` の iframe `src` を `/games/mura_v1.html` から `/games/mura_v3.html` へ切替した。`mura_v1.html`／`mura_v2.html` は削除せず保持し、切り戻し可能な状態を維持する。
+- `src/App.jsx` のルーティング（`/mura`、エイリアス `/doubutsu-mura`）は無変更で、対象ファイルのみが切り替わる。
+- `src/seo/gameMeta.js` の `/mura` エントリは、v3で追加された着せ替え・住民の移住・森/川/海の探索・図鑑/実績・むらレベルを反映するため `intro`／`howto` を必要最小限で更新した。`age`・FAQ・カテゴリは既存のまま（内容に誤りがないため）。
+- `src/pages/TopPage.jsx` のカード（アイコン・サムネイルSVG・`isNew`・一覧の説明文）は変更していない。既存の説明文はv3でも引き続き正しいため、大規模な改修は行っていない。
+- `public/sitemap.xml`・`prerender.mjs` はルートベースで `/mura` を扱っており、参照ファイルの切替による変更は不要である。
+- `scripts/capture-thumbs.mjs` は本番URLに対して手動実行するサムネイル生成専用スクリプト（ビルドパイプライン外）で、`'/mura'`/`'/doubutsu-mura'` のマッピングは現状 `mura_v1.html` のまま。本番デプロイ後にv3のサムネイルを取り直す場合は、このマッピングを `mura_v3.html` に更新して再実行する必要がある（今回の切替では未実施・残課題）。
+
 ## 15. 変更していない範囲
 
-`src/games/MuraGame.jsx`、`src/seo/gameMeta.js`、`src/pages/TopPage.jsx`、
-`public/games/mura_v1.html`、`public/games/mura_v2.html` は変更していない。
-森・川・海岸、図鑑・実績、公開ルート切替もPhase 3の対象外である。
+`src/pages/TopPage.jsx`、`public/games/mura_v1.html`、`public/games/mura_v2.html` は変更していない。
+森・川・海岸、図鑑・実績、公開ルート切替もPhase 3の対象外である（Phase 4・Phase 5・公開切替で順次対応した）。

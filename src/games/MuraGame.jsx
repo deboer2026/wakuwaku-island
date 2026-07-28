@@ -17,7 +17,7 @@ export default function MuraGame() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/mura_v1.html"
+          src="/games/mura_v3.html"
           title="どうぶつのむら"
           allow="autoplay; fullscreen"
           allowFullScreen
