@@ -17,7 +17,7 @@ export default function AnimalSoccer() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/soccer_v7.html"
+          src="/games/soccer_v8.html"
           title="どうぶつサッカー"
           allow="autoplay; fullscreen"
           allowFullScreen
