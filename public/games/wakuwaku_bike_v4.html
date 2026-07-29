@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>わくわくバイク アドベンチャー</title>
+<script src="/games/safe_area.js">
+</script>
+<script src="/games/wakuwaku_bgm.js">
+</script>
+<style>
+*{box-sizing:border-box;touch-action:none}html,body{margin:0;overflow:hidden;background:#14274e;font-family:system-ui,"Yu Gothic",sans-serif}#game{position:fixed;inset:0;width:100%;height:100%}#hud{position:fixed;inset:calc(var(--sat,0px) + 8px) 10px auto;display:flex;justify-content:space-between;gap:6px;pointer-events:none}.pill{background:#fffc;padding:5px 10px;border-radius:999px;font-weight:800;color:#37405b;font-size:13px}.bar{width:110px;height:13px;border:2px solid #fff;border-radius:10px;background:#64748b;overflow:hidden}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd54f,#ff6ba4)}#ui{position:fixed;inset:0;pointer-events:none}button{font:inherit;font-weight:900;border:0;border-radius:18px;padding:12px 20px;background:#ff6ba4;color:white;box-shadow:0 4px #b93f70;cursor:pointer}button:active{transform:translateY(3px);box-shadow:0 1px #b93f70}.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:calc(var(--sat,0px) + 12px) 18px calc(var(--sab,0px) + 12px);background:linear-gradient(#263b75eF,#8050a8eF);color:white;text-align:center}.hide{display:none!important}h1{margin:0;color:#ffe05d;text-shadow:0 3px #b7662e}.cards{display:flex;gap:8px;max-width:560px;flex-wrap:wrap;justify-content:center}.card{width:118px;padding:10px;background:#fffc;border-radius:16px;color:#39415f;box-shadow:0 4px #b0b8d0}.card.sel{outline:4px solid #ffd54f}.icon{height:45px}.course{width:min(420px,94vw);background:#fff;color:#334;border-radius:15px;padding:12px;text-align:left}.course.lock{opacity:.55}.controls{position:fixed;inset:auto 14px calc(var(--sab,0px) + 14px);display:flex;justify-content:space-between;pointer-events:none}.controls div{display:flex;gap:10px}.controls button{pointer-events:auto;width:76px;height:62px;padding:4px;background:#385b91;box-shadow:0 4px #20375c}.controls .jump{background:#ffb52e;box-shadow:0 4px #c17811;color:#533400}.small{font-size:13px}.progress{height:10px;border-radius:8px;background:#ffffff66;overflow:hidden}.progress i{display:block;height:100%;background:#7ee58b;width:0}@media(max-height:500px){.screen{gap:6px}.card{width:100px;padding:5px}.icon{height:30px}h1{font-size:22px}}
+</style>
+<style>#landscapeHint{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;background:#1d315beF;color:#fff;text-align:center;font-weight:900;font-size:20px}#landscapeHint.show{display:flex}#landscapeHint b{color:#ffe05d;font-size:46px}</style>
+</head>
+<body>
+<canvas id="game">
+</canvas>
+<style>#pauseBtn{pointer-events:auto;padding:5px 10px;border-radius:999px;font-size:13px;background:#385b91;box-shadow:0 3px #20375c}</style>
+<div id="hud" class="hide">
+<span class="pill" id="time">0.0秒</span>
+<span class="pill" id="stars">★ 0/0</span>
+<span class="pill">
+<span class="bar">
+<i id="boost">
+</i>
+</span>
+</span>
+<span class="pill" id="land">はしろう！</span>
+<button id="pauseBtn" type="button" aria-label="ポーズ">Ⅱ</button>
+</div>
+<div class="controls hide" id="controls">
+<div>
+<button data-k="left">◀<br>
+<small>後ろ</small>
+</button>
+<button data-k="right">▶<br>
+<small>前へ</small>
+</button>
+</div>
+<button class="jump" data-k="jump">▲<br>
+<small>ジャンプ</small>
+</button>
+</div>
+<div id="landscapeHint" aria-live="polite"><b>↻</b>よこむきにしてね<br><small>よこむきの がめんで あそべるよ</small></div>
+<main id="title" class="screen">
+<div class="icon">🏍️</div>
+<h1>わくわくバイク<br>アドベンチャー</h1>
+<p>ジャンプと ちゃくちで コースを ぼうけん！</p>
+<button id="start">スタート</button>
+<button id="how">あそびかた</button>
+<button id="back">もどる</button>
+</main>
+<main id="select" class="screen hide">
+<h1>ライダーを えらぼう</h1>
+<div id="chars" class="cards">
+</div>
+<button id="toCourses">コースを えらぶ</button>
+</main>
+<main id="courses" class="screen hide">
+<h1>コースを えらぼう</h1>
+<div id="courseList">
+</div>
+<button id="courseBack">もどる</button>
+</main>
+<main id="result" class="screen hide">
+<div class="icon">✨</div>
+<h1 id="resultTitle">ゴール！</h1>
+<div id="resultText">
+</div>
+<button id="next">つぎへ</button>
+<button id="again">もういちど</button>
+<button id="resultCourses">コース選択へ</button>
+</main>
+<main id="pause" class="screen hide">
+<h1>ポーズ</h1>
+<button id="resume">つづける</button>
+<button id="restart">はじめから</button>
+<button id="pauseCourses">コース選択へ</button>
+<button id="pauseTitle">タイトルへ</button>
+</main>
+<script>
+(()=>{'use strict';const cv=document.querySelector('#game'),x=cv.getContext('2d');let W,H,dpr,last=0,raf=0,mode='title',course=0,chosen=0,paused=false;const KEY='wakuwaku_bike_v4';
+const SAFE_LS={getItem(k){try{return localStorage.getItem(k)}catch(e){return null}},setItem(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const def={char:0,unlocked:1,stars:[0,0,0],best:[0,0,0],tutorial:0,bgm:1};
+const whole=(v,min,max,fallback)=>typeof v==='number'&&Number.isFinite(v)?Math.max(min,Math.min(max,Math.trunc(v))):fallback;
+const cleanSave=(raw)=>{const d=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};return {char:whole(d.char,0,3,def.char),unlocked:whole(d.unlocked,1,3,def.unlocked),stars:Array.from({length:3},(_,i)=>Array.isArray(d.stars)?whole(d.stars[i],0,3,0):0),best:Array.from({length:3},(_,i)=>Array.isArray(d.best)&&typeof d.best[i]==='number'&&Number.isFinite(d.best[i])?Math.max(0,d.best[i]):0),tutorial:whole(d.tutorial,0,1,0),bgm:whole(d.bgm,0,1,1)}};
+let save=(()=>{try{return cleanSave(JSON.parse(SAFE_LS.getItem(KEY)||'{}'))}catch(e){return {...def}}})();
+const persist=()=>SAFE_LS.setItem(KEY,JSON.stringify(save));
+persist();
+const chars=[['うさぎ','#fff','#ff76aa','ジャンプが とくい',1.16,1,1],['くま','#c99562','#4f91df','ちゃくちが あんてい',1,1,.85],['きつね','#f29a52','#ff6b50','かそくが はやい',1,1.15,1],['ねこ','#c8c9d6','#8d6ce8','くうちゅうで くるり',1,1,1.45]];
+const courses=[{n:'はらっぱロード',c:'#8bd56a',sky:'#8ed9ff',len:2100,need:0,stars:[340,700,1190,1660],ramps:[560,1320,1860],pits:[900]},{n:'もりのアップダウン',c:'#5aad63',sky:'#9ed6b8',len:2700,need:1,stars:[380,810,1280,1740,2280],ramps:[420,1010,1520,2140],pits:[680,1900]},{n:'にじいろスカイロード',c:'#d7b9ff',sky:'#7db9ff',len:3300,need:2,stars:[500,940,1420,1880,2420,2910],ramps:[620,1180,1770,2520,3060],pits:[800,1500,2250]}];
+let p,stars,cp,elapsed,finishStars,landings,tricks,boost,keys={};const landscapeHint=document.querySelector('#landscapeHint');function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';x.setTransform(dpr,0,0,dpr,0,0);landscapeHint.classList.toggle('show',W<H&&W<500)}addEventListener('resize',resize);resize();
+function show(id){document.querySelectorAll('.screen').forEach(e=>e.classList.add('hide'));if(id)document.querySelector(id).classList.remove('hide')}function drawAnimal(px,py,a){x.save();x.translate(px,py);x.rotate(a);const c=chars[chosen];x.fillStyle=c[1];x.beginPath();x.arc(0,-20,15,0,7);x.fill();x.fillStyle=c[2];x.fillRect(-25,-3,50,10);x.fillStyle='#27324d';x.beginPath();x.arc(-21,9,10,0,7);x.arc(21,9,10,0,7);x.fill();x.fillStyle=c[1];x.fillRect(-10,-5,20,15);x.strokeStyle='#20283d';x.lineWidth=3;x.beginPath();x.moveTo(-8,-27);x.lineTo(-15,-45);x.moveTo(8,-27);x.lineTo(15,-45);x.stroke();x.fillStyle='#20283d';x.beginPath();x.arc(-5,-21,2,0,7);x.arc(5,-21,2,0,7);x.fill();x.restore()}
+function ground(wx){const C=courses[course];let y=H*.68;for(const r of C.ramps){const q=wx-r;if(q>-90&&q<90)y-=Math.sin((q+90)/180*Math.PI)*90}
+for(const pit of C.pits){if(Math.abs(wx-pit)<65)y=H+220}
+return y}
+function begin(i){course=i;
+const C=courses[i];p={wx:40,y:ground(40)-28,vy:0,rot:0,vr:0,on:true,lastGround:ground(40),air:0};stars=C.stars.map(v=>({v,taken:false}));cp=40;elapsed=0;finishStars=0;landings=0;tricks=0;boost=0;mode='play';
+paused=false;
+show(null);
+document.querySelector('#hud').classList.remove('hide');
+document.querySelector('#controls').classList.remove('hide');if(save.bgm&&window.WakuwakuBGM){try{window.__bikeBgm=window.__bikeBgm||new WakuwakuBGM('racing');window.__bikeBgm.play?.()}catch(e){}}}
+function end(){mode='result';
+document.querySelector('#hud').classList.add('hide');
+document.querySelector('#controls').classList.add('hide');
+const C=courses[course],rate=1+(finishStars>=Math.ceil(C.stars.length*.55)?1:0)+(elapsed<Math.max(45,C.len/32)?1:0);save.stars[course]=Math.max(save.stars[course],rate);if(!save.best[course]||elapsed<save.best[course])save.best[course]=elapsed;if(course+2>save.unlocked)save.unlocked=Math.min(3,course+2);persist();
+document.querySelector('#resultTitle').textContent=`ゴール！ ${'★'.repeat(rate)}`;document.querySelector('#resultText').innerHTML=`タイム ${elapsed.toFixed(1)}秒<br>ほし ${finishStars}/${C.stars.length}<br>きれいな着地 ${landings}回 ・ くるり ${tricks}回`;document.querySelector('#next').classList.toggle('hide',course>=2);show('#result')}
+function update(dt){if(mode!=='play'||paused)return;dt=Math.min(dt,.033);
+elapsed+=dt;
+const C=courses[course],acc=180+(boost>0?110:0);
+if(keys.right)p.wx+=acc*dt;if(keys.left)p.wx-=80*dt;p.wx=Math.max(0,p.wx);if(keys.jump&&p.on){p.vy=-420;p.on=false;p.air=0;keys.jump=false}if(!p.on){p.vy+=900*dt;p.air+=dt;const tilt=(keys.right?1:0)-(keys.left?1:0);p.vr+=tilt*(chars[chosen][0]==='ねこ'?5:3)*dt;p.rot+=p.vr*dt;p.vr*=.985}
+const g=ground(p.wx);
+if(g>H&&p.on)p.on=false;
+p.y+=p.vy*dt;if(p.y>=g-28){if(!p.on&&p.vy>120){const a=Math.abs(p.rot%(Math.PI*2));const good=Math.min(a,Math.abs(a-Math.PI*2))<.65;if(good){landings++;boost=Math.min(100,boost+24);if(p.air>1.1)tricks++;document.querySelector('#land').textContent=p.air>1.1?'スーパー着地！': 'ナイス！'}else{document.querySelector('#land').textContent='あぶない！';p.wx=Math.max(cp,p.wx-40)}}p.y=g-28;p.vy=0;p.on=true;p.rot*=.35;p.vr*=.2}if(p.wx>cp+350)cp=p.wx;for(const s of stars)if(!s.taken&&Math.abs(p.wx-s.v)<35&&Math.abs(p.y-ground(s.v))<150){s.taken=true;finishStars++;boost=Math.min(100,boost+12)}if(boost>=100){boost=0;p.wx+=80;document.querySelector('#land').textContent='ブースト！'}if(p.wx> C.len){end()}if(p.y>H+150){p.wx=cp;p.y=ground(cp)-28;p.vy=0;p.on=true;document.querySelector('#land').textContent='チェックポイントへ'}document.querySelector('#time').textContent=elapsed.toFixed(1)+'秒';document.querySelector('#stars').textContent='★ '+finishStars+'/'+C.stars.length;document.querySelector('#boost').style.width=boost+'%'}
+function render(){x.clearRect(0,0,W,H);
+const C=courses[course]||courses[0];x.fillStyle=C.sky;x.fillRect(0,0,W,H);for(let i=0;i<8;i++){x.fillStyle='#fff9';x.beginPath();x.ellipse((i*170-(p?.wx||0)*.1)% (W+180)-70,70+(i%3)*36,70,20,0,0,7);x.fill()}if(mode==='play'){const cam=Math.max(0,p.wx-W*.3);x.fillStyle=C.c;x.beginPath();x.moveTo(0,H);for(let sx=0;sx<=W;sx+=10)x.lineTo(sx,ground(cam+sx));x.lineTo(W,H);x.fill();for(const r of C.ramps){const sx=r-cam;if(sx>-100&&sx<W+100){x.fillStyle='#ffba38';x.beginPath();x.moveTo(sx-35,ground(r-35));x.lineTo(sx+35,ground(r+35));x.lineTo(sx+35,ground(r+35)+15);x.lineTo(sx-35,ground(r-35)+15);x.fill()}}for(const s of stars)if(!s.taken){const sx=s.v-cam,sy=ground(s.v)-90;x.fillStyle='#ffe55b';x.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?6:13;i?x.lineTo(sx+Math.cos(a)*rr,sy+Math.sin(a)*rr):x.moveTo(sx+Math.cos(a)*rr,sy+Math.sin(a)*rr)}x.fill()}const gx=C.len-cam;if(gx>-60&&gx<W+60){x.strokeStyle='#4a5268';x.lineWidth=5;x.beginPath();x.moveTo(gx,ground(C.len));x.lineTo(gx,ground(C.len)-100);x.stroke();x.fillStyle='#fff';for(let a=0;a<4;a++)for(let b=0;b<3;b++){x.fillStyle=(a+b)%2?'#2d354d':'#fff';x.fillRect(gx+a*10,ground(C.len)-100+b*10,10,10)}}drawAnimal(p.wx-cam,p.y,p.rot)}else{drawAnimal(W*.5,H*.65,0)}raf=requestAnimationFrame(tick)}function tick(t){const dt=last?(t-last)/1000:0;last=t;update(dt);render()}raf=requestAnimationFrame(tick);
+function charsUI(){const e=document.querySelector('#chars');e.innerHTML='';chars.forEach((c,i)=>{const b=document.createElement('button');b.className='card '+(i===chosen?'sel':'');b.innerHTML=`<div class="icon">${['🐰','🐻','🦊','🐱'][i]} 🏍️</div>${c[0]}<small>${c[3]}</small>`;b.onclick=()=>{chosen=i;save.char=i;persist();charsUI()};e.append(b)})}function coursesUI(){const e=document.querySelector('#courseList');e.innerHTML='';courses.forEach((c,i)=>{const b=document.createElement('button');b.className='course '+(i+1>save.unlocked?'lock':'');b.disabled=i+1>save.unlocked;b.innerHTML=`${i+1}. ${c.n}<br>
+<small>${'★'.repeat(save.stars[i])||'☆☆☆'}　ベスト ${save.best[i]?save.best[i].toFixed(1)+'秒':'--'}</small>`;b.onclick=()=>begin(i);e.append(b)})}chosen=save.char|0;charsUI();coursesUI();document.querySelector('#start').onclick=()=>show('#select');document.querySelector('#toCourses').onclick=()=>{coursesUI();show('#courses')};document.querySelector('#courseBack').onclick=()=>show('#select');document.querySelector('#again').onclick=()=>begin(course);document.querySelector('#next').onclick=()=>{coursesUI();show('#courses')};document.querySelector('#resultCourses').onclick=()=>{coursesUI();show('#courses')};document.querySelector('#back').onclick=()=>parent.postMessage({type:'goBack'},'*');document.querySelector('#how').onclick=()=>alert('右で前へ、左で後ろへ。▲でジャンプ。空中で左右をおすと くるり！');document.querySelector('#resume').onclick=()=>{paused=false;
+show(null)};document.querySelector('#restart').onclick=()=>begin(course);
+const leavePlay=(screen)=>{mode='title';paused=false;document.querySelector('#hud').classList.add('hide');document.querySelector('#controls').classList.add('hide');show(screen)};
+document.querySelector('#pauseCourses').onclick=()=>{coursesUI();leavePlay('#courses')};
+document.querySelector('#pauseTitle').onclick=()=>leavePlay('#title');
+document.querySelector('#pauseBtn').onclick=()=>{if(mode==='play'){paused=!paused;show(paused?'#pause':null)}};
+addEventListener('keydown',e=>{if(e.key==='Escape'&&mode==='play'){paused=!paused;show(paused?'#pause':null)}if(e.key==='r')begin(course);keys[e.key==='ArrowLeft'||e.key==='a'?'left':e.key==='ArrowRight'||e.key==='d'?'right':e.code==='Space'?'jump':'']=e.type==='keydown'});addEventListener('keyup',e=>{const k=e.key==='ArrowLeft'||e.key==='a'?'left':e.key==='ArrowRight'||e.key==='d'?'right':e.code==='Space'?'jump':'';if(k)keys[k]=false});
+document.querySelectorAll('[data-k]').forEach(b=>{const press=e=>{e.preventDefault();keys[b.dataset.k]=true};const release=e=>{e.preventDefault();keys[b.dataset.k]=false};['pointerdown','mousedown','touchstart'].forEach(ev=>b.addEventListener(ev,press,{passive:false}));['pointerup','pointercancel','pointerleave','mouseup','mouseleave','touchend','touchcancel'].forEach(ev=>b.addEventListener(ev,release,{passive:false}))});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='play'){paused=true;show('#pause')}});})();
+</script>
+</body>
+</html>
