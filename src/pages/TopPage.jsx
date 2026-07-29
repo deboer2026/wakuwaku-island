@@ -82,19 +82,18 @@ const GAME_SVGS = {
 
   g_oukan: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0" y="0" width="100" height="85" rx="12" fill="#1d372b"/>
-      <circle cx="20" cy="15" r="1.5" fill="#f6dd8b" opacity=".9"/>
-      <circle cx="80" cy="13" r="1.3" fill="#f6dd8b" opacity=".8"/>
-      <circle cx="70" cy="24" r="1" fill="#fff4cc" opacity=".7"/>
-      <circle cx="30" cy="25" r="1" fill="#fff4cc" opacity=".7"/>
-      <path d="M22 62 L22 34 L34 46 L50 26 L66 46 L78 34 L78 62 Z" fill="#f3d57a"/>
-      <path d="M22 62 L22 34 L34 46 L50 26 L66 46 L78 34 L78 62 Z" fill="none" stroke="#a5761f" strokeWidth="1.4"/>
-      <rect x="20" y="62" width="60" height="9" rx="3" fill="#e0b64a"/>
-      <circle cx="50" cy="24" r="3.4" fill="#ff8fae"/>
-      <circle cx="30" cy="49" r="3" fill="#7fd3ff"/>
-      <circle cx="70" cy="49" r="3" fill="#8be08f"/>
-      <rect x="46" y="66" width="8" height="3" rx="1.5" fill="#fff4cc"/>
-      <path d="M50 6 L51.8 12 L58 12 L53 15.6 L54.8 21.6 L50 18 L45.2 21.6 L47 15.6 L42 12 L48.2 12 Z" fill="#fff4cc" opacity=".85"/>
+      <rect width="100" height="85" rx="12" fill="#234237"/>
+      <path d="M0 63 Q24 50 50 61 Q76 72 100 54 V85 H0Z" fill="#588b4c"/>
+      <path d="M0 70 Q24 57 50 69 Q76 80 100 62" fill="none" stroke="#a8d76c" strokeWidth="3" strokeDasharray="5 4"/>
+      <path d="M72 17 L90 17 L90 62 L72 62Z" fill="#7f9fc5" stroke="#d6ebff" strokeWidth="2"/>
+      <path d="M70 18 Q81 3 92 18" fill="none" stroke="#d6ebff" strokeWidth="3"/>
+      <rect x="78" y="43" width="7" height="19" rx="2" fill="#3e5d78"/>
+      <g transform="translate(34 56)">
+        <circle cy="-13" r="9" fill="#ffd6aa"/><path d="M-8 -16 L-11 -26 L-3 -19 M8 -16 L11 -26 L3 -19" fill="#ffd6aa"/>
+        <rect x="-9" y="-3" width="18" height="17" rx="7" fill="#f08bb8"/><path d="M-7 -6 L-4 -12 L0 -7 L4 -12 L7 -6Z" fill="#f5cf4e" stroke="#a5761f" strokeWidth="1"/>
+      </g>
+      <g transform="translate(55 50)"><circle cy="-8" r="7" fill="#96cdf2"/><rect x="-7" y="-1" width="14" height="14" rx="6" fill="#4e7dbd"/><circle cx="-2.5" cy="-9" r="1.2" fill="#28334e"/><circle cx="2.5" cy="-9" r="1.2" fill="#28334e"/></g>
+      <rect x="7" y="7" width="27" height="10" rx="4" fill="#173028" opacity=".8"/><circle cx="14" cy="12" r="2" fill="#f5cf4e"/><rect x="19" y="10" width="10" height="3" rx="1.5" fill="#fff4cc"/>
     </svg>
   ),
 
@@ -277,6 +276,9 @@ const GAME_SVGS = {
         <rect x="-8" y="-4" width="16" height="4" rx="2" fill="#fff" opacity=".55"/>
         <circle cx="5" cy="1" r="1.6" fill="#5a3a2a"/><circle cx="9" cy="1" r="1.6" fill="#5a3a2a"/>
       </g>
+      <circle cx="70" cy="21" r="6" fill="#ffcb70" stroke="#d98535" strokeWidth="1.2"/>
+      <circle cx="68" cy="20" r="1" fill="#6d3f2a"/><circle cx="72" cy="23" r="1" fill="#6d3f2a"/>
+      <rect x="7" y="7" width="24" height="10" rx="4" fill="#a64d89" opacity=".9"/><circle cx="14" cy="12" r="2" fill="#fff"/><rect x="19" y="10" width="8" height="3" rx="1.5" fill="#ffe07a"/>
       <g transform="translate(38 68)">
         <ellipse cx="-5" cy="-16" rx="2.6" ry="7.5" fill="#fff" transform="rotate(-9 -5 -16)"/>
         <ellipse cx="5" cy="-16" rx="2.6" ry="7.5" fill="#fff" transform="rotate(9 5 -16)"/>
@@ -287,7 +289,6 @@ const GAME_SVGS = {
         <circle cx="0" cy="0" r="1" fill="#ff8fb5"/>
         <path d="M-4.5 -10 L-4.5 -13.5 L-2.2 -11 L0 -14 L2.2 -11 L4.5 -13.5 L4.5 -10 Z" fill="#ffd34d"/>
       </g>
-      <text x="14" y="20" fontSize="11">🍬</text><text x="76" y="16" fontSize="10">🍭</text>
     </svg>
   ),
 
@@ -344,10 +345,10 @@ const GAME_SVGS = {
         <rect x="8" y="58" width="44" height="3" rx="1.5"/>
       </g>
       <rect x="42" y="42" width="12" height="18" rx="3" fill="url(#mmGate)" opacity="0.9"/>
-      <text x="48" y="55" fontSize="9" textAnchor="middle" fill="#fff">✦</text>
+      <path d="M45 57 V49 Q48 45 51 49 V57" fill="none" stroke="#fff" strokeWidth="1.5"/>
       <rect x="16" y="68" width="10" height="10" rx="2" transform="rotate(45 21 73)" fill="url(#mmGem)"/>
-      <text x="76" y="78" fontSize="14" textAnchor="middle">🐱</text>
-      <text x="90" y="46" fontSize="12" textAnchor="middle">🏁</text>
+      <g transform="translate(76 72)"><circle r="7" fill="#f3c48b"/><path d="M-6 -4 L-9 -12 L-2 -7 M6 -4 L9 -12 L2 -7" fill="#f3c48b"/><circle cx="-2.5" cy="-1" r="1" fill="#2e2450"/><circle cx="2.5" cy="-1" r="1" fill="#2e2450"/><rect x="-7" y="5" width="14" height="6" rx="3" fill="#e97eb2"/></g>
+      <circle cx="90" cy="46" r="6" fill="#74d6cf" stroke="#3a9f9d" strokeWidth="1"/><circle cx="88" cy="45" r="1" fill="#26344d"/><circle cx="92" cy="45" r="1" fill="#26344d"/>
     </svg>
   ),
   g_houki: (
@@ -428,37 +429,26 @@ const GAME_SVGS = {
   ),
   g5: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="10" cy="10" r="1.8" fill="#FFD700" opacity=".6"/>
-      <circle cx="88" cy="15" r="1.5" fill="white" opacity=".5"/>
-      <rect x="60" y="38" width="32" height="34" rx="5" fill="#FF9800" stroke="#E65100" strokeWidth="2"/>
-      <rect x="62" y="40" width="14" height="7" rx="2" fill="#FFCC02" opacity=".4"/>
-      <text x="76" y="64" textAnchor="middle" fontSize="21" fontWeight="bold" fill="white">3</text>
-      <rect x="8" y="38" width="32" height="34" rx="5" fill="#66BB6A" stroke="#2E7D32" strokeWidth="2"/>
-      <rect x="10" y="40" width="14" height="7" rx="2" fill="#A5D6A7" opacity=".4"/>
-      <text x="24" y="64" textAnchor="middle" fontSize="21" fontWeight="bold" fill="white">2</text>
-      <rect x="26" y="22" width="48" height="50" rx="6" fill="#FF5252" stroke="#B71C1C" strokeWidth="2.5"/>
-      <rect x="29" y="25" width="22" height="10" rx="3" fill="#FF8A80" opacity=".5"/>
-      <text x="50" y="58" textAnchor="middle" fontSize="34" fontWeight="bold" fill="white">1</text>
-      <circle cx="50" cy="12" r="10" fill="#FFD700" stroke="#B8860B" strokeWidth="2"/>
+      <rect width="100" height="85" rx="12" fill="#dff4ff"/>
+      <rect x="7" y="8" width="25" height="11" rx="4" fill="#2e78c7"/><rect x="10" y="11" width="11" height="3" rx="1.5" fill="#fff" opacity=".8"/>
+      <rect x="68" y="8" width="25" height="11" rx="4" fill="#ff866c"/><rect x="71" y="11" width="11" height="3" rx="1.5" fill="#fff" opacity=".8"/>
+      <path d="M0 70 Q25 63 50 71 Q75 78 100 68 V85H0Z" fill="#93d66e"/>
+      <g fill="#ffb347" stroke="#d97a21" strokeWidth="1"><circle cx="24" cy="42" r="6"/><circle cx="38" cy="50" r="6"/><circle cx="67" cy="40" r="6"/></g>
+      <g transform="translate(52 58)"><circle cy="-12" r="9" fill="#ffd6aa"/><path d="M-7 -16 L-10 -24 L-3 -19 M7 -16 L10 -24 L3 -19" fill="#ffd6aa"/><rect x="-9" y="-3" width="18" height="17" rx="7" fill="#4ba0e8"/><circle cx="-3" cy="-12" r="1" fill="#372e43"/><circle cx="3" cy="-12" r="1" fill="#372e43"/></g>
+      <rect x="73" y="55" width="18" height="19" rx="5" fill="#fff" stroke="#5788be" strokeWidth="1.5"/><circle cx="82" cy="65" r="5" fill="#ffcf4d"/><path d="M80 65h4M82 63v4" stroke="#9d681a" strokeWidth="1"/>
       <text x="50" y="17" textAnchor="middle" fontSize="12" fill="white" fontWeight="bold">★</text>
     </svg>
   ),
   g6: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="85" cy="12" r="2" fill="#FFD700" opacity=".6"/>
-      <rect x="5" y="25" width="30" height="22" rx="2" fill="none" stroke="white" strokeWidth="2" opacity=".5"/>
-      <rect x="5" y="25" width="30" height="3" rx="1" fill="white" opacity=".4"/>
-      <line x1="12" y1="28" x2="12" y2="47" stroke="white" strokeWidth="1" opacity=".3"/>
-      <line x1="19" y1="28" x2="19" y2="47" stroke="white" strokeWidth="1" opacity=".3"/>
-      <line x1="26" y1="28" x2="26" y2="47" stroke="white" strokeWidth="1" opacity=".3"/>
-      <line x1="5" y1="33" x2="35" y2="33" stroke="white" strokeWidth="1" opacity=".3"/>
-      <line x1="5" y1="40" x2="35" y2="40" stroke="white" strokeWidth="1" opacity=".3"/>
-      <circle cx="62" cy="52" r="22" fill="white" stroke="#333" strokeWidth="2"/>
-      <polygon points="62,30 70,36 67,46 57,46 54,36" fill="#333" stroke="#333" strokeWidth=".5"/>
-      <polygon points="83,42 84,52 75,58 68,52 70,42" fill="#333" stroke="#333" strokeWidth=".5"/>
-      <polygon points="70,70 62,74 54,70 54,60 70,60" fill="#333" stroke="#333" strokeWidth=".5"/>
-      <polygon points="40,42 43,52 52,58 52,46 46,38" fill="#333" stroke="#333" strokeWidth=".5"/>
-      <ellipse cx="55" cy="36" rx="5" ry="3" fill="white" opacity=".5" transform="rotate(-20 55 36)"/>
+      <rect width="100" height="85" rx="12" fill="#66bf74"/>
+      <rect x="5" y="7" width="24" height="10" rx="4" fill="#1e5845" opacity=".85"/><rect x="9" y="10" width="6" height="3" rx="1" fill="#fff"/><rect x="18" y="10" width="7" height="3" rx="1" fill="#ffdc62"/>
+      <path d="M50 19V85 M0 52H100" stroke="#e9fff2" strokeWidth="1.4" opacity=".7"/><circle cx="50" cy="52" r="13" fill="none" stroke="#e9fff2" strokeWidth="1.4" opacity=".7"/>
+      <path d="M78 24 H96 V47 H84" fill="none" stroke="#fff" strokeWidth="2"/><path d="M4 58 H20 V78 H4" fill="none" stroke="#fff" strokeWidth="2"/>
+      <g transform="translate(47 55)"><circle cy="-10" r="7" fill="#f5c99d"/><rect x="-8" y="-2" width="16" height="18" rx="6" fill="#ffd333"/><path d="M0 -25 L5 -18 H-5Z" fill="#ffd333" stroke="#aa8114" strokeWidth="1"/></g>
+      <g transform="translate(66 42)"><circle cy="-8" r="6" fill="#f5c99d"/><rect x="-7" y="-1" width="14" height="16" rx="6" fill="#4d9fe9"/></g>
+      <g transform="translate(34 38)"><circle cy="-7" r="6" fill="#f5c99d"/><rect x="-7" y="-1" width="14" height="16" rx="6" fill="#ef6670"/></g>
+      <circle cx="55" cy="65" r="6" fill="#fff" stroke="#263449" strokeWidth="1.4"/><path d="M55 60 l3 2 -1 3h-4l-1-3z" fill="#263449"/>
     </svg>
   ),
   g8: (
@@ -636,12 +626,9 @@ const GAME_SVGS = {
   ),
   g15: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <rect x="6" y="8" width="16" height="11" rx="1" fill="#E53935" stroke="#B71C1C" strokeWidth="1"/>
-      <rect x="6" y="8" width="16" height="3.5" fill="#E53935"/>
-      <rect x="6" y="11.5" width="16" height="3.5" fill="white"/>
-      <rect x="6" y="15" width="16" height="4" fill="#1565C0"/>
-      <line x1="5" y1="7" x2="5" y2="25" stroke="#795548" strokeWidth="1.5" strokeLinecap="round"/>
-      <circle cx="52" cy="46" r="33" fill="#1565C0" stroke="#0D47A1" strokeWidth="2.5"/>
+      <rect width="100" height="85" rx="12" fill="#dff4ff"/>
+      <rect x="6" y="7" width="27" height="12" rx="4" fill="#1b568e"/><circle cx="14" cy="13" r="2" fill="#fff"/><rect x="19" y="11" width="9" height="3" rx="1.5" fill="#a8dcff"/>
+      <circle cx="52" cy="47" r="30" fill="#1565C0" stroke="#0D47A1" strokeWidth="2.5"/>
       <path d="M30 34Q40 28 48 34Q52 40 45 46Q38 50 33 44Z" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1"/>
       <path d="M55 32Q65 26 72 34Q76 42 68 48Q60 52 55 44Z" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1"/>
       <path d="M38 54Q50 51 56 59Q54 68 44 69Q36 66 36 58Z" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1"/>
@@ -654,38 +641,21 @@ const GAME_SVGS = {
       <circle cx="47.8" cy="45" r="1" fill="white"/>
       <circle cx="59.8" cy="45" r="1" fill="white"/>
       <path d="M47 52Q52 56 57 52" stroke="#0D47A1" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-      <circle cx="78" cy="22" r="12" fill="rgba(255,255,255,.12)" stroke="white" strokeWidth="2"/>
-      <circle cx="78" cy="22" r="8" fill="rgba(135,206,250,.25)" stroke="rgba(255,255,255,.4)" strokeWidth="1"/>
-      <line x1="87" y1="31" x2="94" y2="39" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+      <rect x="70" y="10" width="23" height="16" rx="3" fill="#fff" stroke="#5e86b0" strokeWidth="1.2"/>
+      <rect x="72" y="12" width="19" height="12" fill="#e64d56"/><path d="M72 16 H91" stroke="#fff" strokeWidth="2"/><path d="M78 12V24" stroke="#fff" strokeWidth="2"/>
+      <path d="M68 30 Q76 34 84 30" fill="none" stroke="#fff" strokeWidth="1.8" strokeDasharray="3 2"/>
     </svg>
   ),
   g16: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <line x1="50" y1="3" x2="50" y2="14" stroke="#FFD700" strokeWidth="1.5" opacity=".5"/>
-      <line x1="20" y1="12" x2="28" y2="20" stroke="#FFD700" strokeWidth="1.5" opacity=".4"/>
-      <line x1="80" y1="12" x2="72" y2="20" stroke="#FFD700" strokeWidth="1.5" opacity=".4"/>
-      <line x1="4" y1="38" x2="16" y2="38" stroke="#FFD700" strokeWidth="1.5" opacity=".4"/>
-      <line x1="96" y1="38" x2="84" y2="38" stroke="#FFD700" strokeWidth="1.5" opacity=".4"/>
-      <polygon points="50,12 68,34 50,56 32,34" fill="#B5EEFF" stroke="#0288D1" strokeWidth="2"/>
-      <polygon points="50,12 68,34 50,34" fill="#E8FAFF"/>
-      <polygon points="50,12 32,34 50,34" fill="#81D4FA"/>
-      <polygon points="50,34 68,34 50,56" fill="#29B6F6"/>
-      <polygon points="50,34 32,34 50,56" fill="#0288D1"/>
-      <ellipse cx="43" cy="21" rx="5" ry="3" fill="white" opacity=".72" transform="rotate(-20 43 21)"/>
-      <polygon points="22,52 34,66 22,80 10,66" fill="#FF5252" stroke="#B71C1C" strokeWidth="1.8"/>
-      <polygon points="22,52 34,66 22,66" fill="#FF8A80"/>
-      <polygon points="22,52 10,66 22,66" fill="#E53935"/>
-      <polygon points="22,66 34,66 22,80" fill="#C62828"/>
-      <polygon points="22,66 10,66 22,80" fill="#B71C1C"/>
-      <ellipse cx="17" cy="59" rx="3" ry="2" fill="white" opacity=".6" transform="rotate(-20 17 59)"/>
-      <polygon points="78,52 90,66 78,80 66,66" fill="#536DFE" stroke="#1A237E" strokeWidth="1.8"/>
-      <polygon points="78,52 90,66 78,66" fill="#8C9EFF"/>
-      <polygon points="78,52 66,66 78,66" fill="#3D5AFE"/>
-      <polygon points="78,66 90,66 78,80" fill="#283593"/>
-      <polygon points="78,66 66,66 78,80" fill="#1A237E"/>
-      <ellipse cx="73" cy="59" rx="3" ry="2" fill="white" opacity=".6" transform="rotate(-20 73 59)"/>
-      <circle cx="9" cy="24" r="2.5" fill="#FFD700" opacity=".7"/>
-      <circle cx="90" cy="82" r="2" fill="#FFD700" opacity=".6"/>
+      <rect width="100" height="85" rx="12" fill="#261747"/>
+      <rect x="6" y="7" width="30" height="11" rx="4" fill="#593d8d"/><circle cx="14" cy="12" r="2" fill="#ffdd55"/><rect x="19" y="10" width="11" height="3" rx="1.5" fill="#fff" opacity=".85"/>
+      <rect x="10" y="24" width="80" height="52" rx="7" fill="#fff8ed" stroke="#bba7d5" strokeWidth="2"/>
+      <path d="M10 61 H90" stroke="#d6c2e9" strokeWidth="1.5"/>
+      <polygon points="38,29 51,44 38,59 25,44" fill="#ff6588" stroke="#a92b58" strokeWidth="1.5"/><path d="M38 29V59M25 44H51" stroke="#ffb7c8" strokeWidth="1"/>
+      <polygon points="66,32 78,46 66,60 54,46" fill="#5fbdf1" stroke="#2474af" strokeWidth="1.5"/><path d="M66 32V60M54 46H78" stroke="#c9f2ff" strokeWidth="1"/>
+      <circle cx="22" cy="69" r="5" fill="#ffd24d"/><circle cx="38" cy="69" r="5" fill="#76cf77"/><circle cx="54" cy="69" r="5" fill="#a98bff"/>
+      <path d="M82 18 L92 29 L86 30 L89 39 L84 41 L81 31 L76 35 Z" fill="#fff" stroke="#6c578e" strokeWidth="1.3"/>
     </svg>
   ),
   s1: (
@@ -953,18 +923,13 @@ const GAME_SVGS = {
   ),
   g_tokei: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="10" r="1.8" fill="#FFD700" opacity=".6"/>
-      <circle cx="90" cy="16" r="1.5" fill="white" opacity=".5"/>
-      <circle cx="50" cy="46" r="34" fill="#4a148c" stroke="#FFD700" strokeWidth="3.5"/>
-      <circle cx="50" cy="46" r="27" fill="#2a0a5c"/>
-      <line x1="50" y1="21" x2="50" y2="26" stroke="#FFD700" strokeWidth="2.4"/>
-      <line x1="50" y1="66" x2="50" y2="71" stroke="#FFD700" strokeWidth="2.4"/>
-      <line x1="25" y1="46" x2="30" y2="46" stroke="#FFD700" strokeWidth="2.4"/>
-      <line x1="70" y1="46" x2="75" y2="46" stroke="#FFD700" strokeWidth="2.4"/>
-      <line x1="50" y1="46" x2="50" y2="28" stroke="#FFD700" strokeWidth="3.5" strokeLinecap="round"/>
-      <line x1="50" y1="46" x2="66" y2="46" stroke="#40C4FF" strokeWidth="2.6" strokeLinecap="round"/>
-      <circle cx="50" cy="46" r="3.2" fill="#FFD700"/>
-      <circle cx="50" cy="10" r="9" fill="#FF9800" stroke="#E65100" strokeWidth="2"/>
+      <rect width="100" height="85" rx="12" fill="#ede3ff"/>
+      <rect x="7" y="7" width="24" height="10" rx="4" fill="#6849a8"/><circle cx="14" cy="12" r="2" fill="#ffd24d"/><rect x="19" y="10" width="8" height="3" rx="1.5" fill="#fff"/>
+      <circle cx="40" cy="42" r="23" fill="#fff" stroke="#60408d" strokeWidth="2.5"/>
+      <g stroke="#60408d" strokeWidth="2"><line x1="40" y1="22" x2="40" y2="27"/><line x1="40" y1="57" x2="40" y2="62"/><line x1="20" y1="42" x2="25" y2="42"/><line x1="55" y1="42" x2="60" y2="42"/></g>
+      <line x1="40" y1="42" x2="40" y2="29" stroke="#f06b84" strokeWidth="3" strokeLinecap="round"/><line x1="40" y1="42" x2="53" y2="49" stroke="#3ca6d9" strokeWidth="2.5" strokeLinecap="round"/><circle cx="40" cy="42" r="3" fill="#ffd24d"/>
+      <g fill="#fff" stroke="#7f65aa" strokeWidth="1.2"><rect x="68" y="25" width="23" height="12" rx="4"/><rect x="68" y="42" width="23" height="12" rx="4"/><rect x="68" y="59" width="23" height="12" rx="4"/></g>
+      <path d="M75 31h9M75 48h9M75 65h9" stroke="#60408d" strokeWidth="2" strokeLinecap="round"/>
       <text x="50" y="14" textAnchor="middle" fontSize="11" fill="white" fontWeight="bold">★</text>
     </svg>
   ),
@@ -1334,21 +1299,6 @@ const CAT_CHIPS = [
 
 /* ── 実ゲーム画面サムネイル(public/thumbs/<route>.webp)。
       未配置・読込失敗時は非表示→既存SVG/アイコンにフォールバック ── */
-function GameThumb({ route, className }) {
-  const [ok, setOk] = useState(true);
-  if (!ok) return null;
-  return (
-    <img
-      className={className}
-      src={`/thumbs${route}.webp`}
-      alt=""
-      loading="lazy"
-      decoding="async"
-      onError={() => setOk(false)}
-    />
-  );
-}
-
 /* ── 棚用コンパクトカード ── */
 function ShelfCard({ game, lang, onClick }) {
   const t = game[lang] || game.ja;
@@ -1362,7 +1312,6 @@ function ShelfCard({ game, lang, onClick }) {
       {game.hard && <span className="tp-shelf-hard">🔥</span>}
       <div className="tp-shelf-art">
         {GAME_SVGS[game.id] || <span className="tp-shelf-icon-fb">{game.icon}</span>}
-        <GameThumb route={game.route} className="tp-shelf-thumb" />
         <span className="tp-thumb-badge tp-thumb-badge--sm" aria-hidden="true">{game.icon}</span>
       </div>
       <div className="tp-shelf-name">{t.name}</div>
@@ -1469,7 +1418,6 @@ function GameCard({ game, lang, isRecommended, onClick, animIndex }) {
           <span className="tp-card-new">NEW</span>
         )}
         {svg || <span className="tp-card-icon-fb">{game.icon}</span>}
-        <GameThumb route={game.route} className="tp-card-thumb" />
         <span className="tp-thumb-badge" aria-hidden="true">{game.icon}</span>
       </div>
 
