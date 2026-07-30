@@ -17,7 +17,7 @@ export default function BikeGame() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/wakuwaku_bike_v4.html"
+          src="/games/wakuwaku_bike_v3.html"
           title="わくわくバイク"
           allow="autoplay; fullscreen"
           allowFullScreen

@@ -824,15 +824,15 @@ const GAME_SVGS = {
         </linearGradient>
       </defs>
       <rect width="200" height="140" fill="url(#sky2)" rx="8"/>
-      <rect y="95" width="200" height="45" fill="#70B85B"/>
-      <path d="M0 104 Q30 82 66 102 Q105 118 140 91 Q170 72 200 96 L200 140 L0 140Z" fill="#4C963E"/>
-      <path d="M12 122 H52 M146 116 H188" stroke="#D7F1B7" strokeWidth="4" strokeLinecap="round" opacity="0.75"/>
-      <path d="M45 105 L78 105 L78 78 Z" fill="#FFB52E" stroke="#D27A18" strokeWidth="3" strokeLinejoin="round"/>
+      <rect y="95" width="200" height="45" fill="#455A64"/>
+      <rect y="95" width="200" height="6" fill="#546E7A"/>
+      <rect x="10" y="115" width="30" height="4" fill="white" opacity="0.8" rx="2"/>
+      <rect x="60" y="115" width="30" height="4" fill="white" opacity="0.8" rx="2"/>
+      <rect x="110" y="115" width="30" height="4" fill="white" opacity="0.8" rx="2"/>
+      <rect x="160" y="115" width="30" height="4" fill="white" opacity="0.8" rx="2"/>
       <line x1="0" y1="70" x2="50" y2="70" stroke="white" strokeWidth="2" opacity="0.5"/>
       <line x1="0" y1="78" x2="40" y2="78" stroke="white" strokeWidth="1.5" opacity="0.35"/>
       <line x1="0" y1="85" x2="55" y2="85" stroke="white" strokeWidth="2" opacity="0.45"/>
-      <path d="M52 45 l4 9 10 1 -8 7 2 10 -8 -5 -9 5 3 -10 -8 -7 10 -1Z" fill="#FFE45B" stroke="#E7A72A" strokeWidth="2"/>
-      <path d="M79 28 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1Z" fill="#FFE45B" stroke="#E7A72A" strokeWidth="2"/>
       <circle cx="95" cy="93" r="18" fill="#212121"/>
       <circle cx="95" cy="93" r="12" fill="#37474F"/>
       <circle cx="95" cy="93" r="5" fill="#212121"/>
