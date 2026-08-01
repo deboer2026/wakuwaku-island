@@ -13,7 +13,6 @@ import { getRecentGames } from '../utils/recentGames';
 import { getPlayHistory } from '../utils/playHistory';
 import { detectLang } from '../utils/i18n';
 import GAME_META from '../seo/gameMeta';
-import IslandMap, { AREA_THEMES as MAP_AREA_THEMES } from './IslandMap';
 import './TopPage.css';
 
 /* ── カテゴリ別グラデーション ──────────────────────────── */
@@ -1298,21 +1297,18 @@ const CAT_CHIPS = [
     label:{ja:'がくしゅう', en:'Learn',  zh:'学习', ko:'배우기', es:'Aprender'} },
 ];
 
-/* ── 年齢別の入口。SEO側の対象年齢を唯一の参照元にする ── */
+/* ── 年齢別の入口。年齢が重複するゲームは、遊びやすさで一つの棚に振り分ける ── */
 const AGE_FILTERS = [
   { key:'all', label:{ja:'ぜんぶの年齢', en:'All ages', zh:'全部年龄', ko:'모든 연령', es:'Todas las edades'}, match:() => true },
   { key:'3-5', label:{ja:'3〜5さい', en:'Ages 3–5', zh:'3〜5岁', ko:'3〜5세', es:'3–5 años'}, match:g => {
     const meta = GAME_META[g.route];
-    return meta && meta.ageMin <= 5 && meta.ageMax >= 3;
+    return meta && meta.ageMin === 3;
   } },
   { key:'6-8', label:{ja:'6〜8さい', en:'Ages 6–8', zh:'6〜8岁', ko:'6〜8세', es:'6–8 años'}, match:g => {
     const meta = GAME_META[g.route];
-    return meta && meta.ageMin <= 8 && meta.ageMax >= 6;
+    return meta && meta.ageMin >= 4 && !g.hard;
   } },
-  { key:'9-12', label:{ja:'9〜12さい', en:'Ages 9–12', zh:'9〜12岁', ko:'9〜12세', es:'9–12 años'}, match:g => {
-    const meta = GAME_META[g.route];
-    return meta && meta.ageMin <= 12 && meta.ageMax >= 9;
-  } },
+  { key:'9-plus', label:{ja:'9さい〜', en:'Ages 9+', zh:'9岁以上', ko:'9세 이상', es:'9+ años'}, match:g => g.hard },
 ];
 
 /* 最初に迷わないための固定6本。全39本の棚はこの下に残す。 */
@@ -1565,19 +1561,8 @@ export default function TopPage() {
   const [coins,       setCoins]       = useState(() => typeof localStorage !== 'undefined' ? getCoins() : 0);
   const [loginBonus,  setLoginBonus]  = useState(null);
   const [recentRoutes,   setRecentRoutes]   = useState(() => typeof localStorage !== 'undefined' ? getRecentGames() : []);
-  // しまマップ⇔いちらん切替。SSR/ハイドレーション不一致回避のため初期値は固定し、
-  // 保存値の反映はマウント後に行う。
-  const [topView, setTopView] = useState('list');
   const [catKey,  setCatKey]  = useState('all');
   const [ageKey,  setAgeKey]  = useState('all');
-  useEffect(() => {
-    const saved = localStorage.getItem('wakuwaku_top_view');
-    if (saved === 'list') setTopView('list');
-  }, []);
-  function changeTopView(v) {
-    setTopView(v);
-    localStorage.setItem('wakuwaku_top_view', v);
-  }
 
   const season    = getSeason();
   const daysSince = getDaysSinceUpdate();
@@ -1625,27 +1610,6 @@ export default function TopPage() {
     const detected = detectLang();
     localStorage.setItem('wakuwaku_lang', detected);
     if (detected !== lang) setLang(detected);
-  }, []);
-
-  // 横スクロール棚(.tp-shelf-scroll / .tp-chips 等)の上でマウスホイールを
-  // 縦回転させると、その要素が縦ホイールを消費してページが縦スクロールしなく
-  // なるChromeの挙動への対策。横成分の無い純縦ホイールはページに転送する。
-  useEffect(() => {
-    const onWheel = (e) => {
-      const scroller = e.target.closest?.('.tp-shelf-scroll, .tp-chips, .tp-cat-chips, .tp-recent-scroll');
-      if (!scroller) return;
-      // 主に縦方向の回転で、その要素が横にしかスクロールできない場合のみ転送
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        const canScrollX = scroller.scrollWidth > scroller.clientWidth;
-        // 横に動けない、または既に横端 → 縦ホイールをページへ委譲
-        if (!canScrollX) {
-          window.scrollBy({ top: e.deltaY, behavior: 'auto' });
-          e.preventDefault();
-        }
-      }
-    };
-    window.addEventListener('wheel', onWheel, { passive: false });
-    return () => window.removeEventListener('wheel', onWheel);
   }, []);
 
   function handleMuteToggle() {
@@ -1994,95 +1958,43 @@ export default function TopPage() {
           </div>
         </section>
 
-        {/* ── sticky統合バー：切替タブ＋エリアジャンプ ── */}
+        {/* ── カテゴリ・年齢の絞り込み ── */}
         <div className="tp-sticky-bar">
-          <div className="tp-view-toggle" role="tablist">
-            <button
-              role="tab"
-              aria-selected={topView === 'map'}
-              className={`tp-view-tab${topView === 'map' ? ' tp-view-tab--on' : ''}`}
-              onClick={() => changeTopView('map')}
-            >
-              🗺️ {{ja:'しまマップ', en:'Island Map', zh:'岛屿地图', ko:'섬 지도', es:'Mapa'}[lang] || 'しまマップ'}
-            </button>
-            <button
-              role="tab"
-              aria-selected={topView === 'list'}
-              className={`tp-view-tab${topView === 'list' ? ' tp-view-tab--on' : ''}`}
-              onClick={() => changeTopView('list')}
-            >
-              📋 {{ja:'いちらん', en:'List', zh:'列表', ko:'목록', es:'Lista'}[lang] || 'いちらん'}
-            </button>
-          </div>
-          {topView === 'list' && (
-            <div className="tp-filter-stack">
-              <div className="tp-cat-chips" role="tablist" aria-label="カテゴリ">
-                {CAT_CHIPS.map(c => (
+          <div className="tp-filter-stack">
+            <div className="tp-cat-chips" role="tablist" aria-label="カテゴリ">
+              {CAT_CHIPS.map(c => (
+                <button
+                  key={c.key}
+                  role="tab"
+                  aria-selected={catKey === c.key}
+                  className={`tp-cat-chip${catKey === c.key ? ' tp-cat-chip--on' : ''}`}
+                  onClick={() => setCatKey(c.key)}
+                >
+                  {c.label[lang] || c.label.ja}
+                </button>
+              ))}
+            </div>
+            <div className="tp-age-filter" role="tablist" aria-label={lang === 'ja' ? '年齢で選ぶ' : 'Choose by age'}>
+              <strong>{{ja:'ねんれいで えらぶ', en:'Choose by age', zh:'按年龄选择', ko:'나이로 선택', es:'Elegir por edad'}[lang] || 'ねんれいで えらぶ'}</strong>
+              <div>
+                {AGE_FILTERS.map(age => (
                   <button
-                    key={c.key}
+                    key={age.key}
                     role="tab"
-                    aria-selected={catKey === c.key}
-                    className={`tp-cat-chip${catKey === c.key ? ' tp-cat-chip--on' : ''}`}
-                    onClick={() => setCatKey(c.key)}
+                    aria-selected={ageKey === age.key}
+                    className={ageKey === age.key ? 'tp-age-chip tp-age-chip--on' : 'tp-age-chip'}
+                    onClick={() => setAgeKey(age.key)}
                   >
-                    {c.label[lang] || c.label.ja}
+                    {age.label[lang] || age.label.ja}
                   </button>
                 ))}
               </div>
-              <div className="tp-age-filter" role="tablist" aria-label={lang === 'ja' ? '年齢で選ぶ' : 'Choose by age'}>
-                <strong>{{ja:'ねんれいで えらぶ', en:'Choose by age', zh:'按年龄选择', ko:'나이로 선택', es:'Elegir por edad'}[lang] || 'ねんれいで えらぶ'}</strong>
-                <div>
-                  {AGE_FILTERS.map(age => (
-                    <button
-                      key={age.key}
-                      role="tab"
-                      aria-selected={ageKey === age.key}
-                      className={ageKey === age.key ? 'tp-age-chip tp-age-chip--on' : 'tp-age-chip'}
-                      onClick={() => setAgeKey(age.key)}
-                    >
-                      {age.label[lang] || age.label.ja}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
-          )}
-          {topView === 'map' && (
-            <div className="tp-sticky-jump">
-              {SHELF_GROUPS.map(grp => {
-                if (!ALL_SHELF_GAMES.some(g => grp.match(g))) return null;
-                return (
-                  <button
-                    key={grp.key}
-                    className="im-jump-btn"
-                    style={{ '--sign': (MAP_AREA_THEMES[grp.key] || {}).sign || '#888' }}
-                    onClick={() => {
-                      const el = document.getElementById(`im-area-${grp.key}`);
-                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }}
-                  >
-                    <span className="im-jump-icon">{grp.icon}</span>
-                    <span className="im-jump-label">{grp.label[lang] || grp.label.ja}</span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          </div>
         </div>
 
-        {/* ── しまマップ ── */}
-        {topView === 'map' && (
-          <IslandMap
-            groups={SHELF_GROUPS}
-            games={ALL_SHELF_GAMES}
-            lang={lang}
-            svgMap={GAME_SVGS}
-            onPlay={(game, e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY); }}
-          />
-        )}
-
         {/* ── ジャンルグループ別ゲーム棚(6棚) ── */}
-        {topView === 'list' && SHELF_GROUPS.map(grp => {
+        {SHELF_GROUPS.map(grp => {
           const chip  = CAT_CHIPS.find(c => c.key === catKey) || CAT_CHIPS[0];
           const age   = AGE_FILTERS.find(item => item.key === ageKey) || AGE_FILTERS[0];
           const items = ALL_SHELF_GAMES.filter(grp.match).filter(chip.match).filter(age.match);
