@@ -47,7 +47,7 @@ const THEMES = {
     cWave:'triangle', mWave:'sine', bWave:'sine', cVol:0.045, mVol:0.065, bVol:0.14,
   },
 
-  // めいろ・ランナー・クロッシング — G major adventure
+  // めいろ・ランナー・おかしのくに — G major adventure
   adventure: {
     bpm:138, bpc:4,
     chords:[[N.G3,N.B3,N.D4],[N.E3||N.E3,N.Gs3||N.G3,N.B3],[N.C4,N.E4,N.G4],[N.D4,N.Fs4,N.A4]],

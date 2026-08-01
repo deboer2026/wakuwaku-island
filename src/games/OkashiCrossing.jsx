@@ -51,7 +51,7 @@ export default function OkashiCrossing() {
         <iframe
           ref={iframeRef}
           src="/games/okashi_crossing.html"
-          title="おかしのくにたんけん"
+          title="ぴょんぴょん！おかしのくに"
           allow="autoplay; fullscreen"
           allowFullScreen
           sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
