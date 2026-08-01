@@ -12,6 +12,7 @@ import { getCoins, checkLoginBonus, claimLoginBonus } from '../utils/coins';
 import { getRecentGames } from '../utils/recentGames';
 import { getPlayHistory } from '../utils/playHistory';
 import { detectLang } from '../utils/i18n';
+import GAME_META from '../seo/gameMeta';
 import IslandMap, { AREA_THEMES as MAP_AREA_THEMES } from './IslandMap';
 import './TopPage.css';
 
@@ -1297,24 +1298,127 @@ const CAT_CHIPS = [
     label:{ja:'がくしゅう', en:'Learn',  zh:'学习', ko:'배우기', es:'Aprender'} },
 ];
 
+/* ── 年齢別の入口。SEO側の対象年齢を唯一の参照元にする ── */
+const AGE_FILTERS = [
+  { key:'all', label:{ja:'ぜんぶの年齢', en:'All ages', zh:'全部年龄', ko:'모든 연령', es:'Todas las edades'}, match:() => true },
+  { key:'3-5', label:{ja:'3〜5さい', en:'Ages 3–5', zh:'3〜5岁', ko:'3〜5세', es:'3–5 años'}, match:g => {
+    const meta = GAME_META[g.route];
+    return meta && meta.ageMin <= 5 && meta.ageMax >= 3;
+  } },
+  { key:'6-8', label:{ja:'6〜8さい', en:'Ages 6–8', zh:'6〜8岁', ko:'6〜8세', es:'6–8 años'}, match:g => {
+    const meta = GAME_META[g.route];
+    return meta && meta.ageMin <= 8 && meta.ageMax >= 6;
+  } },
+  { key:'9-12', label:{ja:'9〜12さい', en:'Ages 9–12', zh:'9〜12岁', ko:'9〜12세', es:'9–12 años'}, match:g => {
+    const meta = GAME_META[g.route];
+    return meta && meta.ageMin <= 12 && meta.ageMax >= 9;
+  } },
+];
+
+/* 最初に迷わないための固定6本。全39本の棚はこの下に残す。 */
+const BEGINNER_ROUTES = [
+  '/shabondama',
+  '/kudamono-catch',
+  '/animal-soccer',
+  '/astral-fang',
+  '/doubutsu-puzzle',
+  '/mura',
+];
+
+/* NEWを乱立させず、直近の代表作だけに絞る。 */
+const FEATURED_NEW_ROUTES = new Set([
+  '/oukan-monogatari',
+  '/astral-fang',
+  '/neon-drive',
+  '/katachi',
+]);
+
+const THUMB_ALIASES = {
+  '/sora': 'sora',
+  '/shooting': 'shooting',
+  '/sniper': 'sniper',
+};
+const NO_THUMB_ROUTES = new Set([
+  '/neon-drive',
+  '/astral-fang',
+  '/mahou-meiro',
+  '/oukan-monogatari',
+]);
+
+function thumbFor(game) {
+  if (NO_THUMB_ROUTES.has(game.route)) return null;
+  return `/thumbs/${THUMB_ALIASES[game.route] || game.route.replace(/^\//, '')}.webp`;
+}
+
+function ageText(game, lang) {
+  const meta = GAME_META[game.route];
+  if (!meta) return '';
+  if (lang === 'en') return `Ages ${meta.ageMin}–${meta.ageMax}`;
+  if (lang === 'zh') return `${meta.ageMin}〜${meta.ageMax}岁`;
+  if (lang === 'ko') return `${meta.ageMin}〜${meta.ageMax}세`;
+  if (lang === 'es') return `${meta.ageMin}–${meta.ageMax} años`;
+  return `${meta.ageMin}〜${meta.ageMax}さい`;
+}
+
 /* ── 実ゲーム画面サムネイル(public/thumbs/<route>.webp)。
       未配置・読込失敗時は非表示→既存SVG/アイコンにフォールバック ── */
 /* ── 棚用コンパクトカード ── */
 function ShelfCard({ game, lang, onClick }) {
   const t = game[lang] || game.ja;
+  const thumb = thumbFor(game);
   return (
     <button
       className="tp-shelf-card"
       style={{ background: CARD_GRADIENTS[game.category] || DEFAULT_GRADIENT }}
       onClick={onClick}
+      aria-label={`${t.name}、${ageText(game, lang)}`}
     >
-      {game.isNew && <span className="tp-shelf-new">NEW</span>}
+      {FEATURED_NEW_ROUTES.has(game.route) && <span className="tp-shelf-new">NEW</span>}
       {game.hard && <span className="tp-shelf-hard">🔥</span>}
       <div className="tp-shelf-art">
         {GAME_SVGS[game.id] || <span className="tp-shelf-icon-fb">{game.icon}</span>}
+        {thumb && (
+          <img
+            className="tp-shelf-thumb"
+            src={thumb}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
+        )}
         <span className="tp-thumb-badge tp-thumb-badge--sm" aria-hidden="true">{game.icon}</span>
       </div>
-      <div className="tp-shelf-name">{t.name}</div>
+      <div className="tp-shelf-copy">
+        <div className="tp-shelf-name">{t.name}</div>
+        <div className="tp-shelf-age">{ageText(game, lang)}</div>
+      </div>
+    </button>
+  );
+}
+
+function BeginnerCard({ game, lang, onClick }) {
+  const t = game[lang] || game.ja;
+  const thumb = thumbFor(game);
+  return (
+    <button className="tp-beginner-card" onClick={onClick} aria-label={`${t.name}、${ageText(game, lang)}`}>
+      <div className="tp-beginner-art" style={{ background: CARD_GRADIENTS[game.category] || DEFAULT_GRADIENT }}>
+        {GAME_SVGS[game.id] || <span className="tp-card-icon-fb">{game.icon}</span>}
+        {thumb && (
+          <img
+            src={thumb}
+            alt=""
+            loading="eager"
+            decoding="async"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
+        )}
+        <span className="tp-beginner-play" aria-hidden="true">▶</span>
+      </div>
+      <div className="tp-beginner-copy">
+        <span>{ageText(game, lang)}</span>
+        <strong>{t.name}</strong>
+      </div>
     </button>
   );
 }
@@ -1465,6 +1569,7 @@ export default function TopPage() {
   // 保存値の反映はマウント後に行う。
   const [topView, setTopView] = useState('list');
   const [catKey,  setCatKey]  = useState('all');
+  const [ageKey,  setAgeKey]  = useState('all');
   useEffect(() => {
     const saved = localStorage.getItem('wakuwaku_top_view');
     if (saved === 'list') setTopView('list');
@@ -1476,6 +1581,9 @@ export default function TopPage() {
 
   const season    = getSeason();
   const daysSince = getDaysSinceUpdate();
+  const beginnerGames = BEGINNER_ROUTES
+    .map(route => ALL_SHELF_GAMES.find(game => game.route === route))
+    .filter(Boolean);
 
   // 引っ張って更新(フルスクリーンPWA向け)
   const { pull, ready } = usePullToRefresh(() => window.location.reload());
@@ -1855,8 +1963,37 @@ export default function TopPage() {
         </div>
       </div>
 
+      {/* ── 保護者にも一目で伝わる安心表示 ── */}
+      <section className="tp-trust" aria-label={lang === 'ja' ? '安心して遊べるポイント' : 'Safe play information'}>
+        <div><span aria-hidden="true">¥0</span><p><strong>{{ja:'ずっと無料', en:'Always free', zh:'完全免费', ko:'완전 무료', es:'Siempre gratis'}[lang] || 'ずっと無料'}</strong><small>{{ja:'お金はかかりません', en:'No payments', zh:'无需付费', ko:'결제 없음', es:'Sin pagos'}[lang] || 'お金はかかりません'}</small></p></div>
+        <div><span aria-hidden="true">✓</span><p><strong>{{ja:'登録なし', en:'No sign-up', zh:'无需注册', ko:'가입 없음', es:'Sin registro'}[lang] || '登録なし'}</strong><small>{{ja:'すぐに遊べます', en:'Play right away', zh:'打开就能玩', ko:'바로 플레이', es:'Juega al instante'}[lang] || 'すぐに遊べます'}</small></p></div>
+        <div><span aria-hidden="true">↓</span><p><strong>{{ja:'インストール不要', en:'No install', zh:'无需安装', ko:'설치 불필요', es:'Sin instalación'}[lang] || 'インストール不要'}</strong><small>{{ja:'ブラウザだけでOK', en:'Browser only', zh:'浏览器即可', ko:'브라우저만으로 OK', es:'Solo navegador'}[lang] || 'ブラウザだけでOK'}</small></p></div>
+        <div><span aria-hidden="true">♡</span><p><strong>{{ja:'子ども向け', en:'Made for kids', zh:'儿童友好', ko:'어린이용', es:'Para niños'}[lang] || '子ども向け'}</strong><small>{{ja:'こわい表現なし', en:'No scary content', zh:'无恐怖内容', ko:'무서운 표현 없음', es:'Sin contenido aterrador'}[lang] || 'こわい表現なし'}</small></p></div>
+      </section>
+
       {/* ── ゲームセクション ── */}
       <div className="tp-game-section">
+        {/* ── 最初に選びやすい代表6本 ── */}
+        <section className="tp-beginner">
+          <div className="tp-beginner-head">
+            <div>
+              <span>{{ja:'はじめてでも かんたん', en:'Easy first picks', zh:'第一次也很简单', ko:'처음에도 쉬워요', es:'Fáciles para empezar'}[lang] || 'はじめてでも かんたん'}</span>
+              <h2>{{ja:'まずは ここから！', en:'Start here!', zh:'从这里开始！', ko:'여기서 시작!', es:'¡Empieza aquí!'}[lang] || 'まずは ここから！'}</h2>
+            </div>
+            <p>{{ja:'人気の6本をえらびました。カードを押すと、すぐに遊べます。', en:'Six friendly favorites. Tap a card to play.', zh:'精选6款热门游戏，点击即可开始。', ko:'인기 게임 6개를 골랐어요. 카드를 눌러 바로 시작해요.', es:'Seis favoritos. Toca una tarjeta para jugar.'}[lang] || '人気の6本をえらびました。カードを押すと、すぐに遊べます。'}</p>
+          </div>
+          <div className="tp-beginner-grid">
+            {beginnerGames.map(game => (
+              <BeginnerCard
+                key={game.route}
+                game={game}
+                lang={lang}
+                onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY); }}
+              />
+            ))}
+          </div>
+        </section>
+
         {/* ── sticky統合バー：切替タブ＋エリアジャンプ ── */}
         <div className="tp-sticky-bar">
           <div className="tp-view-toggle" role="tablist">
@@ -1878,18 +2015,36 @@ export default function TopPage() {
             </button>
           </div>
           {topView === 'list' && (
-            <div className="tp-cat-chips" role="tablist" aria-label="カテゴリ">
-              {CAT_CHIPS.map(c => (
-                <button
-                  key={c.key}
-                  role="tab"
-                  aria-selected={catKey === c.key}
-                  className={`tp-cat-chip${catKey === c.key ? ' tp-cat-chip--on' : ''}`}
-                  onClick={() => setCatKey(c.key)}
-                >
-                  {c.label[lang] || c.label.ja}
-                </button>
-              ))}
+            <div className="tp-filter-stack">
+              <div className="tp-cat-chips" role="tablist" aria-label="カテゴリ">
+                {CAT_CHIPS.map(c => (
+                  <button
+                    key={c.key}
+                    role="tab"
+                    aria-selected={catKey === c.key}
+                    className={`tp-cat-chip${catKey === c.key ? ' tp-cat-chip--on' : ''}`}
+                    onClick={() => setCatKey(c.key)}
+                  >
+                    {c.label[lang] || c.label.ja}
+                  </button>
+                ))}
+              </div>
+              <div className="tp-age-filter" role="tablist" aria-label={lang === 'ja' ? '年齢で選ぶ' : 'Choose by age'}>
+                <strong>{{ja:'ねんれいで えらぶ', en:'Choose by age', zh:'按年龄选择', ko:'나이로 선택', es:'Elegir por edad'}[lang] || 'ねんれいで えらぶ'}</strong>
+                <div>
+                  {AGE_FILTERS.map(age => (
+                    <button
+                      key={age.key}
+                      role="tab"
+                      aria-selected={ageKey === age.key}
+                      className={ageKey === age.key ? 'tp-age-chip tp-age-chip--on' : 'tp-age-chip'}
+                      onClick={() => setAgeKey(age.key)}
+                    >
+                      {age.label[lang] || age.label.ja}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
           {topView === 'map' && (
@@ -1929,7 +2084,8 @@ export default function TopPage() {
         {/* ── ジャンルグループ別ゲーム棚(6棚) ── */}
         {topView === 'list' && SHELF_GROUPS.map(grp => {
           const chip  = CAT_CHIPS.find(c => c.key === catKey) || CAT_CHIPS[0];
-          const items = ALL_SHELF_GAMES.filter(grp.match).filter(chip.match);
+          const age   = AGE_FILTERS.find(item => item.key === ageKey) || AGE_FILTERS[0];
+          const items = ALL_SHELF_GAMES.filter(grp.match).filter(chip.match).filter(age.match);
           if (items.length === 0) return null;
           return (
             <div className="tp-shelf" key={grp.key}>
