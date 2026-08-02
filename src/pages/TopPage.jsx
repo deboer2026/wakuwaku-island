@@ -405,26 +405,25 @@ const GAME_SVGS = {
   ),
   g4: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="88" cy="10" r="2" fill="white" opacity=".4"/>
-      <rect x="10" y="15" width="35" height="35" rx="4" fill="#66BB6A" stroke="#2E7D32" strokeWidth="2"/>
-      <circle cx="27.5" cy="49.5" r="5" fill="#66BB6A" stroke="#2E7D32" strokeWidth="2"/>
-      <rect x="55" y="15" width="35" height="35" rx="4" fill="#42A5F5" stroke="#1565C0" strokeWidth="2"/>
-      <circle cx="55" cy="32.5" r="5" fill="#42A5F5" stroke="#1565C0" strokeWidth="2"/>
-      <circle cx="72.5" cy="49.5" r="5" fill="#42A5F5" stroke="#1565C0" strokeWidth="2"/>
-      <rect x="32" y="50" width="36" height="28" rx="4" fill="#FFA726" stroke="#E65100" strokeWidth="2"/>
-      <circle cx="50" cy="49.5" r="5" fill="rgba(255,255,255,.15)"/>
-      <circle cx="23" cy="29" r="3" fill="white" stroke="#2E7D32" strokeWidth="1"/>
-      <circle cx="23" cy="29" r="1.8" fill="#1a1a2e"/>
-      <circle cx="32" cy="29" r="3" fill="white" stroke="#2E7D32" strokeWidth="1"/>
-      <circle cx="32" cy="29" r="1.8" fill="#1a1a2e"/>
-      <circle cx="68" cy="29" r="3" fill="white" stroke="#1565C0" strokeWidth="1"/>
-      <circle cx="68" cy="29" r="1.8" fill="#1a1a2e"/>
-      <circle cx="77" cy="29" r="3" fill="white" stroke="#1565C0" strokeWidth="1"/>
-      <circle cx="77" cy="29" r="1.8" fill="#1a1a2e"/>
-      <circle cx="46" cy="63" r="3" fill="white" stroke="#E65100" strokeWidth="1"/>
-      <circle cx="46" cy="63" r="1.8" fill="#1a1a2e"/>
-      <circle cx="55" cy="63" r="3" fill="white" stroke="#E65100" strokeWidth="1"/>
-      <circle cx="55" cy="63" r="1.8" fill="#1a1a2e"/>
+      <rect x="0" y="0" width="100" height="85" rx="12" fill="#7EC98A"/>
+      <ellipse cx="50" cy="74" rx="42" ry="8" fill="#5FAF6C" opacity=".55"/>
+      <circle cx="14" cy="13" r="2" fill="#FFF6C8" opacity=".7"/>
+      <circle cx="86" cy="16" r="1.6" fill="#FFF6C8" opacity=".6"/>
+      <rect x="8" y="26" width="26" height="34" rx="5" fill="#7E57C2" stroke="#4E3391" strokeWidth="2.5"/>
+      <circle cx="21" cy="43" r="7" fill="none" stroke="#B39DDB" strokeWidth="3"/>
+      <circle cx="21" cy="43" r="2" fill="#B39DDB"/>
+      <rect x="66" y="26" width="26" height="34" rx="5" fill="#7E57C2" stroke="#4E3391" strokeWidth="2.5"/>
+      <circle cx="79" cy="43" r="7" fill="none" stroke="#B39DDB" strokeWidth="3"/>
+      <circle cx="79" cy="43" r="2" fill="#B39DDB"/>
+      <rect x="35" y="44" width="30" height="20" rx="4" fill="#FFF6E3" stroke="#D9BE93" strokeWidth="2.5"/>
+      <ellipse cx="50" cy="52" rx="10" ry="9" fill="#F7B267" stroke="#D98C3F" strokeWidth="2"/>
+      <path d="M42 45 L40 37 L47 42 Z" fill="#F7B267" stroke="#D98C3F" strokeWidth="2" strokeLinejoin="round"/>
+      <path d="M58 45 L60 37 L53 42 Z" fill="#F7B267" stroke="#D98C3F" strokeWidth="2" strokeLinejoin="round"/>
+      <circle cx="46" cy="51" r="1.8" fill="#2E2A33"/>
+      <circle cx="54" cy="51" r="1.8" fill="#2E2A33"/>
+      <ellipse cx="50" cy="56" rx="3.5" ry="2.4" fill="#FFF8EC"/>
+      <circle cx="50" cy="55" r="1.2" fill="#E87A8A"/>
+      <path d="M50 20 L52.6 26.4 L59 29 L52.6 31.6 L50 38 L47.4 31.6 L41 29 L47.4 26.4 Z" fill="#FFE082" stroke="#E8B84B" strokeWidth="1.6" strokeLinejoin="round"/>
     </svg>
   ),
   g5: (
@@ -1031,12 +1030,12 @@ const GAMES = [
     zh:{ name:'接水果',               desc:'接住掉落的水果！'                             },
     ko:{ name:'과일 캐치',             desc:'떨어지는 과일을\n잡아요!'                    },
     es:{ name:'Atrapa Frutas',         desc:'¡Atrapa las frutas\nantes de que caigan!'    } },
-  { id:'g4', route:'/doubutsu-puzzle', icon:'🧩', num:4, color:'#2ECC71', stars:5, isNew:true, category:'パズル',
-    ja:{ name:'どうぶつパズル',     desc:'どうぶつを ならべて\nパズルをとこう！'         },
-    en:{ name:'Animal Puzzle',        desc:'Line up animals\nto solve the puzzle!'        },
-    zh:{ name:'动物拼图',             desc:'排列动物\n解开拼图！'                         },
-    ko:{ name:'동물 퍼즐',             desc:'동물을 맞춰\n퍼즐을 풀어요!'                 },
-    es:{ name:'Puzzle Animal',         desc:'¡Ordena animales\ny resuelve el puzzle!'      } },
+  { id:'g4', route:'/doubutsu-puzzle', icon:'🃏', num:4, color:'#2ECC71', stars:5, isNew:true, category:'パズル',
+    ja:{ name:'どうぶつパズル',     desc:'カードをめくって\nおなじどうぶつさがし！'       },
+    en:{ name:'Animal Memory Match',  desc:'Flip cards and find\nmatching animals!'        },
+    zh:{ name:'动物翻牌',             desc:'翻开卡片\n找出相同的动物！'                   },
+    ko:{ name:'동물 퍼즐',             desc:'카드를 뒤집어\n같은 동물을 찾아요!'           },
+    es:{ name:'Puzzle Animal',         desc:'¡Voltea cartas y busca\nanimales iguales!'    } },
   { id:'g5', route:'/kazu-asobi',      icon:'🔢', num:5, color:'#F4D03F', stars:3, isNew:false, category:'かずあそび',
     ja:{ name:'かずあそび',         desc:'かずを かぞえて\nたのしく まなぼう！'          },
     en:{ name:'Number Fun',           desc:'Count and learn\nnumbers with fun!'           },
