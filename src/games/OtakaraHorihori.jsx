@@ -28,8 +28,8 @@ export default function OtakaraHorihori() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/otakara_horihori_v1.html"
-          title="おたからほりほり"
+          src="/games/otakara_horihori_v2.html"
+          title="おたからほりほり 3D"
           allow="autoplay; fullscreen"
           allowFullScreen
           sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
