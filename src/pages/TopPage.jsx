@@ -589,38 +589,29 @@ const GAME_SVGS = {
   ),
   g14: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="80" cy="14" r="11" fill="#FFD700" stroke="#F57F17" strokeWidth="1.5"/>
-      <line x1="80" y1="0" x2="80" y2="4" stroke="#F57F17" strokeWidth="1.5" opacity=".7"/>
-      <line x1="93" y1="4" x2="90" y2="7" stroke="#F57F17" strokeWidth="1.5" opacity=".7"/>
-      <line x1="95" y1="14" x2="91" y2="14" stroke="#F57F17" strokeWidth="1.5" opacity=".7"/>
-      <rect x="0" y="70" width="100" height="15" fill="#757575"/>
-      <rect x="20" y="77" width="12" height="4" rx="1" fill="white" opacity=".8"/>
-      <rect x="46" y="77" width="12" height="4" rx="1" fill="white" opacity=".8"/>
-      <rect x="72" y="77" width="12" height="4" rx="1" fill="white" opacity=".8"/>
-      <rect x="8" y="32" width="22" height="40" rx="2" fill="#F48FB1" stroke="#C2185B" strokeWidth="1.5"/>
-      <rect x="10" y="34" width="18" height="6" rx="1" fill="#FCE4EC" opacity=".5"/>
-      <rect x="12" y="44" width="5" height="6" rx="1" fill="#80DEEA" stroke="#0097A7" strokeWidth=".8"/>
-      <rect x="20" y="44" width="5" height="6" rx="1" fill="#80DEEA" stroke="#0097A7" strokeWidth=".8"/>
-      <rect x="12" y="54" width="5" height="6" rx="1" fill="#FFE082" stroke="#F57F17" strokeWidth=".8"/>
-      <rect x="20" y="54" width="5" height="6" rx="1" fill="#80DEEA" stroke="#0097A7" strokeWidth=".8"/>
-      <rect x="36" y="18" width="28" height="54" rx="2" fill="#FF9800" stroke="#E65100" strokeWidth="2"/>
-      <rect x="38" y="20" width="24" height="8" rx="1" fill="#FFE0B2" opacity=".5"/>
-      <rect x="40" y="32" width="7" height="7" rx="1" fill="#80DEEA" stroke="#0097A7" strokeWidth=".8"/>
-      <rect x="51" y="32" width="7" height="7" rx="1" fill="#FFE082" stroke="#F57F17" strokeWidth=".8"/>
-      <rect x="40" y="44" width="7" height="7" rx="1" fill="#FFE082" stroke="#F57F17" strokeWidth=".8"/>
-      <rect x="51" y="44" width="7" height="7" rx="1" fill="#80DEEA" stroke="#0097A7" strokeWidth=".8"/>
-      <rect x="40" y="56" width="7" height="7" rx="1" fill="#80DEEA" stroke="#0097A7" strokeWidth=".8"/>
-      <rect x="51" y="56" width="7" height="7" rx="1" fill="#FFE082" stroke="#F57F17" strokeWidth=".8"/>
-      <line x1="50" y1="18" x2="50" y2="6" stroke="#9E9E9E" strokeWidth="1.5" strokeLinecap="round"/>
-      <circle cx="50" cy="4" r="3" fill="#FF5252"/>
-      <rect x="70" y="38" width="24" height="34" rx="2" fill="#66BB6A" stroke="#2E7D32" strokeWidth="1.5"/>
-      <rect x="72" y="40" width="20" height="6" rx="1" fill="#C8E6C9" opacity=".5"/>
-      <rect x="74" y="50" width="5" height="6" rx="1" fill="#80DEEA" stroke="#0097A7" strokeWidth=".8"/>
-      <rect x="82" y="50" width="5" height="6" rx="1" fill="#FFE082" stroke="#F57F17" strokeWidth=".8"/>
-      <rect x="74" y="60" width="5" height="6" rx="1" fill="#FFE082" stroke="#F57F17" strokeWidth=".8"/>
-      <rect x="82" y="60" width="5" height="6" rx="1" fill="#80DEEA" stroke="#0097A7" strokeWidth=".8"/>
-      <rect x="26" y="62" width="5" height="8" rx="1" fill="#5D4037" stroke="#3E2723" strokeWidth="1"/>
-      <circle cx="28.5" cy="60" r="7" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1.2"/>
+      <rect width="100" height="85" rx="12" fill="#8FDCFF"/>
+      <circle cx="16" cy="14" r="6" fill="#FFE27A" opacity=".9"/>
+      <ellipse cx="50" cy="50" rx="42" ry="30" fill="#7ED07A" stroke="#4E9E4C" strokeWidth="2"/>
+      <ellipse cx="50" cy="50" rx="42" ry="30" fill="none" stroke="#FFF8E0" strokeWidth="2.4" opacity=".5"/>
+      <path d="M14 55c10-8 18 4 28-2s16 6 26-2s16 2 20-4" fill="none" stroke="#E8D3A0" strokeWidth="6" strokeLinecap="round" opacity=".9"/>
+      <rect x="24" y="38" width="13" height="12" rx="1.5" fill="#FFB74D" stroke="#A85E00" strokeWidth="1.6"/>
+      <path d="M22 38l8.5-7 8.5 7z" fill="#E05656" stroke="#A85E00" strokeWidth="1.6" strokeLinejoin="round"/>
+      <rect x="60" y="34" width="13" height="14" rx="1.5" fill="#8FD8FF" stroke="#0A5D96" strokeWidth="1.6"/>
+      <path d="M58 34l8.5-7 8.5 7z" fill="#7E4BC4" stroke="#0A5D96" strokeWidth="1.6" strokeLinejoin="round"/>
+      <circle cx="70" cy="58" r="7" fill="#B3ECFF" stroke="#2B90CE" strokeWidth="1.8"/>
+      <circle cx="70" cy="58" r="2.4" fill="#FFFFFF"/>
+      <circle cx="38" cy="63" r="3.4" fill="#FFE0C0"/>
+      <rect x="35.6" y="65.5" width="4.8" height="6" rx="2" fill="#FF9EC4"/>
+      <g>
+        <ellipse cx="52" cy="66" rx="3.4" ry="2.8" fill="#F6D6A8"/>
+        <circle cx="49.6" cy="63.4" r="1.6" fill="#F6D6A8"/>
+        <circle cx="54.4" cy="63.4" r="1.6" fill="#F6D6A8"/>
+      </g>
+      <g>
+        <ellipse cx="30" cy="48" rx="3" ry="2.5" fill="#FFF4E8"/>
+        <ellipse cx="28.4" cy="45" rx="1.1" ry="2.2" fill="#FFF4E8"/>
+        <ellipse cx="31.6" cy="45" rx="1.1" ry="2.2" fill="#FFF4E8"/>
+      </g>
     </svg>
   ),
   g15: (
@@ -1090,12 +1081,12 @@ const GAMES = [
     zh:{ name:'动物村庄',          desc:'种蔬菜做料理，\n送给小动物们！' },
     ko:{ name:'동물 마을',        desc:'채소를 키워 요리하고\n동물에게 배달해요!' },
     es:{ name:'Aldea Animal',     desc:'¡Cultiva, cocina y\nreparte a los animales!' } },
-  { id:'g14', route:'/machi',          icon:'🏙️', num:14, color:'#00897B', stars:5, isNew:false, category:'そうぞう',
-    ja:{ name:'わくわくまちづくり', desc:'じぶんだけの\nすてきなまちを\nつくろう！'            },
-    en:{ name:'City Builder',        desc:'Build your own\namazing city!'                      },
-    zh:{ name:'建造城市',             desc:'建造属于自己的\n美丽城市！'                   },
-    ko:{ name:'도시 만들기',           desc:'나만의 멋진\n도시를 만들어요!'                 },
-    es:{ name:'Constructor',           desc:'¡Construye tu propia\nciudad increíble!'       } },
+  { id:'g14', route:'/machi',          icon:'🏙️', num:14, color:'#00897B', stars:5, isNew:true, category:'そうぞう',
+    ja:{ name:'わくわくまちづくり', desc:'3Dの しまを あるいて\nどうぶつと まちを つくろう！' },
+    en:{ name:'Dream Island Town',   desc:'Explore a 3D island and\nbuild a town with animals!' },
+    zh:{ name:'梦幻岛小镇',           desc:'漫步3D小岛，\n和动物一起建造小镇！'             },
+    ko:{ name:'꿈의 섬 마을',          desc:'3D 섬을 걸으며\n동물과 마을을 만들어요!'         },
+    es:{ name:'Pueblo Isla Soñada',  desc:'¡Recorre la isla 3D y\nconstruye con los animales!' } },
   { id:'g15', route:'/kokki', icon:'🌍', num:15, color:'#0d47a1', stars:4, isNew:false, category:'クイズ',
     ja:{ name:'こっきクイズ',    desc:'せかいの こっきを\nみわけよう！\n30かこく以上！'       },
     en:{ name:'Flag Quiz',        desc:'Identify world flags!\n30+ countries!\nTest your knowledge!' },
