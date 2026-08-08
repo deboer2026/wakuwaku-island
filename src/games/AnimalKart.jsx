@@ -17,7 +17,7 @@ export default function AnimalKart() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/animal_kart_v8.html"
+          src="/games/animal_kart_v9.html"
           title="アニマルカートGP 3D"
           allow="autoplay; fullscreen"
           allowFullScreen

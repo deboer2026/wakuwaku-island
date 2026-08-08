@@ -299,13 +299,14 @@ const GAME_SVGS = {
         <linearGradient id="kTrk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#9aa3b5"/><stop offset="1" stopColor="#5b6478"/></linearGradient>
       </defs>
       <rect width="100" height="85" fill="url(#kSky)"/>
-      <circle cx="80" cy="15" r="9" fill="#fff3b0" opacity="0.85"/>
-      <path d="M0 85 L34 38 H66 L100 85 Z" fill="url(#kTrk)"/>
-      <path d="M50 40 V85" stroke="#ffd84d" strokeWidth="4" strokeDasharray="5 7"/>
-      <rect x="34" y="55" width="32" height="13" rx="5" fill="#e8471e"/>
-      <path d="M40 55 l5 -7 h10 l5 7 Z" fill="#c62f14"/>
-      <circle cx="41" cy="69" r="6" fill="#222"/><circle cx="59" cy="69" r="6" fill="#222"/>
-      <circle cx="41" cy="69" r="2.4" fill="#aaa"/><circle cx="59" cy="69" r="2.4" fill="#aaa"/>
+      <path d="M0 84 L20 33 H80 L100 84Z" fill="url(#kTrk)"/>
+      <path d="M22 84 L39 33M50 84V33M78 84L61 33" stroke="#f7d755" strokeWidth="1.6" strokeDasharray="4 4" opacity=".9"/>
+      <path d="M7 48h18" stroke="#58a94f" strokeWidth="5"/><path d="M76 49h18" stroke="#58a94f" strokeWidth="5"/>
+      <path d="M83 31l3 5 6 .7-4.5 4 1.2 6-5.7-3.2-5.5 3.2 1.1-6-4.5-4 6-.7z" fill="#ffe14d" stroke="#e59c16" strokeWidth="1"/>
+      <g transform="translate(15 48) scale(.58)"><rect x="0" y="7" width="27" height="11" rx="4" fill="#6b83dd"/><path d="M7 7l4-6h8l4 6" fill="#7d96f0"/><circle cx="6" cy="19" r="5" fill="#1f2434"/><circle cx="22" cy="19" r="5" fill="#1f2434"/></g>
+      <g transform="translate(58 43) scale(.72)"><rect x="0" y="7" width="27" height="11" rx="4" fill="#57b969"/><path d="M7 7l4-6h8l4 6" fill="#80db81"/><circle cx="6" cy="19" r="5" fill="#1f2434"/><circle cx="22" cy="19" r="5" fill="#1f2434"/></g>
+      <g transform="translate(36 57)"><rect x="0" y="7" width="32" height="13" rx="5" fill="#e8471e"/><path d="M7 7l5-7h10l5 7Z" fill="#ff7752"/><circle cx="7" cy="21" r="6" fill="#202431"/><circle cx="25" cy="21" r="6" fill="#202431"/><circle cx="7" cy="21" r="2.3" fill="#b9c1d1"/><circle cx="25" cy="21" r="2.3" fill="#b9c1d1"/><circle cx="16" cy="1" r="4" fill="#ffd6ad"/><path d="M12-1q4-7 8 0" fill="#ff8e5d"/></g>
+      <rect x="6" y="7" width="28" height="8" rx="3" fill="#17253f" opacity=".8"/><rect x="8" y="9" width="15" height="4" rx="2" fill="#ffe14d"/><rect x="24" y="9" width="8" height="4" rx="2" fill="#ff8469"/>
     </svg>
   ),
   g_block: (
@@ -1161,11 +1162,11 @@ const SCHOOL_GAMES = [
     ko:{ name:'두근두근 바이크 GP',  desc:'8명 중 라이더를 골라\n4대가 3개 3D 코스 대결!' },
     es:{ name:'Moto Wakuwaku GP',  desc:'¡Elige 1 de 8 pilotos!\n4 motos, 3 circuitos 3D.' } },
   { id:'g_kart', route:'/kart', icon:'🏎️', num:9, color:'#e53935', stars:3, isNew:true, category:'レース',
-    ja:{ name:'アニマルカートGP', desc:'6ひきからキャラをえらんで\nほしとアイテムの3Dレース！' },
-    en:{ name:'Animal Kart GP',  desc:'Pick your character and race\nin full 3D with stars & items!' },
-    zh:{ name:'动物卡丁车GP',     desc:'挑选角色，驾驶3D卡丁车\n收集星星和道具冲刺！' },
-    ko:{ name:'애니멀 카트 GP',   desc:'캐릭터를 골라서\n별과 아이템으로 3D 레이스!' },
-    es:{ name:'Kart de Animales GP', desc:'¡Elige tu personaje y compite\nen 3D con estrellas e ítems!' } },
+    ja:{ name:'アニマルカートGP', desc:'6ひきからキャラをえらんで\nほしで とくしゅをためる3Dレース！' },
+    en:{ name:'Animal Kart GP',  desc:'Choose 1 of 6 racers!\nCollect stars for special skills in 3D!' },
+    zh:{ name:'动物卡丁车GP',     desc:'从6位赛车手中选择\n收集星星发动专属技能！' },
+    ko:{ name:'애니멀 카트 GP',   desc:'6명 중 캐릭터를 골라\n별로 특수 기술을 쓰는 3D 레이스!' },
+    es:{ name:'Kart de Animales GP', desc:'¡Elige 1 de 6 pilotos!\nJunta estrellas y usa habilidades en 3D!' } },
   { id:'g_neon', route:'/neon-drive', icon:'🚗', num:22, color:'#00d5ff', stars:5, isNew:true, category:'レース',
     ja:{ name:'きらきらドライブ',  desc:'よるのまちをドライブ！\nほしをあつめてはしろう！' },
     en:{ name:'Neon Drive',        desc:'Cruise the night city\nand collect the stars!' },
