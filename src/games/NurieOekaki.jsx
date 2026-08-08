@@ -17,7 +17,7 @@ export default function NurieOekaki() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/nurie_oekaki_v1.html"
+          src="/games/nurie_oekaki_v2.html"
           title="ぬりえ・おえかき"
           allow="autoplay; fullscreen"
           allowFullScreen

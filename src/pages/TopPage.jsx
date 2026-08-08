@@ -1163,12 +1163,12 @@ const GAMES = [
     zh:{ name:'珠宝大师',           desc:'打磨原石、制作饰品\n经营你自己的\n珠宝店！'                      },
     ko:{ name:'주얼리 마스터',       desc:'원석을 다듬어\n액세서리를 만들고\n가게를 운영해요！'               },
     es:{ name:'Maestro Joyero',    desc:'¡Pule gemas, crea\naccesorios y dirige\ntu propia joyería!'           } },
-  { id:'g_nurie', route:'/nurie', icon:'🖍️', num:17, color:'#FF8A65', stars:3, isNew:true, category:'そうぞう',
-    ja:{ name:'ぬりえ・おえかき', desc:'すきな いろで じゆうに\nぬったり かいたり しよう！' },
-    en:{ name:'Coloring & Drawing', desc:'Color pictures and\ndraw freely!' },
-    zh:{ name:'涂色和画画',         desc:'用喜欢的颜色\n自由涂色画画！' },
-    ko:{ name:'색칠·그림 그리기',   desc:'좋아하는 색으로\n자유롭게 색칠하고 그려요!' },
-    es:{ name:'Colorear y Dibujar', desc:'¡Colorea dibujos\ny dibuja libremente!' } },
+  { id:'g_nurie', route:'/nurie', icon:'🖍️', num:17, color:'#FF8A65', stars:5, isNew:true, category:'そうぞう',
+    ja:{ name:'ぬりえ・おえかき', desc:'ぬって かいて、じぶんの\nキャラや おえかきが うごきだす！' },
+    en:{ name:'Coloring & Drawing', desc:'Draw, color and bring\nyour creations to life!' },
+    zh:{ name:'涂色和画画',         desc:'涂色、画画，让自己的\n角色和作品动起来！' },
+    ko:{ name:'색칠·그림 그리기',   desc:'색칠하고 그리고, 내\n캐릭터와 그림을 움직여요!' },
+    es:{ name:'Colorear y Dibujar', desc:'¡Colorea, dibuja y da\nvida a tus personajes!' } },
 ];
 
 /* ════════════════════════════════════════════════════
