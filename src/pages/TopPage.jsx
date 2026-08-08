@@ -386,21 +386,28 @@ const GAME_SVGS = {
   ),
   g2: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="10" cy="10" r="2" fill="#FFD700" opacity=".6"/>
-      <circle cx="88" cy="15" r="1.5" fill="white" opacity=".5"/>
-      <rect x="28" y="58" width="44" height="24" rx="4" fill="#8B4513" stroke="#5D2E0C" strokeWidth="2"/>
-      <line x1="28" y1="65" x2="72" y2="65" stroke="#5D2E0C" strokeWidth="1.5"/>
-      <line x1="28" y1="72" x2="72" y2="72" stroke="#5D2E0C" strokeWidth="1.5"/>
-      <rect x="32" y="54" width="36" height="6" rx="3" fill="#A0522D" stroke="#5D2E0C" strokeWidth="1.5"/>
-      <circle cx="30" cy="22" r="10" fill="#E53935" stroke="#B71C1C" strokeWidth="1.5"/>
-      <ellipse cx="26" cy="17" rx="3" ry="2" fill="#EF9A9A" opacity=".6" transform="rotate(-20 26 17)"/>
-      <rect x="29" y="11" width="2" height="5" rx="1" fill="#4CAF50"/>
-      <path d="M55 30Q58 10 72 15Q78 18 72 28Q65 38 55 30" fill="#FFD700" stroke="#F57F17" strokeWidth="1.5"/>
-      <ellipse cx="62" cy="17" rx="4" ry="2" fill="#FFF176" opacity=".5" transform="rotate(-25 62 17)"/>
-      <path d="M40 44Q36 34 44 32Q52 30 52 42Q48 50 40 44" fill="#E53935" stroke="#B71C1C" strokeWidth="1.5"/>
-      <ellipse cx="47" cy="32" rx="6" ry="3" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1.2"/>
-      <ellipse cx="43" cy="38" rx="1.2" ry="1.8" fill="#FFCDD2" stroke="#B71C1C" strokeWidth=".6"/>
-      <ellipse cx="48" cy="36" rx="1.2" ry="1.8" fill="#FFCDD2" stroke="#B71C1C" strokeWidth=".6"/>
+      <rect width="100" height="85" rx="12" fill="#AEE8FF"/>
+      <ellipse cx="50" cy="52" rx="48" ry="26" fill="#8FDD7E"/>
+      <ellipse cx="50" cy="52" rx="48" ry="26" fill="none" stroke="#FFFFFF" strokeWidth="2" opacity=".45"/>
+      <circle cx="20" cy="30" r="9" fill="#6FC85C"/>
+      <circle cx="80" cy="28" r="10" fill="#6FC85C"/>
+      <circle cx="14" cy="14" r="5" fill="#FFE27A" opacity=".9"/>
+      <circle cx="17" cy="61" r="7.5" fill="#FFE24A" stroke="#F2A20C" strokeWidth="1.6"/>
+      <circle cx="30" cy="20" r="6.5" fill="#E53935" stroke="#B71C1C" strokeWidth="1.4"/>
+      <rect x="29.2" y="14.5" width="1.6" height="3.6" rx="0.8" fill="#4CAF50"/>
+      <circle cx="72" cy="18" r="5.5" fill="#E53935" stroke="#B71C1C" strokeWidth="1.4"/>
+      <rect x="71.2" y="13.2" width="1.6" height="3.4" rx="0.8" fill="#4CAF50"/>
+      <ellipse cx="50" cy="70" rx="15" ry="4" fill="#FFFFFF" stroke="#FFD84A" strokeWidth="2" opacity=".9"/>
+      <rect x="38" y="58" width="24" height="13" rx="4" fill="#D9A15B" stroke="#8B5E34" strokeWidth="2"/>
+      <path d="M37 58c2-5 8-8 13-8s11 3 13 8z" fill="none" stroke="#8B5E34" strokeWidth="2"/>
+      <circle cx="50" cy="41" r="9" fill="#FFE0C0"/>
+      <path d="M41 37a9 8 0 0118 0z" fill="#7E57C2"/>
+      <circle cx="46.6" cy="42" r="1.3" fill="#3A2A18"/>
+      <circle cx="53.4" cy="42" r="1.3" fill="#3A2A18"/>
+      <path d="M47 45.5q3 2 6 0" fill="none" stroke="#B0793A" strokeWidth="1.2" strokeLinecap="round"/>
+      <path d="M39 53c3-4 8-6 11-6s8 2 11 6l-2 6H41z" fill="#FF9EC4"/>
+      <circle cx="45" cy="30" r="2.6" fill="#FFD84A" stroke="#C9930A" strokeWidth="1"/>
+      <path d="M50 6l1.6 4.4 4.4 1.6-4.4 1.6L50 18l-1.6-4.4L44 12l4.4-1.6z" fill="#FFD84A"/>
     </svg>
   ),
   g4: (
@@ -1015,12 +1022,12 @@ const GAMES = [
     zh:{ name:'泡泡消消乐',           desc:'点击飞来的\n泡泡消消乐！'                   },
     ko:{ name:'비눗방울 팡',           desc:'날아오는 거품을\n탭해서 터뜨려요!'          },
     es:{ name:'Burbuja Pop',           desc:'¡Toca las burbujas\nantes de que escapen!'  } },
-  { id:'g2', route:'/kudamono-catch',  icon:'🍎', num:2, color:'#FF6B35', stars:4, isNew:false, category:'アクション',
-    ja:{ name:'くだものキャッチ',   desc:'おちてくる くだものを\nキャッチしよう！'       },
-    en:{ name:'Fruit Catch',          desc:'Catch falling fruits\nbefore they drop!'      },
-    zh:{ name:'接水果',               desc:'接住掉落的水果！'                             },
-    ko:{ name:'과일 캐치',             desc:'떨어지는 과일을\n잡아요!'                    },
-    es:{ name:'Atrapa Frutas',         desc:'¡Atrapa las frutas\nantes de que caigan!'    } },
+  { id:'g2', route:'/kudamono-catch',  icon:'🍎', num:2, color:'#FF6B35', stars:5, isNew:true, category:'アクション',
+    ja:{ name:'くだものキャッチ',   desc:'3Dの かじゅえんで\nくだものを キャッチ！'      },
+    en:{ name:'Fruit Catch 3D',       desc:'Catch fruits falling\nin a 3D orchard!'       },
+    zh:{ name:'3D接水果',             desc:'在3D果园里\n接住掉落的水果！'                 },
+    ko:{ name:'3D 과일 캐치',          desc:'3D 과수원에서\n과일을 잡아요!'               },
+    es:{ name:'Atrapa Frutas 3D',     desc:'¡Atrapa las frutas\nen un huerto 3D!'         } },
   { id:'g4', route:'/doubutsu-puzzle', icon:'🃏', num:4, color:'#2ECC71', stars:5, isNew:true, category:'パズル',
     ja:{ name:'どうぶつパズル',     desc:'カードをめくって\nおなじどうぶつさがし！'       },
     en:{ name:'Animal Memory Match',  desc:'Flip cards and find\nmatching animals!'        },

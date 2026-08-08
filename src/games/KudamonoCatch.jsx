@@ -17,8 +17,8 @@ export default function KudamonoCatch() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/kudamono_v2.html"
-          title="くだものキャッチ"
+          src="/games/kudamono_v3.html"
+          title="くだものキャッチ 3D"
           allow="autoplay; fullscreen"
           allowFullScreen
           sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
