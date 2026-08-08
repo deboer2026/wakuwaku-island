@@ -747,9 +747,9 @@ function openInvModal(){
   h += '<p style="text-align:center;font-weight:900;margin:10px 0 0">🗺️ ちずのかけら '+S.mapPieces+'/4　💛 なかよし</p>';
   h += '<p style="text-align:center;margin:4px 0 0">';
   Object.keys(ANIMALS).forEach(a=>{ h += ANIMALS[a].icon + '<span class="hearts">'+"❤️".repeat(Math.min(5,S.friends[a]||0))+'</span> '; });
-  h += '</p><button class="mBtn sub" id="mClose">とじる</button>';
+  h += '</p><button class="mBtn sub" id="invClose">とじる</button>';
   openModal(h);
-  document.getElementById("mClose").addEventListener("click", closeModal);
+  document.getElementById("invClose").addEventListener("click", closeModal);
 }
 document.getElementById("invBtn").addEventListener("click", ()=>{ ensureAudio(); openInvModal(); });
 
@@ -767,8 +767,8 @@ function openPlotUnlockModal(idx){
   const rankOk = (S.progression.farmingRank||1) >= (def.unlockRank||1);
   const label = def.type==="orchard" ? "くだものばたけ" : def.type==="herb" ? "ハーブばたけ" : "ついかの はたけ";
   openModal('<h2>🔒 '+label+'</h2><p style="text-align:center;font-weight:900;line-height:1.7">のうぎょうランク '+(def.unlockRank||1)+' で かいほう<br>ひつよう：👑 '+(def.cost||0)+'</p>'+
-    '<button class="mBtn" id="mUnlock"'+(rankOk && S.crowns >= (def.cost||0) ? '' : ' disabled')+'>かいほうする！</button><button class="mBtn sub" id="mClose">まだにする</button>');
-  document.getElementById("mClose").addEventListener("click", closeModal);
+    '<button class="mBtn" id="mUnlock"'+(rankOk && S.crowns >= (def.cost||0) ? '' : ' disabled')+'>かいほうする！</button><button class="mBtn sub" id="plotUnlockClose">まだにする</button>');
+  document.getElementById("plotUnlockClose").addEventListener("click", closeModal);
   const b = document.getElementById("mUnlock");
   if(b) b.addEventListener("click", ()=>{
     if(!rankOk || S.crowns < (def.cost||0) || p.unlocked) return;
@@ -787,9 +787,9 @@ function openSeedModal(idx){
     const sub = locked ? ("🔒 ランク"+cr.unlockRank) : ((price?"たね 👑"+price+" / ":"")+"そだつまで "+cr.time+"びょう");
     h += '<div class="card'+(buyable?'':' dis')+'" data-c="'+c+'"><span class="big">'+CROP_ICON[c]+'</span>'+cr.name+'<small>'+sub+'</small></div>';
   });
-  h += '</div><button class="mBtn sub" id="mClose">やめる</button>';
+  h += '</div><button class="mBtn sub" id="seedClose">やめる</button>';
   openModal(h);
-  document.getElementById("mClose").addEventListener("click", closeModal);
+  document.getElementById("seedClose").addEventListener("click", closeModal);
   modalEl.querySelectorAll(".card[data-c]").forEach(el=>{
     el.addEventListener("click", ()=>{
       const crop = el.getAttribute("data-c");
@@ -904,9 +904,9 @@ function openKitchenModal(){
     const sub=unlocked ? needTxt+'<br>さいこう '+("⭐".repeat(rp.bestStars)||"−")+' / '+rp.timesCooked+'かい' : '🔒 りょうりランク '+(r.cookingRank||1);
     h += '<div class="card'+(ok?'':' dis')+'" data-r="'+id+'"><span class="big">'+(DISH_ICON[id]||"🍽️")+'</span>'+r.name+'<small>'+sub+'</small></div>';
   });
-  h += '</div><p style="text-align:center;font-weight:900;font-size:12px;margin:8px 0 0;opacity:.7">こうていを じょうずに つないで ⭐3を めざそう！</p><button class="mBtn sub" id="mClose">やめる</button>';
+  h += '</div><p style="text-align:center;font-weight:900;font-size:12px;margin:8px 0 0;opacity:.7">こうていを じょうずに つないで ⭐3を めざそう！</p><button class="mBtn sub" id="recipeClose">やめる</button>';
   openModal(h);
-  document.getElementById("mClose").addEventListener("click", closeModal);
+  document.getElementById("recipeClose").addEventListener("click", closeModal);
   modalEl.querySelectorAll(".card[data-r]").forEach(el=>el.addEventListener("click",()=>startCooking(el.getAttribute("data-r"))));
 }
 function startCooking(recipeId){
@@ -1036,14 +1036,14 @@ function talkAnimal(animalId){
     h += '<p style="text-align:center;font-weight:900;font-size:13px;margin:6px 0 0;opacity:.85">📋 '+q.text+'</p>';
     if(ok) h += '<button class="mBtn" id="mQuest">わたす</button>';
   }
-  h += '<button class="mBtn sub" id="mClose">またね</button>';
+  h += '<button class="mBtn sub" id="residentClose">またね</button>';
   openModal(h);
   if(rs){ const first=!rs.metOnce; rs.metOnce = true; registerDiscovery("residents",animalId,{count:1,bestQuality:S.friends[animalId]||0}); if(first){ updateAchievementProgress("talk"); addVillageXp(1); } save(); }
   const g = document.getElementById("mGive");
   if(g) g.addEventListener("click", ()=> deliver(animalId, oi));
   const qb = document.getElementById("mQuest");
   if(qb) qb.addEventListener("click", ()=> fulfillQuest(animalId));
-  const c = document.getElementById("mClose");
+  const c = document.getElementById("residentClose");
   if(c) c.addEventListener("click", closeModal);
 }
 function fulfillQuest(animalId){
@@ -1166,9 +1166,9 @@ function openShopModal(){
     const afford = S.crowns >= it.price;
     h += '<div class="card'+((!owned && !afford)?' dis':'')+'" data-i="'+id+'"><span class="big">'+shopIcon(shopTab,id)+'</span>'+it.name+'<small>'+sub+'</small></div>';
   });
-  h += '</div><button class="mBtn sub" id="mClose">とじる</button>';
+  h += '</div><button class="mBtn sub" id="shopClose">とじる</button>';
   openModal(h);
-  document.getElementById("mClose").addEventListener("click", closeModal);
+  document.getElementById("shopClose").addEventListener("click", closeModal);
   modalEl.querySelectorAll(".tab").forEach(el=> el.addEventListener("click", ()=>{ shopTab = el.getAttribute("data-t"); openShopModal(); }));
   modalEl.querySelectorAll(".card[data-i]").forEach(el=>{
     el.addEventListener("click", ()=>{
@@ -3026,10 +3026,10 @@ function collectRegionNode(node){
 function startFishing(node){
   if(fishingState){ return; }
   fishingState={node:node, started:Date.now(), target:.45+Math.random()*.25};
-  openModal('<h2>🎣 つり</h2><p id="fishText">ゲージが まんなかに 来たら ひく！</p><div style="height:18px;background:#d9f5ff;border-radius:9px;overflow:hidden"><div id="fishGauge" style="height:100%;width:0;background:#50bce8"></div></div><button class="mBtn" id="fishPull">ひく！</button><button class="mBtn sub" id="mClose">やめる</button>');
+  openModal('<h2>🎣 つり</h2><p id="fishText">ゲージが まんなかに 来たら ひく！</p><div style="height:18px;background:#d9f5ff;border-radius:9px;overflow:hidden"><div id="fishGauge" style="height:100%;width:0;background:#50bce8"></div></div><button class="mBtn" id="fishPull">ひく！</button><button class="mBtn sub" id="fishingClose">やめる</button>');
   const timer=setInterval(()=>{ if(!fishingState){clearInterval(timer);return;} const p=((Date.now()-fishingState.started)%1800)/1800; const el=document.getElementById("fishGauge"); if(el) el.style.width=(p*100)+"%"; },50);
   document.getElementById("fishPull").addEventListener("click",()=>{ const p=((Date.now()-fishingState.started)%1800)/1800; const ok=Math.abs(p-fishingState.target)<.16; fishingState=null; clearInterval(timer); closeModal(); if(ok){S.gathered.riverFish=(S.gathered.riverFish||0)+1; S.exploration.nodes[node.id]=Date.now(); incrementDiscovery("fish","riverFish",1); updateAchievementProgress("fish"); updateAchievementProgress("gather"); addVillageXp(2); addExplorationXp(5); completeExplorationQuests("river"); save(); refreshRegionNodes(); toast("🐟 さかなが つれた！");}else toast("にげられちゃった…"); });
-  document.getElementById("mClose").addEventListener("click",()=>{ fishingState=null; clearInterval(timer); closeModal(); });
+  document.getElementById("fishingClose").addEventListener("click",()=>{ fishingState=null; clearInterval(timer); closeModal(); });
 }
 function completeExplorationQuests(area){
   (REGION_QUESTS[area]||[]).forEach(q=>{
@@ -3161,14 +3161,14 @@ function openEncyclopedia(category){
   cats.forEach(c=>{ h+='<button class="tab '+(c===category?'on':'')+'" data-ec="'+c+'">'+ENCYCLOPEDIA_CATEGORY_LABELS[c]+' '+categoryDiscovered(c)+'/'+catalogItems(c).length+'</button>'; }); h+='</div><div class="tabs"><button class="tab '+(encyclopediaSort==='new'?'on':'')+'" data-es="new">あたらしい順</button><button class="tab '+(encyclopediaSort==='name'?'on':'')+'" data-es="name">なまえ順</button></div><div class="cardGrid">';
   const entries=catalogItems(category).slice().sort((a,b)=>{ const ae=S.encyclopedia.entries[a.category+":"+a.id]||{},be=S.encyclopedia.entries[b.category+":"+b.id]||{}; return encyclopediaSort==='name'?a.name.localeCompare(b.name,'ja'):(Number(be.firstDiscoveredAt||0)-Number(ae.firstDiscoveredAt||0)||a.name.localeCompare(b.name,'ja')); });
   entries.forEach(def=>{ const key=def.category+":"+def.id,e=S.encyclopedia.entries[key],found=e&&e.discovered,isNew=S.encyclopedia.newEntries.indexOf(key)>=0; h+='<div class="card" data-ed="'+key+'"><span class="big">'+(found?def.iconType:'❔')+'</span>'+(found?def.name:'？？？')+'<small>'+(found?('×'+(e.count||0)+(e.bestQuality?"　★".repeat(e.bestQuality):"")):(def.hint||"みつけてみよう"))+(isNew?'　🆕':'')+'</small></div>'; });
-  h+='</div><p style="text-align:center;font-size:12px">カテゴリごほうび　25% / 50% / 75% / 100%</p><div class="tabs">'; [25,50,75,100].forEach(n=>h+='<button class="tab" data-er="'+n+'" '+(rate<n?'disabled':'')+'>'+n+'% '+(S.encyclopedia.rewards[collectionRewardKey(category,n)]?'✅':'🎁')+'</button>'); h+='</div><p style="text-align:center;font-size:12px">ぜんたいごほうび</p><div class="tabs">'; [25,50,75,100].forEach(n=>h+='<button class="tab" data-eall="'+n+'" '+(overallRate()<n?'disabled':'')+'>'+n+'% '+(S.encyclopedia.rewards[collectionRewardKey("all",n)]?'✅':'🎁')+'</button>'); h+='</div><button class="mBtn sub" id="mClose">とじる</button>';
-  openModal(h); document.getElementById("mClose").addEventListener("click",closeModal); modalEl.querySelectorAll("[data-ec]").forEach(b=>b.addEventListener("click",()=>openEncyclopedia(b.dataset.ec))); modalEl.querySelectorAll("[data-es]").forEach(b=>b.addEventListener("click",()=>{encyclopediaSort=b.dataset.es;openEncyclopedia(category);})); modalEl.querySelectorAll("[data-er]").forEach(b=>b.addEventListener("click",()=>{claimCollectionReward(category,Number(b.dataset.er)); openEncyclopedia(category);})); modalEl.querySelectorAll("[data-eall]").forEach(b=>b.addEventListener("click",()=>{claimCollectionReward("all",Number(b.dataset.eall)); openEncyclopedia(category);})); modalEl.querySelectorAll("[data-ed]").forEach(b=>b.addEventListener("click",()=>{ const key=b.dataset.ed,e=S.encyclopedia.entries[key]; if(e){S.encyclopedia.newEntries=S.encyclopedia.newEntries.filter(x=>x!==key); save(); openEncyclopedia(category);} }));
+  h+='</div><p style="text-align:center;font-size:12px">カテゴリごほうび　25% / 50% / 75% / 100%</p><div class="tabs">'; [25,50,75,100].forEach(n=>h+='<button class="tab" data-er="'+n+'" '+(rate<n?'disabled':'')+'>'+n+'% '+(S.encyclopedia.rewards[collectionRewardKey(category,n)]?'✅':'🎁')+'</button>'); h+='</div><p style="text-align:center;font-size:12px">ぜんたいごほうび</p><div class="tabs">'; [25,50,75,100].forEach(n=>h+='<button class="tab" data-eall="'+n+'" '+(overallRate()<n?'disabled':'')+'>'+n+'% '+(S.encyclopedia.rewards[collectionRewardKey("all",n)]?'✅':'🎁')+'</button>'); h+='</div><button class="mBtn sub" id="encyclopediaClose">とじる</button>';
+  openModal(h); document.getElementById("encyclopediaClose").addEventListener("click",closeModal); modalEl.querySelectorAll("[data-ec]").forEach(b=>b.addEventListener("click",()=>openEncyclopedia(b.dataset.ec))); modalEl.querySelectorAll("[data-es]").forEach(b=>b.addEventListener("click",()=>{encyclopediaSort=b.dataset.es;openEncyclopedia(category);})); modalEl.querySelectorAll("[data-er]").forEach(b=>b.addEventListener("click",()=>{claimCollectionReward(category,Number(b.dataset.er)); openEncyclopedia(category);})); modalEl.querySelectorAll("[data-eall]").forEach(b=>b.addEventListener("click",()=>{claimCollectionReward("all",Number(b.dataset.eall)); openEncyclopedia(category);})); modalEl.querySelectorAll("[data-ed]").forEach(b=>b.addEventListener("click",()=>{ const key=b.dataset.ed,e=S.encyclopedia.entries[key]; if(e){S.encyclopedia.newEntries=S.encyclopedia.newEntries.filter(x=>x!==key); save(); openEncyclopedia(category);} }));
 }
 function openAchievements(category){
   const cats=["farm","cook","social","explore","collection","secret"]; category=category||cats[0]; let h='<h2>🏅 じっせき</h2><p style="text-align:center;font-weight:900">🏡 '+S.progression.title+'　未受取 '+ACHIEVEMENTS.filter(a=>S.achievements.unlocked[a.id]&&!S.achievements.rewardsClaimed[a.id]).length+'こ</p><div class="tabs">';
   cats.forEach(c=>h+='<button class="tab '+(c===category?'on':'')+'" data-ac="'+c+'">'+({farm:"農業",cook:"料理",social:"交流",explore:"探索",collection:"図鑑",secret:"ひみつ"}[c])+'</button>'); h+='</div><div class="cardGrid">';
   ACHIEVEMENTS.filter(a=>a.category===category).forEach(a=>{ const unlocked=!!S.achievements.unlocked[a.id], hidden=a.hidden&&!unlocked, value=Math.min(a.target,a.value()), percent=Math.round(value*100/a.target); h+='<div class="card"><span class="big">'+(unlocked?'🏅':'🔒')+'</span>'+(hidden?'？？？':a.title)+'<small>'+(hidden?'ひみつの じっせき':a.description+'　'+value+'/'+a.target)+'</small><span aria-label="進捗 '+percent+'%" style="display:block;height:6px;margin:5px 0;border-radius:5px;background:#ece7ff;overflow:hidden"><i style="display:block;height:100%;width:'+percent+'%;background:#8a6cff"></i></span>'+(unlocked?'<button class="mBtn" data-ar="'+a.id+'" '+(S.achievements.rewardsClaimed[a.id]?'disabled':'')+'>'+(S.achievements.rewardsClaimed[a.id]?'うけとった':'ごほうび')+'</button>':'')+'</div>'; });
-  h+='</div><button class="mBtn sub" id="mClose">とじる</button>'; openModal(h); document.getElementById("mClose").addEventListener("click",closeModal); modalEl.querySelectorAll("[data-ac]").forEach(b=>b.addEventListener("click",()=>openAchievements(b.dataset.ac))); modalEl.querySelectorAll("[data-ar]").forEach(b=>b.addEventListener("click",()=>{claimAchievement(b.dataset.ar);openAchievements(category);}));
+  h+='</div><button class="mBtn sub" id="achievementClose">とじる</button>'; openModal(h); document.getElementById("achievementClose").addEventListener("click",closeModal); modalEl.querySelectorAll("[data-ac]").forEach(b=>b.addEventListener("click",()=>openAchievements(b.dataset.ac))); modalEl.querySelectorAll("[data-ar]").forEach(b=>b.addEventListener("click",()=>{claimAchievement(b.dataset.ar);openAchievements(category);}));
 }
 const PHASE5_DEFINITION_ISSUES = (()=>{ const ids=ENCYCLOPEDIA_CATALOG.map(x=>x.category+":"+x.id), aids=ACHIEVEMENTS.map(x=>x.id); return { duplicateCatalog:ids.filter((x,i)=>ids.indexOf(x)!==i), duplicateAchievements:aids.filter((x,i)=>aids.indexOf(x)!==i), missingCatalog:ENCYCLOPEDIA_CATALOG.filter(x=>!x.name).map(x=>x.id) }; })();
 
