@@ -1293,11 +1293,12 @@ const SCHOOL_GAMES = [
     es:{ name:'Historia de la Corona', desc:'¡Aventúrate por tres\nreinos con tu héroe!' } },
 ];
 
-/* ── 全ゲーム統合(チャレンジ系は🔥マーク) ── */
+/* ── 全ゲーム統合。hard は既存の年齢フィルター分類にだけ使う。 ── */
 const ALL_SHELF_GAMES = [
   ...GAMES,
   ...SCHOOL_GAMES.map(g => ({ ...g, hard: true })),
 ];
+const TOTAL_GAME_COUNT = Object.keys(GAME_META).length;
 /* ── 棚グループ定義(6棚)。アクションはゲーム性で2分割 ── */
 const SHELF_SHOOT_JUMP = ['s3','s4','g_sora','g_mori','g_block']; // ねらう・とぶ系
 const SHELF_GROUPS = [
@@ -1315,19 +1316,31 @@ const SHELF_GROUPS = [
     label:{ja:'まなぶ',       en:'Learn',       zh:'学习',   ko:'배우기',     es:'Aprender' } },
 ];
 
-/* ── カテゴリチップ(4分類。既存categoryをグループにマップ) ── */
-const CAT_CHIPS = [
-  { key:'all',    match:() => true,
-    label:{ja:'ぜんぶ',     en:'All',    zh:'全部', ko:'전체',   es:'Todos'} },
-  { key:'action', match:g => ['アクション','レース'].includes(g.category),
-    label:{ja:'アクション', en:'Action', zh:'动作', ko:'액션',   es:'Acción'} },
-  { key:'puzzle', match:g => g.category === 'パズル',
-    label:{ja:'パズル',     en:'Puzzle', zh:'益智', ko:'퍼즐',   es:'Puzle'} },
-  { key:'create', match:g => g.category === 'そうぞう',
-    label:{ja:'つくる',     en:'Create', zh:'创造', ko:'만들기', es:'Crear'} },
-  { key:'learn',  match:g => ['かずあそび','もじあそび','クイズ','がくしゅう'].includes(g.category),
-    label:{ja:'がくしゅう', en:'Learn',  zh:'学习', ko:'배우기', es:'Aprender'} },
+/* フィルターは棚定義から派生させ、分類ルールを一元化する。 */
+const CATEGORY_FILTERS = [
+  { key:'all', icon:'🎮', match:() => true,
+    label:{ja:'ぜんぶ', en:'All', zh:'全部', ko:'전체', es:'Todos'} },
+  ...SHELF_GROUPS,
 ];
+
+/* 棚だけに適用する優先順。未登録のゲームは元の登録順のまま後ろへ並ぶ。 */
+const SHELF_PRIORITY = {
+  asobu: ['/kudamono-catch','/otakara-horihori','/astral-fang','/oukan-monogatari','/mahou-nakama'],
+  nerau: ['/mori','/sora','/shooting','/block','/sniper'],
+  race: ['/kart','/bike','/neon-drive','/houki','/runner'],
+  kangaeru: ['/doubutsu-puzzle','/kakurenbo','/mahou-meiro','/iro','/kokki'],
+  tsukuru: ['/machi','/mura','/jewelry-master','/nurie'],
+  manabu: ['/katachi','/katakana-asobi','/tokei-yomi'],
+};
+
+function sortShelfItems(items, groupKey) {
+  const ranks = new Map((SHELF_PRIORITY[groupKey] || []).map((route, index) => [route, index]));
+  return items
+    .map((game, index) => ({ game, index }))
+    .sort((a, b) => (ranks.has(a.game.route) ? ranks.get(a.game.route) : Number.MAX_SAFE_INTEGER)
+      - (ranks.has(b.game.route) ? ranks.get(b.game.route) : Number.MAX_SAFE_INTEGER) || a.index - b.index)
+    .map(entry => entry.game);
+}
 
 /* ── 年齢別の入口。年齢が重複するゲームは、遊びやすさで一つの棚に振り分ける ── */
 const AGE_FILTERS = [
@@ -1391,6 +1404,51 @@ function ageText(game, lang) {
 
 /* ── 実ゲーム画面サムネイル(public/thumbs/<route>.webp)。
       未配置・読込失敗時は非表示→既存SVG/アイコンにフォールバック ── */
+function HorizontalRail({ className, children, labels, railProps = {} }) {
+  const railRef = useRef(null);
+  const [edge, setEdge] = useState({ left:false, right:false });
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return undefined;
+    const update = () => {
+      const max = Math.max(0, rail.scrollWidth - rail.clientWidth);
+      const next = { left: rail.scrollLeft > 2, right: rail.scrollLeft < max - 2 };
+      setEdge(current => current.left === next.left && current.right === next.right ? current : next);
+    };
+    update();
+    const frame = window.requestAnimationFrame(update);
+    const settleTimer = window.setTimeout(update, 100);
+    rail.addEventListener('scroll', update, { passive:true });
+    window.addEventListener('resize', update);
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+    observer?.observe(rail);
+    return () => {
+      rail.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(settleTimer);
+      observer?.disconnect();
+    };
+  }, [children]);
+
+  const move = (direction) => {
+    const rail = railRef.current;
+    if (!rail) return;
+    rail.scrollBy({ left: direction * Math.max(rail.clientWidth * 0.75, 180), behavior:'smooth' });
+  };
+
+  return (
+    <div className="tp-horizontal-rail">
+      <div ref={railRef} className={className} {...railProps}>{children}</div>
+      {edge.left && <span className="tp-rail-fade tp-rail-fade--left" aria-hidden="true" />}
+      {edge.right && <span className="tp-rail-fade tp-rail-fade--right" aria-hidden="true" />}
+      {edge.left && <button type="button" className="tp-rail-cue tp-rail-cue--left" aria-label={labels.left} onClick={() => move(-1)}>‹</button>}
+      {edge.right && <button type="button" className="tp-rail-cue tp-rail-cue--right" aria-label={labels.right} onClick={() => move(1)}>›</button>}
+    </div>
+  );
+}
+
 /* ── 棚用コンパクトカード ── */
 function ShelfCard({ game, lang, onClick }) {
   const t = game[lang] || game.ja;
@@ -1403,7 +1461,6 @@ function ShelfCard({ game, lang, onClick }) {
       aria-label={`${t.name}、${ageText(game, lang)}`}
     >
       {FEATURED_NEW_ROUTES.has(game.route) && <span className="tp-shelf-new">NEW</span>}
-      {game.hard && <span className="tp-shelf-hard">🔥</span>}
       <div className="tp-shelf-art">
         {GAME_SVGS[game.id] || <span className="tp-shelf-icon-fb">{game.icon}</span>}
         {thumb && (
@@ -1617,7 +1674,7 @@ export default function TopPage() {
   useEffect(() => {
     try {
       const hist = getPlayHistory() || {};
-      const counts = CAT_CHIPS.slice(1).map(c => [c, ALL_SHELF_GAMES.filter(g => c.match(g) && hist[g.route]).length]);
+      const counts = CATEGORY_FILTERS.slice(1).map(c => [c, ALL_SHELF_GAMES.filter(g => c.match(g) && hist[g.route]).length]);
       counts.sort((a, b) => b[1] - a[1]);
       const fav = counts[0] && counts[0][1] > 0 ? counts[0][0] : null;
       const pool = fav
@@ -1782,7 +1839,7 @@ export default function TopPage() {
       </div>
       <Helmet>
         <title>わくわくアイランド｜こども向け無料ブラウザゲーム</title>
-        <meta name="description" content="幼児・小学生向けの無料ミニゲームが20種類以上。かず・もじ・パズル・アクション・レースなどを登録不要・インストール不要でブラウザですぐ遊べます。" />
+        <meta name="description" content={`幼児・小学生向けの無料ミニゲームが${TOTAL_GAME_COUNT}種類。かず・もじ・パズル・アクション・レースなどを登録不要・インストール不要でブラウザですぐ遊べます。`} />
         <link rel="canonical" href="https://wakuwakuislands.com/" />
       </Helmet>
 
@@ -1994,8 +2051,15 @@ export default function TopPage() {
         {/* ── カテゴリ・年齢の絞り込み ── */}
         <div className="tp-sticky-bar">
           <div className="tp-filter-stack">
-            <div className="tp-cat-chips" role="tablist" aria-label="カテゴリ">
-              {CAT_CHIPS.map(c => (
+            <HorizontalRail
+              className="tp-cat-chips"
+              railProps={{ role:'tablist', 'aria-label':'カテゴリ' }}
+              labels={{
+                left: ({ja:'ひだりのカテゴリをみる', en:'See categories to the left', zh:'查看左侧分类', ko:'왼쪽 카테고리 보기', es:'Ver categorías a la izquierda'}[lang] || 'ひだりのカテゴリをみる'),
+                right: ({ja:'みぎのカテゴリをみる', en:'See categories to the right', zh:'查看右侧分类', ko:'오른쪽 카테고리 보기', es:'Ver categorías a la derecha'}[lang] || 'みぎのカテゴリをみる'),
+              }}
+            >
+              {CATEGORY_FILTERS.map(c => (
                 <button
                   key={c.key}
                   role="tab"
@@ -2003,10 +2067,10 @@ export default function TopPage() {
                   className={`tp-cat-chip${catKey === c.key ? ' tp-cat-chip--on' : ''}`}
                   onClick={() => setCatKey(c.key)}
                 >
-                  {c.label[lang] || c.label.ja}
+                  <span aria-hidden="true">{c.icon} </span>{c.label[lang] || c.label.ja}
                 </button>
               ))}
-            </div>
+            </HorizontalRail>
             <div className="tp-age-filter" role="tablist" aria-label={lang === 'ja' ? '年齢で選ぶ' : 'Choose by age'}>
               <strong>{{ja:'ねんれいで えらぶ', en:'Choose by age', zh:'按年龄选择', ko:'나이로 선택', es:'Elegir por edad'}[lang] || 'ねんれいで えらぶ'}</strong>
               <div>
@@ -2028,16 +2092,22 @@ export default function TopPage() {
 
         {/* ── ジャンルグループ別ゲーム棚(6棚) ── */}
         {SHELF_GROUPS.map(grp => {
-          const chip  = CAT_CHIPS.find(c => c.key === catKey) || CAT_CHIPS[0];
+          const chip  = CATEGORY_FILTERS.find(c => c.key === catKey) || CATEGORY_FILTERS[0];
           const age   = AGE_FILTERS.find(item => item.key === ageKey) || AGE_FILTERS[0];
-          const items = ALL_SHELF_GAMES.filter(grp.match).filter(chip.match).filter(age.match);
+          const items = sortShelfItems(ALL_SHELF_GAMES.filter(grp.match).filter(chip.match).filter(age.match), grp.key);
           if (items.length === 0) return null;
           return (
             <div className="tp-shelf" key={grp.key}>
               <div className="tp-shelf-title">
                 {grp.icon} {grp.label[lang] || grp.label.ja}
               </div>
-              <div className="tp-shelf-scroll">
+              <HorizontalRail
+                className="tp-shelf-scroll"
+                labels={{
+                  left: ({ja:'ひだりのゲームをみる', en:'See games to the left', zh:'查看左侧游戏', ko:'왼쪽 게임 보기', es:'Ver juegos a la izquierda'}[lang] || 'ひだりのゲームをみる'),
+                  right: ({ja:'みぎのゲームをみる', en:'See games to the right', zh:'查看右侧游戏', ko:'오른쪽 게임 보기', es:'Ver juegos a la derecha'}[lang] || 'みぎのゲームをみる'),
+                }}
+              >
                 {items.map(game => (
                   <ShelfCard
                     key={game.id}
@@ -2046,7 +2116,7 @@ export default function TopPage() {
                     onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY); }}
                   />
                 ))}
-              </div>
+              </HorizontalRail>
             </div>
           );
         })}
@@ -2057,7 +2127,7 @@ export default function TopPage() {
             <div className="tp-recent-title">
               🕐 {{ja:'さいきんあそんだゲーム', en:'Recently Played', zh:'最近玩过', ko:'최근 플레이', es:'Reciente'}[lang] || 'さいきんあそんだゲーム'}
             </div>
-            <div className="tp-recent-scroll">
+            <HorizontalRail className="tp-recent-scroll" labels={{ left:({ja:'ひだりのゲームをみる',en:'See games to the left', zh:'查看左侧游戏', ko:'왼쪽 게임 보기', es:'Ver juegos a la izquierda'}[lang] || 'ひだりのゲームをみる'), right:({ja:'みぎのゲームをみる',en:'See games to the right', zh:'查看右侧游戏', ko:'오른쪽 게임 보기', es:'Ver juegos a la derecha'}[lang] || 'みぎのゲームをみる') }}>
               {recentGames.map(g => (
                 <button
                   key={g.route}
@@ -2068,7 +2138,7 @@ export default function TopPage() {
                   <span className="tp-recent-name">{(g[lang] || g.ja).name}</span>
                 </button>
               ))}
-            </div>
+            </HorizontalRail>
           </div>
         )}
 
@@ -2078,7 +2148,7 @@ export default function TopPage() {
             <div className="tp-recent-title">
               💡 {{ja:'きみに オススメ', en:'For You', zh:'为你推荐', ko:'추천 게임', es:'Para ti'}[lang] || 'きみに オススメ'}
             </div>
-            <div className="tp-recent-scroll">
+            <HorizontalRail className="tp-recent-scroll" labels={{ left:({ja:'ひだりのゲームをみる',en:'See games to the left', zh:'查看左侧游戏', ko:'왼쪽 게임 보기', es:'Ver juegos a la izquierda'}[lang] || 'ひだりのゲームをみる'), right:({ja:'みぎのゲームをみる',en:'See games to the right', zh:'查看右侧游戏', ko:'오른쪽 게임 보기', es:'Ver juegos a la derecha'}[lang] || 'みぎのゲームをみる') }}>
               {recoGames.map(g => (
                 <button
                   key={g.route}
@@ -2089,7 +2159,7 @@ export default function TopPage() {
                   <span className="tp-recent-name">{(g[lang] || g.ja).name}</span>
                 </button>
               ))}
-            </div>
+            </HorizontalRail>
           </div>
         )}
       </div>

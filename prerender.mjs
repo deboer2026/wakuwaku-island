@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 const { render } = await import('./dist-server/entry-server.js')
 const GAME_META = (await import('./src/seo/gameMeta.js')).default
+const TOP_GAME_COUNT = Object.keys(GAME_META).length
 
 // トップ + 全ゲーム正規ルート（エイリアスは canonical に集約するため除外）
 const routes = ['/', ...Object.keys(GAME_META)]
@@ -46,13 +47,19 @@ function stripTopHead(html) {
     .replace(/\s*<script type="application\/ld\+json">\s*\{"@context":"https:\/\/schema\.org","@type":"FAQPage"[\s\S]*?<\/script>/, '')
 }
 
+function syncTopGameCount(html) {
+  return html
+    .replace(/無料ミニゲームが\d+種類以上/g, `無料ミニゲームが${TOP_GAME_COUNT}種類`)
+    .replace(/など\d+種類以上のミニゲーム/g, `など${TOP_GAME_COUNT}種類のミニゲーム`)
+}
+
 for (const url of routes) {
   const { html, helmet } = render(url)
   const { hoisted, body } = hoistHeadTags(html)
   let page
   if (url === '/') {
     // トップは既存の静的 head を維持し、本文だけ差し込む（hoisted は静的 head と重複するため破棄）
-    page = template.replace(ROOT, `<div id="root">${body}</div>`)
+    page = syncTopGameCount(template.replace(ROOT, `<div id="root">${body}</div>`))
   } else {
     const headTags = [buildHead(helmet), hoisted].filter(Boolean).join('\n    ')
     page = stripTopHead(template)
