@@ -7,7 +7,7 @@ const rel = (...parts) => path.join(root, ...parts);
 const posix = (value) => value.split(path.sep).join('/');
 const knownCategories = new Set([
   'アクション', 'パズル', 'かずあそび', 'もじあそび',
-  'クイズ', 'そうぞう', 'レース', 'がくしゅう',
+  'クイズ', 'そうぞう', 'レース', 'がくしゅう', 'ぼうけん',
 ]);
 const errors = [];
 const warnings = [];

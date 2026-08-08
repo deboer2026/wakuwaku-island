@@ -4,7 +4,7 @@ import { useIframeBridge } from '../hooks/useIframeBridge';
 import GameContent from '../seo/GameContent';
 import HomeChip from '../components/HomeChip';
 
-export default function OukanMonogatari() {
+export default function NijiiroOukoku() {
   const navigate = useNavigate();
   const iframeRef = useRef(null);
   useIframeBridge(iframeRef);
@@ -28,14 +28,14 @@ export default function OukanMonogatari() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/oukan_monogatari_v1.html"
-          title="おうかんものがたり"
+          src="/games/oukan_monogatari_v2.html"
+          title="にじいろおうこく"
           allow="autoplay; fullscreen"
           allowFullScreen
           sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
         />
       </div>
-      <GameContent route="/oukan-monogatari" />
+      <GameContent route="/nijiiro-oukoku" />
     </div>
   );
 }

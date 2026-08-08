@@ -25,6 +25,7 @@ const CARD_GRADIENTS = {
   'そうぞう':   'linear-gradient(145deg, #C97FE0, #3D0D6B)',
   'レース':     'linear-gradient(145deg, #F9A825, #E53935)',
   'がくしゅう': 'linear-gradient(145deg, #7986CB, #283593)',
+  'ぼうけん':   'linear-gradient(145deg, #8ED8C1, #9B82D8)',
 };
 const DEFAULT_GRADIENT = 'linear-gradient(145deg, #7B8FA1, #3D4A5C)';
 
@@ -38,6 +39,7 @@ const CATEGORIES = [
   { key:'クイズ',     icon:'❓', label:{ja:'クイズ',     en:'Quiz',     zh:'问答',   ko:'퀴즈',   es:'Quiz'    } },
   { key:'そうぞう',   icon:'🎨', label:{ja:'そうぞう',   en:'Create',   zh:'创造',   ko:'창작',   es:'Crear'   } },
   { key:'がくしゅう', icon:'📚', label:{ja:'がくしゅう', en:'Study',    zh:'学习',   ko:'학습',   es:'Estudio' } },
+  { key:'ぼうけん',   icon:'🌈', label:{ja:'ぼうけん',   en:'Adventure', zh:'冒险',   ko:'모험',   es:'Aventura'} },
 ];
 
 /* ── マスコットのセリフ ──────────────────────────── */
@@ -80,20 +82,40 @@ const GAME_SVGS = {
     </svg>
   ),
 
-  g_oukan: (
+  g_nijiiro: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100" height="85" rx="12" fill="#234237"/>
-      <path d="M0 63 Q24 50 50 61 Q76 72 100 54 V85 H0Z" fill="#588b4c"/>
-      <path d="M0 70 Q24 57 50 69 Q76 80 100 62" fill="none" stroke="#a8d76c" strokeWidth="3" strokeDasharray="5 4"/>
-      <path d="M72 17 L90 17 L90 62 L72 62Z" fill="#7f9fc5" stroke="#d6ebff" strokeWidth="2"/>
-      <path d="M70 18 Q81 3 92 18" fill="none" stroke="#d6ebff" strokeWidth="3"/>
-      <rect x="78" y="43" width="7" height="19" rx="2" fill="#3e5d78"/>
-      <g transform="translate(34 56)">
-        <circle cy="-13" r="9" fill="#ffd6aa"/><path d="M-8 -16 L-11 -26 L-3 -19 M8 -16 L11 -26 L3 -19" fill="#ffd6aa"/>
-        <rect x="-9" y="-3" width="18" height="17" rx="7" fill="#f08bb8"/><path d="M-7 -6 L-4 -12 L0 -7 L4 -12 L7 -6Z" fill="#f5cf4e" stroke="#a5761f" strokeWidth="1"/>
+      <rect width="100" height="85" rx="12" fill="#CFF0FF"/>
+      <path d="M0 85 Q26 62 52 74 Q78 86 100 66 V85Z" fill="#B8E39B"/>
+      <g fill="none" strokeWidth="5" strokeLinecap="round">
+        <path d="M16 62 A34 34 0 0 1 84 62" stroke="#FF9FB6"/>
+        <path d="M23 62 A27 27 0 0 1 77 62" stroke="#FFCF5C"/>
+        <path d="M30 62 A20 20 0 0 1 70 62" stroke="#9BE0B4"/>
+        <path d="M37 62 A13 13 0 0 1 63 62" stroke="#7FC8F0"/>
       </g>
-      <g transform="translate(55 50)"><circle cy="-8" r="7" fill="#96cdf2"/><rect x="-7" y="-1" width="14" height="14" rx="6" fill="#4e7dbd"/><circle cx="-2.5" cy="-9" r="1.2" fill="#28334e"/><circle cx="2.5" cy="-9" r="1.2" fill="#28334e"/></g>
-      <rect x="7" y="7" width="27" height="10" rx="4" fill="#173028" opacity=".8"/><circle cx="14" cy="12" r="2" fill="#f5cf4e"/><rect x="19" y="10" width="10" height="3" rx="1.5" fill="#fff4cc"/>
+      <g transform="translate(50 34)">
+        <path d="M-15 8 L-15 -3 L-7 4 L0 -8 L7 4 L15 -3 L15 8Z" fill="#F7D374" stroke="#CE9A2A" strokeWidth="2"/>
+        <rect x="-15" y="7" width="30" height="7" rx="3" fill="#F2C14E" stroke="#CE9A2A" strokeWidth="2"/>
+        <circle cx="-8" cy="10.5" r="2.6" fill="#FF9FB6"/>
+        <circle cx="0" cy="10.5" r="2.6" fill="#7FC8F0"/>
+        <circle cx="8" cy="10.5" r="2.6" fill="#C3AEF0"/>
+      </g>
+      <g transform="translate(22 64)">
+        <ellipse cy="8" rx="9" ry="8" fill="#FFB9D0"/>
+        <ellipse cx="-4" cy="-11" rx="2.6" ry="6" fill="#FFB9D0"/>
+        <ellipse cx="4" cy="-11" rx="2.6" ry="6" fill="#FFB9D0"/>
+        <circle cy="-2" r="9" fill="#FFB9D0"/>
+        <ellipse cy="0" rx="7" ry="6" fill="#FFF3F6"/>
+        <circle cx="-2.6" cy="-1.5" r="1.3" fill="#4A3B32"/>
+        <circle cx="2.6" cy="-1.5" r="1.3" fill="#4A3B32"/>
+      </g>
+      <g transform="translate(76 66)">
+        <ellipse cy="7" rx="8.5" ry="7.5" fill="#C7A9F0"/>
+        <path d="M-8 -8 L-5 -15 L-1 -9 M8 -8 L5 -15 L1 -9" fill="#C7A9F0"/>
+        <circle cy="-2" r="8.5" fill="#C7A9F0"/>
+        <ellipse cy="0" rx="6.6" ry="5.6" fill="#FFF0E2"/>
+        <circle cx="-2.4" cy="-1.5" r="1.2" fill="#4A3B32"/>
+        <circle cx="2.4" cy="-1.5" r="1.2" fill="#4A3B32"/>
+      </g>
     </svg>
   ),
 
@@ -1285,12 +1307,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'形状配对',           desc:'在宇宙中拼合\n和分类形状！' },
     ko:{ name:'모양 맞추기',        desc:'우주에서 모양을\n끼우고 분류해요!' },
     es:{ name:'Formas Espaciales',  desc:'¡Encaja y clasifica\nformas en el espacio!' } },
-  { id:'g_oukan', route:'/oukan-monogatari', icon:'👑', num:24, color:'#d8b24d', stars:5, isNew:true, category:'アクション',
-    ja:{ name:'おうかんものがたり', desc:'すきなキャラで\n3つのおうこくをぼうけん！' },
-    en:{ name:'Crown Story',        desc:'Adventure through three\nkingdoms with your hero!' },
-    zh:{ name:'王冠物语',           desc:'选择角色，\n冒险三大王国！' },
-    ko:{ name:'왕관 이야기',        desc:'좋아하는 캐릭터로\n세 왕국을 모험하자!' },
-    es:{ name:'Historia de la Corona', desc:'¡Aventúrate por tres\nreinos con tu héroe!' } },
+  { id:'g_nijiiro', route:'/nijiiro-oukoku', icon:'🌈', num:24, color:'#F2C14E', stars:5, isNew:true, category:'ぼうけん',
+    ja:{ name:'にじいろおうこく', desc:'きもちを みて えらぼう！\nどうぶつと なかよしRPG' },
+    en:{ name:'Rainbow Kingdom',  desc:'Guess their feelings and\nbefriend every animal!' },
+    zh:{ name:'彩虹王国',         desc:'猜中心情，\n和动物们成为好朋友！' },
+    ko:{ name:'무지개 왕국',       desc:'기분을 맞혀서\n동물들과 친구가 되자!' },
+    es:{ name:'Reino Arcoíris',   desc:'¡Adivina sus emociones\ny hazte amigo de todos!' } },
 ];
 
 /* ── 全ゲーム統合。hard は既存の年齢フィルター分類にだけ使う。 ── */
@@ -1308,7 +1330,7 @@ const SHELF_GROUPS = [
     label:{ja:'ねらう・とぶ', en:'Aim & Jump',  zh:'瞄准・跳跃', ko:'조준・점프', es:'Apunta y salta' } },
   { key:'race',     icon:'🏁', match:g => g.category==='レース',
     label:{ja:'レース',       en:'Racing',      zh:'赛车',   ko:'레이싱',     es:'Carreras' } },
-  { key:'kangaeru', icon:'🧩', match:g => ['パズル','かずあそび','もじあそび','クイズ'].includes(g.category),
+  { key:'kangaeru', icon:'🧩', match:g => ['パズル','かずあそび','もじあそび','クイズ','ぼうけん'].includes(g.category),
     label:{ja:'かんがえる',   en:'Think',       zh:'思考',   ko:'생각하기',   es:'Pensar'   } },
   { key:'tsukuru',  icon:'🎨', match:g => g.category==='そうぞう',
     label:{ja:'つくる',       en:'Create',      zh:'创造',   ko:'만들기',     es:'Crear'    } },
@@ -1321,14 +1343,16 @@ const CATEGORY_FILTERS = [
   { key:'all', icon:'🎮', match:() => true,
     label:{ja:'ぜんぶ', en:'All', zh:'全部', ko:'전체', es:'Todos'} },
   ...SHELF_GROUPS,
+  { key:'adventure', icon:'🌈', match:g => g.category === 'ぼうけん',
+    label:{ja:'ぼうけん', en:'Adventure', zh:'冒险', ko:'모험', es:'Aventura'} },
 ];
 
 /* 棚だけに適用する優先順。未登録のゲームは元の登録順のまま後ろへ並ぶ。 */
 const SHELF_PRIORITY = {
-  asobu: ['/kudamono-catch','/otakara-horihori','/astral-fang','/oukan-monogatari','/mahou-nakama'],
+  asobu: ['/kudamono-catch','/otakara-horihori','/astral-fang','/mahou-nakama'],
   nerau: ['/mori','/sora','/shooting','/block','/sniper'],
   race: ['/kart','/bike','/neon-drive','/houki','/runner'],
-  kangaeru: ['/doubutsu-puzzle','/kakurenbo','/mahou-meiro','/iro','/kokki'],
+  kangaeru: ['/nijiiro-oukoku','/doubutsu-puzzle','/kakurenbo','/mahou-meiro','/iro','/kokki'],
   tsukuru: ['/machi','/mura','/jewelry-master','/nurie'],
   manabu: ['/katachi','/katakana-asobi','/tokei-yomi'],
 };
@@ -1369,7 +1393,7 @@ const BEGINNER_ROUTES = [
 /* NEWを乱立させず、直近の代表作だけに絞る。 */
 const FEATURED_NEW_ROUTES = new Set([
   '/shabondama',
-  '/oukan-monogatari',
+  '/nijiiro-oukoku',
   '/astral-fang',
   '/neon-drive',
   '/katachi',
@@ -1384,7 +1408,6 @@ const NO_THUMB_ROUTES = new Set([
   '/neon-drive',
   '/astral-fang',
   '/mahou-meiro',
-  '/oukan-monogatari',
 ]);
 
 function thumbFor(game) {
