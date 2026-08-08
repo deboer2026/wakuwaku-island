@@ -750,27 +750,61 @@ const GAME_SVGS = {
   ),
   g_mori: (
     <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
-      <rect width="200" height="140" fill="#87CEEB" rx="8"/>
-      <circle cx="170" cy="25" r="18" fill="#FFD700" opacity="0.9"/>
-      <polygon points="30,110 55,60 80,110" fill="#2d7a2d"/>
-      <polygon points="60,110 85,55 110,110" fill="#3a9a3a"/>
-      <polygon points="130,110 155,58 180,110" fill="#2d7a2d"/>
-      <rect y="108" width="200" height="32" fill="#5a8f3c"/>
-      <rect y="108" width="200" height="8" fill="#7ab84a"/>
-      <rect x="82" y="88" width="36" height="10" fill="#e09a55" rx="2"/>
-      <line x1="91" y1="88" x2="91" y2="98" stroke="#c8884a" strokeWidth="1"/>
-      <line x1="99" y1="88" x2="99" y2="98" stroke="#c8884a" strokeWidth="1"/>
-      <line x1="107" y1="88" x2="107" y2="98" stroke="#c8884a" strokeWidth="1"/>
-      <ellipse cx="65" cy="90" rx="10" ry="11" fill="#E8834A"/>
-      <ellipse cx="65" cy="84" rx="7" ry="7" fill="#E8834A"/>
-      <polygon points="59,79 57,71 63,76" fill="#E8834A"/>
-      <polygon points="71,79 73,71 67,76" fill="#E8834A"/>
-      <ellipse cx="65" cy="84" rx="4" ry="4" fill="#f5c499"/>
-      <circle cx="63" cy="82" r="1.2" fill="#222"/>
-      <circle cx="67" cy="82" r="1.2" fill="#222"/>
-      <line x1="20" y1="92" x2="45" y2="92" stroke="white" strokeWidth="2" opacity="0.6"/>
-      <line x1="15" y1="96" x2="40" y2="96" stroke="white" strokeWidth="1.5" opacity="0.4"/>
-      <polygon points="100,70 102,76 108,76 103,80 105,86 100,82 95,86 97,80 92,76 98,76" fill="#FFD700" opacity="0.9"/>
+      <defs>
+        <linearGradient id="moriSky5" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#62C8EE"/>
+          <stop offset="100%" stopColor="#BFEAFF"/>
+        </linearGradient>
+        <linearGradient id="moriBeam5" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFF7A8" stopOpacity="0.1"/>
+          <stop offset="100%" stopColor="#FFD84A" stopOpacity="0.9"/>
+        </linearGradient>
+      </defs>
+      <rect width="200" height="140" rx="8" fill="url(#moriSky5)"/>
+      <path d="M0 76 Q40 58 83 70 Q126 52 200 72 L200 140 L0 140 Z" fill="#67D743"/>
+      <path d="M0 104 Q45 89 92 100 Q142 110 200 88 L200 140 L0 140 Z" fill="#49B835" opacity=".72"/>
+      <path d="M14 111 Q58 91 102 99 Q146 107 190 88" fill="none" stroke="#D8C9A0" strokeWidth="14" strokeLinecap="round" opacity=".9"/>
+      <g opacity=".96">
+        <rect x="22" y="49" width="8" height="35" rx="3" fill="#976A32"/>
+        <polygon points="26,17 5,57 47,57" fill="#3F9E3B"/>
+        <polygon points="26,29 8,66 44,66" fill="#53B94B"/>
+        <rect x="166" y="48" width="8" height="37" rx="3" fill="#8D6130"/>
+        <polygon points="170,15 147,58 193,58" fill="#3A9638"/>
+        <polygon points="170,29 151,68 189,68" fill="#55BD4E"/>
+      </g>
+      <path d="M149 16 L160 16 L169 93 L140 93 Z" fill="url(#moriBeam5)" opacity=".82"/>
+      <ellipse cx="83" cy="119" rx="18" ry="5" fill="#335127" opacity=".18"/>
+      <g transform="translate(83 93)">
+        <ellipse cx="0" cy="19" rx="13" ry="17" fill="#D99A43"/>
+        <circle cx="0" cy="2" r="15" fill="#E9AE55"/>
+        <polygon points="-13,-7 -18,-19 -5,-12" fill="#E9AE55"/>
+        <polygon points="13,-7 18,-19 5,-12" fill="#E9AE55"/>
+        <ellipse cx="0" cy="8" rx="8" ry="6" fill="#F3D19A"/>
+        <circle cx="-5" cy="1" r="2" fill="#3B2A20"/>
+        <circle cx="5" cy="1" r="2" fill="#3B2A20"/>
+        <circle cx="0" cy="7" r="2" fill="#593D28"/>
+        <rect x="-12" y="13" width="24" height="4" rx="2" fill="#39A5A2"/>
+      </g>
+      <g transform="translate(139 81)">
+        <circle cx="0" cy="0" r="13" fill="#7458B8"/>
+        <polygon points="-10,-7 -15,-16 -5,-12" fill="#8B6BD6"/>
+        <polygon points="10,-7 15,-16 5,-12" fill="#8B6BD6"/>
+        <circle cx="-4" cy="-1" r="2.3" fill="#FFF6E2"/>
+        <circle cx="4" cy="-1" r="2.3" fill="#FFF6E2"/>
+        <circle cx="-4" cy="0" r="1" fill="#392D50"/>
+        <circle cx="4" cy="0" r="1" fill="#392D50"/>
+      </g>
+      <g transform="translate(111 86) rotate(-18)">
+        <ellipse cx="0" cy="0" rx="5" ry="7" fill="#9A632C"/>
+        <rect x="-4" y="-7" width="8" height="3" rx="1.5" fill="#5E8C35"/>
+      </g>
+      <g transform="translate(52 98) scale(.72)">
+        <circle cx="0" cy="0" r="12" fill="#F0C484"/>
+        <polygon points="-10,-5 -13,-15 -4,-10" fill="#F0C484"/>
+        <polygon points="10,-5 13,-15 4,-10" fill="#F0C484"/>
+        <circle cx="-4" cy="-1" r="1.8" fill="#4A3B32"/>
+        <circle cx="4" cy="-1" r="1.8" fill="#4A3B32"/>
+      </g>
     </svg>
   ),
   g_sora: (
@@ -1144,11 +1178,11 @@ const SCHOOL_GAMES = [
     ko:{ name:'동물 스나이퍼',     desc:'움직이는 동물을\n탭해서 맞혀요!'                      },
     es:{ name:'Francotirador',    desc:'¡Toca animales\nen movimiento!'                        } },
   { id:'g_mori', route:'/mori', icon:'🌲', num:6, color:'#2e7d32', stars:4, isNew:false, category:'アクション',
-    ja:{ name:'もりのなかまたち', desc:'もりをとびこえて\nゴールをめざせ！' },
-    en:{ name:'Forest Friends',  desc:'Jump through the forest\nand reach the goal!' },
-    zh:{ name:'森林伙伴',         desc:'穿越森林\n冲向终点！' },
-    ko:{ name:'숲속 친구들',       desc:'숲을 뛰어넘어\n골인 지점을 향해!' },
-    es:{ name:'Amigos del Bosque',desc:'¡Salta por el bosque\ny llega a la meta!' } },
+    ja:{ name:'もりのなかまたち', desc:'3Dのしまをたんけん！\nどんぐりでなかまをたすけよう！' },
+    en:{ name:'Forest Friends',  desc:'Explore a 3D forest island\nand rescue animal friends!' },
+    zh:{ name:'森林伙伴',         desc:'探索3D森林小岛\n救出动物伙伴！' },
+    ko:{ name:'숲속 친구들',       desc:'3D 숲섬을 탐험하고\n동물 친구들을 구해요!' },
+    es:{ name:'Amigos del Bosque',desc:'¡Explora una isla 3D\ny rescata a tus amigos!' } },
   { id:'g_sora', route:'/sora', icon:'👸', num:7, color:'#7b1fa2', stars:4, isNew:true, category:'アクション',
     ja:{ name:'そらとびプリンセス3D', desc:'4にんからなかまをえらんで\n5つの空とボスにいどもう！' },
     en:{ name:'Sky Princess 3D',    desc:'Pick from 4 characters and\nchallenge 5 skies & bosses!' },

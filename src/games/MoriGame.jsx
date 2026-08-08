@@ -17,7 +17,7 @@ export default function MoriGame() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/mori_v4.html"
+          src="/games/mori_v5.html"
           title="もりのなかまたち"
           allow="autoplay; fullscreen"
           allowFullScreen
