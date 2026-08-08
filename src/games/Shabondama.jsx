@@ -17,7 +17,7 @@ export default function Shabondama() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/shabondama_v3.html"
+          src="/games/shabondama_v4.html"
           title="しゃぼんだまポン"
           allow="autoplay; fullscreen"
           allowFullScreen

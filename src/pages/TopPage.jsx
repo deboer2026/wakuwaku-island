@@ -1051,12 +1051,12 @@ function getTodayIndex(n) {
    ゲームリスト（ja / en 両対応）
 ════════════════════════════════════════════════════ */
 const GAMES = [
-  { id:'g1', route:'/shabondama',      icon:'🫧', num:1, color:'#4DB8FF', stars:5, isNew:false, category:'アクション',
-    ja:{ name:'シャボンだまポン',   desc:'とんでくる たまを\nタップしてわろう！'        },
-    en:{ name:'Bubble Pop',           desc:'Tap flying bubbles\nbefore they escape!'     },
-    zh:{ name:'泡泡消消乐',           desc:'点击飞来的\n泡泡消消乐！'                   },
-    ko:{ name:'비눗방울 팡',           desc:'날아오는 거품을\n탭해서 터뜨려요!'          },
-    es:{ name:'Burbuja Pop',           desc:'¡Toca las burbujas\nantes de que escapen!'  } },
+  { id:'g1', route:'/shabondama',      icon:'🫧', num:1, color:'#4DB8FF', stars:5, isNew:true, category:'アクション',
+    ja:{ name:'シャボンだまポン',   desc:'にじいろの あわを\nタップして ポン！'          },
+    en:{ name:'Bubble Pop',           desc:'Pop rainbow bubbles\nin a 3D world!'         },
+    zh:{ name:'泡泡消消乐',           desc:'点击彩虹泡泡\n畅玩3D世界！'                 },
+    ko:{ name:'비눗방울 팡',           desc:'무지개 거품을\n탭해서 팡!'                  },
+    es:{ name:'Burbuja Pop',           desc:'¡Revienta burbujas\nde arcoíris en 3D!'     } },
   { id:'g2', route:'/kudamono-catch',  icon:'🍎', num:2, color:'#FF6B35', stars:5, isNew:true, category:'アクション',
     ja:{ name:'くだものキャッチ',   desc:'3Dの かじゅえんで\nくだものを キャッチ！'      },
     en:{ name:'Fruit Catch 3D',       desc:'Catch fruits falling\nin a 3D orchard!'       },
@@ -1355,6 +1355,7 @@ const BEGINNER_ROUTES = [
 
 /* NEWを乱立させず、直近の代表作だけに絞る。 */
 const FEATURED_NEW_ROUTES = new Set([
+  '/shabondama',
   '/oukan-monogatari',
   '/astral-fang',
   '/neon-drive',
