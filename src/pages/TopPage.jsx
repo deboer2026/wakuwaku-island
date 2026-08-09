@@ -503,34 +503,15 @@ const GAME_SVGS = {
   ),
   g9: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0" y="76" width="100" height="9" fill="rgba(0,0,0,.2)"/>
-      <circle cx="14" cy="20" r="2" fill="#FFD700" opacity=".7"/>
-      <circle cx="86" cy="25" r="1.5" fill="white" opacity=".6"/>
-      <line x1="30" y1="51" x2="16" y2="39" stroke="#B71C1C" strokeWidth="4" strokeLinecap="round"/>
-      <circle cx="13" cy="37" r="5" fill="#FFCDD2" stroke="#B71C1C" strokeWidth="1.5"/>
-      <line x1="70" y1="51" x2="84" y2="39" stroke="#B71C1C" strokeWidth="4" strokeLinecap="round"/>
-      <circle cx="86" cy="37" r="5" fill="#FFCDD2" stroke="#B71C1C" strokeWidth="1.5"/>
-      <ellipse cx="50" cy="16" rx="22" ry="7" fill="#4CAF50" stroke="#2E7D32" strokeWidth="2"/>
-      <path d="M30 16Q35 3 50 9Q65 3 70 16" fill="#4CAF50" stroke="#2E7D32" strokeWidth="2"/>
-      <path d="M36 14Q40 5 50 9" fill="#66BB6A"/>
-      <path d="M25 30Q20 55 50 73Q80 55 75 30Q62 18 50 20Q38 18 25 30" fill="#E53935" stroke="#B71C1C" strokeWidth="2.5"/>
-      <path d="M30 33Q26 51 36 63" stroke="rgba(255,255,255,.35)" strokeWidth="6" fill="none" strokeLinecap="round"/>
-      <ellipse cx="42" cy="46" rx="2" ry="3" fill="#FFCDD2" stroke="#B71C1C" strokeWidth=".8" transform="rotate(-10 42 46)"/>
-      <ellipse cx="52" cy="42" rx="2" ry="3" fill="#FFCDD2" stroke="#B71C1C" strokeWidth=".8" transform="rotate(8 52 42)"/>
-      <ellipse cx="60" cy="49" rx="2" ry="3" fill="#FFCDD2" stroke="#B71C1C" strokeWidth=".8" transform="rotate(15 60 49)"/>
-      <ellipse cx="46" cy="58" rx="2" ry="3" fill="#FFCDD2" stroke="#B71C1C" strokeWidth=".8"/>
-      <ellipse cx="57" cy="61" rx="2" ry="3" fill="#FFCDD2" stroke="#B71C1C" strokeWidth=".8" transform="rotate(12 57 61)"/>
-      <circle cx="42" cy="41" r="5" fill="white" stroke="#B71C1C" strokeWidth="1.2"/>
-      <circle cx="58" cy="41" r="5" fill="white" stroke="#B71C1C" strokeWidth="1.2"/>
-      <circle cx="43" cy="41" r="3" fill="#1a1a2e"/>
-      <circle cx="59" cy="41" r="3" fill="#1a1a2e"/>
-      <circle cx="43.8" cy="39.8" r="1.2" fill="white"/>
-      <circle cx="59.8" cy="39.8" r="1.2" fill="white"/>
-      <ellipse cx="37" cy="46" rx="4" ry="3" fill="#FF8A80" opacity=".65"/>
-      <ellipse cx="63" cy="46" rx="4" ry="3" fill="#FF8A80" opacity=".65"/>
-      <path d="M43 50Q50 56 57 50" stroke="#B71C1C" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-      <line x1="40" y1="74" x2="36" y2="84" stroke="#B71C1C" strokeWidth="4" strokeLinecap="round"/>
-      <line x1="60" y1="74" x2="64" y2="84" stroke="#B71C1C" strokeWidth="4" strokeLinecap="round"/>
+      <rect width="100" height="85" rx="12" fill="#94ddff"/>
+      <path d="M0 45Q18 35 35 44T68 41T100 46V85H0Z" fill="#88ca61"/>
+      <path d="M0 61Q18 52 38 61T72 56T100 62V85H0Z" fill="#61b45a"/>
+      <rect x="77" y="27" width="15" height="17" rx="2" fill="#d8f8f2" stroke="#fff7de" strokeWidth="2"/><path d="M75 28L84 20L94 28" fill="none" stroke="#f7e8bb" strokeWidth="3"/>
+      <path d="M12 62V38M4 45H24M12 38L4 33M12 38L20 32" stroke="#b67a42" strokeWidth="2.5" strokeLinecap="round"/>
+      <g transform="translate(50 50)"><ellipse cx="0" cy="21" rx="19" ry="5" fill="#4b8d52" opacity=".25"/><ellipse cx="0" cy="2" rx="16" ry="15" fill="#fffaf3" stroke="#e6b2c4" strokeWidth="1.2"/><ellipse cx="-8" cy="-15" rx="5" ry="15" fill="#fffaf3" stroke="#e6b2c4" strokeWidth="1.2" transform="rotate(-9 -8 -15)"/><ellipse cx="8" cy="-15" rx="5" ry="15" fill="#fffaf3" stroke="#e6b2c4" strokeWidth="1.2" transform="rotate(9 8 -15)"/><ellipse cx="-8" cy="-15" rx="2" ry="10" fill="#ffa5bd"/><ellipse cx="8" cy="-15" rx="2" ry="10" fill="#ffa5bd"/><circle cx="-6" cy="-2" r="2.5" fill="#493047"/><circle cx="6" cy="-2" r="2.5" fill="#493047"/><circle cx="-5.3" cy="-2.7" r=".8" fill="#fff"/><circle cx="6.7" cy="-2.7" r=".8" fill="#fff"/><ellipse cx="0" cy="3" rx="2" ry="1.5" fill="#ef85a2"/><path d="M0 5q-3 3-6 0M0 5q3 3 6 0" fill="none" stroke="#b75778" strokeWidth="1"/><path d="M-10 8q-5 2-8 0M10 8q5 2 8 0" stroke="#b75778" strokeWidth="1"/></g>
+      <g fill="#f54773" stroke="#ba244d" strokeWidth="1"><path d="M24 56q-6 2-5 9q2 7 8 8q6-1 8-8q1-7-5-9Z"/><path d="M68 56q-6 2-5 9q2 7 8 8q6-1 8-8q1-7-5-9Z"/><path d="M38 67q-5 2-4 8q2 5 7 6q5-1 6-6q1-6-4-8Z"/></g>
+      <g fill="#4ca348"><path d="M22 57l3-4 2 4 2-4 2 4z"/><path d="M66 57l3-4 2 4 2-4 2 4z"/><path d="M36 68l3-4 2 4 2-4 2 4z"/></g>
+      <g fill="#fff4a4"><circle cx="16" cy="20" r="2"/><circle cx="63" cy="14" r="1.7"/><circle cx="91" cy="13" r="1.4"/></g>
     </svg>
   ),
   g10: (
@@ -1137,11 +1118,11 @@ const GAMES = [
     ko:{ name:'연어 회전초밥집',          desc:'주문에 맞춰\n3D 초밥을 터치해요!' },
     es:{ name:'Sushi de Salmón 3D',     desc:'¡Sirve cada pedido\nde la cinta 3D!' } },
   { id:'g9', route:'/ichigo',          icon:'🍓', num:9, color:'#E91E63', stars:5, isNew:false, category:'アクション',
-    ja:{ name:'いちご',             desc:'30びょうで\nいちごを\nあつめよう！'            },
-    en:{ name:'Strawberry Time',      desc:'Collect strawberries\nin 30 seconds!'         },
-    zh:{ name:'草莓时间',             desc:'30秒内收集\n草莓！'                           },
-    ko:{ name:'딸기 모으기',           desc:'30초 안에\n딸기를 모아요!'                   },
-    es:{ name:'Tiempo de Fresa',       desc:'¡Recoge fresas\nen 30 segundos!'              } },
+    ja:{ name:'いちご',             desc:'いちごばたけで\nたくさん あつめよう！'       },
+    en:{ name:'Strawberry Time',      desc:'Pick lots of berries\nin a sunny field!'      },
+    zh:{ name:'草莓时间',             desc:'在阳光草莓田里\n收集好多草莓！'               },
+    ko:{ name:'딸기 모으기',           desc:'햇살 가득 딸기밭에서\n딸기를 모아요!'         },
+    es:{ name:'Tiempo de Fresa',       desc:'¡Recoge muchas fresas\nen el campo!'           } },
   { id:'g10', route:'/kakurenbo',      icon:'🔍', num:10, color:'#2d6a4f', stars:5, isNew:true, category:'パズル',
     ja:{ name:'どうぶつかくれんぼ3D', desc:'3Dのしまをまわしてさがそう！\n2つのあそびと8ステージ' },
     en:{ name:'Animal Hide & Seek 3D',   desc:'Spin the 3D island and explore!\n2 modes, 8 stages, pick a partner'      },
