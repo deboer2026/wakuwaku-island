@@ -1439,7 +1439,6 @@ const THUMB_ALIASES = {
 };
 const NO_THUMB_ROUTES = new Set([
   '/neon-drive',
-  '/astral-fang',
 ]);
 
 function thumbFor(game) {

@@ -11,22 +11,28 @@
     canvas{display:block}
     #game{position:fixed;inset:0}
     .screen{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:calc(16px + var(--sat,0px)) calc(16px + var(--sar,0px)) calc(16px + var(--sab,0px)) calc(16px + var(--sal,0px));background:linear-gradient(160deg,var(--sky1),var(--sky2));transition:.3s;overflow-y:auto}
+    .screen.screen-in{animation:screenIn .42s cubic-bezier(.2,.85,.3,1)}
+    @keyframes screenIn{from{opacity:0;transform:scale(1.025)}to{opacity:1;transform:scale(1)}}
     .hidden{display:none!important}
     h1.tt{font-size:clamp(26px,6vw,42px);font-weight:900;margin:0;color:#fff8d8;text-shadow:0 3px 0 rgba(60,40,120,.5)}
     .sub{font-size:14px;font-weight:800;color:#eaf0ff;margin:0}
-    .bigbtn{font-family:inherit;font-weight:900;font-size:18px;color:#4a3a10;background:linear-gradient(180deg,#fff2a8,#ffd35a);border:none;border-radius:20px;padding:14px 40px;cursor:pointer;box-shadow:0 6px 0 #d69a2a;touch-action:manipulation;min-height:52px}
+    .bigbtn{position:relative;overflow:hidden;font-family:inherit;font-weight:900;font-size:18px;color:#4a3a10;background:linear-gradient(180deg,#fffbd1,#ffd35a);border:2px solid rgba(255,255,255,.7);border-radius:22px;padding:14px 40px;cursor:pointer;box-shadow:0 6px 0 #d69a2a,0 10px 24px rgba(21,18,70,.25);touch-action:manipulation;min-height:52px;transition:transform .18s,filter .18s}
+    .bigbtn::after{content:"";position:absolute;inset:-30% auto -30% -35%;width:26%;transform:skewX(-24deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);animation:btnShine 3.8s ease-in-out infinite}
+    .bigbtn:hover{filter:brightness(1.07);transform:translateY(-2px)}
+    @keyframes btnShine{0%,68%{left:-35%}90%,100%{left:125%}}
     .bigbtn:active{transform:translateY(4px);box-shadow:0 2px 0 #d69a2a}
     .bigbtn.sub2{background:linear-gradient(180deg,#dff0ff,#a8d0ff);color:#1a3a6a;box-shadow:0 6px 0 #6a97cc}
     .bigbtn.sub2:active{box-shadow:0 2px 0 #6a97cc}
     .bigbtn:disabled{opacity:.4;cursor:default}
     .rowwrap{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:900px}
-    .charcard{width:150px;background:rgba(255,255,255,.92);border-radius:20px;padding:12px 8px;cursor:pointer;border:4px solid transparent;color:#333}
-    .charcard.sel{border-color:#ffd35a;background:#fff9e0}
+    .charcard{width:150px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(235,241,255,.94));border-radius:22px;padding:12px 8px;cursor:pointer;border:4px solid transparent;color:#333;box-shadow:0 10px 24px rgba(18,20,75,.2);transition:.2s}
+    .charcard.sel{border-color:#ffd35a;background:#fff9e0;transform:translateY(-6px) scale(1.035);box-shadow:0 0 0 6px rgba(255,211,90,.2),0 14px 28px rgba(18,20,75,.25)}
     .charcard canvas{width:100%;height:110px;display:block;border-radius:12px;background:radial-gradient(circle,#eaf3ff,#cfe0ff)}
     .charcard .cn{font-weight:900;font-size:16px;margin-top:6px}
     .charcard .cf{font-size:11px;color:#666;margin-top:2px;line-height:1.5}
     #stageGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;max-width:760px;width:100%}
-    .stagecard{background:rgba(255,255,255,.92);border-radius:18px;padding:12px;cursor:pointer;color:#333;text-align:center}
+    .stagecard{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(235,241,255,.93));border-radius:20px;padding:12px;cursor:pointer;color:#333;text-align:center;box-shadow:0 9px 22px rgba(18,20,75,.2);border:2px solid rgba(255,255,255,.68);transition:.2s}
+    .stagecard:not(.locked):hover{transform:translateY(-5px);box-shadow:0 0 0 4px rgba(255,223,105,.25),0 13px 26px rgba(18,20,75,.25)}
     .stagecard.locked{opacity:.55;cursor:default}
     .stagecard canvas{width:100%;height:80px;border-radius:10px;display:block}
     .stagecard .sn{font-weight:900;font-size:13px;margin-top:6px}
@@ -35,7 +41,7 @@
     #hud{position:fixed;inset:0;z-index:12;pointer-events:none;opacity:0;transition:.3s}
     #hud.show{opacity:1}
     .hudtop{position:absolute;left:calc(10px + var(--sal,0px));right:calc(10px + var(--sar,0px));top:calc(8px + var(--sat,0px));display:flex;align-items:center;gap:8px;pointer-events:auto}
-    .chip{background:rgba(20,20,60,.55);border:1px solid rgba(255,255,255,.4);border-radius:14px;padding:5px 11px;font-weight:900;font-size:12px;color:#fff;white-space:nowrap}
+    .chip{background:linear-gradient(180deg,rgba(61,60,130,.82),rgba(30,29,90,.78));border:1px solid rgba(255,255,255,.62);border-radius:16px;padding:6px 12px;font-weight:900;font-size:12px;color:#fff;white-space:nowrap;box-shadow:0 4px 13px rgba(10,10,45,.24),inset 0 1px rgba(255,255,255,.2)}
     .spacer{flex:1}
     #goalTxt{position:absolute;left:50%;top:calc(52px + var(--sat,0px));transform:translateX(-50%);background:rgba(20,20,60,.55);border:1px solid rgba(255,255,255,.35);border-radius:14px;padding:6px 16px;font-size:12px;font-weight:800;white-space:nowrap;pointer-events:none}
     #toastMsg{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%) scale(.85);opacity:0;transition:.25s;font-weight:900;font-size:clamp(18px,4vw,26px);color:#fff8d8;text-shadow:0 3px 10px rgba(0,0,0,.4);text-align:center;pointer-events:none;white-space:nowrap}
@@ -49,8 +55,12 @@
     #sparkleBtn .sp-label{font-size:14px}
     #backChip{pointer-events:auto;background:rgba(20,20,60,.55);border:1px solid rgba(255,255,255,.4);border-radius:14px;padding:6px 12px;font-weight:900;font-size:12px;color:#fff;cursor:pointer;min-height:34px}
     #bgmChip{pointer-events:auto;background:rgba(20,20,60,.55);border:1px solid rgba(255,255,255,.4);border-radius:14px;padding:6px 10px;font-size:15px;cursor:pointer;min-height:34px}
-    .resultbox{background:rgba(255,255,255,.95);border-radius:22px;padding:22px 20px;max-width:420px;width:100%;color:#333}
-    .starsrow{font-size:40px;letter-spacing:6px;margin:6px 0}
+    .resultbox{position:relative;overflow:hidden;background:linear-gradient(160deg,#fffef5,#f0ecff);border:4px solid rgba(255,255,255,.9);border-radius:28px;padding:24px 20px;max-width:440px;width:100%;color:#333;box-shadow:0 18px 50px rgba(22,18,85,.35),0 0 45px rgba(255,224,104,.18);animation:resultPop .55s cubic-bezier(.18,.9,.22,1)}
+    .resultbox::before{content:"✦  ·  ✧  ·  ✦";position:absolute;left:0;right:0;top:6px;color:#ffd052;font-size:20px;letter-spacing:12px;animation:twinkle 1.2s ease-in-out infinite alternate}
+    @keyframes resultPop{from{opacity:0;transform:scale(.72) rotate(-2deg)}to{opacity:1;transform:scale(1)}}
+    .starsrow{font-size:44px;letter-spacing:6px;margin:10px 0}
+    .starsrow .on{display:inline-block;animation:starPop .52s cubic-bezier(.2,1.4,.4,1) both}.starsrow .on:nth-child(2){animation-delay:.16s}.starsrow .on:nth-child(3){animation-delay:.32s}
+    @keyframes starPop{from{opacity:0;transform:scale(.15) rotate(-45deg)}to{opacity:1;transform:scale(1) rotate(0)}}
     .starsrow .off{color:#ddd}
     .starsrow .on{color:#ffc93c}
     #dressGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:10px;max-width:560px;width:100%}
@@ -64,14 +74,47 @@
     body.portrait #rotate{display:flex}
     a11y-hidden{display:none}
     @media(max-width:480px){ .bigbtn{padding:12px 28px;font-size:16px} }
+
+    /* タイトル：軽量な絵本風ヒーローアート */
+    #scrTitle{isolation:isolate;overflow:hidden;background:radial-gradient(circle at 50% 70%,rgba(255,193,241,.34),transparent 30%),linear-gradient(160deg,#273a8b 0%,#675ac9 50%,#b07fdc 100%)}
+    .title-sky{position:absolute;inset:0;z-index:-2;pointer-events:none;overflow:hidden}
+    .title-sky::before{content:"";position:absolute;inset:0;background-image:radial-gradient(circle,#fffbd7 0 1.5px,transparent 2px),radial-gradient(circle,#d9f7ff 0 1px,transparent 1.6px);background-size:74px 74px,47px 47px;background-position:3px 8px,22px 17px;animation:starsDrift 16s linear infinite}
+    .title-rainbow{position:absolute;width:720px;height:280px;border-radius:50%;border:22px solid rgba(255,157,205,.2);border-left-color:rgba(255,226,116,.2);border-right-color:rgba(132,231,255,.2);left:50%;bottom:-205px;transform:translateX(-50%) rotate(-4deg);box-shadow:0 0 0 18px rgba(167,255,215,.12),0 0 0 38px rgba(191,166,255,.12)}
+    .title-cloud{position:absolute;width:190px;height:54px;border-radius:60px;background:rgba(255,255,255,.2);filter:blur(.2px);animation:cloudFloat 14s linear infinite}.title-cloud::before,.title-cloud::after{content:"";position:absolute;border-radius:50%;background:inherit}.title-cloud::before{width:82px;height:82px;left:28px;bottom:4px}.title-cloud::after{width:62px;height:62px;right:26px;bottom:5px}.title-cloud.c1{top:18%;left:-210px}.title-cloud.c2{top:63%;left:-240px;animation-delay:-7s;transform:scale(.72)}
+    .title-logo{position:relative;max-width:min(760px,92vw);padding:10px 24px 14px;border-radius:30px;background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.22);box-shadow:0 14px 40px rgba(15,15,70,.28),inset 0 1px rgba(255,255,255,.25);animation:logoArrive .9s cubic-bezier(.2,.9,.25,1)}
+    #scrTitle h1.tt{font-size:clamp(31px,6.7vw,58px);line-height:1.05;background:linear-gradient(180deg,#fffbd7,#ffd86b 58%,#ffb9dd);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:1px rgba(99,56,145,.55);text-shadow:0 5px 0 rgba(82,49,139,.48),0 0 22px rgba(255,238,143,.38);animation:logoBob 3s ease-in-out infinite}
+    #scrTitle .sub{font-size:clamp(14px,2.5vw,19px);color:#fff9dd;text-shadow:0 2px 8px rgba(20,18,70,.6);letter-spacing:.08em}
+    .title-mascots{height:120px;width:min(610px,94vw);display:flex;align-items:flex-end;justify-content:center;gap:clamp(10px,4vw,42px);pointer-events:none}
+    .title-mascot{position:relative;width:76px;height:82px;border-radius:48% 48% 42% 42%;background:var(--fur);box-shadow:inset 0 -10px rgba(69,43,83,.1),0 13px 22px rgba(20,18,70,.24);animation:mascotBob 2.3s ease-in-out infinite;transform-origin:50% 100%}
+    .title-mascot::before,.title-mascot::after{content:"";position:absolute;top:-18px;width:31px;height:38px;background:var(--fur);border-radius:65% 65% 35% 35%;z-index:-1}.title-mascot::before{left:3px;transform:rotate(-20deg)}.title-mascot::after{right:3px;transform:rotate(20deg)}
+    .title-mascot .face{position:absolute;inset:26px 12px auto;height:30px;border-radius:50%;background:rgba(255,247,229,.7)}.title-mascot .face::before{content:"•   •";color:#382f4a;font-size:23px;letter-spacing:8px;line-height:12px;white-space:pre}.title-mascot .face::after{content:"ᴗ";display:block;color:#764d5e;font-size:18px;line-height:22px}
+    .title-mascot.m2{animation-delay:-.5s;transform:scale(.9)}.title-mascot.m3{animation-delay:-1.1s}.title-mascot.m4{animation-delay:-1.6s;transform:scale(.9)}
+    .title-lost{position:absolute;right:7%;bottom:12%;width:48px;height:48px;border-radius:50%;background:#fff4b6;box-shadow:0 0 25px #ffe77b;animation:mascotBob 1.8s ease-in-out infinite}.title-lost::after{content:"♡";color:#f28db9;font-size:24px;line-height:48px}
+    @keyframes logoArrive{from{opacity:0;transform:translateY(-35px) scale(.82)}to{opacity:1;transform:none}}@keyframes logoBob{50%{transform:translateY(-5px) scale(1.015)}}@keyframes mascotBob{50%{transform:translateY(-9px) rotate(2deg)}}@keyframes starsDrift{to{background-position:77px 82px,69px 64px}}@keyframes cloudFloat{from{left:-240px}to{left:110%}}@keyframes twinkle{to{opacity:.45;transform:scale(.96)}}
+    .tap-star{position:fixed;z-index:80;color:#fff2a8;font-size:22px;pointer-events:none;animation:tapStar .75s ease-out forwards}@keyframes tapStar{to{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.25) rotate(120deg)}}
+
+    #stageIntro{position:fixed;inset:0;z-index:35;display:none;align-items:center;justify-content:center;pointer-events:none;background:radial-gradient(circle,rgba(255,246,191,.22),rgba(36,38,110,.28));backdrop-filter:blur(2px)}
+    #stageIntro.show{display:flex;animation:introFade 1.55s ease both}
+    .intro-card{padding:20px 34px;border:2px solid rgba(255,255,255,.72);border-radius:28px;background:linear-gradient(160deg,rgba(64,57,145,.9),rgba(125,91,190,.82));box-shadow:0 16px 45px rgba(15,15,65,.38),0 0 34px rgba(255,226,109,.28);transform:scale(.8);animation:introCard 1.55s cubic-bezier(.2,.9,.3,1) both}
+    #stageIntroName{font-size:clamp(28px,6vw,50px);font-weight:900;color:#fff7c7;text-shadow:0 4px rgba(61,38,118,.6)}#stageIntroMission{font-size:clamp(14px,2.8vw,20px);font-weight:900;color:#dff8ff;margin-top:8px}
+    @keyframes introFade{0%{opacity:0}18%,76%{opacity:1}100%{opacity:0}}@keyframes introCard{0%{transform:scale(.65) translateY(24px)}25%,72%{transform:scale(1)}100%{transform:scale(1.04) translateY(-8px)}}
   </style>
 </head>
 <body>
   <div id="game"></div>
 
   <div id="scrTitle" class="screen">
-    <h1 class="tt">ほしぞらアニマルレスキュー</h1>
-    <p class="sub">どうぶつたちを たすけにいこう！</p>
+    <div class="title-sky"><div class="title-rainbow"></div><div class="title-cloud c1"></div><div class="title-cloud c2"></div><div class="title-lost"></div></div>
+    <div class="title-logo">
+      <h1 class="tt">ほしぞら<br>アニマルレスキュー</h1>
+      <p class="sub">ほしを あつめて まいごを たすけよう！</p>
+    </div>
+    <div class="title-mascots" aria-hidden="true">
+      <div class="title-mascot m1" style="--fur:#ffcf7a"><span class="face"></span></div>
+      <div class="title-mascot m2" style="--fur:#ffe6f0"><span class="face"></span></div>
+      <div class="title-mascot m3" style="--fur:#c98a5a"><span class="face"></span></div>
+      <div class="title-mascot m4" style="--fur:#ff9a52"><span class="face"></span></div>
+    </div>
     <button class="bigbtn" id="btnStart" aria-label="はじめる">はじめる</button>
     <button class="bigbtn sub2 hidden" id="btnContinue" aria-label="つづきから">つづきから</button>
     <button class="bigbtn sub2" id="btnMusicTitle" aria-label="おんがく">🎵 おんがく</button>
@@ -131,6 +174,8 @@
     <div id="joyBase"><div id="joyNub"></div></div>
     <button id="sparkleBtn" aria-label="きらきらアクション"><span class="sp-ico">✨</span><span class="sp-label" id="sparkleLabel">キラキラ</span></button>
   </div>
+
+  <div id="stageIntro" aria-hidden="true"><div class="intro-card"><div id="stageIntroName"></div><div id="stageIntroMission"></div></div></div>
 
   <div id="rotate"><div class="ph">📱</div><div>よこむきにして<br>あそんでね</div></div>
 
@@ -376,6 +421,7 @@ function burst(x,y,z,color,count,speed){
     d.vx=Math.cos(th)*Math.cos(ph)*sp; d.vy=Math.sin(ph)*sp+2; d.vz=Math.sin(th)*Math.cos(ph)*sp;
     pCol[idx*3]=col.r; pCol[idx*3+1]=col.g; pCol[idx*3+2]=col.b;
   }
+  pGeo.attributes.color.needsUpdate = true;
 }
 function updateParticles(dt){
   for(var i=0;i<P_MAX;i++){
@@ -386,6 +432,28 @@ function updateParticles(dt){
     }
   }
   pGeo.attributes.position.needsUpdate = true;
+}
+function addMagicMotes(group,st,anim){
+  var cols=[0xfff0a8,0xc9f7ff,0xffbddd,0xcbbcff];
+  for(var i=0;i<14;i++){
+    var m=meshOf(GEO.octa,new THREE.MeshBasicMaterial({color:cols[(i+st.id)%cols.length],transparent:true,opacity:.62,depthWrite:false,fog:true}));
+    m.scale.setScalar(.055+(i%3)*.018);
+    var a=i/14*Math.PI*2, r=5+(i%5)*3.1;
+    m.position.set(Math.cos(a)*r,.8+(i%4)*.55,Math.sin(a)*r);
+    m.userData={cx:m.position.x,cy:m.position.y,cz:m.position.z,r:.25+(i%3)*.12,phase:i*.83};
+    group.add(m); anim.motes.push(m);
+  }
+}
+function addWelcomeScene(group,st,start,anim){
+  var root=new THREE.Group(); root.position.set(4.2,0,start.z-3.4); root.rotation.y=-.3;
+  var palette=st.id===0?[0xff8fc8,0xffdf69,0x77e7db]:st.id===1?[0xaedcff,0xffffff,0xffbddd]:st.id===2?[0xff75c8,0x75e8ff,0xffdf58]:st.id===3?[0xb78cff,0x78efc8,0xffc2ec]:[0x8fdcff,0xffdf79,0xd3a8ff];
+  for(var i=0;i<3;i++){
+    var pole=meshOf(GEO.cyl,mat(0xfff1c4)); pole.scale.set(.045,.9,.045); pole.position.set((i-1)*.7,.9,0); root.add(pole);
+    var bulb=meshOf(GEO.sphereLo,mat(palette[i],{emissive:palette[i],emissiveIntensity:.32})); bulb.scale.setScalar(.16); bulb.position.set((i-1)*.7,1.82,0); root.add(bulb);
+  }
+  var ribbon=meshOf(GEO.torus,mat(palette[st.id%3],{emissive:palette[st.id%3],emissiveIntensity:.2})); ribbon.scale.set(1.25,1.25,.45); ribbon.position.y=.75; ribbon.rotation.x=Math.PI/2; root.add(ribbon);
+  for(var j=0;j<4;j++){var star=meshOf(GEO.octa,mat(0xffef8c,{emissive:0xaa7a20,emissiveIntensity:.28}));star.scale.setScalar(.09);star.position.set(-1.1+j*.72,1.25+Math.sin(j)*.22,.12);root.add(star);}
+  group.add(root);
 }
 
 /* ---------- キャラクター生成（頭・胴・手足・しっぽを分離、背面からも動物と分かる形状） ---------- */
@@ -400,8 +468,12 @@ function buildCharacterMesh(charId, equipped){
   var muzzle = meshOf(GEO.sphereLo, mat(0xf3ede0)); muzzle.scale.set(0.2,0.16,0.22); muzzle.position.set(0,0.97,0.4); g.add(muzzle);
   var cheekMat = mat(0xffb3c9);
   [-0.19,0.19].forEach(function(sx){ var ch=meshOf(GEO.sphereLo, cheekMat); ch.scale.setScalar(0.075); ch.position.set(sx,0.96,0.38); g.add(ch); });
-  var eyeMat = mat(0x333333);
-  [-0.16,0.16].forEach(function(sx){ var ey=meshOf(GEO.sphereLo, eyeMat); ey.scale.setScalar(0.05); ey.position.set(sx,1.05,0.44); g.add(ey); });
+  var eyeMat = mat(0x333333), eyes=[];
+  [-0.16,0.16].forEach(function(sx){
+    var ey=meshOf(GEO.sphere, eyeMat); ey.scale.set(0.058,0.072,0.045); ey.position.set(sx,1.06,0.445); g.add(ey); eyes.push(ey);
+    var hi=meshOf(GEO.sphereLo,mat(0xfffcf0)); hi.scale.setScalar(0.017); hi.position.set(sx-0.014,1.085,0.486); g.add(hi);
+  });
+  var nose=meshOf(GEO.sphereLo,mat(0x6f4853)); nose.scale.set(0.045,0.035,0.035); nose.position.set(0,0.99,0.56); g.add(nose);
   /* 耳（大きめ・種別ごとの形） */
   var ears=[];
   if(c.ear==="cat" || c.ear==="fox"){
@@ -456,7 +528,7 @@ function buildCharacterMesh(charId, equipped){
   extras.wandStar = star;
 
   g.userData.headY = 1.04; g.userData.extras = extras;
-  g.userData.legs = legs; g.userData.arms = arms; g.userData.tail = tail; g.userData.ears = ears; g.userData.body = body;
+  g.userData.legs = legs; g.userData.arms = arms; g.userData.tail = tail; g.userData.ears = ears; g.userData.body = body; g.userData.eyes=eyes;
   g.userData.animPhase = Math.random()*Math.PI*2;
   return g;
 }
@@ -464,7 +536,8 @@ function buildCharacterMesh(charId, equipped){
 function animateCharacterMesh(g, dt, now, moving){
   if(!g || !g.userData) return;
   var ph = g.userData.animPhase||0;
-  var legs = g.userData.legs, arms = g.userData.arms, tail = g.userData.tail, ears = g.userData.ears, body = g.userData.body;
+  var legs = g.userData.legs, arms = g.userData.arms, tail = g.userData.tail, ears = g.userData.ears, body = g.userData.body, eyes=g.userData.eyes;
+  if(eyes){ var blink=((now+ph*900)%4200)>4050; eyes.forEach(function(e){e.scale.y=blink?0.012:0.072;}); }
   if(moving){
     var w = now*0.012;
     if(legs) legs.forEach(function(lg, i){ lg.rotation.x = Math.sin(w + (i%2?Math.PI:0))*0.6; });
@@ -1025,7 +1098,11 @@ function syncBgmIcons(){
 /* ---------- 画面制御 ---------- */
 var screens = ["scrTitle","scrChar","scrStage","scrResult","scrDress"];
 function showScreen(id){
-  screens.forEach(function(s){ document.getElementById(s).classList.toggle("hidden", s!==id); });
+  screens.forEach(function(s){
+    var el=document.getElementById(s), active=s===id;
+    el.classList.toggle("hidden",!active);
+    if(active){ el.classList.remove("screen-in"); void el.offsetWidth; el.classList.add("screen-in"); }
+  });
   document.getElementById("hud").classList.toggle("show", id===null);
 }
 function $(id){ return document.getElementById(id); }
@@ -1230,13 +1307,28 @@ function renderDressPreview(){
 var curStageIdx = -1, stageObjs = null, player=null, playerParts=null;
 var joyActive=false, joyId=null, joyOrigin={x:0,y:0}, joyVec={x:0,y:0};
 var keys = {};
-var camYaw=0, camDist=7.6, camHeight=3.7;
+var camYaw=0, camDist=9.1, camHeight=4.35;
 var camZoom=1, camZoomTarget=1;
 var CAM_ZOOM_MIN=0.72, CAM_ZOOM_MAX=1.55;
 var lastSafe = new THREE.Vector3(0,0,0);
 var lastSafeTimer = 0;
 var runState = { stars:0, rescued:0, task:0, done:false, finishing:false };
 var activeAction = null;
+var lastStepFx=0;
+var STAGE_MISSIONS=[
+  "まいごを たすけよう！",
+  "あまぐもを きれいに！",
+  "のりものを ひからせよう！",
+  "おはなを さかせよう！",
+  "ほしくじらに ひかりを とどけよう！"
+];
+function showStageIntro(idx){
+  var intro=$("stageIntro");
+  $("stageIntroName").textContent=STAGES[idx].name;
+  $("stageIntroMission").textContent=STAGE_MISSIONS[idx];
+  intro.classList.remove("show"); void intro.offsetWidth; intro.classList.add("show");
+  setTimeout(function(){intro.classList.remove("show");},1600);
+}
 
 function clearStageObjs(){
   if(stageObjs){
@@ -1259,12 +1351,12 @@ function startStage(idx){
   clearStageObjs();
   buildStageWorld(st);
   camZoom = 1; camZoomTarget = 1;
-  runState = { stars:0, rescued:0, task:0, done:false, finishing:false };
+  runState = { stars:0, rescued:0, task:0, done:false, finishing:false, introUntil:performance.now()+1450 };
   updateHud();
   showScreen(null);
   $("stageNameChip").textContent = st.name;
   playBGM(st.bgm);
-  showToast(st.name);
+  showStageIntro(idx);
   updateGoalText(st);
 }
 
@@ -1858,6 +1950,8 @@ function buildStageWorld(st){
   else built = buildWhaleStage(group, st, anim, batcher);
   stageObjs.stars = built.stars; stageObjs.rescues = built.rescues; stageObjs.tasks = built.tasks; stageObjs.goal = built.goal;
   playerStart = built.playerStart;
+  addMagicMotes(group,st,anim);
+  addWelcomeScene(group,st,playerStart,anim);
 
   var safeInnerRadius = computeSafeInnerRadius(group, st, playerStart);
   /* 霞レイヤーがすっかり霧に隠れて消えないよう、霧の遠端も背景半径に合わせて広げる */
@@ -2246,6 +2340,11 @@ function tick(now){
   if(document.hidden) return;
 
   if(player && stageObjs && !runState.finishing){
+    if(runState.introUntil && now<runState.introUntil){
+      animateCharacterMesh(player,dt,now,false);
+      if(stageObjs.playerShadow){stageObjs.playerShadow.position.x=player.position.x;stageObjs.playerShadow.position.z=player.position.z;}
+      renderer.render(scene,camera); return;
+    }
     /* 上昇気流：範囲に入るとふわっと上の雲へ（操作不能時間は短く、落下扱いにしない） */
     if(stageObjs.updraft && !stageObjs.riding){
       var du = player.position.distanceTo(stageObjs.updraft.pos);
@@ -2283,6 +2382,7 @@ function tick(now){
         player.rotation.y += dr*Math.min(1,dt*10);
       }
       player.position.y = Math.abs(Math.sin(now*0.008))*0.06;
+      if(now-lastStepFx>150){ lastStepFx=now; burst(player.position.x,0.15,player.position.z,curStageIdx===2?0xffb8ed:0xffed9a,2,0.65); }
     }
     animateCharacterMesh(player, dt, now, mvLen>0.08);
     /* 星の自動収集（磁石半径） */
@@ -2398,6 +2498,14 @@ function tick(now){
 $("btnStart").addEventListener("click", function(){ ensureAudio(); pickedChar=S.selectedCharacter; buildCharGrid(); showScreen("scrChar"); });
 $("btnContinue").addEventListener("click", function(){ ensureAudio(); buildStageGrid(); showScreen("scrStage"); playBGM("magical"); });
 $("btnMusicTitle").addEventListener("click", function(){ ensureAudio(); toggleBGM(); });
+$("scrTitle").addEventListener("pointerdown",function(e){
+  for(var i=0;i<5;i++){
+    var s=document.createElement("span"); s.className="tap-star"; s.textContent=i%2?"✦":"★";
+    s.style.left=(e.clientX-8)+"px"; s.style.top=(e.clientY-10)+"px";
+    s.style.setProperty("--dx",((Math.random()-.5)*110)+"px"); s.style.setProperty("--dy",(-25-Math.random()*75)+"px");
+    document.body.appendChild(s); setTimeout(function(el){el.remove();},800,s);
+  }
+});
 $("btnCharBack").addEventListener("click", function(){ showScreen("scrTitle"); });
 $("btnCharGo").addEventListener("click", function(){
   S.selectedCharacter = pickedChar; saveGame();
