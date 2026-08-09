@@ -17,7 +17,7 @@ export default function MahouMeiro() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/meiro_v6.html"
+          src="/games/meiro_v7.html"
           title="まほうのめいろ"
           allow="autoplay; fullscreen"
           allowFullScreen
