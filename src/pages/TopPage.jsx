@@ -770,6 +770,33 @@ const GAME_SVGS = {
       <circle cx="80.5" cy="63" r="1.2" fill="#1a1a2e"/>
     </svg>
   ),
+  g_donguri: (
+    <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="140" fill="#7FD0F2" rx="8"/>
+      <circle cx="24" cy="24" r="14" fill="#FFE066" opacity="0.95"/>
+      <ellipse cx="46" cy="66" rx="30" ry="22" fill="#3f9e2c" opacity="0.55"/>
+      <ellipse cx="150" cy="60" rx="34" ry="24" fill="#3f9e2c" opacity="0.55"/>
+      <rect x="0" y="96" width="86" height="44" fill="#9a6a34"/>
+      <rect x="0" y="96" width="86" height="10" fill="#5fbe3a"/>
+      <rect x="120" y="88" width="80" height="52" fill="#9a6a34"/>
+      <rect x="120" y="88" width="80" height="10" fill="#5fbe3a"/>
+      <rect x="86" y="126" width="34" height="14" fill="#2f9fe0"/>
+      <rect x="86" y="126" width="34" height="4" fill="#dff4ff"/>
+      <ellipse cx="34" cy="84" rx="11" ry="10" fill="#b08a5a"/>
+      <circle cx="34" cy="74" r="8" fill="#b08a5a"/>
+      <path d="M24 78 L16 70 M27 71 L21 61 M34 68 L34 57 M41 71 L47 61 M44 78 L52 70"
+            stroke="#6a4a28" strokeWidth="3" strokeLinecap="round" fill="none"/>
+      <circle cx="31" cy="73" r="1.8" fill="#241a14"/>
+      <circle cx="37" cy="73" r="1.8" fill="#241a14"/>
+      <ellipse cx="72" cy="58" rx="7" ry="8" fill="#d8a24a"/>
+      <rect x="65" y="48" width="14" height="6" rx="2" fill="#7a5020"/>
+      <ellipse cx="150" cy="74" rx="13" ry="12" fill="#6b4a9c"/>
+      <circle cx="145" cy="70" r="3" fill="#ffe14a"/>
+      <circle cx="155" cy="70" r="3" fill="#ffe14a"/>
+      <polygon points="176,60 180,50 184,60 194,64 184,68 180,78 176,68 166,64"
+               fill="#ffe14a" opacity="0.95"/>
+    </svg>
+  ),
   g_mori: (
     <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -1199,6 +1226,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'动物狙击手',       desc:'点击移动动物\n积累分数！'                              },
     ko:{ name:'동물 스나이퍼',     desc:'움직이는 동물을\n탭해서 맞혀요!'                      },
     es:{ name:'Francotirador',    desc:'¡Toca animales\nen movimiento!'                        } },
+  { id:'g_donguri', route:'/donguri', icon:'🌰', num:25, color:'#b0722e', stars:5, isNew:true, category:'アクション',
+    ja:{ name:'どんぐりだいさくせん', desc:'どんぐりをころがして\nなかまをたすけよう！' },
+    en:{ name:'Acorn Rescue',       desc:'Roll acorns and\nrescue your friends!' },
+    zh:{ name:'橡果大作战',           desc:'滚动橡果\n拯救伙伴们！' },
+    ko:{ name:'도토리 대작전',        desc:'도토리를 굴려서\n친구들을 구하자!' },
+    es:{ name:'Rescate de Bellotas', desc:'¡Rueda bellotas y\nrescata a tus amigos!' } },
   { id:'g_mori', route:'/mori', icon:'🌲', num:6, color:'#2e7d32', stars:4, isNew:false, category:'アクション',
     ja:{ name:'もりのなかまたち', desc:'3Dのしまをたんけん！\nどんぐりでなかまをたすけよう！' },
     en:{ name:'Forest Friends',  desc:'Explore a 3D forest island\nand rescue animal friends!' },
@@ -1322,7 +1355,7 @@ const ALL_SHELF_GAMES = [
 ];
 const TOTAL_GAME_COUNT = Object.keys(GAME_META).length;
 /* ── 棚グループ定義(6棚)。アクションはゲーム性で2分割 ── */
-const SHELF_SHOOT_JUMP = ['s3','s4','g_sora','g_mori','g_block']; // ねらう・とぶ系
+const SHELF_SHOOT_JUMP = ['s3','s4','g_sora','g_mori','g_block','g_donguri']; // ねらう・とぶ系
 const SHELF_GROUPS = [
   { key:'asobu',    icon:'⚡', match:g => g.category==='アクション' && !SHELF_SHOOT_JUMP.includes(g.id),
     label:{ja:'あそぶ',       en:'Play',        zh:'玩耍',   ko:'놀기',       es:'Jugar'    } },
@@ -1350,7 +1383,7 @@ const CATEGORY_FILTERS = [
 /* 棚だけに適用する優先順。未登録のゲームは元の登録順のまま後ろへ並ぶ。 */
 const SHELF_PRIORITY = {
   asobu: ['/kudamono-catch','/otakara-horihori','/astral-fang','/mahou-nakama'],
-  nerau: ['/mori','/sora','/shooting','/block','/sniper'],
+  nerau: ['/donguri','/mori','/sora','/shooting','/block','/sniper'],
   race: ['/kart','/bike','/neon-drive','/houki','/runner'],
   kangaeru: ['/nijiiro-oukoku','/doubutsu-puzzle','/kakurenbo','/mahou-meiro','/iro','/kokki'],
   tsukuru: ['/machi','/mura','/jewelry-master','/nurie'],
@@ -1392,11 +1425,11 @@ const BEGINNER_ROUTES = [
 
 /* NEWを乱立させず、直近の代表作だけに絞る。 */
 const FEATURED_NEW_ROUTES = new Set([
+  '/donguri',
   '/shabondama',
   '/nijiiro-oukoku',
   '/astral-fang',
   '/neon-drive',
-  '/katachi',
 ]);
 
 const THUMB_ALIASES = {

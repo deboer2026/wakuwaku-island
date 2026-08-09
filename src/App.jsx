@@ -24,6 +24,7 @@ import JewelryMaster from './games/JewelryMaster'
 import DressUp from './games/DressUp'
 import OkashiCrossing from './games/OkashiCrossing'
 import MoriGame from './games/MoriGame'
+import DonguriGame from './games/DonguriGame'
 import SoraGame from './games/SoraGame'
 import BikeGame from './games/BikeGame'
 import AnimalKart from './games/AnimalKart'
@@ -67,7 +68,7 @@ const GAME_ROUTES = new Set([
   '/kokki', '/jewelry-master', '/animal-block', '/runner', '/shooting',
   '/sniper', '/dressup', '/okashi-crossing',
   '/moji-asobi', '/iro-awase', '/flag-quiz', '/shoot',
-  '/mori', '/sora', '/bike', '/kart', '/block', '/houki', '/usagi-carrot', '/usagi', '/neko-chou', '/neko', '/mahou-meiro',
+  '/mori', '/donguri', '/sora', '/bike', '/kart', '/block', '/houki', '/usagi-carrot', '/usagi', '/neko-chou', '/neko', '/mahou-meiro',
   '/tokei-yomi', '/katakana-asobi', '/nurie', '/mahou-nakama', '/katachi', '/katachi-awase',
   '/otakara-horihori',
   '/sora-kyoshitsu', '/kyoshitsu',
@@ -142,6 +143,7 @@ export default function App() {
         <Route path="/jewelry-master" element={<GameWithSEO route="/jewelry-master"><JewelryMaster /></GameWithSEO>} />
         <Route path="/dressup"        element={<DressUp />} />
         <Route path="/mori" element={<GameWithSEO route="/mori"><MoriGame /></GameWithSEO>} />
+        <Route path="/donguri" element={<GameWithSEO route="/donguri"><DonguriGame /></GameWithSEO>} />
         <Route path="/sora" element={<GameWithSEO route="/sora"><SoraGame /></GameWithSEO>} />
         <Route path="/bike" element={<GameWithSEO route="/bike"><BikeGame /></GameWithSEO>} />
         <Route path="/kart" element={<GameWithSEO route="/kart"><AnimalKart /></GameWithSEO>} />
