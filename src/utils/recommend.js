@@ -18,7 +18,7 @@ export const ALL_GAMES = [
   { route:'/animal-block',    icon:'🧱', ja:'どうぶつブロック',       en:'Animal Blocks',        category:'パズル'     },
   { route:'/runner',          icon:'🏃', ja:'どうぶつランナー',       en:'Animal Runner',        category:'レース'     },
   { route:'/shooting',        icon:'🚀', ja:'どうぶつシューティング', en:'Animal Shooter',       category:'アクション' },
-  { route:'/sniper',          icon:'🎯', ja:'どうぶつスナイパー',     en:'Animal Sniper',        category:'アクション' },
+  { route:'/sniper',          icon:'🎯', ja:'どうぶつターゲット',     en:'Animal Target',        category:'アクション' },
   { route:'/mori',            icon:'🌲', ja:'もりのなかまたち',       en:'Forest Friends',       category:'アクション' },
   { route:'/sora',            icon:'👸', ja:'そらとびプリンセス',     en:'Sky Princess',         category:'アクション' },
   { route:'/bike',            icon:'🏍️', ja:'わくわくバイク',         en:'Wakuwaku Bike',        category:'レース'     },

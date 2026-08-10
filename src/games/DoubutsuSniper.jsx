@@ -18,7 +18,7 @@ export default function DoubutsuSniper() {
         <iframe
           ref={iframeRef}
           src="/games/sniper_v3.html"
-          title="どうぶつスナイパー"
+          title="どうぶつターゲット"
           allow="autoplay; fullscreen"
           allowFullScreen
           sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"

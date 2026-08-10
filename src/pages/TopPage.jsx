@@ -1052,7 +1052,7 @@ const GAME_SVGS = {
 /* ════════════════════════════════════════════════════
    ① 更新日時（手動で更新する定数）
 ════════════════════════════════════════════════════ */
-const LAST_UPDATE_DATE = '2026-06-19';
+const LAST_UPDATE_DATE = '2026-08-10';
 
 function getDaysSinceUpdate() {
   return Math.floor((new Date() - new Date(LAST_UPDATE_DATE)) / 86400000);
@@ -1099,7 +1099,7 @@ const GAMES = [
     zh:{ name:'动物翻牌',             desc:'翻开卡片\n找出相同的动物！'                   },
     ko:{ name:'동물 퍼즐',             desc:'카드를 뒤집어\n같은 동물을 찾아요!'           },
     es:{ name:'Puzzle Animal',         desc:'¡Voltea cartas y busca\nanimales iguales!'    } },
-  { id:'g5', route:'/kazu-asobi',      icon:'🔢', num:5, color:'#F4D03F', stars:3, isNew:false, category:'かずあそび',
+  { id:'g5', route:'/kazu-asobi',      icon:'🔢', num:5, color:'#F4D03F', stars:3, isNew:false, category:'がくしゅう',
     ja:{ name:'かずあそび',         desc:'かずを かぞえて\nたのしく まなぼう！'          },
     en:{ name:'Number Fun',           desc:'Count and learn\nnumbers with fun!'           },
     zh:{ name:'数字游戏',             desc:'数数字\n快乐学习！'                           },
@@ -1129,13 +1129,13 @@ const GAMES = [
     zh:{ name:'动物捉迷藏3D',           desc:'转动3D小岛来探索吧！\n2种玩法，8个关卡，可选搭档'                    },
     ko:{ name:'동물 숨바꼭질 3D',         desc:'3D 섬을 돌려가며 찾아봐요!\n2가지 모드, 8스테이지, 파트너 선택'              },
     es:{ name:'Escondite Animal 3D',        desc:'¡Gira la isla 3D y explora!\n2 modos, 8 niveles, elige compañero'         } },
-  { id:'g11', route:'/moji',           icon:'🔤', num:11, color:'#4CAF50', stars:3, isNew:false, category:'もじあそび',
+  { id:'g11', route:'/moji',           icon:'🔤', num:11, color:'#4CAF50', stars:3, isNew:false, category:'がくしゅう',
     ja:{ name:'もじあそび',         desc:'えをみて ただしい\nひらがなを えらんでね！'        },
     en:{ name:'Letter Fun',          desc:'Look at the picture\nand choose the right hiragana!' },
     zh:{ name:'文字游戏',             desc:'看图选择\n正确的平假名！'                    },
     ko:{ name:'글자 놀이',             desc:'그림을 보고\n히라가나를 골라요!'               },
     es:{ name:'Letras',                desc:'¡Mira el dibujo y\nelige la letra!'            } },
-  { id:'g12', route:'/tashizan',       icon:'➕', num:12, color:'#2196F3', stars:3, isNew:false, category:'かずあそび',
+  { id:'g12', route:'/tashizan',       icon:'➕', num:12, color:'#2196F3', stars:3, isNew:false, category:'がくしゅう',
     ja:{ name:'たしざんゲーム',     desc:'どうぶつを かぞえて\nこたえをえらんでね！'          },
     en:{ name:'Math Quiz',           desc:'Count animals and\nchoose the right answer!'        },
     zh:{ name:'加法游戏',             desc:'数动物\n选答案！'                             },
@@ -1159,7 +1159,7 @@ const GAMES = [
     zh:{ name:'梦幻岛小镇',           desc:'漫步3D小岛，\n和动物一起建造小镇！'             },
     ko:{ name:'꿈의 섬 마을',          desc:'3D 섬을 걸으며\n동물과 마을을 만들어요!'         },
     es:{ name:'Pueblo Isla Soñada',  desc:'¡Recorre la isla 3D y\nconstruye con los animales!' } },
-  { id:'g15', route:'/kokki', icon:'🌍', num:15, color:'#0d47a1', stars:4, isNew:false, category:'クイズ',
+  { id:'g15', route:'/kokki', icon:'🌍', num:15, color:'#0d47a1', stars:4, isNew:false, category:'がくしゅう',
     ja:{ name:'こっきクイズ',    desc:'せかいの こっきを\nみわけよう！\n30かこく以上！'       },
     en:{ name:'Flag Quiz',        desc:'Identify world flags!\n30+ countries!\nTest your knowledge!' },
     zh:{ name:'国旗问答',          desc:'识别世界各国国旗！\n30多个国家！'                          },
@@ -1202,11 +1202,11 @@ const SCHOOL_GAMES = [
     ko:{ name:'동물 슈팅',         desc:'적을 물리치고\n보스를 쓰러뜨려요!'                    },
     es:{ name:'Shooter Animal',   desc:'¡Elimina enemigos\ny derrota al jefe!'                 } },
   { id:'s4', route:'/sniper',   icon:'🎯', num:4, color:'#2d6a4f', stars:4, isNew:false, category:'アクション',
-    ja:{ name:'どうぶつスナイパー', desc:'うごくどうぶつを\nタップでねらえ！\nフェイクに注意！' },
-    en:{ name:'Animal Sniper',   desc:'Tap moving animals\nto score points!\nWatch for fakes!' },
-    zh:{ name:'动物狙击手',       desc:'点击移动动物\n积累分数！'                              },
-    ko:{ name:'동물 스나이퍼',     desc:'움직이는 동물을\n탭해서 맞혀요!'                      },
-    es:{ name:'Francotirador',    desc:'¡Toca animales\nen movimiento!'                        } },
+    ja:{ name:'どうぶつターゲット', desc:'うごくどうぶつを\nタップでみつけよう！\nフェイクに注意！' },
+    en:{ name:'Animal Target',   desc:'Tap moving animals\nto score points!\nWatch for fakes!' },
+    zh:{ name:'动物目标',       desc:'点击移动动物\n积累分数！'                              },
+    ko:{ name:'동물 타깃',     desc:'움직이는 동물을\n탭해서 맞혀요!'                      },
+    es:{ name:'Objetivo Animal',    desc:'¡Toca animales\nen movimiento!'                        } },
   { id:'g_donguri', route:'/donguri', icon:'🌰', num:25, color:'#b0722e', stars:5, isNew:true, category:'アクション',
     ja:{ name:'どんぐりだいさくせん', desc:'どんぐりをころがして\nなかまをたすけよう！' },
     en:{ name:'Acorn Rescue',       desc:'Roll acorns and\nrescue your friends!' },
@@ -1936,8 +1936,8 @@ export default function TopPage() {
           🪙 <span className="tp-coin-num">{coins}</span>
         </div>
         <button className="tp-top-btn tp-shop-btn" onClick={() => setShopOpen(true)}
-          title={lang === 'en' ? 'Shop' : 'ショップ'}>
-          🛒 <span className="tp-shop-label">{{ja:'ショップ', en:'Shop', zh:'商店', ko:'상점', es:'Tienda'}[lang] || 'ショップ'}</span>
+          title={lang === 'en' ? 'Coin exchange' : 'コインでこうかん'}>
+          🪙 <span className="tp-shop-label">{{ja:'コインでこうかん', en:'Coin exchange', zh:'金币兑换', ko:'코인 교환', es:'Canjear monedas'}[lang] || 'コインでこうかん'}</span>
         </button>
         <button className="tp-top-btn" onClick={startRoulette}
           title={{ja:'ゲームルーレット', en:'Game Roulette', zh:'游戏轮盘', ko:'게임 룰렛', es:'Ruleta'}[lang] || 'ゲームルーレット'}>
@@ -2212,6 +2212,10 @@ export default function TopPage() {
           {{ja:'🌟 あそびたいゲームをえらんでね 🌟', en:'🌟 Pick a game to play! 🌟', zh:'🌟 选择想玩的游戏 🌟', ko:'🌟 하고 싶은 게임을 골라요 🌟', es:'🌟 ¡Elige un juego para jugar! 🌟'}[lang] || '🌟 あそびたいゲームをえらんでね 🌟'}
         </div>
         <div className="tp-footer-links">
+          <button className="tp-footer-link" onClick={() => navigate('/parents')}>
+            {{ja:'👪 保護者の方へ', en:'👪 For Parents', zh:'👪 致家长', ko:'👪 보호자 안내', es:'👪 Para familias'}[lang] || '👪 保護者の方へ'}
+          </button>
+          <span className="tp-footer-sep">|</span>
           <button className="tp-footer-link" onClick={() => navigate('/privacy')}>
             {{ja:'🔒 プライバシーポリシー', en:'🔒 Privacy Policy', zh:'🔒 隐私政策', ko:'🔒 개인정보 처리방침', es:'🔒 Privacidad'}[lang] || '🔒 プライバシーポリシー'}
           </button>

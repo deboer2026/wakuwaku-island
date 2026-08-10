@@ -46,6 +46,7 @@ import AstralFang from './games/AstralFang'
 import NijiiroOukoku from './games/NijiiroOukoku'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
+import ParentsPage from './pages/ParentsPage'
 import { recordRecentGame } from './utils/recentGames'
 import { recordGamePlay } from './utils/playHistory'
 
@@ -171,6 +172,7 @@ export default function App() {
         <Route path="/nijiiro"        element={<GameWithSEO route="/nijiiro-oukoku"><NijiiroOukoku /></GameWithSEO>} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms"   element={<TermsPage />} />
+        <Route path="/parents" element={<ParentsPage />} />
       </Routes>
     </>
   )

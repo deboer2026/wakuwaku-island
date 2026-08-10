@@ -4,8 +4,8 @@ const { render } = await import('./dist-server/entry-server.js')
 const GAME_META = (await import('./src/seo/gameMeta.js')).default
 const TOP_GAME_COUNT = Object.keys(GAME_META).length
 
-// トップ + 全ゲーム正規ルート（エイリアスは canonical に集約するため除外）
-const routes = ['/', ...Object.keys(GAME_META)]
+// トップ + 案内・ポリシー + 全ゲーム正規ルート（エイリアスは canonical に集約するため除外）
+const routes = ['/', '/parents', '/privacy', '/terms', ...Object.keys(GAME_META)]
 
 const template = fs.readFileSync('dist/index.html', 'utf-8')
 const ROOT = '<div id="root"></div>'

@@ -1,14 +1,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import StaticPageSEO from '../seo/StaticPageSEO';
 import './LegalPage.css';
 
 export default function TermsPage() {
   const navigate = useNavigate();
-  const [lang] = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
+  const [lang] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('wakuwaku_lang') : null) || 'ja');
   const en = lang === 'en';
+  const title = en ? 'Terms of Use｜Wakuwaku Island' : '利用規約｜わくわくアイランド';
+  const description = en
+    ? 'Terms for using the free browser games on Wakuwaku Island.'
+    : 'わくわくアイランドの無料ブラウザゲームをご利用いただく際の基本ルールをご案内します。';
 
   return (
     <div className="legal-wrap">
+      <StaticPageSEO route="/terms" title={title} description={description} />
       {/* ── ヘッダー ── */}
       <div className="legal-header">
         <button className="legal-back-btn" onClick={() => navigate('/')}>
@@ -25,7 +31,7 @@ export default function TermsPage() {
           {en ? 'Terms of Use' : '利用規約'}
         </h1>
         <p className="legal-date">
-          {en ? 'Last updated: 2025-05-01' : '最終更新日：2025年5月1日'}
+          {en ? 'Last updated: 2026-08-10' : '最終更新日：2026年8月10日'}
         </p>
 
         {/* 1 */}
@@ -133,13 +139,13 @@ export default function TermsPage() {
           </h2>
           <p>
             {en
-              ? 'If you have any questions about these Terms of Use, please contact us through the site\'s inquiry form.'
-              : '利用規約についてご不明な点がございましたら、サイトのお問い合わせフォームよりご連絡ください。'}
+              ? 'A public contact channel is being prepared. When available, it will be published on this page and the For Parents page.'
+              : '公開用のお問い合わせ窓口は現在整備中です。開設後、このページと「保護者の方へ」に掲載します。'}
           </p>
         </div>
 
         <p className="legal-footnote">
-          © 2025 Wakuwaku Island. {en ? 'All rights reserved.' : 'All rights reserved.'}
+          © 2026 Wakuwaku Island. All rights reserved.
         </p>
       </div>
     </div>

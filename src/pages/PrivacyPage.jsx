@@ -1,14 +1,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import StaticPageSEO from '../seo/StaticPageSEO';
 import './LegalPage.css';
 
 export default function PrivacyPage() {
   const navigate = useNavigate();
-  const [lang] = useState(() => localStorage.getItem('wakuwaku_lang') || 'ja');
+  const [lang] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('wakuwaku_lang') : null) || 'ja');
   const en = lang === 'en';
+  const title = en ? 'Privacy Policy｜Wakuwaku Island' : 'プライバシーポリシー｜わくわくアイランド';
+  const description = en
+    ? 'How Wakuwaku Island handles device data, cookies, analytics, and children’s privacy.'
+    : 'わくわくアイランドにおける端末内データ、Cookie、アクセス解析、お子さまのプライバシーの取り扱いをご案内します。';
 
   return (
     <div className="legal-wrap">
+      <StaticPageSEO route="/privacy" title={title} description={description} />
       {/* ── ヘッダー ── */}
       <div className="legal-header">
         <button className="legal-back-btn" onClick={() => navigate('/')}>
@@ -25,7 +31,7 @@ export default function PrivacyPage() {
           {en ? 'Privacy Policy' : 'プライバシーポリシー'}
         </h1>
         <p className="legal-date">
-          {en ? 'Last updated: 2025-05-01' : '最終更新日：2025年5月1日'}
+          {en ? 'Last updated: 2026-08-10' : '最終更新日：2026年8月10日'}
         </p>
 
         {/* 1 */}
@@ -70,8 +76,8 @@ export default function PrivacyPage() {
           <h2>💾 {en ? 'Use of localStorage' : 'localStorageの使用について'}</h2>
           <p>
             {en
-              ? 'This site saves the following data locally in your browser (localStorage) to provide game features. This data is stored only on your device and is never sent to any server.'
-              : '当サイトでは、ゲームの機能を提供するため、以下のデータをお使いのブラウザ内（localStorage）にのみ保存します。このデータはお使いの端末内にのみ保存され、外部サーバーに送信されることは一切ありません。'}
+              ? 'This site saves the following data locally in your browser (localStorage) to provide game features. This game data is stored on your device and is not synchronized to an account.'
+              : '当サイトでは、ゲーム機能を提供するため、以下のゲームデータをお使いのブラウザ内（localStorage）に保存します。アカウントへの同期や別端末への引き継ぎは行いません。'}
           </p>
           <ul>
             {en ? (
@@ -82,6 +88,7 @@ export default function PrivacyPage() {
                 <li>Coin count and login bonus streak</li>
                 <li>Costume (Kisekae) selection for characters</li>
                 <li>Unlocked shop items</li>
+                <li>Recent play history and display preferences</li>
               </>
             ) : (
               <>
@@ -91,6 +98,7 @@ export default function PrivacyPage() {
                 <li>コイン枚数・ログインボーナスの連続日数</li>
                 <li>キャラクターの着せ替え設定</li>
                 <li>ショップで解放したアイテム</li>
+                <li>最近遊んだゲーム・表示設定</li>
               </>
             )}
           </ul>
@@ -106,19 +114,24 @@ export default function PrivacyPage() {
           <h2>📊 {en ? 'Google Analytics' : 'Google Analyticsについて'}</h2>
           <p>
             {en
-              ? 'This site uses Google Analytics to understand how the site is being used (e.g., number of page views, which games are popular). Google Analytics collects anonymous, aggregate data and does not identify individual users.'
-              : '当サイトでは、サイトの利用状況（ページビュー数、人気ゲームなど）を把握するためにGoogle Analyticsを使用しています。Google Analyticsは匿名の集計データを収集するものであり、個人を特定するものではありません。'}
+              ? 'This site uses Google Analytics to understand usage such as page views, popular games, device/browser information, approximate location, access time, and referral source. Google may process these data using cookies and similar technologies. We do not use the analytics data to directly identify individual visitors.'
+              : '当サイトでは、ページビュー、人気ゲーム、端末・ブラウザ情報、おおよその地域、アクセス日時、参照元などを把握し改善するため、Google Analyticsを使用しています。GoogleはCookie等を利用してこれらの情報を処理する場合があります。当サイトでは、アクセス解析情報を個人を直接特定する目的で利用しません。'}
           </p>
           <p style={{ marginTop: 8 }}>
             {en
-              ? 'Google Analytics uses cookies to collect anonymous statistical data. You can opt out by installing the Google Analytics Opt-out Browser Add-on.'
-              : 'Google Analyticsはクッキーを使用して匿名の統計データを収集します。Google アナリティクス オプトアウト アドオンをインストールすることで、収集を拒否することができます。'}
+              ? 'You can limit collection through your browser settings or the Google Analytics Opt-out Browser Add-on.'
+              : 'ブラウザの設定やGoogle アナリティクス オプトアウト アドオンを利用して、収集を制限できます。'}
           </p>
           <p style={{ marginTop: 8 }}>
             {en
-              ? 'For details on how Google handles data, please see Google\'s Privacy Policy.'
-              : 'Googleによるデータの取り扱いについては、Googleのプライバシーポリシーをご確認ください。'}
+              ? 'See Google’s information on data use on partner sites, Privacy Policy, and the opt-out add-on for details.'
+              : '詳しくは、Googleのサービス利用サイトにおけるデータ使用、プライバシーポリシー、オプトアウト アドオンをご確認ください。'}
           </p>
+          <ul>
+            <li><a href="https://policies.google.com/technologies/partner-sites?hl=ja" target="_blank" rel="noopener noreferrer">{en ? 'How Google uses data on partner sites' : 'Googleのサービス利用サイトにおけるデータ使用'}</a></li>
+            <li><a href="https://policies.google.com/privacy?hl=ja" target="_blank" rel="noopener noreferrer">{en ? 'Google Privacy Policy' : 'Google プライバシーポリシー'}</a></li>
+            <li><a href="https://tools.google.com/dlpage/gaoptout?hl=ja" target="_blank" rel="noopener noreferrer">{en ? 'Google Analytics opt-out add-on' : 'Google アナリティクス オプトアウト アドオン'}</a></li>
+          </ul>
         </div>
 
         {/* 5 */}
@@ -126,8 +139,8 @@ export default function PrivacyPage() {
           <h2>👶 {en ? 'For Children\'s Safety' : 'お子さまの安全のために'}</h2>
           <p>
             {en
-              ? 'This site is designed for children. We do not display advertising, do not link to external sites that collect personal information, and do not include any features for communication between users.'
-              : '当サイトは子ども向けに設計されています。広告の表示は行わず、個人情報を収集する外部サイトへのリンクも設けていません。また、ユーザー間でのコミュニケーション機能も一切ありません。'}
+              ? 'This site is designed for children. It has no advertising, account registration, payment, chat, comments, or other user-to-user communication. Policy and analytics information may link to external official resources for parents and guardians.'
+              : '当サイトは子ども向けに設計されています。広告、会員登録、決済、チャット、コメント等の利用者間コミュニケーション機能はありません。保護者向けのポリシー・アクセス解析の説明から、外部の公式情報へリンクする場合があります。'}
           </p>
         </div>
 
@@ -148,13 +161,13 @@ export default function PrivacyPage() {
           </h2>
           <p>
             {en
-              ? 'If you have any questions about this Privacy Policy, please contact us through the site\'s inquiry form.'
-              : 'このプライバシーポリシーについてご不明な点がございましたら、サイトのお問い合わせフォームよりご連絡ください。'}
+              ? 'A public contact channel is being prepared. When available, it will be published on this page and the For Parents page.'
+              : '公開用のお問い合わせ窓口は現在整備中です。開設後、このページと「保護者の方へ」に掲載します。'}
           </p>
         </div>
 
         <p className="legal-footnote">
-          © 2025 Wakuwaku Island. {en ? 'All rights reserved.' : 'All rights reserved.'}
+          © 2026 Wakuwaku Island. All rights reserved.
         </p>
       </div>
     </div>
