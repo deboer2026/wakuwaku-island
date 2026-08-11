@@ -1,0 +1,2635 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>こっきクイズ せかいたんけん</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;user-select:none;-webkit-user-select:none;}
+body{
+  font-family:'M PLUS Rounded 1c',sans-serif;
+  background:#071229;
+  display:flex;flex-direction:column;align-items:center;
+}
+:root{
+  --sat:0px; --sab:0px; --sal:0px; --sar:0px;
+  --ink:#4A3B32;
+  --gold:#FFD24A;
+  --sky:#5FC8F0;
+  --deep:#0A1730;
+  --panel:rgba(12,28,56,0.94);
+}
+#app{
+  width:100%;max-width:520px;height:100%;
+  position:relative;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 22%,#173B6B 0%,#0A1730 55%,#050C1C 100%);
+}
+canvas{touch-action:none;display:block;}
+
+/* ===== 3Dキャンバス ===== */
+#gl{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;}
+.gl-host{position:relative;overflow:hidden;}
+.gl-host #gl{position:absolute;}
+
+/* ===== ほし の背景 ===== */
+#stars{position:absolute;inset:0;pointer-events:none;opacity:0.75;}
+
+/* ===== 画面 ===== */
+.screen{
+  position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;
+  padding-top:var(--sat);padding-bottom:var(--sab);
+}
+.screen.active{display:flex;}
+.fadein{animation:fadeIn .34s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
+/* ===== ボタン ===== */
+.btn{
+  font-family:inherit;font-weight:900;cursor:pointer;border:none;
+  border-radius:18px;transition:transform .12s ease, filter .12s ease;
+}
+.btn:active{transform:scale(.94);}
+.btn-main{
+  background:linear-gradient(180deg,#FFE27A,#FFB01F);
+  color:#5A3B00;font-size:21px;padding:16px 40px;
+  box-shadow:0 6px 0 #C97C00, 0 12px 26px rgba(255,178,31,.36);
+}
+.btn-main:active{box-shadow:0 2px 0 #C97C00;transform:translateY(4px) scale(.98);}
+.btn-sub{
+  background:rgba(255,255,255,.11);border:2px solid rgba(255,255,255,.26);
+  color:rgba(255,255,255,.88);font-size:15px;padding:11px 22px;border-radius:15px;
+}
+.chip{
+  background:rgba(0,0,0,.42);border:1.5px solid rgba(255,255,255,.28);
+  border-radius:13px;padding:8px 14px;color:rgba(255,255,255,.85);
+  font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;
+}
+.icon-btn{
+  width:42px;height:42px;border-radius:50%;flex-shrink:0;
+  background:rgba(0,0,0,.45);border:1.5px solid rgba(255,255,255,.32);
+  color:#fff;font-size:19px;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ===== タイトル ===== */
+#s-title{align-items:center;}
+#title-globe{position:absolute;left:0;right:0;top:0;height:58%;}
+#title-bottom{
+  position:absolute;left:0;right:0;bottom:0;
+  padding:0 20px calc(26px + var(--sab));
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  background:linear-gradient(0deg,#050C1C 42%,rgba(5,12,28,.86) 68%,transparent);
+  padding-top:76px;
+}
+#logo{
+  font-size:40px;font-weight:900;line-height:1.15;text-align:center;
+  background:linear-gradient(180deg,#FFFFFF 8%,#FFE066 46%,#FF9F1C 96%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+  filter:drop-shadow(0 3px 14px rgba(255,200,60,.45));
+  letter-spacing:1px;
+}
+#logo-sub{
+  font-family:'DotGothic16',monospace;font-size:12.5px;letter-spacing:5px;
+  color:rgba(255,215,110,.72);margin-top:-4px;
+}
+#title-stats{font-size:12px;color:rgba(255,255,255,.5);}
+
+/* ===== ヘッダー ===== */
+.hdr{
+  display:flex;align-items:center;gap:10px;
+  padding:calc(10px + var(--sat)) 14px 10px;flex-shrink:0;z-index:20;
+}
+.hdr-title{
+  flex:1;text-align:center;font-size:17px;font-weight:900;color:#fff;
+  text-shadow:0 2px 8px rgba(0,0,0,.6);
+}
+
+/* ===== メニュー ===== */
+#menu-list{
+  flex:1;display:flex;flex-direction:column;justify-content:center;
+  gap:14px;padding:10px 22px 26px;overflow-y:auto;
+}
+.mode-card{
+  display:flex;align-items:center;gap:15px;text-align:left;
+  padding:17px 18px;border-radius:22px;cursor:pointer;font-family:inherit;
+  border:2px solid rgba(255,255,255,.16);
+  box-shadow:0 8px 26px rgba(0,0,0,.42);
+  transition:transform .13s ease;
+}
+.mode-card:active{transform:scale(.96);}
+.mode-card .mi{font-size:38px;flex-shrink:0;filter:drop-shadow(0 2px 5px rgba(0,0,0,.4));}
+.mode-card .mt{font-size:19px;font-weight:900;color:#fff;}
+.mode-card .md{font-size:12px;color:rgba(255,255,255,.72);margin-top:3px;line-height:1.45;}
+.mode-card .mp{font-size:11px;color:var(--gold);margin-top:5px;font-weight:800;}
+
+/* ===== 大陸えらび ===== */
+#region-globe{height:38%;flex-shrink:0;position:relative;}
+#region-label{
+  position:absolute;left:0;right:0;bottom:6px;text-align:center;
+  font-size:13px;color:rgba(255,255,255,.62);
+}
+#region-list{
+  flex:1;display:grid;grid-template-columns:1fr 1fr;gap:11px;
+  padding:14px 16px calc(18px + var(--sab));overflow-y:auto;align-content:start;
+}
+.region-card{
+  border-radius:19px;padding:13px 11px;cursor:pointer;font-family:inherit;
+  border:2px solid rgba(255,255,255,.18);text-align:center;
+  box-shadow:0 6px 18px rgba(0,0,0,.4);transition:transform .13s ease;
+  position:relative;overflow:hidden;
+}
+.region-card:active{transform:scale(.95);}
+.region-card.wide{grid-column:span 2;}
+.region-card .re{font-size:30px;}
+.region-card .rn{font-size:15.5px;font-weight:900;color:#fff;margin-top:3px;}
+.region-card .rc{font-size:10.5px;color:rgba(255,255,255,.72);margin-top:2px;}
+.region-card .rstar{font-size:12px;margin-top:4px;letter-spacing:1px;}
+.rprog{
+  position:absolute;left:0;bottom:0;height:4px;background:var(--gold);
+  border-radius:0 3px 0 0;transition:width .5s ease;
+}
+
+/* ===== クイズ ===== */
+#quiz-top{
+  display:flex;align-items:center;gap:8px;
+  padding:calc(8px + var(--sat)) 12px 6px;flex-shrink:0;z-index:20;
+}
+#qprog-wrap{flex:1;height:11px;background:rgba(255,255,255,.14);border-radius:6px;overflow:hidden;}
+#qprog{height:100%;width:0;background:linear-gradient(90deg,#7FE3A0,#FFD24A);border-radius:6px;transition:width .4s ease;}
+#qcount{font-size:12.5px;font-weight:900;color:rgba(255,255,255,.8);min-width:44px;text-align:right;}
+
+#quiz-stage{
+  flex:1;display:flex;flex-direction:column;min-height:0;
+}
+#flag-stage{
+  flex:1;min-height:148px;position:relative;
+  display:flex;align-items:center;justify-content:center;
+}
+#quiz-question{
+  text-align:center;font-size:16px;font-weight:900;color:#fff;
+  padding:4px 18px 8px;text-shadow:0 2px 8px rgba(0,0,0,.7);flex-shrink:0;
+}
+#quiz-hints{
+  display:flex;justify-content:center;gap:12px;flex-wrap:wrap;
+  padding:0 14px 6px;flex-shrink:0;
+}
+.hint-chip{
+  background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);
+  border-radius:14px;padding:7px 11px;text-align:center;min-width:66px;
+}
+.hint-chip .he{font-size:22px;line-height:1.1;}
+.hint-chip .hl{font-size:9.5px;color:rgba(255,255,255,.72);margin-top:2px;}
+
+#answers{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  padding:8px 14px calc(16px + var(--sab));flex-shrink:0;
+}
+.ans{
+  background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.07));
+  border:2px solid rgba(255,255,255,.24);border-radius:17px;
+  padding:14px 8px;font-size:15px;font-weight:900;color:#fff;
+  cursor:pointer;font-family:inherit;min-height:56px;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .12s ease;
+}
+.ans:active{transform:scale(.95);}
+.ans.flagmode{padding:8px;flex-direction:column;gap:0;}
+.ans canvas{width:100%;max-width:130px;height:auto;border-radius:7px;
+  box-shadow:0 3px 10px rgba(0,0,0,.45);display:block;}
+.ans.correct{background:linear-gradient(180deg,#7FE3A0,#3FBF6C);border-color:#B8F5CD;color:#14421F;}
+.ans.wrong{background:linear-gradient(180deg,#FF9E9E,#E85757);border-color:#FFD0D0;color:#521414;opacity:.95;}
+.ans.dim{opacity:.35;}
+
+/* ===== オーバーレイ ===== */
+.ov{
+  position:absolute;inset:0;z-index:60;display:none;
+  align-items:center;justify-content:center;padding:24px;
+  background:rgba(3,9,22,.82);backdrop-filter:blur(4px);
+}
+.ov.active{display:flex;animation:fadeIn .25s ease;}
+.ov-box{
+  background:linear-gradient(165deg,rgba(20,44,84,.98),rgba(8,20,44,.99));
+  border:2px solid rgba(255,215,90,.34);border-radius:26px;
+  padding:24px 22px;max-width:340px;width:100%;text-align:center;
+  box-shadow:0 22px 60px rgba(0,0,0,.75);
+}
+.ov-big{font-size:46px;margin-bottom:4px;}
+.ov-title{font-size:23px;font-weight:900;color:var(--gold);margin-bottom:8px;}
+.ov-text{font-size:14px;color:rgba(255,255,255,.86);line-height:1.65;}
+.ov-stars{font-size:34px;letter-spacing:5px;margin:10px 0 4px;}
+.ov-actions{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin-top:17px;}
+
+/* こたえ発表の旗 */
+.ov-flag{margin:8px auto 6px;width:150px;}
+.ov-flag canvas{width:100%;height:auto;border-radius:8px;box-shadow:0 5px 16px rgba(0,0,0,.5);display:block;}
+
+/* ===== 図鑑 ===== */
+#zukan-tabs{
+  display:flex;gap:6px;padding:2px 12px 8px;overflow-x:auto;flex-shrink:0;
+  scrollbar-width:none;
+}
+#zukan-tabs::-webkit-scrollbar{display:none;}
+.ztab{
+  flex-shrink:0;background:rgba(255,255,255,.09);border:1.5px solid rgba(255,255,255,.2);
+  border-radius:14px;padding:8px 13px;font-size:12.5px;font-weight:800;
+  color:rgba(255,255,255,.72);cursor:pointer;font-family:inherit;white-space:nowrap;
+}
+.ztab.on{background:linear-gradient(180deg,#FFE27A,#FFB01F);color:#5A3B00;border-color:#FFD24A;}
+#zukan-grid{
+  flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);
+  gap:10px;padding:4px 14px calc(20px + var(--sab));align-content:start;
+}
+.zcard{
+  background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.15);
+  border-radius:14px;padding:7px 6px 8px;cursor:pointer;font-family:inherit;
+  transition:transform .13s ease;
+}
+.zcard:active{transform:scale(.94);}
+.zcard canvas{width:100%;height:auto;border-radius:5px;display:block;
+  box-shadow:0 2px 7px rgba(0,0,0,.4);}
+.zcard .zn{font-size:10.5px;font-weight:800;color:#fff;margin-top:5px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}
+.zcard.locked{opacity:.9;}
+.zcard.locked canvas{filter:grayscale(1) brightness(.32);}
+.zcard.locked .zn{color:rgba(255,255,255,.35);}
+#zukan-count{font-size:12px;color:var(--gold);text-align:center;padding:0 0 8px;font-weight:800;}
+
+/* 図鑑くわしく */
+#zd-flag{height:34%;flex-shrink:0;position:relative;}
+#zd-body{flex:1;overflow-y:auto;padding:6px 20px calc(20px + var(--sab));text-align:center;}
+#zd-name{font-size:26px;font-weight:900;color:#fff;}
+#zd-region{font-size:12px;color:var(--sky);margin-top:2px;font-weight:800;}
+#zd-cap{font-size:13px;color:rgba(255,255,255,.75);margin-top:9px;}
+#zd-fact{
+  background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.16);
+  border-radius:17px;padding:14px 15px;margin-top:13px;
+  font-size:13.5px;line-height:1.8;color:rgba(255,255,255,.9);text-align:left;
+}
+#zd-hints{display:flex;justify-content:center;gap:10px;margin-top:13px;flex-wrap:wrap;}
+
+/* ===== こっきづくり ===== */
+#craft-body{
+  flex:1;display:flex;flex-direction:column;min-height:0;
+  padding:0 16px calc(14px + var(--sab));gap:9px;
+}
+#craft-target{
+  display:flex;align-items:center;justify-content:center;gap:16px;flex-shrink:0;
+  padding:4px 0 2px;
+}
+.craft-slot{text-align:center;}
+.craft-slot .cs-l{font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px;font-weight:800;}
+.craft-slot canvas{
+  width:118px;height:auto;border-radius:8px;display:block;
+  box-shadow:0 5px 15px rgba(0,0,0,.5);background:#12325C;
+}
+#craft-arrow{font-size:22px;color:rgba(255,255,255,.4);align-self:center;margin-top:14px;}
+#craft-q{text-align:center;font-size:15px;font-weight:900;color:#fff;flex-shrink:0;}
+#craft-opts{
+  flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  align-content:center;overflow-y:auto;
+}
+.copt{
+  background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.22);
+  border-radius:16px;padding:9px;cursor:pointer;font-family:inherit;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  transition:transform .12s ease;
+}
+.copt:active{transform:scale(.95);}
+.copt canvas{width:100%;max-width:112px;height:auto;border-radius:6px;display:block;
+  box-shadow:0 3px 9px rgba(0,0,0,.4);}
+.copt .col{font-size:12px;font-weight:800;color:#fff;}
+.copt.correct{background:linear-gradient(180deg,#7FE3A0,#3FBF6C);border-color:#B8F5CD;}
+.copt.wrong{background:linear-gradient(180deg,#FF9E9E,#E85757);border-color:#FFD0D0;}
+#craft-steps{
+  display:flex;justify-content:center;gap:7px;flex-shrink:0;padding-bottom:2px;
+}
+.cstep{
+  width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.22);
+}
+.cstep.on{background:var(--gold);}
+.cstep.done{background:#7FE3A0;}
+
+/* ===== WebGLだめなとき ===== */
+#nogl{
+  position:absolute;inset:0;z-index:999;display:none;
+  flex-direction:column;align-items:center;justify-content:center;
+  background:#0A1730;padding:30px;text-align:center;gap:14px;
+}
+#nogl .ng-e{font-size:52px;}
+#nogl .ng-t{font-size:17px;font-weight:900;color:#fff;line-height:1.7;}
+
+/* ===== ちいさい画面 ===== */
+@media (max-height:700px){
+  #flag-stage{min-height:126px;}
+}
+@media (max-height:640px){
+  #logo{font-size:32px;}
+  .mode-card{padding:13px 15px;}
+  .mode-card .mi{font-size:32px;}
+  .mode-card .mt{font-size:17px;}
+  .ans{min-height:48px;font-size:14px;padding:11px 6px;}
+  #zd-name{font-size:22px;}
+  .hint-chip .he{font-size:19px;}
+}
+@media (max-height:560px){
+  #title-globe{height:50%;}
+  #region-globe{height:32%;}
+  .ov-box{padding:18px 16px;}
+  .ov-big{font-size:36px;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="stars"></canvas>
+  <canvas id="gl"></canvas>
+
+  <!-- ===== タイトル ===== -->
+  <section class="screen active" id="s-title">
+    <div id="title-globe" class="gl-host"></div>
+    <div id="title-bottom">
+      <div>
+        <div id="logo">こっきクイズ</div>
+        <div id="logo-sub">せかいたんけん</div>
+      </div>
+      <button class="btn btn-main" id="btn-start">はじめる</button>
+      <div id="title-stats">あつめたこっき 0 / 51</div>
+    </div>
+    <div style="position:absolute;top:calc(10px + var(--sat));right:12px;z-index:30;">
+      <button class="icon-btn" id="bgm-btn">🔊</button>
+    </div>
+  </section>
+
+  <!-- ===== メニュー ===== -->
+  <section class="screen" id="s-menu">
+    <div class="hdr">
+      <button class="chip" data-back="title">← もどる</button>
+      <div class="hdr-title">なにで あそぶ？</div>
+      <div style="width:74px;"></div>
+    </div>
+    <div id="menu-list"></div>
+  </section>
+
+  <!-- ===== 大陸えらび ===== -->
+  <section class="screen" id="s-region">
+    <div class="hdr">
+      <button class="chip" data-back="menu">← もどる</button>
+      <div class="hdr-title">どこへ いく？</div>
+      <div style="width:74px;"></div>
+    </div>
+    <div id="region-globe" class="gl-host">
+      <div id="region-label">ちきゅうを ゆびで まわせるよ</div>
+    </div>
+    <div id="region-list"></div>
+  </section>
+
+  <!-- ===== クイズ ===== -->
+  <section class="screen" id="s-quiz">
+    <div id="quiz-top">
+      <button class="chip" data-back="region">←</button>
+      <div id="qprog-wrap"><div id="qprog"></div></div>
+      <div id="qcount">1/10</div>
+    </div>
+    <div id="quiz-stage">
+      <div id="flag-stage" class="gl-host"></div>
+      <div id="quiz-question">この こっきは どこの くに？</div>
+      <div id="quiz-hints"></div>
+      <div id="answers"></div>
+    </div>
+  </section>
+
+  <!-- ===== 図鑑 ===== -->
+  <section class="screen" id="s-zukan">
+    <div class="hdr">
+      <button class="chip" data-back="menu">← もどる</button>
+      <div class="hdr-title">こっき ずかん</div>
+      <div style="width:74px;"></div>
+    </div>
+    <div id="zukan-count"></div>
+    <div id="zukan-tabs"></div>
+    <div id="zukan-grid"></div>
+  </section>
+
+  <!-- ===== 図鑑くわしく ===== -->
+  <section class="screen" id="s-zd">
+    <div class="hdr">
+      <button class="chip" data-back="zukan">← ずかん</button>
+      <div class="hdr-title" id="zd-hdr"></div>
+      <div style="width:74px;"></div>
+    </div>
+    <div id="zd-flag" class="gl-host"></div>
+    <div id="zd-body">
+      <div id="zd-name"></div>
+      <div id="zd-region"></div>
+      <div id="zd-cap"></div>
+      <div id="zd-hints"></div>
+      <div id="zd-fact"></div>
+    </div>
+  </section>
+
+  <!-- ===== こっきづくり ===== -->
+  <section class="screen" id="s-craft">
+    <div class="hdr">
+      <button class="chip" data-back="menu">← もどる</button>
+      <div class="hdr-title" id="craft-hdr">こっき づくり</div>
+      <div style="width:74px;"></div>
+    </div>
+    <div id="craft-body">
+      <div id="craft-target">
+        <div class="craft-slot">
+          <div class="cs-l">おてほん</div>
+          <canvas id="craft-model" width="240" height="160"></canvas>
+        </div>
+        <div id="craft-arrow">→</div>
+        <div class="craft-slot">
+          <div class="cs-l">きみの こっき</div>
+          <canvas id="craft-mine" width="240" height="160"></canvas>
+        </div>
+      </div>
+      <div id="craft-steps"></div>
+      <div id="craft-q"></div>
+      <div id="craft-opts"></div>
+    </div>
+  </section>
+
+  <!-- ===== オーバーレイ ===== -->
+  <div class="ov" id="ov-answer">
+    <div class="ov-box">
+      <div class="ov-big" id="oa-icon">🎉</div>
+      <div class="ov-title" id="oa-title">せいかい！</div>
+      <div class="ov-flag"><canvas id="oa-flag" width="300" height="200"></canvas></div>
+      <div class="ov-text" id="oa-text"></div>
+      <div class="ov-actions"><button class="btn btn-main" id="oa-next" style="font-size:17px;padding:13px 32px;">つぎへ</button></div>
+    </div>
+  </div>
+
+  <div class="ov" id="ov-result">
+    <div class="ov-box">
+      <div class="ov-big" id="or-icon">🏆</div>
+      <div class="ov-title" id="or-title">クリア！</div>
+      <div class="ov-stars" id="or-stars">⭐⭐⭐</div>
+      <div class="ov-text" id="or-text"></div>
+      <div class="ov-actions">
+        <button class="btn btn-main" id="or-again" style="font-size:16px;padding:12px 24px;">もういちど</button>
+        <button class="btn btn-sub" id="or-back">ちずへ</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ov" id="ov-craft">
+    <div class="ov-box">
+      <div class="ov-big" id="oc-icon">🎨</div>
+      <div class="ov-title" id="oc-title">できた！</div>
+      <div class="ov-flag"><canvas id="oc-flag" width="300" height="200"></canvas></div>
+      <div class="ov-text" id="oc-text"></div>
+      <div class="ov-actions">
+        <button class="btn btn-main" id="oc-next" style="font-size:16px;padding:12px 28px;">つぎ</button>
+        <button class="btn btn-sub" id="oc-back">やめる</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="nogl">
+    <div class="ng-e">🌍</div>
+    <div class="ng-t">この きかいでは 3Dが つかえないみたい。<br>べつの ブラウザで ためしてね。</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="/games/safe_area.js"></script>
+<script src="/games/wakuwaku_bgm.js"></script>
+<script>
+/* ===== こっき えがきライブラリ =====
+   すべて Canvas 2D で自前描画。外部画像に一切依存しない。
+   drawFlag(ctx, iso, W, H)  比率は 3:2 を基本とする
+*/
+(function(global){
+'use strict';
+
+/* ---- 汎用ヘルパー ---- */
+function rect(c,x,y,w,h,col){c.fillStyle=col;c.fillRect(x,y,w,h);}
+function hbands(c,W,H,cols){ // 横しま
+  const n=cols.length, h=H/n;
+  for(let i=0;i<n;i++) rect(c,0,Math.floor(i*h),W,Math.ceil(h)+1,cols[i]);
+}
+function vbands(c,W,H,cols){ // 縦しま
+  const n=cols.length, w=W/n;
+  for(let i=0;i<n;i++) rect(c,Math.floor(i*w),0,Math.ceil(w)+1,H,cols[i]);
+}
+function hbandsW(c,W,H,items){ // 横しま(比率指定) items=[[col,weight],...]
+  const tot=items.reduce((s,it)=>s+it[1],0); let y=0;
+  for(const [col,w] of items){ const hh=H*w/tot; rect(c,0,Math.floor(y),W,Math.ceil(hh)+1,col); y+=hh; }
+}
+function vbandsW(c,W,H,items){
+  const tot=items.reduce((s,it)=>s+it[1],0); let x=0;
+  for(const [col,w] of items){ const ww=W*w/tot; rect(c,Math.floor(x),0,Math.ceil(ww)+1,H,col); x+=ww; }
+}
+function disc(c,cx,cy,r,col){c.fillStyle=col;c.beginPath();c.arc(cx,cy,r,0,Math.PI*2);c.fill();}
+function ring(c,cx,cy,r,lw,col){c.strokeStyle=col;c.lineWidth=lw;c.beginPath();c.arc(cx,cy,r,0,Math.PI*2);c.stroke();}
+function starPath(c,cx,cy,r,points,inner,rot){
+  const ir=r*inner; c.beginPath();
+  for(let i=0;i<points*2;i++){
+    const rr=(i%2===0)?r:ir;
+    const a=(Math.PI/points)*i-Math.PI/2+(rot||0);
+    const x=cx+Math.cos(a)*rr, y=cy+Math.sin(a)*rr;
+    i?c.lineTo(x,y):c.moveTo(x,y);
+  }
+  c.closePath();
+}
+function star(c,cx,cy,r,col,points,inner,rot){
+  c.fillStyle=col; starPath(c,cx,cy,r,points||5,inner||0.382,rot||0); c.fill();
+}
+function nordic(c,W,H,bg,cr,edge){ // 北欧十字
+  rect(c,0,0,W,H,bg);
+  const t=H*0.18, cx=W*0.36;
+  if(edge){ // 縁取り付き（NO/IS）
+    const t2=t*1.72;
+    rect(c,0,H/2-t2/2,W,t2,edge);
+    rect(c,cx-t2/2,0,t2,H,edge);
+  }
+  rect(c,0,H/2-t/2,W,t,cr);
+  rect(c,cx-t/2,0,t,H,cr);
+}
+function crescent(c,cx,cy,r,col,bg,off){ // 三日月
+  disc(c,cx,cy,r,col);
+  disc(c,cx+(off||r*0.32),cy,r*0.80,bg);
+}
+function clip(c,fn,draw){ c.save(); c.beginPath(); fn(c); c.clip(); draw(c); c.restore(); }
+
+/* ---- ユニオンジャック（GB / AU / NZ / FJ で共有） ---- */
+function unionJack(c,x,y,W,H){
+  c.save(); c.translate(x,y);
+  c.beginPath(); c.rect(0,0,W,H); c.clip();
+  rect(c,0,0,W,H,'#012169');
+  // 斜め白
+  c.strokeStyle='#FFFFFF'; c.lineWidth=H*0.30;
+  c.beginPath(); c.moveTo(0,0); c.lineTo(W,H); c.moveTo(W,0); c.lineTo(0,H); c.stroke();
+  // 斜め赤（オフセットして本物っぽく）
+  c.strokeStyle='#C8102E'; c.lineWidth=H*0.115;
+  c.save(); c.beginPath(); c.rect(0,0,W/2,H/2); c.clip();
+  c.beginPath(); c.moveTo(-W*0.03,-H*0.05); c.lineTo(W,H); c.stroke(); c.restore();
+  c.save(); c.beginPath(); c.rect(W/2,H/2,W/2,H/2); c.clip();
+  c.beginPath(); c.moveTo(W*0.03,H*0.05); c.lineTo(0,0); c.lineTo(W,H); c.stroke(); c.restore();
+  c.save(); c.beginPath(); c.rect(W/2,0,W/2,H/2); c.clip();
+  c.beginPath(); c.moveTo(W+W*0.03,-H*0.05); c.lineTo(0,H); c.stroke(); c.restore();
+  c.save(); c.beginPath(); c.rect(0,H/2,W/2,H/2); c.clip();
+  c.beginPath(); c.moveTo(W-W*0.03,H*0.05); c.lineTo(0,H); c.stroke(); c.restore();
+  // 十字 白→赤
+  rect(c,0,H/2-H*0.185,W,H*0.37,'#FFFFFF');
+  rect(c,W/2-H*0.185,0,H*0.37,H,'#FFFFFF');
+  rect(c,0,H/2-H*0.11,W,H*0.22,'#C8102E');
+  rect(c,W/2-H*0.11,0,H*0.22,H,'#C8102E');
+  c.restore();
+}
+
+/* ---- 国旗定義 ---- */
+const F = {
+
+/* ========== アジア ========== */
+JP(c,W,H){ rect(c,0,0,W,H,'#FFFFFF'); disc(c,W/2,H/2,H*0.30,'#BC002D'); },
+
+KR(c,W,H){
+  rect(c,0,0,W,H,'#FFFFFF');
+  const cx=W/2, cy=H/2, r=H*0.24;
+  // 太極（赤上・青下、S字）
+  c.save(); c.translate(cx,cy); c.rotate(-Math.PI/6);
+  c.fillStyle='#CD2E3A'; c.beginPath(); c.arc(0,0,r,Math.PI,0); c.fill();
+  c.fillStyle='#0047A0'; c.beginPath(); c.arc(0,0,r,0,Math.PI); c.fill();
+  c.fillStyle='#CD2E3A'; c.beginPath(); c.arc(r/2,0,r/2,0,Math.PI*2); c.fill();
+  c.fillStyle='#0047A0'; c.beginPath(); c.arc(-r/2,0,r/2,0,Math.PI*2); c.fill();
+  c.restore();
+  // 四卦
+  const bars=[[3,3,3],[3,1,1],[1,1,1],[1,3,1]]; // 3=長, 1=分割
+  const pos=[[-1,-1,Math.PI/3.1],[1,1,Math.PI/3.1],[1,-1,-Math.PI/3.1],[-1,1,-Math.PI/3.1]];
+  const bw=H*0.20, bh=H*0.035, gap=H*0.020;
+  for(let k=0;k<4;k++){
+    const [sx,sy,rot]=pos[k];
+    c.save(); c.translate(cx+sx*W*0.29, cy+sy*H*0.30); c.rotate(rot);
+    c.fillStyle='#000000';
+    for(let i=0;i<3;i++){
+      const yy=(i-1)*(bh+gap)-bh/2;
+      if(bars[k][i]===3) c.fillRect(-bw/2,yy,bw,bh);
+      else { c.fillRect(-bw/2,yy,bw*0.42,bh); c.fillRect(bw*0.08,yy,bw*0.42,bh); }
+    }
+    c.restore();
+  }
+},
+
+CN(c,W,H){
+  rect(c,0,0,W,H,'#DE2910');
+  const bx=W*0.1667, by=H*0.25;
+  star(c,bx,by,H*0.15,'#FFDE00',5,0.382,0);
+  const pts=[[0.3333,0.10],[0.40,0.20],[0.40,0.35],[0.3333,0.45]];
+  for(const [px,py] of pts){
+    const sx=W*px, sy=H*py;
+    star(c,sx,sy,H*0.05,'#FFDE00',5,0.382,Math.atan2(by-sy,bx-sx)+Math.PI/2);
+  }
+},
+
+IN(c,W,H){
+  hbands(c,W,H,['#FF9933','#FFFFFF','#138808']);
+  const r=H*0.145;
+  ring(c,W/2,H/2,r,H*0.018,'#000080');
+  c.strokeStyle='#000080'; c.lineWidth=Math.max(1,H*0.009);
+  for(let i=0;i<24;i++){ const a=i*Math.PI/12;
+    c.beginPath(); c.moveTo(W/2,H/2); c.lineTo(W/2+Math.cos(a)*r,H/2+Math.sin(a)*r); c.stroke(); }
+  disc(c,W/2,H/2,H*0.028,'#000080');
+},
+
+TH(c,W,H){ hbandsW(c,W,H,[['#A51931',1],['#F4F5F8',1],['#2D2A4A',2],['#F4F5F8',1],['#A51931',1]]); },
+
+VN(c,W,H){ rect(c,0,0,W,H,'#DA251D'); star(c,W/2,H/2,H*0.27,'#FFFF00',5,0.382,0); },
+
+ID(c,W,H){ hbands(c,W,H,['#FF0000','#FFFFFF']); },
+
+TR(c,W,H){
+  rect(c,0,0,W,H,'#E30A17');
+  crescent(c,W*0.36,H/2,H*0.20,'#FFFFFF','#E30A17',H*0.07);
+  star(c,W*0.545,H/2,H*0.088,'#FFFFFF',5,0.382,-0.35);
+},
+
+SA(c,W,H){
+  rect(c,0,0,W,H,'#165D31');
+  c.fillStyle='#FFFFFF';
+  // 文字を模した抽象的な白いかたち（上段）
+  const yy=H*0.34;
+  c.fillRect(W*0.16,yy,W*0.68,H*0.055);
+  for(let i=0;i<9;i++){
+    const x=W*0.19+i*W*0.075;
+    c.fillRect(x,yy-H*0.14,W*0.026,H*0.145);
+  }
+  for(let i=0;i<4;i++) disc(c,W*0.24+i*W*0.16,yy+H*0.115,H*0.022,'#FFFFFF');
+  // 剣（下段）
+  c.fillRect(W*0.20,H*0.66,W*0.52,H*0.05);
+  c.beginPath();
+  c.moveTo(W*0.72,H*0.645); c.lineTo(W*0.84,H*0.685); c.lineTo(W*0.72,H*0.725);
+  c.closePath(); c.fill();
+  c.fillRect(W*0.175,H*0.615,W*0.030,H*0.15);
+},
+
+NP(c,W,H){ // ネパール（三角2つ・特殊形）
+  const w=W*0.72;
+  c.save();
+  c.beginPath();
+  c.moveTo(W*0.14,H*0.03); c.lineTo(W*0.14,H*0.97);
+  c.lineTo(W*0.14+w*0.92,H*0.545); c.lineTo(W*0.14+w*0.30,H*0.545);
+  c.lineTo(W*0.14+w*0.86,H*0.10); c.closePath();
+  c.fillStyle='#003893'; c.fill();
+  c.save(); c.clip();
+  c.fillStyle='#DC143C';
+  c.beginPath();
+  c.moveTo(W*0.16,H*0.06); c.lineTo(W*0.16,H*0.94);
+  c.lineTo(W*0.14+w*0.86,H*0.535); c.lineTo(W*0.145+w*0.27,H*0.535);
+  c.lineTo(W*0.14+w*0.80,H*0.13); c.closePath(); c.fill();
+  // 月と太陽
+  crescent(c,W*0.30,H*0.30,H*0.075,'#FFFFFF','#DC143C',H*0.028);
+  star(c,W*0.31,H*0.72,H*0.095,'#FFFFFF',12,0.55,0);
+  c.restore(); c.restore();
+},
+
+SG(c,W,H){
+  hbands(c,W,H,['#ED2939','#FFFFFF']);
+  crescent(c,W*0.17,H*0.25,H*0.155,'#FFFFFF','#ED2939',H*0.058);
+  const sp=[[0.255,0.13],[0.315,0.20],[0.293,0.315],[0.218,0.315],[0.196,0.20]];
+  for(const [px,py] of sp) star(c,W*px,H*py,H*0.048,'#FFFFFF',5,0.382,0);
+},
+
+MY(c,W,H){
+  const n=14, bh=H/n;
+  for(let i=0;i<n;i++) rect(c,0,Math.floor(i*bh),W,Math.ceil(bh)+1, i%2===0?'#CC0001':'#FFFFFF');
+  rect(c,0,0,W*0.5,bh*8,'#010066');
+  crescent(c,W*0.19,bh*4,H*0.135,'#FFCC00','#010066',H*0.05);
+  star(c,W*0.325,bh*4,H*0.115,'#FFCC00',14,0.62,0);
+},
+
+/* ========== ヨーロッパ ========== */
+GB(c,W,H){ unionJack(c,0,0,W,H); },
+
+FR(c,W,H){ vbands(c,W,H,['#002395','#FFFFFF','#ED2939']); },
+DE(c,W,H){ hbands(c,W,H,['#000000','#DD0000','#FFCE00']); },
+IT(c,W,H){ vbands(c,W,H,['#009246','#F1F2F1','#CE2B37']); },
+
+ES(c,W,H){
+  hbandsW(c,W,H,[['#AA151B',1],['#F1BF00',2],['#AA151B',1]]);
+  // 紋章（簡略）
+  const cx=W*0.30, cy=H*0.50;
+  c.fillStyle='#AD1519'; c.fillRect(cx-W*0.045,cy-H*0.115,W*0.09,H*0.23);
+  c.fillStyle='#FFFFFF'; c.fillRect(cx-W*0.030,cy-H*0.095,W*0.06,H*0.19);
+  c.fillStyle='#AD1519'; c.fillRect(cx-W*0.018,cy-H*0.075,W*0.036,H*0.06);
+  c.fillStyle='#C8B100';
+  c.beginPath(); c.moveTo(cx-W*0.055,cy-H*0.125); c.lineTo(cx+W*0.055,cy-H*0.125);
+  c.lineTo(cx+W*0.038,cy-H*0.185); c.lineTo(cx,cy-H*0.150); c.lineTo(cx-W*0.038,cy-H*0.185); c.closePath(); c.fill();
+},
+
+RU(c,W,H){ hbands(c,W,H,['#FFFFFF','#0039A6','#D52B1E']); },
+
+CH(c,W,H){
+  rect(c,0,0,W,H,'#FF0000');
+  const t=H*0.16, L=H*0.52;
+  rect(c,W/2-t/2,H/2-L/2,t,L,'#FFFFFF');
+  rect(c,W/2-L/2,H/2-t/2,L,t,'#FFFFFF');
+},
+
+SE(c,W,H){ nordic(c,W,H,'#006AA7','#FECC00'); },
+NO(c,W,H){ nordic(c,W,H,'#BA0C2F','#00205B','#FFFFFF'); },
+FI(c,W,H){ nordic(c,W,H,'#FFFFFF','#003580'); },
+DK(c,W,H){ nordic(c,W,H,'#C8102E','#FFFFFF'); },
+
+NL(c,W,H){ hbands(c,W,H,['#AE1C28','#FFFFFF','#21468B']); },
+
+GR(c,W,H){
+  const n=9, bh=H/n;
+  for(let i=0;i<n;i++) rect(c,0,Math.floor(i*bh),W,Math.ceil(bh)+1, i%2===0?'#0D5EAF':'#FFFFFF');
+  rect(c,0,0,bh*5,bh*5,'#0D5EAF');
+  rect(c,bh*2,0,bh,bh*5,'#FFFFFF');
+  rect(c,0,bh*2,bh*5,bh,'#FFFFFF');
+},
+
+PL(c,W,H){ hbands(c,W,H,['#FFFFFF','#DC143C']); },
+
+AT(c,W,H){ hbands(c,W,H,['#ED2939','#FFFFFF','#ED2939']); },
+
+/* ========== アフリカ ========== */
+EG(c,W,H){
+  hbands(c,W,H,['#CE1126','#FFFFFF','#000000']);
+  const cx=W/2, cy=H*0.50, g='#C09300';
+  // 胴
+  c.fillStyle=g;
+  c.beginPath();
+  c.moveTo(cx-W*0.028,cy-H*0.05); c.lineTo(cx+W*0.028,cy-H*0.05);
+  c.lineTo(cx+W*0.018,cy+H*0.115); c.lineTo(cx-W*0.018,cy+H*0.115);
+  c.closePath(); c.fill();
+  // 翼（左右）
+  for(const s of [-1,1]){
+    c.beginPath();
+    c.moveTo(cx+s*W*0.022,cy-H*0.065);
+    c.lineTo(cx+s*W*0.105,cy-H*0.105);
+    c.lineTo(cx+s*W*0.098,cy-H*0.035);
+    c.lineTo(cx+s*W*0.062,cy+H*0.020);
+    c.lineTo(cx+s*W*0.024,cy+H*0.010);
+    c.closePath(); c.fill();
+  }
+  // 頭
+  disc(c,cx,cy-H*0.105,H*0.042,g);
+  c.beginPath();
+  c.moveTo(cx+W*0.012,cy-H*0.120); c.lineTo(cx+W*0.052,cy-H*0.105);
+  c.lineTo(cx+W*0.012,cy-H*0.088); c.closePath(); c.fill();
+  // 尾
+  c.beginPath();
+  c.moveTo(cx-W*0.030,cy+H*0.105); c.lineTo(cx+W*0.030,cy+H*0.105);
+  c.lineTo(cx,cy+H*0.200); c.closePath(); c.fill();
+},
+
+ZA(c,W,H){
+  hbandsW(c,W,H,[['#E03C31',1],['#FFFFFF',0.22],['#007A4D',1.1],['#FFFFFF',0.22],['#001489',1]]);
+  // 黒三角 + 金縁 + 緑Y
+  c.fillStyle='#FFFFFF';
+  c.beginPath(); c.moveTo(0,0); c.lineTo(W*0.46,H/2); c.lineTo(0,H); c.closePath(); c.fill();
+  c.fillStyle='#FFB612';
+  c.beginPath(); c.moveTo(0,H*0.055); c.lineTo(W*0.40,H/2); c.lineTo(0,H*0.945); c.closePath(); c.fill();
+  c.fillStyle='#000000';
+  c.beginPath(); c.moveTo(0,H*0.145); c.lineTo(W*0.325,H/2); c.lineTo(0,H*0.855); c.closePath(); c.fill();
+  c.strokeStyle='#007A4D'; c.lineWidth=H*0.20; c.lineCap='butt';
+  c.beginPath(); c.moveTo(W*0.30,H/2); c.lineTo(W,H/2); c.stroke();
+  c.beginPath(); c.moveTo(W*0.30,H/2); c.lineTo(0,H*0.06); c.stroke();
+  c.beginPath(); c.moveTo(W*0.30,H/2); c.lineTo(0,H*0.94); c.stroke();
+},
+
+KE(c,W,H){
+  hbandsW(c,W,H,[['#000000',6],['#FFFFFF',1],['#BB0000',6],['#FFFFFF',1],['#006600',6]]);
+  // 交差する槍
+  c.strokeStyle='#FFFFFF'; c.lineWidth=H*0.035; c.lineCap='round';
+  c.beginPath(); c.moveTo(W*0.38,H*0.08); c.lineTo(W*0.62,H*0.92); c.stroke();
+  c.beginPath(); c.moveTo(W*0.62,H*0.08); c.lineTo(W*0.38,H*0.92); c.stroke();
+  // 盾（縦長の楕円）
+  c.fillStyle='#BB0000';
+  c.beginPath(); c.ellipse(W/2,H/2,W*0.105,H*0.32,0,0,Math.PI*2); c.fill();
+  c.fillStyle='#000000';
+  c.beginPath(); c.ellipse(W/2,H/2,W*0.105,H*0.32,0,0,Math.PI*2);
+  c.save(); c.clip();
+  c.fillRect(W/2-W*0.11,H*0.18,W*0.22,H*0.12);
+  c.fillRect(W/2-W*0.11,H*0.70,W*0.22,H*0.12);
+  c.restore();
+  c.fillStyle='#FFFFFF';
+  c.beginPath(); c.ellipse(W/2,H*0.325,W*0.058,H*0.080,0,0,Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse(W/2,H*0.675,W*0.058,H*0.080,0,0,Math.PI*2); c.fill();
+  c.fillRect(W/2-W*0.058,H*0.325,W*0.116,H*0.35);
+  c.fillStyle='#BB0000';
+  c.beginPath(); c.ellipse(W/2,H/2,W*0.036,H*0.155,0,0,Math.PI*2); c.fill();
+},
+
+NG(c,W,H){ vbands(c,W,H,['#008751','#FFFFFF','#008751']); },
+
+MA(c,W,H){
+  rect(c,0,0,W,H,'#C1272D');
+  c.strokeStyle='#006233'; c.lineWidth=H*0.030;
+  starPath(c,W/2,H/2,H*0.24,5,0.475,0); c.stroke();
+},
+
+GH(c,W,H){
+  hbands(c,W,H,['#CE1126','#FCD116','#006B3F']);
+  star(c,W/2,H/2,H*0.145,'#000000',5,0.382,0);
+},
+
+ET(c,W,H){
+  hbands(c,W,H,['#078930','#FCDD09','#DA121A']);
+  disc(c,W/2,H/2,H*0.235,'#0F47AF');
+  star(c,W/2,H/2,H*0.175,'#FCDD09',5,0.382,0);
+  c.strokeStyle='#FCDD09'; c.lineWidth=H*0.020;
+  for(let i=0;i<5;i++){ const a=i*Math.PI*2/5-Math.PI/2;
+    c.beginPath(); c.moveTo(W/2,H/2); c.lineTo(W/2+Math.cos(a)*H*0.20,H/2+Math.sin(a)*H*0.20); c.stroke(); }
+},
+
+TZ(c,W,H){
+  rect(c,0,0,W,H,'#1EB53A');
+  c.fillStyle='#00A3DD';
+  c.beginPath(); c.moveTo(W,0); c.lineTo(W,H); c.lineTo(0,H); c.closePath(); c.fill();
+  c.lineCap='butt';
+  c.strokeStyle='#FCD116'; c.lineWidth=H*0.32;
+  c.beginPath(); c.moveTo(-W*0.02,H*1.02); c.lineTo(W*1.02,-H*0.02); c.stroke();
+  c.strokeStyle='#000000'; c.lineWidth=H*0.22;
+  c.beginPath(); c.moveTo(-W*0.02,H*1.02); c.lineTo(W*1.02,-H*0.02); c.stroke();
+},
+
+/* ========== アメリカ ========== */
+US(c,W,H){
+  const n=13, bh=H/n;
+  for(let i=0;i<n;i++) rect(c,0,Math.floor(i*bh),W,Math.ceil(bh)+1, i%2===0?'#B22234':'#FFFFFF');
+  const cw=W*0.40, ch=bh*7;
+  rect(c,0,0,cw,ch,'#3C3B6E');
+  for(let r=0;r<9;r++){
+    const cols=(r%2===0)?6:5;
+    for(let i=0;i<cols;i++){
+      const x=cw*( (r%2===0? (i+0.5)/6 : (i+1)/6) );
+      const y=ch*((r+0.5)/9);
+      star(c,x,y,H*0.030,'#FFFFFF',5,0.382,0);
+    }
+  }
+},
+
+CA(c,W,H){
+  vbandsW(c,W,H,[['#FF0000',1],['#FFFFFF',2],['#FF0000',1]]);
+  const cx=W/2, cy=H*0.55, s=H*0.42;
+  // メープルリーフ（左半分を定義して鏡像）
+  const half=[
+    [0.000,-1.000],[0.075,-0.760],[0.230,-0.800],[0.190,-0.585],
+    [0.430,-0.375],[0.360,-0.300],[0.470,-0.030],[0.255,-0.070],
+    [0.225,0.010],[0.320,0.185],[0.185,0.170],[0.155,0.245],
+    [0.045,0.140],[0.075,0.560],[0.000,0.560]
+  ];
+  c.fillStyle='#FF0000'; c.beginPath();
+  half.forEach(([px,py],i)=>{ const x=cx+px*s*1.25, y=cy+py*s; i?c.lineTo(x,y):c.moveTo(x,y); });
+  for(let i=half.length-1;i>=0;i--){ const [px,py]=half[i]; c.lineTo(cx-px*s*1.25, cy+py*s); }
+  c.closePath(); c.fill();
+},
+
+BR(c,W,H){
+  rect(c,0,0,W,H,'#009C3B');
+  c.fillStyle='#FFDF00';
+  c.beginPath(); c.moveTo(W*0.50,H*0.09); c.lineTo(W*0.915,H*0.50);
+  c.lineTo(W*0.50,H*0.91); c.lineTo(W*0.085,H*0.50); c.closePath(); c.fill();
+  disc(c,W/2,H/2,H*0.245,'#002776');
+  // 白帯
+  c.save(); c.beginPath(); c.arc(W/2,H/2,H*0.245,0,Math.PI*2); c.clip();
+  c.strokeStyle='#FFFFFF'; c.lineWidth=H*0.058;
+  c.beginPath(); c.arc(W/2,H*0.90,H*0.44,Math.PI*1.18,Math.PI*1.82); c.stroke();
+  // 星
+  const sp=[[-0.10,-0.13],[0.06,-0.15],[0.13,-0.03],[-0.14,0.02],[0.02,0.05],[-0.05,0.13],[0.15,0.10],[0.09,-0.08]];
+  for(const [px,py] of sp) star(c,W/2+W*px*0.55,H/2+H*py,H*0.020,'#FFFFFF',5,0.382,0);
+  c.restore();
+},
+
+MX(c,W,H){
+  vbands(c,W,H,['#006847','#FFFFFF','#CE1126']);
+  const cx=W/2, cy=H/2;
+  // 鷲とサボテン（簡略）
+  c.fillStyle='#8B5A2B';
+  c.beginPath(); c.ellipse(cx,cy+H*0.13,W*0.055,H*0.045,0,0,Math.PI*2); c.fill();
+  c.fillStyle='#4E7B2E';
+  c.fillRect(cx-W*0.012,cy+H*0.02,W*0.024,H*0.12);
+  c.fillStyle='#6B4423';
+  c.beginPath(); c.ellipse(cx,cy-H*0.02,W*0.030,H*0.075,0.15,0,Math.PI*2); c.fill();
+  c.beginPath(); c.moveTo(cx-W*0.02,cy-H*0.06); c.lineTo(cx-W*0.075,cy-H*0.13);
+  c.lineTo(cx-W*0.055,cy-H*0.01); c.closePath(); c.fill();
+  c.beginPath(); c.moveTo(cx+W*0.02,cy-H*0.06); c.lineTo(cx+W*0.072,cy-H*0.14);
+  c.lineTo(cx+W*0.050,cy-H*0.02); c.closePath(); c.fill();
+  disc(c,cx-W*0.012,cy-H*0.085,H*0.028,'#6B4423');
+},
+
+AR(c,W,H){
+  hbands(c,W,H,['#74ACDF','#FFFFFF','#74ACDF']);
+  disc(c,W/2,H/2,H*0.105,'#F6B40E');
+  c.strokeStyle='#F6B40E'; c.lineWidth=Math.max(1,H*0.014);
+  for(let i=0;i<16;i++){ const a=i*Math.PI/8;
+    c.beginPath(); c.moveTo(W/2+Math.cos(a)*H*0.105,H/2+Math.sin(a)*H*0.105);
+    c.lineTo(W/2+Math.cos(a)*H*0.155,H/2+Math.sin(a)*H*0.155); c.stroke(); }
+  disc(c,W/2,H/2,H*0.075,'#EDB730');
+},
+
+PE(c,W,H){ vbands(c,W,H,['#D91023','#FFFFFF','#D91023']); },
+
+CL(c,W,H){
+  rect(c,0,0,W,H,'#FFFFFF');
+  rect(c,0,H/2,W,H/2,'#D52B1E');
+  rect(c,0,0,W/3,H/2,'#0039A6');
+  star(c,W/6,H/4,H*0.145,'#FFFFFF',5,0.382,0);
+},
+
+CO(c,W,H){ hbandsW(c,W,H,[['#FCD116',2],['#003893',1],['#CE1126',1]]); },
+
+CU(c,W,H){
+  const n=5, bh=H/n;
+  for(let i=0;i<n;i++) rect(c,0,Math.floor(i*bh),W,Math.ceil(bh)+1, i%2===0?'#002A8F':'#FFFFFF');
+  c.fillStyle='#CF142B';
+  c.beginPath(); c.moveTo(0,0); c.lineTo(W*0.42,H/2); c.lineTo(0,H); c.closePath(); c.fill();
+  star(c,W*0.135,H/2,H*0.135,'#FFFFFF',5,0.382,0);
+},
+
+JM(c,W,H){
+  rect(c,0,0,W,H,'#009B3A');
+  c.fillStyle='#000000';
+  c.beginPath(); c.moveTo(0,0); c.lineTo(W*0.42,H/2); c.lineTo(0,H); c.closePath(); c.fill();
+  c.beginPath(); c.moveTo(W,0); c.lineTo(W*0.58,H/2); c.lineTo(W,H); c.closePath(); c.fill();
+  c.strokeStyle='#FED100'; c.lineWidth=H*0.13;
+  c.beginPath(); c.moveTo(0,0); c.lineTo(W,H); c.moveTo(W,0); c.lineTo(0,H); c.stroke();
+},
+
+/* ========== オセアニア ========== */
+AU(c,W,H){
+  rect(c,0,0,W,H,'#00008B');
+  unionJack(c,0,0,W*0.5,H*0.5);
+  star(c,W*0.25,H*0.75,H*0.115,'#FFFFFF',7,0.42,0);
+  const sc=[[0.76,0.20,0.058],[0.68,0.47,0.050],[0.76,0.75,0.058],[0.855,0.55,0.050],[0.72,0.62,0.030]];
+  for(const [px,py,r] of sc) star(c,W*px,H*py,H*r,'#FFFFFF',7,0.42,0);
+},
+
+NZ(c,W,H){
+  rect(c,0,0,W,H,'#00247D');
+  unionJack(c,0,0,W*0.5,H*0.5);
+  const sc=[[0.76,0.24],[0.68,0.50],[0.76,0.77],[0.845,0.50]];
+  for(const [px,py] of sc){
+    star(c,W*px,H*py,H*0.072,'#FFFFFF',5,0.382,0);
+    star(c,W*px,H*py,H*0.052,'#CC142B',5,0.382,0);
+  }
+},
+
+FJ(c,W,H){
+  rect(c,0,0,W,H,'#68BFE5');
+  unionJack(c,0,0,W*0.5,H*0.5);
+  // 盾
+  const sx=W*0.72, sy=H*0.50, sw=W*0.13, sh=H*0.34;
+  c.fillStyle='#FFFFFF';
+  c.beginPath();
+  c.moveTo(sx-sw,sy-sh/2); c.lineTo(sx+sw,sy-sh/2); c.lineTo(sx+sw,sy+sh*0.12);
+  c.quadraticCurveTo(sx,sy+sh*0.75,sx-sw,sy+sh*0.12); c.closePath(); c.fill();
+  c.save(); c.clip();
+  c.fillStyle='#CF142B';
+  c.fillRect(sx-sw,sy-sh/2,sw*2,sh*0.14);
+  c.fillRect(sx-sw*0.12,sy-sh/2,sw*0.24,sh);
+  c.restore();
+},
+
+PG(c,W,H){
+  rect(c,0,0,W,H,'#CE1126');
+  c.fillStyle='#000000';
+  c.beginPath(); c.moveTo(0,0); c.lineTo(0,H); c.lineTo(W,H); c.closePath(); c.fill();
+  const sc=[[0.20,0.58],[0.29,0.76],[0.11,0.76],[0.20,0.90]];
+  for(const [px,py] of sc) star(c,W*px,H*py,H*0.050,'#FFFFFF',5,0.382,0);
+  // ごくらくちょう
+  const g='#FCD116';
+  c.fillStyle=g;
+  c.beginPath();
+  c.moveTo(W*0.60,H*0.50); c.quadraticCurveTo(W*0.66,H*0.28,W*0.78,H*0.24);
+  c.quadraticCurveTo(W*0.74,H*0.36,W*0.72,H*0.44);
+  c.quadraticCurveTo(W*0.80,H*0.50,W*0.74,H*0.58);
+  c.quadraticCurveTo(W*0.66,H*0.60,W*0.60,H*0.50);
+  c.closePath(); c.fill();
+  disc(c,W*0.775,H*0.245,H*0.038,g);
+  c.beginPath();
+  c.moveTo(W*0.805,H*0.225); c.lineTo(W*0.875,H*0.205); c.lineTo(W*0.805,H*0.268);
+  c.closePath(); c.fill();
+  // 尾ばね
+  c.strokeStyle=g; c.lineWidth=H*0.022; c.lineCap='round';
+  for(const [ex,ey] of [[0.44,0.66],[0.46,0.76],[0.53,0.80]]){
+    c.beginPath(); c.moveTo(W*0.62,H*0.55);
+    c.quadraticCurveTo(W*0.54,H*0.60,W*ex,H*ey); c.stroke();
+  }
+},
+
+WS(c,W,H){
+  rect(c,0,0,W,H,'#CE1126');
+  rect(c,0,0,W*0.5,H*0.5,'#002B7F');
+  const sc=[[0.14,0.14],[0.22,0.24],[0.30,0.16],[0.24,0.36],[0.155,0.30]];
+  for(const [px,py] of sc) star(c,W*px,H*py,H*0.042,'#FFFFFF',5,0.382,0);
+},
+
+TO(c,W,H){
+  rect(c,0,0,W,H,'#C10000');
+  rect(c,0,0,W*0.42,H*0.5,'#FFFFFF');
+  const cx=W*0.21, cy=H*0.25, t=H*0.055, L=H*0.28;
+  rect(c,cx-t/2,cy-L/2,t,L,'#C10000');
+  rect(c,cx-L/2*0.78,cy-t/2,L*0.78,t,'#C10000');
+},
+
+};
+
+/* ---- 国リスト（メタ情報） ---- */
+const COUNTRY_META = {
+  JP:{n:'にほん',r:'asia'},   KR:{n:'かんこく',r:'asia'}, CN:{n:'ちゅうごく',r:'asia'},
+  IN:{n:'インド',r:'asia'},   TH:{n:'タイ',r:'asia'},     VN:{n:'ベトナム',r:'asia'},
+  ID:{n:'インドネシア',r:'asia'}, TR:{n:'トルコ',r:'asia'}, SA:{n:'サウジアラビア',r:'asia'},
+  NP:{n:'ネパール',r:'asia'}, SG:{n:'シンガポール',r:'asia'}, MY:{n:'マレーシア',r:'asia'},
+  GB:{n:'イギリス',r:'europe'}, FR:{n:'フランス',r:'europe'}, DE:{n:'ドイツ',r:'europe'},
+  IT:{n:'イタリア',r:'europe'}, ES:{n:'スペイン',r:'europe'}, RU:{n:'ロシア',r:'europe'},
+  CH:{n:'スイス',r:'europe'}, SE:{n:'スウェーデン',r:'europe'}, NO:{n:'ノルウェー',r:'europe'},
+  FI:{n:'フィンランド',r:'europe'}, DK:{n:'デンマーク',r:'europe'}, NL:{n:'オランダ',r:'europe'},
+  GR:{n:'ギリシャ',r:'europe'}, PL:{n:'ポーランド',r:'europe'}, AT:{n:'オーストリア',r:'europe'},
+  EG:{n:'エジプト',r:'africa'}, ZA:{n:'みなみアフリカ',r:'africa'}, KE:{n:'ケニア',r:'africa'},
+  NG:{n:'ナイジェリア',r:'africa'}, MA:{n:'モロッコ',r:'africa'}, GH:{n:'ガーナ',r:'africa'},
+  ET:{n:'エチオピア',r:'africa'}, TZ:{n:'タンザニア',r:'africa'},
+  US:{n:'アメリカ',r:'america'}, CA:{n:'カナダ',r:'america'}, BR:{n:'ブラジル',r:'america'},
+  MX:{n:'メキシコ',r:'america'}, AR:{n:'アルゼンチン',r:'america'}, PE:{n:'ペルー',r:'america'},
+  CL:{n:'チリ',r:'america'}, CO:{n:'コロンビア',r:'america'}, CU:{n:'キューバ',r:'america'},
+  JM:{n:'ジャマイカ',r:'america'},
+  AU:{n:'オーストラリア',r:'oceania'}, NZ:{n:'ニュージーランド',r:'oceania'},
+  FJ:{n:'フィジー',r:'oceania'}, PG:{n:'パプアニューギニア',r:'oceania'},
+  WS:{n:'サモア',r:'oceania'}, TO:{n:'トンガ',r:'oceania'},
+};
+
+function drawFlag(ctx,iso,W,H){
+  const fn=F[iso];
+  ctx.save();
+  if(fn){ fn(ctx,W,H); }
+  else { rect(ctx,0,0,W,H,'#CCCCCC'); }
+  ctx.restore();
+}
+
+global.WakuFlags={draw:drawFlag,list:Object.keys(F),meta:COUNTRY_META,_F:F};
+})(typeof window!=='undefined'?window:global);
+
+
+</script>
+<script>
+/* ===== ちきゅうぎ テクスチャ生成 =====
+   equirectangular (2:1) 投影。大陸を簡略ポリゴンで描画。
+*/
+(function(global){
+'use strict';
+
+// [lon, lat] の簡略ポリゴン
+const LANDS = {
+north_america:[[-168,65],[-160,71],[-140,70],[-125,70],[-100,70],[-85,73],[-75,78],[-62,74],
+  [-56,60],[-52,47],[-65,45],[-70,42],[-75,35],[-81,25],[-97,26],[-107,23],[-115,30],
+  [-125,40],[-125,48],[-135,58],[-150,60],[-168,65]],
+greenland:[[-45,60],[-22,70],[-20,82],[-40,84],[-58,82],[-55,70],[-45,60]],
+south_america:[[-92,15],[-84,10],[-77,8],[-70,12],[-60,10],[-52,5],[-48,-2],[-38,-5],[-35,-8],
+  [-39,-18],[-48,-25],[-58,-35],[-62,-40],[-65,-45],[-68,-53],[-75,-52],[-73,-45],[-71,-30],
+  [-70,-20],[-75,-15],[-80,-5],[-79,2],[-83,8],[-92,15]],
+africa:[[-17,15],[-17,21],[-10,27],[0,32],[10,34],[20,32],[32,31],[35,23],[39,15],[43,11],
+  [51,12],[48,2],[41,-3],[40,-12],[35,-20],[32,-26],[28,-34],[20,-34],[15,-25],[12,-17],
+  [9,-2],[9,4],[3,6],[-8,5],[-13,9],[-17,15]],
+eurasia:[[-10,36],[-9,43],[-2,48],[2,51],[8,54],[10,58],[5,60],[11,64],[15,68],[22,70],[30,70],
+  [40,68],[55,70],[70,73],[85,74],[100,76],[115,74],[130,73],[140,72],[160,70],[170,66],[179,65],
+  [179,60],[160,60],[145,55],[140,45],[130,42],[125,38],[122,30],[115,22],[108,20],[105,10],
+  [100,5],[95,15],[90,22],[80,15],[75,8],[70,22],[62,25],[57,25],[48,30],[43,37],[35,36],
+  [28,36],[20,40],[15,38],[12,45],[5,43],[-2,36],[-10,36]],
+japan:[[130,32],[133,34],[136,35],[139,35],[141,40],[142,42],[145,44],[143,45],[140,41],
+  [138,36],[134,34],[131,33],[130,32]],
+uk:[[-6,50],[-2,51],[0,53],[-1,56],[-3,58],[-5,57],[-6,54],[-6,50]],
+madagascar:[[43,-12],[50,-15],[50,-25],[45,-25],[43,-19],[43,-12]],
+indonesia:[[95,5],[105,-2],[115,-4],[130,-4],[141,-3],[141,-9],[130,-9],[115,-9],[105,-7],[95,5]],
+philippines:[[120,18],[124,17],[126,10],[123,6],[120,10],[120,18]],
+new_zealand:[[172,-34],[178,-38],[177,-41],[172,-44],[166,-46],[167,-41],[172,-34]],
+australia:[[113,-22],[114,-34],[120,-34],[129,-32],[138,-35],[146,-39],[150,-37],[153,-28],
+  [146,-19],[142,-11],[135,-12],[130,-11],[125,-14],[115,-20],[113,-22]],
+};
+
+function makeEarthTexture(size){
+  const W=size||2048, H=W/2;
+  const cv=(typeof document!=='undefined')?document.createElement('canvas'):global.__mkcv(W,H);
+  cv.width=W; cv.height=H;
+  const c=cv.getContext('2d');
+
+  // うみ（あわい青のグラデーション）
+  const g=c.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#7EC8E8'); g.addColorStop(0.30,'#4FA8D8');
+  g.addColorStop(0.50,'#3E97CE'); g.addColorStop(0.70,'#4FA8D8');
+  g.addColorStop(1,'#7EC8E8');
+  c.fillStyle=g; c.fillRect(0,0,W,H);
+
+  const px=(lon)=>((lon+180)/360)*W;
+  const py=(lat)=>((90-lat)/180)*H;
+
+  // りく
+  function drawLand(poly,fill,offset){
+    c.beginPath();
+    poly.forEach(([lo,la],i)=>{
+      const x=px(lo)+(offset||0), y=py(la);
+      i?c.lineTo(x,y):c.moveTo(x,y);
+    });
+    c.closePath(); c.fillStyle=fill; c.fill();
+  }
+
+  // 島じま（細いので線でも描き足す）
+  function strokeLand(poly,col,lw,offset){
+    c.beginPath();
+    poly.forEach(([lo,la],i)=>{
+      const x=px(lo)+(offset||0), y=py(la);
+      i?c.lineTo(x,y):c.moveTo(x,y);
+    });
+    c.strokeStyle=col; c.lineWidth=lw; c.lineJoin='round'; c.lineCap='round'; c.stroke();
+  }
+
+  // 陸地パスをまとめて作る（クリップ用）
+  function landPath(offset){
+    c.beginPath();
+    for(const k in LANDS){
+      LANDS[k].forEach(([lo,la],i)=>{
+        const x=px(lo)+(offset||0), y=py(la);
+        i?c.lineTo(x,y):c.moveTo(x,y);
+      });
+      c.closePath();
+    }
+  }
+
+  const OFFS=[0,-W,W];
+  const THIN={japan:W*0.010, uk:W*0.008, philippines:W*0.009, indonesia:W*0.009,
+              new_zealand:W*0.008, madagascar:W*0.010};
+
+  // 影
+  for(const off of OFFS){
+    for(const k in LANDS){
+      drawLand(LANDS[k],'rgba(70,120,50,0.40)',off+3);
+      if(THIN[k]) strokeLand(LANDS[k],'rgba(70,120,50,0.40)',THIN[k],off+3);
+    }
+  }
+  // 本体
+  for(const off of OFFS){
+    for(const k in LANDS){
+      drawLand(LANDS[k],'#8FCB6E',off);
+      if(THIN[k]) strokeLand(LANDS[k],'#8FCB6E',THIN[k],off);
+    }
+  }
+
+  // さばく・しんりん（陸地の内側だけに乗せる）
+  const arid=[
+    [[-17,29],[8,30],[28,28],[33,19],[13,14],[-10,16],[-17,29]],   // サハラ
+    [[38,31],[54,30],[57,21],[45,13],[37,19],[38,31]],             // アラビア
+    [[118,-20],[140,-21],[142,-29],[124,-30],[118,-20]],           // 豪州内陸
+    [[-113,33],[-104,32],[-104,26],[-113,28],[-113,33]],           // 北米南西
+    [[62,42],[95,45],[100,38],[75,35],[62,42]],                    // 中央アジア
+  ];
+  const forest=[
+    [[-75,2],[-50,0],[-48,-10],[-70,-8],[-75,2]],                  // アマゾン
+    [[10,4],[28,3],[28,-5],[10,-4],[10,4]],                        // コンゴ
+    [[60,60],[120,62],[130,52],[70,52],[60,60]],                   // シベリア
+  ];
+  for(const off of OFFS){
+    c.save(); landPath(off); c.clip();
+    c.globalAlpha=0.60;
+    for(const p of arid) drawLand(p,'#E5CE85',off);
+    c.globalAlpha=0.45;
+    for(const p of forest) drawLand(p,'#4E9B4A',off);
+    c.restore();
+  }
+
+  return cv;
+}
+
+// くも のテクスチャ（アルファ付き）
+function makeCloudTexture(size){
+  const W=size||1024, H=W/2;
+  const cv=(typeof document!=='undefined')?document.createElement('canvas'):global.__mkcv(W,H);
+  cv.width=W; cv.height=H;
+  const c=cv.getContext('2d');
+  c.clearRect(0,0,W,H);
+  c.fillStyle='rgba(255,255,255,0.34)';
+  let seed=20260809;
+  const rnd=()=>{seed=(seed*1664525+1013904223)&0x7fffffff; return seed/0x7fffffff;};
+  for(let i=0;i<70;i++){
+    const cx=rnd()*W, cy=H*0.10+rnd()*H*0.80;
+    const n=3+Math.floor(rnd()*4);
+    for(let j=0;j<n;j++){
+      const r=(W*0.012)+rnd()*(W*0.030);
+      c.beginPath();
+      c.ellipse(cx+(rnd()-0.5)*W*0.05, cy+(rnd()-0.5)*H*0.03, r, r*0.55, 0, 0, Math.PI*2);
+      c.fill();
+    }
+  }
+  return cv;
+}
+
+// 地域の代表座標（カメラを向ける先）
+const REGION_LATLON = {
+  asia:    {lat:28,  lon:100},
+  europe:  {lat:52,  lon:12},
+  africa:  {lat:2,   lon:20},
+  america: {lat:12,  lon:-80},
+  oceania: {lat:-25, lon:140},
+};
+
+global.WakuGlobe={makeEarthTexture,makeCloudTexture,LANDS,REGION_LATLON};
+})(typeof window!=='undefined'?window:global);
+
+
+</script>
+<script>
+/* ===== くにデータ（50かこく） ===== */
+var COUNTRIES=[
+/* --- アジア --- */
+{iso:'JP',name:'にほん',region:'asia',lv:1,cap:'とうきょう',
+ hints:[{e:'🗻',l:'ふじさん'},{e:'🍣',l:'おすし'},{e:'🌸',l:'さくら'}],
+ fact:'まんなかの あかい まるは、のぼる おひさま。「ひのまる」と よばれるよ。'},
+{iso:'KR',name:'かんこく',region:'asia',lv:1,cap:'ソウル',
+ hints:[{e:'🥬',l:'キムチ'},{e:'🎵',l:'K-POP'},{e:'🍲',l:'ビビンバ'}],
+ fact:'まんなかの あかとあおの まるは「たいきょく」。てんと ちを あらわすんだ。'},
+{iso:'CN',name:'ちゅうごく',region:'asia',lv:1,cap:'ペキン',
+ hints:[{e:'🐼',l:'パンダ'},{e:'🏯',l:'ばんりのちょうじょう'},{e:'🥟',l:'ぎょうざ'}],
+ fact:'おおきな ほし ひとつと、ちいさな ほし よっつ。ぜんぶで 5つ あるよ。'},
+{iso:'IN',name:'インド',region:'asia',lv:1,cap:'ニューデリー',
+ hints:[{e:'🐘',l:'ゾウ'},{e:'🍛',l:'カレー'},{e:'🕌',l:'タージマハル'}],
+ fact:'まんなかの あおい わは「チャクラ」。24ほんの せんが あるよ。'},
+{iso:'TH',name:'タイ',region:'asia',lv:2,cap:'バンコク',
+ hints:[{e:'🐘',l:'ゾウ'},{e:'🍜',l:'トムヤムクン'},{e:'🛕',l:'きんいろのおてら'}],
+ fact:'まんなかの あおい しまが いちばん ふとい。5ほんの しまが あるよ。'},
+{iso:'VN',name:'ベトナム',region:'asia',lv:2,cap:'ハノイ',
+ hints:[{e:'🍜',l:'フォー'},{e:'⛵',l:'ハロンわん'},{e:'👒',l:'とんがりぼうし'}],
+ fact:'あかい じめんに きいろい ほしが ひとつ。「きんぼしこうき」と いうよ。'},
+{iso:'ID',name:'インドネシア',region:'asia',lv:2,cap:'ジャカルタ',
+ hints:[{e:'🏝️',l:'バリとう'},{e:'🌋',l:'かざん'},{e:'🦎',l:'コモドドラゴン'}],
+ fact:'しまが 1まんこ いじょう ある くに。あかは ゆうき、しろは きよらかさ。'},
+{iso:'TR',name:'トルコ',region:'asia',lv:2,cap:'アンカラ',
+ hints:[{e:'🎈',l:'ききゅう'},{e:'🍢',l:'ケバブ'},{e:'🐈',l:'ねこのまち'}],
+ fact:'みかづきと ほしの こっき。アジアと ヨーロッパの りょうほうに ある くにだよ。'},
+{iso:'SA',name:'サウジアラビア',region:'asia',lv:3,cap:'リヤド',
+ hints:[{e:'🐪',l:'ラクダ'},{e:'🏜️',l:'さばく'},{e:'🕌',l:'メッカ'}],
+ fact:'この こっきは たいせつな もじが かいてあるので、はんきに しないんだ。'},
+{iso:'NP',name:'ネパール',region:'asia',lv:3,cap:'カトマンズ',
+ hints:[{e:'🏔️',l:'エベレスト'},{e:'🙏',l:'おいのり'},{e:'⛰️',l:'ヒマラヤ'}],
+ fact:'せかいで ただ ひとつ、しかくじゃない こっき！さんかくが 2つ かさなってるよ。'},
+{iso:'SG',name:'シンガポール',region:'asia',lv:3,cap:'シンガポール',
+ hints:[{e:'🦁',l:'マーライオン'},{e:'🌃',l:'よるのまち'},{e:'🌳',l:'にわのくに'}],
+ fact:'5つの ほしは「へいわ・こうへい・しんぽ・せいぎ・びょうどう」を あらわすよ。'},
+{iso:'MY',name:'マレーシア',region:'asia',lv:3,cap:'クアラルンプール',
+ hints:[{e:'🏙️',l:'ツインタワー'},{e:'🌴',l:'ジャングル'},{e:'🦧',l:'オランウータン'}],
+ fact:'14ほんの しまと 14こに とがった ほし。14の しゅうが あつまった くにだよ。'},
+
+/* --- ヨーロッパ --- */
+{iso:'GB',name:'イギリス',region:'europe',lv:1,cap:'ロンドン',
+ hints:[{e:'👑',l:'おうさま'},{e:'🕰️',l:'ビッグベン'},{e:'☕',l:'こうちゃ'}],
+ fact:'3つの こっきが かさなって できた「ユニオンジャック」。じつは ごうたいばんなんだ。'},
+{iso:'FR',name:'フランス',region:'europe',lv:1,cap:'パリ',
+ hints:[{e:'🗼',l:'エッフェルとう'},{e:'🥐',l:'クロワッサン'},{e:'🎨',l:'びじゅつかん'}],
+ fact:'あお・しろ・あかの たてじま。「トリコロール」と よばれる ゆうめいな こっき。'},
+{iso:'DE',name:'ドイツ',region:'europe',lv:1,cap:'ベルリン',
+ hints:[{e:'🌭',l:'ソーセージ'},{e:'🏰',l:'おしろ'},{e:'🚗',l:'くるま'}],
+ fact:'くろ・あか・きんいろの よこじま。むかしの へいたいの ふくの いろから きたよ。'},
+{iso:'IT',name:'イタリア',region:'europe',lv:1,cap:'ローマ',
+ hints:[{e:'🍕',l:'ピザ'},{e:'🍝',l:'パスタ'},{e:'🏛️',l:'コロッセオ'}],
+ fact:'みどり・しろ・あかの たてじま。みどりは くさはら、しろは ゆき、あかは ゆうき。'},
+{iso:'ES',name:'スペイン',region:'europe',lv:2,cap:'マドリード',
+ hints:[{e:'💃',l:'フラメンコ'},{e:'🥘',l:'パエリア'},{e:'⚽',l:'サッカー'}],
+ fact:'まんなかの もんしょうには、2ほんの はしらが かかれているよ。'},
+{iso:'RU',name:'ロシア',region:'europe',lv:2,cap:'モスクワ',
+ hints:[{e:'🪆',l:'マトリョーシカ'},{e:'❄️',l:'ゆき'},{e:'🐻',l:'クマ'}],
+ fact:'せかいで いちばん ひろい くに。しろ・あお・あかの よこじまだよ。'},
+{iso:'CH',name:'スイス',region:'europe',lv:2,cap:'ベルン',
+ hints:[{e:'🏔️',l:'アルプス'},{e:'🧀',l:'チーズ'},{e:'🍫',l:'チョコレート'}],
+ fact:'せかいで めずらしい ましかくの こっき。まんなかに しろい じゅうじ。'},
+{iso:'SE',name:'スウェーデン',region:'europe',lv:2,cap:'ストックホルム',
+ hints:[{e:'🪑',l:'かぐ'},{e:'🌲',l:'もり'},{e:'🦌',l:'トナカイ'}],
+ fact:'あおに きいろの じゅうじ。じゅうじが ひだりに よってるのが 「ほくおうじゅうじ」。'},
+{iso:'NO',name:'ノルウェー',region:'europe',lv:3,cap:'オスロ',
+ hints:[{e:'🛶',l:'フィヨルド'},{e:'🐟',l:'サーモン'},{e:'🌌',l:'オーロラ'}],
+ fact:'あかに しろで ふちどられた あおい じゅうじ。3しょくの ほくおうじゅうじだよ。'},
+{iso:'FI',name:'フィンランド',region:'europe',lv:3,cap:'ヘルシンキ',
+ hints:[{e:'🎅',l:'サンタさん'},{e:'🧖',l:'サウナ'},{e:'🌲',l:'みずうみともり'}],
+ fact:'しろは ゆき、あおは みずうみ。みずうみが 18まんこ ちかく ある くに！'},
+{iso:'DK',name:'デンマーク',region:'europe',lv:3,cap:'コペンハーゲン',
+ hints:[{e:'🧱',l:'ブロックおもちゃ'},{e:'🧜',l:'にんぎょひめ'},{e:'🥐',l:'デニッシュ'}],
+ fact:'せかいで いちばん ふるくから つかわれている こっきと いわれているよ。'},
+{iso:'NL',name:'オランダ',region:'europe',lv:2,cap:'アムステルダム',
+ hints:[{e:'🌷',l:'チューリップ'},{e:'🌬️',l:'ふうしゃ'},{e:'🚲',l:'じてんしゃ'}],
+ fact:'あか・しろ・あおの よこじま。うんがが たくさん ある くにだよ。'},
+{iso:'GR',name:'ギリシャ',region:'europe',lv:3,cap:'アテネ',
+ hints:[{e:'🏛️',l:'しんでん'},{e:'🫒',l:'オリーブ'},{e:'🏖️',l:'あおいうみ'}],
+ fact:'9ほんの しまは 「じゆうか しか」という ことばの もじの かず なんだ。'},
+{iso:'PL',name:'ポーランド',region:'europe',lv:3,cap:'ワルシャワ',
+ hints:[{e:'🥟',l:'ピエロギ'},{e:'🎹',l:'ピアノのくに'},{e:'🏰',l:'ふるいまち'}],
+ fact:'うえが しろ、したが あか。うえと したが ぎゃくだと ちがう くにに なっちゃう！'},
+{iso:'AT',name:'オーストリア',region:'europe',lv:3,cap:'ウィーン',
+ hints:[{e:'🎻',l:'おんがくのまち'},{e:'⛷️',l:'スキー'},{e:'🍰',l:'ケーキ'}],
+ fact:'あか・しろ・あかの よこじま。おんがくかが たくさん うまれた くに。'},
+
+/* --- アフリカ --- */
+{iso:'EG',name:'エジプト',region:'africa',lv:1,cap:'カイロ',
+ hints:[{e:'🐫',l:'ピラミッド'},{e:'🏜️',l:'さばく'},{e:'📜',l:'ミイラ'}],
+ fact:'まんなかの きんいろの とりは「サラディンのワシ」。つよさの しるし。'},
+{iso:'ZA',name:'みなみアフリカ',region:'africa',lv:2,cap:'プレトリア',
+ hints:[{e:'🦁',l:'サファリ'},{e:'💎',l:'ダイヤモンド'},{e:'🐧',l:'ペンギン'}],
+ fact:'6しょくも つかう にぎやかな こっき。よこの「Y」は みんなが ひとつに なること。'},
+{iso:'KE',name:'ケニア',region:'africa',lv:2,cap:'ナイロビ',
+ hints:[{e:'🦒',l:'キリン'},{e:'🏃',l:'マラソン'},{e:'🦓',l:'シマウマ'}],
+ fact:'まんなかは マサイぞくの たてと やり。くにを まもる しるしだよ。'},
+{iso:'NG',name:'ナイジェリア',region:'africa',lv:3,cap:'アブジャ',
+ hints:[{e:'🥁',l:'たいこ'},{e:'🌾',l:'ひろいのうち'},{e:'⚽',l:'サッカー'}],
+ fact:'みどり・しろ・みどりの たてじま。みどりは ゆたかな のうちを あらわすよ。'},
+{iso:'MA',name:'モロッコ',region:'africa',lv:3,cap:'ラバト',
+ hints:[{e:'🕌',l:'あおいまち'},{e:'🐐',l:'きにのぼるヤギ'},{e:'🫖',l:'ミントティー'}],
+ fact:'あかに みどりの ほしが ひとつ。5つの かどが ある「ソロモンの ほし」。'},
+{iso:'GH',name:'ガーナ',region:'africa',lv:3,cap:'アクラ',
+ hints:[{e:'🍫',l:'カカオ'},{e:'🥇',l:'きんのくに'},{e:'🥁',l:'ダンス'}],
+ fact:'まんなかの くろい ほしは「アフリカの じゆう」の しるし。'},
+{iso:'ET',name:'エチオピア',region:'africa',lv:3,cap:'アディスアベバ',
+ hints:[{e:'☕',l:'コーヒーはっしょう'},{e:'⛪',l:'いわのきょうかい'},{e:'🐒',l:'めずらしいサル'}],
+ fact:'みどり・きいろ・あかは アフリカの おおくの くにが まねした いろ なんだ。'},
+{iso:'TZ',name:'タンザニア',region:'africa',lv:3,cap:'ドドマ',
+ hints:[{e:'🏔️',l:'キリマンジャロ'},{e:'🦁',l:'だいそうげん'},{e:'🌊',l:'ザンジバル'}],
+ fact:'ななめの くろい おびは ひとびと、きいろは ちかの たからものを あらわすよ。'},
+
+/* --- アメリカ --- */
+{iso:'US',name:'アメリカ',region:'america',lv:1,cap:'ワシントンD.C.',
+ hints:[{e:'🗽',l:'じゆうのめがみ'},{e:'🍔',l:'ハンバーガー'},{e:'🚀',l:'ロケット'}],
+ fact:'ほしは 50こ、しまは 13ぼん。ほしの かずは しゅうの かずと おなじ！'},
+{iso:'CA',name:'カナダ',region:'america',lv:1,cap:'オタワ',
+ hints:[{e:'🍁',l:'かえでのは'},{e:'🐻',l:'クマ'},{e:'🏒',l:'アイスホッケー'}],
+ fact:'まんなかは「さとうかえで」の は。あまい メープルシロップが とれる きだよ。'},
+{iso:'BR',name:'ブラジル',region:'america',lv:1,cap:'ブラジリア',
+ hints:[{e:'⚽',l:'サッカー'},{e:'🎉',l:'カーニバル'},{e:'🌳',l:'アマゾン'}],
+ fact:'まるの なかの ほしは 27こ。よぞらの ほしを そのまま かいたんだ。'},
+{iso:'MX',name:'メキシコ',region:'america',lv:2,cap:'メキシコシティ',
+ hints:[{e:'🌮',l:'タコス'},{e:'🌵',l:'サボテン'},{e:'🎺',l:'マリアッチ'}],
+ fact:'まんなかは サボテンの うえに とまった ワシ。むかしの でんせつの ばめん。'},
+{iso:'AR',name:'アルゼンチン',region:'america',lv:2,cap:'ブエノスアイレス',
+ hints:[{e:'⚽',l:'サッカー'},{e:'💃',l:'タンゴ'},{e:'🥩',l:'アサード'}],
+ fact:'まんなかの きいろい おひさまは「5がつの たいよう」と よばれるよ。'},
+{iso:'PE',name:'ペルー',region:'america',lv:3,cap:'リマ',
+ hints:[{e:'🏔️',l:'マチュピチュ'},{e:'🦙',l:'アルパカ'},{e:'🥔',l:'じゃがいも'}],
+ fact:'あか・しろ・あかの たてじま。じゃがいもの ふるさとと いわれる くに。'},
+{iso:'CL',name:'チリ',region:'america',lv:3,cap:'サンティアゴ',
+ hints:[{e:'🗿',l:'モアイ'},{e:'🍇',l:'ぶどう'},{e:'🏔️',l:'ながいくに'}],
+ fact:'ほそながい くに。ひだりうえの ほしは くにを みちびく ひかりだよ。'},
+{iso:'CO',name:'コロンビア',region:'america',lv:3,cap:'ボゴタ',
+ hints:[{e:'☕',l:'コーヒー'},{e:'💚',l:'エメラルド'},{e:'🦜',l:'カラフルなとり'}],
+ fact:'きいろの しまが いちばん ふとい。きいろは きんいろの たからものだよ。'},
+{iso:'CU',name:'キューバ',region:'america',lv:3,cap:'ハバナ',
+ hints:[{e:'🎶',l:'サルサ'},{e:'🚗',l:'クラシックカー'},{e:'🏝️',l:'カリブのしま'}],
+ fact:'あかい さんかくの なかに しろい ほし。「ひとつぼしの しま」と よばれるよ。'},
+{iso:'JM',name:'ジャマイカ',region:'america',lv:3,cap:'キングストン',
+ hints:[{e:'🏃',l:'せかいいちはやい'},{e:'🎵',l:'レゲエ'},{e:'🌴',l:'あおいうみ'}],
+ fact:'あかや あおを つかわない めずらしい こっき。ななめの きいろが とくちょう。'},
+
+/* --- オセアニア --- */
+{iso:'AU',name:'オーストラリア',region:'oceania',lv:1,cap:'キャンベラ',
+ hints:[{e:'🦘',l:'カンガルー'},{e:'🐨',l:'コアラ'},{e:'🏄',l:'サーフィン'}],
+ fact:'みぎがわの 5つの ほしは「みなみじゅうじせい」。みなみの そらの ほしだよ。'},
+{iso:'NZ',name:'ニュージーランド',region:'oceania',lv:2,cap:'ウェリントン',
+ hints:[{e:'🐑',l:'ひつじ'},{e:'🥝',l:'キウイ'},{e:'🏉',l:'ラグビー'}],
+ fact:'あかい ほしが 4つ。オーストラリアの こっきと よく にてるから きをつけて！'},
+{iso:'FJ',name:'フィジー',region:'oceania',lv:3,cap:'スバ',
+ hints:[{e:'🐠',l:'サンゴしょう'},{e:'🏝️',l:'みなみのしま'},{e:'🥥',l:'ヤシのみ'}],
+ fact:'みずいろは まわりの きれいな うみ。300いじょうの しまが ある くに。'},
+{iso:'PG',name:'パプアニューギニア',region:'oceania',lv:3,cap:'ポートモレスビー',
+ hints:[{e:'🦜',l:'ごくらくちょう'},{e:'🌴',l:'ジャングル'},{e:'🗣️',l:'ことばがいっぱい'}],
+ fact:'きんいろの とりは「ごくらくちょう」。800いじょうの ことばが ある くに！'},
+{iso:'WS',name:'サモア',region:'oceania',lv:3,cap:'アピア',
+ hints:[{e:'🌺',l:'はな'},{e:'🥥',l:'ココナッツ'},{e:'🕺',l:'でんとうのおどり'}],
+ fact:'あかい じめんの ひだりうえに、みなみじゅうじせいが かがやくよ。'},
+{iso:'TO',name:'トンガ',region:'oceania',lv:3,cap:'ヌクアロファ',
+ hints:[{e:'🐋',l:'クジラ'},{e:'👑',l:'おうさまのくに'},{e:'🏝️',l:'サンゴのしま'}],
+ fact:'ひだりうえに あかい じゅうじ。170いじょうの しまが ある おうこくだよ。'},
+];
+
+
+</script>
+<script>
+/* ============================================================
+   3D エンジン（Three.js r128）
+   ・ひとつの WebGLRenderer を .gl-host のあいだで つかいまわす
+   ============================================================ */
+var G3D=(function(){
+  var renderer=null, glCanvas=null, ok=false;
+  var host=null, mode='none';
+  var clock=null;
+
+  /* --- 地球シーン --- */
+  var gScene,gCam,earth,clouds,atmo,gGroup;
+  var spinVel=0, targetLon=null, targetLat=null, autoSpin=0.055;
+
+  /* --- 旗シーン --- */
+  var fScene,fCam,flagMesh,flagMat,poleGroup,flagTex,flagCv,flagCtx;
+
+  function init(){
+    if(typeof THREE==='undefined') return false;
+    glCanvas=document.getElementById('gl');
+    try{
+      renderer=new THREE.WebGLRenderer({canvas:glCanvas,antialias:true,alpha:true});
+    }catch(e){ return false; }
+    if(!renderer) return false;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    renderer.setClearColor(0x000000,0);
+    clock=new THREE.Clock();
+    buildGlobe();
+    buildFlag();
+    ok=true;
+    return true;
+  }
+
+  /* ---------- ちきゅう ---------- */
+  function buildGlobe(){
+    gScene=new THREE.Scene();
+    gCam=new THREE.PerspectiveCamera(38,1,0.1,100);
+    gCam.position.set(0,0,6.2);
+
+    gGroup=new THREE.Group();
+    gScene.add(gGroup);
+
+    var earthTex=new THREE.CanvasTexture(WakuGlobe.makeEarthTexture(2048));
+    earthTex.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy?renderer.capabilities.getMaxAnisotropy():4);
+    var cloudTex=new THREE.CanvasTexture(WakuGlobe.makeCloudTexture(1024));
+
+    earth=new THREE.Mesh(
+      new THREE.SphereGeometry(2,64,48),
+      new THREE.MeshPhongMaterial({map:earthTex,shininess:9,specular:0x223344})
+    );
+    gGroup.add(earth);
+
+    clouds=new THREE.Mesh(
+      new THREE.SphereGeometry(2.035,48,32),
+      new THREE.MeshLambertMaterial({map:cloudTex,transparent:true,opacity:0.5,depthWrite:false})
+    );
+    gGroup.add(clouds);
+
+    // たいきけん（リムグロー）
+    var atmoMat=new THREE.ShaderMaterial({
+      uniforms:{},
+      vertexShader:[
+        'varying vec3 vN; varying vec3 vP;',
+        'void main(){ vN=normalize(normalMatrix*normal);',
+        ' vec4 mv=modelViewMatrix*vec4(position,1.0); vP=mv.xyz;',
+        ' gl_Position=projectionMatrix*mv; }'
+      ].join('\n'),
+      fragmentShader:[
+        'varying vec3 vN; varying vec3 vP;',
+        'void main(){',
+        ' float f=pow(1.0-abs(dot(normalize(vN),normalize(-vP))),2.6);',
+        ' gl_FragColor=vec4(0.42,0.72,1.0,f*0.85); }'
+      ].join('\n'),
+      transparent:true, side:THREE.BackSide, depthWrite:false, blending:THREE.AdditiveBlending
+    });
+    atmo=new THREE.Mesh(new THREE.SphereGeometry(2.20,40,28),atmoMat);
+    gScene.add(atmo);
+
+    var dir=new THREE.DirectionalLight(0xffffff,1.05);
+    dir.position.set(-3,3.4,4.6);
+    gScene.add(dir);
+    gScene.add(new THREE.AmbientLight(0x8fb4dd,0.62));
+    var back=new THREE.DirectionalLight(0x86c8ff,0.32);
+    back.position.set(3.5,-1.5,-3);
+    gScene.add(back);
+
+    gGroup.rotation.x=0.30;
+    gGroup.rotation.y=1.9;
+  }
+
+  /* ---------- はた ---------- */
+  function buildFlag(){
+    fScene=new THREE.Scene();
+    fCam=new THREE.PerspectiveCamera(36,1,0.1,100);
+    fCam.position.set(0.28,0.10,4.35);
+    fCam.lookAt(0.05,0,0);
+
+    flagCv=document.createElement('canvas');
+    flagCv.width=600; flagCv.height=400;
+    flagCtx=flagCv.getContext('2d');
+    flagCtx.fillStyle='#ccc'; flagCtx.fillRect(0,0,600,400);
+    flagTex=new THREE.CanvasTexture(flagCv);
+    flagTex.minFilter=THREE.LinearFilter;
+
+    flagMat=new THREE.ShaderMaterial({
+      uniforms:{uTime:{value:0},uTex:{value:flagTex}},
+      vertexShader:[
+        'uniform float uTime;',
+        'varying vec2 vUv; varying float vShade;',
+        'void main(){',
+        '  vUv=uv;',
+        '  vec3 p=position;',
+        '  float u=uv.x;',
+        '  float amp=0.115*u*u+0.018;',
+        '  float w1=sin(u*7.0-uTime*3.0);',
+        '  float w2=sin(u*3.4+uv.y*2.4-uTime*2.1);',
+        '  p.z+=w1*amp+w2*amp*0.55;',
+        '  p.y+=sin(u*4.0-uTime*2.4)*0.055*u;',
+        '  float dw=cos(u*7.0-uTime*3.0)*7.0*amp+cos(u*3.4+uv.y*2.4-uTime*2.1)*3.4*amp*0.55;',
+        '  vShade=0.80+clamp(dw*0.26,-0.30,0.36);',
+        '  gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0);',
+        '}'
+      ].join('\n'),
+      fragmentShader:[
+        'uniform sampler2D uTex;',
+        'varying vec2 vUv; varying float vShade;',
+        'void main(){',
+        '  vec4 c=texture2D(uTex,vUv);',
+        '  gl_FragColor=vec4(c.rgb*vShade,1.0);',
+        '}'
+      ].join('\n'),
+      side:THREE.DoubleSide
+    });
+
+    var geo=new THREE.PlaneGeometry(2.4,1.6,48,32);
+    geo.translate(1.2,0,0); // 左はしを ポール に そろえる
+    flagMesh=new THREE.Mesh(geo,flagMat);
+
+    poleGroup=new THREE.Group();
+    poleGroup.add(flagMesh);
+
+    var pole=new THREE.Mesh(
+      new THREE.CylinderGeometry(0.048,0.055,3.5,14),
+      new THREE.MeshPhongMaterial({color:0x9C7B4E,shininess:26})
+    );
+    pole.position.set(-0.055,-0.95,0);
+    poleGroup.add(pole);
+
+    var knob=new THREE.Mesh(
+      new THREE.SphereGeometry(0.12,20,14),
+      new THREE.MeshPhongMaterial({color:0xFFD24A,shininess:70,emissive:0x553d00})
+    );
+    knob.position.set(-0.055,0.86,0);
+    poleGroup.add(knob);
+
+    poleGroup.position.set(-1.15,-0.05,0);
+    poleGroup.rotation.y=-0.30;
+    fScene.add(poleGroup);
+
+    var d=new THREE.DirectionalLight(0xffffff,1.0);
+    d.position.set(-1.6,2.4,3.4);
+    fScene.add(d);
+    fScene.add(new THREE.AmbientLight(0xbcd6f0,0.72));
+  }
+
+  /* ---------- はた の え を さしかえ ---------- */
+  function setFlag(iso){
+    flagCtx.clearRect(0,0,flagCv.width,flagCv.height);
+    WakuFlags.draw(flagCtx,iso,flagCv.width,flagCv.height);
+    // ふちに ほそい かげ を つけて うきださせる
+    flagCtx.strokeStyle='rgba(0,0,0,0.18)';
+    flagCtx.lineWidth=3;
+    flagCtx.strokeRect(1.5,1.5,flagCv.width-3,flagCv.height-3);
+    flagTex.needsUpdate=true;
+  }
+  function setFlagCanvas(drawFn){
+    flagCtx.clearRect(0,0,flagCv.width,flagCv.height);
+    drawFn(flagCtx,flagCv.width,flagCv.height);
+    flagTex.needsUpdate=true;
+  }
+
+  /* ---------- ホスト（表示ばしょ）を うつす ---------- */
+  function attach(hostEl,newMode){
+    if(!ok) return;
+    host=hostEl; mode=newMode;
+    if(glCanvas.parentNode!==hostEl) hostEl.appendChild(glCanvas);
+    glCanvas.style.position='absolute';
+    glCanvas.style.left='0'; glCanvas.style.top='0';
+    glCanvas.style.width='100%'; glCanvas.style.height='100%';
+    resize();
+  }
+  function detach(){ mode='none'; }
+
+  function resize(){
+    if(!ok||!host) return;
+    var w=host.clientWidth||1, h=host.clientHeight||1;
+    renderer.setSize(w,h,false);
+    var cam=(mode==='flag')?fCam:gCam;
+    cam.aspect=w/h;
+    // たてなが の ときは すこし ひいて 全体を みせる
+    if(mode==='flag'){
+      var base=36;
+      cam.fov=(w/h<1.05)? base+8 : base;
+    }
+    cam.updateProjectionMatrix();
+  }
+
+  /* ---------- ちきゅう そうさ ---------- */
+  function spinBy(dx){ spinVel+=dx*0.0055; targetLon=null; }
+  function flyTo(lat,lon){
+    // lon 0 が カメラ正面 に くるよう rotation.y を きめる
+    targetLon=-(lon*Math.PI/180);
+    targetLat=Math.max(-0.62,Math.min(0.62,(lat*Math.PI/180)*0.72+0.14));
+  }
+  function setGlobeScale(s){ if(gGroup){gGroup.scale.setScalar(s);} if(atmo){atmo.scale.setScalar(s);} }
+
+  /* ---------- ループ ---------- */
+  function frame(){
+    if(!ok) return;
+    var dt=Math.min(clock.getDelta(),0.1);
+    if(mode==='globe'||mode==='globe-title'){
+      if(targetLon!==null){
+        var cur=gGroup.rotation.y;
+        var diff=targetLon-cur;
+        while(diff>Math.PI) diff-=Math.PI*2;
+        while(diff<-Math.PI) diff+=Math.PI*2;
+        gGroup.rotation.y+=diff*Math.min(1,dt*3.0);
+        gGroup.rotation.x+=(targetLat-gGroup.rotation.x)*Math.min(1,dt*3.0);
+        if(Math.abs(diff)<0.004) targetLon=null;
+      }else{
+        gGroup.rotation.y+=(spinVel+autoSpin)*dt;
+        spinVel*=Math.pow(0.02,dt);
+      }
+      clouds.rotation.y+=dt*0.012;
+      renderer.render(gScene,gCam);
+    }else if(mode==='flag'){
+      flagMat.uniforms.uTime.value+=dt;
+      poleGroup.rotation.y=-0.30+Math.sin(flagMat.uniforms.uTime.value*0.5)*0.045;
+      renderer.render(fScene,fCam);
+    }
+  }
+
+  return {init:init,attach:attach,detach:detach,resize:resize,frame:frame,
+          setFlag:setFlag,setFlagCanvas:setFlagCanvas,spinBy:spinBy,flyTo:flyTo,
+          setGlobeScale:setGlobeScale,
+          isOK:function(){return ok;},
+          getMode:function(){return mode;}};
+})();
+
+</script>
+<script>
+/* ============================================================
+   コア（ほぞん・がめん・おと）
+   ============================================================ */
+
+/* ---- localStorage の あんぜんな ラッパー ---- */
+var SAFE_LS=(function(){
+  var mem={};
+  var okls=false;
+  try{
+    var k='__wk_t__';
+    window.localStorage.setItem(k,'1');
+    window.localStorage.removeItem(k);
+    okls=true;
+  }catch(e){ okls=false; }
+  return {
+    getItem:function(k){ try{ return okls?window.localStorage.getItem(k):(mem[k]!==undefined?mem[k]:null); }catch(e){ return mem[k]!==undefined?mem[k]:null; } },
+    setItem:function(k,v){ try{ if(okls) window.localStorage.setItem(k,v); else mem[k]=String(v); }catch(e){ mem[k]=String(v); } },
+    removeItem:function(k){ try{ if(okls) window.localStorage.removeItem(k); else delete mem[k]; }catch(e){ delete mem[k]; } }
+  };
+})();
+
+var SAVE_KEY='kokki_v3_progress';
+
+var SAVE={ found:{}, stars:{}, craftDone:0 };
+
+function loadSave(){
+  try{
+    var raw=SAFE_LS.getItem(SAVE_KEY);
+    if(raw){
+      var o=JSON.parse(raw);
+      if(o&&typeof o==='object'){
+        SAVE.found=(o.found&&typeof o.found==='object'&&!Array.isArray(o.found))?o.found:{};
+        SAVE.stars=(o.stars&&typeof o.stars==='object'&&!Array.isArray(o.stars))?o.stars:{};
+        SAVE.craftDone=(typeof o.craftDone==='number'&&isFinite(o.craftDone))?Math.max(0,Math.floor(o.craftDone)):0;
+      }
+    }
+  }catch(e){}
+}
+function writeSave(){
+  try{ SAFE_LS.setItem(SAVE_KEY,JSON.stringify(SAVE)); }catch(e){}
+}
+function markFound(iso){
+  if(!SAVE.found[iso]){ SAVE.found[iso]=1; writeSave(); return true; }
+  return false;
+}
+function foundCount(){ var n=0; for(var k in SAVE.found) if(SAVE.found[k]) n++; return n; }
+
+/* ---- 地域 ---- */
+var REGIONS=[
+  {id:'asia',    name:'アジア',        emoji:'🏯', grad:'linear-gradient(150deg,#8E44C7,#5B2A9E)'},
+  {id:'europe',  name:'ヨーロッパ',    emoji:'🏰', grad:'linear-gradient(150deg,#3D8BEF,#1E4FA8)'},
+  {id:'africa',  name:'アフリカ',      emoji:'🦁', grad:'linear-gradient(150deg,#F0913A,#C4581A)'},
+  {id:'america', name:'アメリカ',      emoji:'🗽', grad:'linear-gradient(150deg,#3FBF7A,#1B7A47)'},
+  {id:'oceania', name:'オセアニア',    emoji:'🏝️', grad:'linear-gradient(150deg,#28B7C4,#12707E)'},
+];
+function regionName(id){ for(var i=0;i<REGIONS.length;i++) if(REGIONS[i].id===id) return REGIONS[i].name; return ''; }
+function regionOf(id){ for(var i=0;i<REGIONS.length;i++) if(REGIONS[i].id===id) return REGIONS[i]; return REGIONS[0]; }
+function countriesIn(id){ return COUNTRIES.filter(function(c){ return c.region===id; }); }
+function byIso(iso){ for(var i=0;i<COUNTRIES.length;i++) if(COUNTRIES[i].iso===iso) return COUNTRIES[i]; return null; }
+
+/* ---- 便利 ---- */
+function $(id){ return document.getElementById(id); }
+function shuffle(a){
+  a=a.slice();
+  for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function drawTo(cv,iso,w,h){
+  cv.width=w; cv.height=h;
+  var c=cv.getContext('2d');
+  c.clearRect(0,0,w,h);
+  WakuFlags.draw(c,iso,w,h);
+}
+
+/* ---- おと ---- */
+var SFX=(function(){
+  var ctx=null, enabled=true;
+  function ac(){
+    if(ctx) return ctx;
+    try{
+      var A=window.AudioContext||window.webkitAudioContext;
+      if(!A) return null;
+      ctx=new A();
+    }catch(e){ ctx=null; }
+    return ctx;
+  }
+  function beep(freqs,dur,type,vol){
+    if(!enabled) return;
+    var c=ac(); if(!c) return;
+    if(c.state==='suspended'){ try{c.resume();}catch(e){} }
+    var t0=c.currentTime;
+    for(var i=0;i<freqs.length;i++){
+      var o=c.createOscillator(), g=c.createGain();
+      o.type=type||'triangle';
+      o.frequency.setValueAtTime(freqs[i],t0+i*dur*0.72);
+      g.gain.setValueAtTime(0.0001,t0+i*dur*0.72);
+      g.gain.exponentialRampToValueAtTime(vol||0.14,t0+i*dur*0.72+0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001,t0+i*dur*0.72+dur);
+      o.connect(g); g.connect(c.destination);
+      o.start(t0+i*dur*0.72); o.stop(t0+i*dur*0.72+dur+0.02);
+    }
+  }
+  return {
+    tap:function(){ beep([620],0.07,'square',0.07); },
+    correct:function(){ beep([660,880,1180],0.15,'triangle',0.15); },
+    wrong:function(){ beep([320,240],0.19,'sine',0.13); },
+    fanfare:function(){ beep([523,659,784,1046,1318],0.17,'triangle',0.15); },
+    page:function(){ beep([480,720],0.09,'sine',0.09); },
+    setEnabled:function(v){ enabled=v; }
+  };
+})();
+
+/* ---- BGM ---- */
+var bgm=null, bgmOn=true;
+function initBGM(){
+  try{
+    if(typeof WakuwakuBGM!=='undefined'){
+      bgm=new WakuwakuBGM('quiz');
+      bgmOn=WakuwakuBGM.loadState();
+    }
+  }catch(e){ bgm=null; }
+  updateBgmBtn();
+}
+function updateBgmBtn(){
+  var b=$('bgm-btn');
+  if(b) b.textContent=bgmOn?'🔊':'🔇';
+}
+function toggleBGM(){
+  bgmOn=!bgmOn;
+  SFX.setEnabled(bgmOn);
+  try{
+    if(typeof WakuwakuBGM!=='undefined') WakuwakuBGM.saveState(bgmOn);
+    if(bgm){ if(bgmOn) bgm.start(); else bgm.stop(); }
+  }catch(e){}
+  updateBgmBtn();
+}
+function startBGM(){
+  try{ if(bgm&&bgmOn) bgm.start(); }catch(e){}
+  SFX.setEnabled(bgmOn);
+}
+
+/* ---- がめん ---- */
+var curScreen='title';
+var SCREEN_IDS={title:'s-title',menu:'s-menu',region:'s-region',quiz:'s-quiz',
+                zukan:'s-zukan',zd:'s-zd',craft:'s-craft'};
+function show(name){
+  for(var k in SCREEN_IDS){
+    var el=$(SCREEN_IDS[k]);
+    if(el) el.classList.remove('active');
+  }
+  var t=$(SCREEN_IDS[name]);
+  if(t){ t.classList.add('active'); t.classList.remove('fadein'); void t.offsetWidth; t.classList.add('fadein'); }
+  curScreen=name;
+  onScreen(name);
+}
+function closeAllOv(){
+  ['ov-answer','ov-result','ov-craft'].forEach(function(id){
+    var e=$(id); if(e) e.classList.remove('active');
+  });
+}
+
+/* ---- ほし の はいけい ---- */
+function drawStars(){
+  var cv=$('stars');
+  var w=cv.clientWidth||window.innerWidth, h=cv.clientHeight||window.innerHeight;
+  var dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.width=Math.max(1,Math.floor(w*dpr));
+  cv.height=Math.max(1,Math.floor(h*dpr));
+  var c=cv.getContext('2d');
+  c.setTransform(dpr,0,0,dpr,0,0);
+  c.clearRect(0,0,w,h);
+  var seed=13579;
+  function rnd(){ seed=(seed*1664525+1013904223)&0x7fffffff; return seed/0x7fffffff; }
+  for(var i=0;i<110;i++){
+    var x=rnd()*w, y=rnd()*h, r=rnd()*1.5+0.35;
+    var a=0.24+rnd()*0.62;
+    c.fillStyle='rgba(255,255,255,'+a.toFixed(2)+')';
+    c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fill();
+  }
+  // きらり
+  for(var j=0;j<9;j++){
+    var sx=rnd()*w, sy=rnd()*h*0.7, s=rnd()*7+4;
+    c.strokeStyle='rgba(255,255,255,0.42)'; c.lineWidth=1;
+    c.beginPath(); c.moveTo(sx-s,sy); c.lineTo(sx+s,sy);
+    c.moveTo(sx,sy-s); c.lineTo(sx,sy+s); c.stroke();
+  }
+}
+
+/* ---- セーフエリア（おやフレームから うけとる） ---- */
+window.addEventListener('message',function(ev){
+  var d=ev.data;
+  if(!d||typeof d!=='object') return;
+  if(d.type==='safeArea'&&d.insets){
+    var r=document.documentElement.style;
+    r.setProperty('--sat',(d.insets.top||0)+'px');
+    r.setProperty('--sab',(d.insets.bottom||0)+'px');
+    r.setProperty('--sal',(d.insets.left||0)+'px');
+    r.setProperty('--sar',(d.insets.right||0)+'px');
+  }
+});
+function goBackToSite(){
+  try{ window.parent.postMessage({type:'goBack'},'*'); }catch(e){}
+}
+
+</script>
+<script>
+/* ============================================================
+   がめん ごとの ロジック
+   ============================================================ */
+
+/* ---------- メニュー ---------- */
+var MODES=[
+  {id:'quiz', icon:'🌍', title:'せかい たんけん',
+   desc:'たいりくを えらんで こっきクイズ！ せいかいすると ずかんに あつまるよ。',
+   grad:'linear-gradient(150deg,#2D6FD6,#16407F)'},
+  {id:'zukan',icon:'📖', title:'こっき ずかん',
+   desc:'あつめた こっきを 3Dで じっくり みられるよ。',
+   grad:'linear-gradient(150deg,#C77CE8,#6B2FA0)'},
+  {id:'craft',icon:'🎨', title:'こっき づくり',
+   desc:'おてほんと おなじ こっきを つくってみよう！',
+   grad:'linear-gradient(150deg,#F0A03A,#C4551A)'},
+];
+
+function buildMenu(){
+  var wrap=$('menu-list');
+  wrap.innerHTML='';
+  MODES.forEach(function(m){
+    var b=document.createElement('button');
+    b.className='mode-card';
+    b.style.background=m.grad;
+    var prog='';
+    if(m.id==='quiz'||m.id==='zukan') prog='あつめた こっき '+foundCount()+' / '+COUNTRIES.length;
+    else prog='つくった こっき '+SAVE.craftDone;
+    b.innerHTML='<div class="mi">'+m.icon+'</div>'+
+      '<div style="flex:1;"><div class="mt">'+m.title+'</div>'+
+      '<div class="md">'+m.desc+'</div>'+
+      '<div class="mp">'+prog+'</div></div>';
+    b.onclick=function(){
+      SFX.tap();
+      if(m.id==='quiz') show('region');
+      else if(m.id==='zukan'){ zukanTab='all'; show('zukan'); }
+      else startCraft();
+    };
+    wrap.appendChild(b);
+  });
+}
+
+/* ---------- たいりく えらび ---------- */
+function buildRegions(){
+  var wrap=$('region-list');
+  wrap.innerHTML='';
+  REGIONS.forEach(function(r,idx){
+    var list=countriesIn(r.id);
+    var got=list.filter(function(c){ return SAVE.found[c.iso]; }).length;
+    var st=SAVE.stars[r.id]||0;
+    var b=document.createElement('button');
+    b.className='region-card'+(idx===REGIONS.length-1?' wide':'');
+    b.style.background=r.grad;
+    var stars='';
+    for(var i=0;i<3;i++) stars+= (i<st?'⭐':'☆');
+    b.innerHTML='<div class="re">'+r.emoji+'</div>'+
+      '<div class="rn">'+r.name+'</div>'+
+      '<div class="rc">'+got+' / '+list.length+' こっき</div>'+
+      '<div class="rstar">'+stars+'</div>'+
+      '<div class="rprog" style="width:'+Math.round(got/list.length*100)+'%"></div>';
+    b.onclick=function(){
+      SFX.tap();
+      var ll=WakuGlobe.REGION_LATLON[r.id];
+      if(ll) G3D.flyTo(ll.lat,ll.lon);
+      var lab=$('region-label');
+      if(lab) lab.textContent=r.name+' へ しゅっぱつ！';
+      setTimeout(function(){ startQuiz(r.id); },720);
+    };
+    wrap.appendChild(b);
+  });
+}
+
+/* ---------- クイズ ---------- */
+var QZ={ region:'', list:[], idx:0, correct:0, newFound:0, answered:false, q:null };
+var QN=8;
+
+function startQuiz(regionId){
+  QZ.region=regionId;
+  var all=countriesIn(regionId);
+  // やさしい→むずかしい の じゅんに ならべ、それぞれ シャッフル
+  var lv1=shuffle(all.filter(function(c){return c.lv===1;}));
+  var lv2=shuffle(all.filter(function(c){return c.lv===2;}));
+  var lv3=shuffle(all.filter(function(c){return c.lv===3;}));
+  var ordered=lv1.concat(lv2,lv3);
+  var n=Math.min(QN,ordered.length);
+  QZ.list=ordered.slice(0,n);
+  QZ.idx=0; QZ.correct=0; QZ.newFound=0;
+  closeAllOv();
+  show('quiz');
+  nextQuestion();
+}
+
+function questionFormat(c){
+  // やさしい くには こっき→なまえ、むずかしい くには ヒントも つける
+  var r=Math.random();
+  if(c.lv===1) return r<0.62?'f2n':'n2f';
+  if(c.lv===2) return r<0.45?'f2n':(r<0.78?'n2f':'hint');
+  return r<0.40?'f2n':(r<0.66?'n2f':'hint');
+}
+
+function nextQuestion(){
+  if(QZ.idx>=QZ.list.length){ finishQuiz(); return; }
+  QZ.answered=false;
+  var c=QZ.list[QZ.idx];
+  var fmt=questionFormat(c);
+  QZ.q={c:c,fmt:fmt};
+
+  $('qcount').textContent=(QZ.idx+1)+'/'+QZ.list.length;
+  $('qprog').style.width=Math.round(QZ.idx/QZ.list.length*100)+'%';
+
+  var stage=$('flag-stage');
+  var hintsEl=$('quiz-hints');
+  var ansEl=$('answers');
+  ansEl.innerHTML='';
+  hintsEl.innerHTML='';
+
+  // まちがい の せんたくし（おなじ たいりく から えらぶ）
+  var pool=COUNTRIES.filter(function(x){ return x.region===c.region&&x.iso!==c.iso; });
+  if(pool.length<3) pool=COUNTRIES.filter(function(x){ return x.iso!==c.iso; });
+  var wrong=shuffle(pool).slice(0,3);
+  var opts=shuffle([c].concat(wrong));
+
+  if(fmt==='n2f'){
+    // なまえ → こっきを えらぶ
+    $('quiz-question').textContent='「'+c.name+'」の こっきは どれ？';
+    stage.style.display='none';
+    G3D.detach();
+    ansEl.className='';
+    ansEl.style.gridTemplateColumns='1fr 1fr';
+    opts.forEach(function(o){
+      var b=document.createElement('button');
+      b.className='ans flagmode';
+      var cv=document.createElement('canvas');
+      drawTo(cv,o.iso,240,160);
+      b.appendChild(cv);
+      b.onclick=function(){ answer(o,b,opts,ansEl); };
+      ansEl.appendChild(b);
+    });
+  }else{
+    // こっき（3D）→ なまえを えらぶ
+    stage.style.display='flex';
+    G3D.setFlag(c.iso);
+    G3D.attach(stage,'flag');
+    if(fmt==='hint'){
+      $('quiz-question').textContent='ヒントを みて あててね！';
+      c.hints.slice(0,3).forEach(function(h){
+        var d=document.createElement('div');
+        d.className='hint-chip';
+        d.innerHTML='<div class="he">'+h.e+'</div><div class="hl">'+h.l+'</div>';
+        hintsEl.appendChild(d);
+      });
+    }else{
+      $('quiz-question').textContent='この こっきは どこの くに？';
+    }
+    opts.forEach(function(o){
+      var b=document.createElement('button');
+      b.className='ans';
+      b.textContent=o.name;
+      b.onclick=function(){ answer(o,b,opts,ansEl); };
+      ansEl.appendChild(b);
+    });
+  }
+}
+
+function answer(chosen,btn,opts,ansEl){
+  if(QZ.answered) return;
+  QZ.answered=true;
+  var c=QZ.q.c;
+  var right=(chosen.iso===c.iso);
+  var kids=ansEl.children;
+  for(var i=0;i<kids.length;i++){
+    var k=kids[i];
+    if(opts[i].iso===c.iso) k.classList.add('correct');
+    else if(k===btn) k.classList.add('wrong');
+    else k.classList.add('dim');
+    k.onclick=null;
+  }
+  var isNew=false;
+  if(right){
+    QZ.correct++;
+    isNew=markFound(c.iso);
+    if(isNew) QZ.newFound++;
+    SFX.correct();
+  }else{
+    SFX.wrong();
+  }
+  setTimeout(function(){ showAnswerOv(c,right,isNew); },560);
+}
+
+function showAnswerOv(c,right,isNew){
+  $('oa-icon').textContent=right?(isNew?'✨':'🎉'):'💡';
+  $('oa-title').textContent=right?(isNew?'ずかんに くわわった！':'せいかい！'):'おしい！';
+  $('oa-title').style.color=right?'#7FE3A0':'#FFD24A';
+  var cv=$('oa-flag');
+  drawTo(cv,c.iso,300,200);
+  $('oa-text').innerHTML='<b style="font-size:17px;color:#fff;">'+c.name+'</b><br>'+c.fact;
+  $('ov-answer').classList.add('active');
+}
+
+function finishQuiz(){
+  $('qprog').style.width='100%';
+  var total=QZ.list.length;
+  var rate=QZ.correct/total;
+  // Reaching the end of all eight questions always earns a first star.
+  var st=rate>=0.95?3:(rate>=0.7?2:1);
+  var key=QZ.region;
+  if(!SAVE.stars[key]||SAVE.stars[key]<st){ SAVE.stars[key]=st; }
+  writeSave();
+
+  var stars='';
+  for(var i=0;i<3;i++) stars+=(i<st?'⭐':'☆');
+  $('or-icon').textContent=st===3?'🏆':(st>=1?'🎊':'🌱');
+  $('or-title').textContent=st===3?'かんぺき！':(st>=1?'クリア！':'もういちど チャレンジ！');
+  $('or-stars').textContent=stars;
+  var msg=QZ.correct+' / '+total+' もん せいかい！';
+  if(QZ.newFound>0) msg+='<br><span style="color:#7FE3A0;">あたらしい こっき '+QZ.newFound+'こ ゲット！</span>';
+  msg+='<br><span style="font-size:12px;color:rgba(255,255,255,.6);">ずかん '+foundCount()+' / '+COUNTRIES.length+'</span>';
+  $('or-text').innerHTML=msg;
+  SFX.fanfare();
+  $('ov-result').classList.add('active');
+}
+
+</script>
+<script>
+/* ============================================================
+   ずかん
+   ============================================================ */
+var zukanTab='all';
+
+function buildZukanTabs(){
+  var wrap=$('zukan-tabs');
+  wrap.innerHTML='';
+  var tabs=[{id:'all',name:'ぜんぶ'}].concat(REGIONS.map(function(r){return {id:r.id,name:r.name};}));
+  tabs.forEach(function(t){
+    var b=document.createElement('button');
+    b.className='ztab'+(zukanTab===t.id?' on':'');
+    b.textContent=t.name;
+    b.onclick=function(){ SFX.tap(); zukanTab=t.id; buildZukanTabs(); buildZukanGrid(); };
+    wrap.appendChild(b);
+  });
+}
+
+function buildZukanGrid(){
+  var grid=$('zukan-grid');
+  grid.innerHTML='';
+  var list=(zukanTab==='all')?COUNTRIES:countriesIn(zukanTab);
+  $('zukan-count').textContent='あつめた こっき '+foundCount()+' / '+COUNTRIES.length;
+  list.forEach(function(c){
+    var got=!!SAVE.found[c.iso];
+    var b=document.createElement('button');
+    b.className='zcard'+(got?'':' locked');
+    var cv=document.createElement('canvas');
+    drawTo(cv,c.iso,150,100);
+    b.appendChild(cv);
+    var n=document.createElement('div');
+    n.className='zn';
+    n.textContent=got?c.name:'？？？';
+    b.appendChild(n);
+    b.onclick=function(){
+      SFX.tap();
+      if(got) openDetail(c);
+      else {
+        n.textContent='まだ みつけてないよ';
+        setTimeout(function(){ n.textContent='？？？'; },1100);
+      }
+    };
+    grid.appendChild(b);
+  });
+}
+
+function openDetail(c){
+  $('zd-hdr').textContent=regionName(c.region);
+  $('zd-name').textContent=c.name;
+  $('zd-region').textContent=regionOf(c.region).emoji+' '+regionName(c.region);
+  $('zd-cap').textContent='しゅと：'+c.cap;
+  $('zd-fact').textContent=c.fact;
+  var h=$('zd-hints');
+  h.innerHTML='';
+  c.hints.forEach(function(x){
+    var d=document.createElement('div');
+    d.className='hint-chip';
+    d.innerHTML='<div class="he">'+x.e+'</div><div class="hl">'+x.l+'</div>';
+    h.appendChild(d);
+  });
+  show('zd');
+  G3D.setFlag(c.iso);
+  G3D.attach($('zd-flag'),'flag');
+}
+
+/* ============================================================
+   こっき づくり（パズル）
+   ============================================================ */
+
+/* --- レイアウト・いろ・マーク の ぶひん --- */
+var CRAFT_LAYOUTS={
+  plain: {name:'むじ',   n:1},
+  h2:    {name:'よこ2だん',n:2},
+  h3:    {name:'よこ3だん',n:3},
+  v3:    {name:'たて3だん',n:3},
+  nordic:{name:'じゅうじ', n:2},
+};
+var CRAFT_SYMBOLS={
+  none:    'なし',
+  circle:  'まる',
+  star:    'ほし',
+  crescent:'みかづき',
+  cross:   'じゅうじ',
+  wheel:   'わ',
+};
+
+/* --- カスタム こっき を えがく --- */
+function drawCraftFlag(c,W,H,spec){
+  c.clearRect(0,0,W,H);
+  var col=spec.colors||['#999999'];
+  var lay=spec.layout||'plain';
+  function R(x,y,w,h,f){ c.fillStyle=f; c.fillRect(x,y,w,h); }
+
+  if(lay==='plain'){
+    R(0,0,W,H,col[0]);
+  }else if(lay==='h2'){
+    R(0,0,W,H/2,col[0]); R(0,H/2,W,H/2,col[1]||col[0]);
+  }else if(lay==='h3'){
+    R(0,0,W,H/3+1,col[0]); R(0,H/3,W,H/3+1,col[1]||col[0]); R(0,H*2/3,W,H/3+1,col[2]||col[0]);
+  }else if(lay==='v3'){
+    R(0,0,W/3+1,H,col[0]); R(W/3,0,W/3+1,H,col[1]||col[0]); R(W*2/3,0,W/3+1,H,col[2]||col[0]);
+  }else if(lay==='nordic'){
+    R(0,0,W,H,col[0]);
+    var t=H*0.18, cx=W*0.36;
+    R(0,H/2-t/2,W,t,col[1]||'#FFFFFF');
+    R(cx-t/2,0,t,H,col[1]||'#FFFFFF');
+  }
+
+  var sym=spec.symbol||'none';
+  var sc=spec.symbolColor||'#FFFFFF';
+  var mx=W/2, my=H/2;
+  if(sym==='circle'){
+    c.fillStyle=sc; c.beginPath(); c.arc(mx,my,H*0.30,0,Math.PI*2); c.fill();
+  }else if(sym==='star'){
+    c.fillStyle=sc; starOn(c,mx,my,H*0.27,5,0.382,0); c.fill();
+  }else if(sym==='crescent'){
+    c.fillStyle=sc; c.beginPath(); c.arc(mx-W*0.03,my,H*0.24,0,Math.PI*2); c.fill();
+    c.fillStyle=spec.bgForCut||col[0];
+    c.beginPath(); c.arc(mx+W*0.02,my,H*0.19,0,Math.PI*2); c.fill();
+    c.fillStyle=sc; starOn(c,mx+W*0.11,my,H*0.105,5,0.382,-0.35); c.fill();
+  }else if(sym==='cross'){
+    var t2=H*0.16, L=H*0.52;
+    c.fillStyle=sc;
+    c.fillRect(mx-t2/2,my-L/2,t2,L);
+    c.fillRect(mx-L/2,my-t2/2,L,t2);
+  }else if(sym==='wheel'){
+    c.strokeStyle=sc; c.lineWidth=Math.max(1,H*0.018);
+    c.beginPath(); c.arc(mx,my,H*0.15,0,Math.PI*2); c.stroke();
+    c.lineWidth=Math.max(1,H*0.010);
+    for(var i=0;i<16;i++){
+      var a=i*Math.PI/8;
+      c.beginPath(); c.moveTo(mx,my);
+      c.lineTo(mx+Math.cos(a)*H*0.15,my+Math.sin(a)*H*0.15); c.stroke();
+    }
+    c.fillStyle=sc; c.beginPath(); c.arc(mx,my,H*0.030,0,Math.PI*2); c.fill();
+  }
+}
+function starOn(c,cx,cy,r,points,inner,rot){
+  var ir=r*inner;
+  c.beginPath();
+  for(var i=0;i<points*2;i++){
+    var rr=(i%2===0)?r:ir;
+    var a=(Math.PI/points)*i-Math.PI/2+rot;
+    var x=cx+Math.cos(a)*rr, y=cy+Math.sin(a)*rr;
+    if(i) c.lineTo(x,y); else c.moveTo(x,y);
+  }
+  c.closePath();
+}
+
+/* --- つくれる くに --- */
+var CRAFTABLE=[
+  {iso:'JP',layout:'plain', colors:['#FFFFFF'],                          symbol:'circle',  symbolColor:'#BC002D'},
+  {iso:'FR',layout:'v3',    colors:['#002395','#FFFFFF','#ED2939'],      symbol:'none'},
+  {iso:'DE',layout:'h3',    colors:['#000000','#DD0000','#FFCE00'],      symbol:'none'},
+  {iso:'IT',layout:'v3',    colors:['#009246','#F1F2F1','#CE2B37'],      symbol:'none'},
+  {iso:'NL',layout:'h3',    colors:['#AE1C28','#FFFFFF','#21468B'],      symbol:'none'},
+  {iso:'RU',layout:'h3',    colors:['#FFFFFF','#0039A6','#D52B1E'],      symbol:'none'},
+  {iso:'ID',layout:'h2',    colors:['#FF0000','#FFFFFF'],                symbol:'none'},
+  {iso:'PL',layout:'h2',    colors:['#FFFFFF','#DC143C'],                symbol:'none'},
+  {iso:'VN',layout:'plain', colors:['#DA251D'],                          symbol:'star',    symbolColor:'#FFFF00'},
+  {iso:'CH',layout:'plain', colors:['#FF0000'],                          symbol:'cross',   symbolColor:'#FFFFFF'},
+  {iso:'TR',layout:'plain', colors:['#E30A17'],                          symbol:'crescent',symbolColor:'#FFFFFF'},
+  {iso:'SE',layout:'nordic',colors:['#006AA7','#FECC00'],                symbol:'none'},
+  {iso:'DK',layout:'nordic',colors:['#C8102E','#FFFFFF'],                symbol:'none'},
+  {iso:'FI',layout:'nordic',colors:['#FFFFFF','#003580'],                symbol:'none'},
+  {iso:'IN',layout:'h3',    colors:['#FF9933','#FFFFFF','#138808'],      symbol:'wheel',   symbolColor:'#000080'},
+  {iso:'GH',layout:'h3',    colors:['#CE1126','#FCD116','#006B3F'],      symbol:'star',    symbolColor:'#000000'},
+  {iso:'NG',layout:'v3',    colors:['#008751','#FFFFFF','#008751'],      symbol:'none'},
+  {iso:'PE',layout:'v3',    colors:['#D91023','#FFFFFF','#D91023'],      symbol:'none'},
+  {iso:'AT',layout:'h3',    colors:['#ED2939','#FFFFFF','#ED2939'],      symbol:'none'},
+  {iso:'MA',layout:'plain', colors:['#C1272D'],                          symbol:'star',    symbolColor:'#006233'},
+];
+
+var CR={ list:[], idx:0, step:0, target:null, mine:null, locked:false };
+var CRAFT_N=5;
+
+function startCraft(){
+  CR.list=shuffle(CRAFTABLE).slice(0,CRAFT_N);
+  CR.idx=0;
+  closeAllOv();
+  show('craft');
+  craftQuestion();
+}
+
+function craftQuestion(){
+  if(CR.idx>=CR.list.length){ craftFinish(); return; }
+  CR.target=CR.list[CR.idx];
+  CR.mine={layout:null,colors:null,symbol:null,symbolColor:null};
+  CR.step=0;
+  CR.locked=false;
+  var c=byIso(CR.target.iso);
+  $('craft-hdr').textContent='こっき づくり '+(CR.idx+1)+'/'+CR.list.length;
+  // おてほん（ほんものの こっき）
+  var mcv=$('craft-model');
+  mcv.width=240; mcv.height=160;
+  WakuFlags.draw(mcv.getContext('2d'),CR.target.iso,240,160);
+  renderMine();
+  craftStep();
+}
+
+function renderMine(){
+  var cv=$('craft-mine');
+  cv.width=240; cv.height=160;
+  var c=cv.getContext('2d');
+  c.clearRect(0,0,240,160);
+  if(!CR.mine.layout){
+    c.fillStyle='rgba(255,255,255,0.09)';
+    c.fillRect(0,0,240,160);
+    c.strokeStyle='rgba(255,255,255,0.3)';
+    c.lineWidth=3; c.setLineDash([9,7]);
+    c.strokeRect(3,3,234,154);
+    c.setLineDash([]);
+    return;
+  }
+  drawCraftFlag(c,240,160,{
+    layout:CR.mine.layout,
+    colors:CR.mine.colors||['#8899AA','#AABBCC','#7788AA'],
+    symbol:CR.mine.symbol||'none',
+    symbolColor:CR.mine.symbolColor||'#FFFFFF'
+  });
+}
+
+function craftSteps(){
+  var wrap=$('craft-steps');
+  wrap.innerHTML='';
+  for(var i=0;i<3;i++){
+    var d=document.createElement('div');
+    d.className='cstep'+(i<CR.step?' done':(i===CR.step?' on':''));
+    wrap.appendChild(d);
+  }
+}
+
+function craftStep(){
+  craftSteps();
+  var opts=$('craft-opts');
+  opts.innerHTML='';
+  var t=CR.target;
+
+  if(CR.step===0){
+    $('craft-q').textContent='① どんな かたち？';
+    var lays=shuffle(['plain','h2','h3','v3','nordic'].filter(function(l){ return l!==t.layout; })).slice(0,3);
+    var all=shuffle([t.layout].concat(lays));
+    all.forEach(function(l){
+      addCraftOpt(opts,CRAFT_LAYOUTS[l].name,
+        {layout:l,colors:['#9AA9BC','#D6DEE8','#6E7F94'],symbol:'none'},
+        l===t.layout,
+        function(){ CR.mine.layout=l; });
+    });
+  }else if(CR.step===1){
+    $('craft-q').textContent='② どの いろ？';
+    var pool=CRAFTABLE.filter(function(x){
+      return x.iso!==t.iso && x.colors.length===t.colors.length;
+    });
+    var seen={}; seen[t.colors.join()]=1;
+    var wrongCols=[];
+    shuffle(pool).forEach(function(x){
+      var k=x.colors.join();
+      if(!seen[k]&&wrongCols.length<3){ seen[k]=1; wrongCols.push(x.colors); }
+    });
+    var spare=['#E84A4A','#4A86E8','#4AB86A','#F0C93A','#FFFFFF','#333333','#8E44C7'];
+    var guard=0;
+    while(wrongCols.length<3&&guard<40){
+      guard++;
+      var cand=shuffle(spare).slice(0,t.colors.length);
+      var ck=cand.join();
+      if(!seen[ck]){ seen[ck]=1; wrongCols.push(cand); }
+    }
+    var allC=shuffle([t.colors].concat(wrongCols));
+    allC.forEach(function(cols){
+      var same=(cols.join()===t.colors.join());
+      addCraftOpt(opts,'',
+        {layout:t.layout,colors:cols,symbol:'none'},
+        same,
+        function(){ CR.mine.colors=cols; });
+    });
+  }else{
+    $('craft-q').textContent='③ まんなかの マークは？';
+    var syms=shuffle(['none','circle','star','crescent','cross','wheel']
+      .filter(function(s){ return s!==t.symbol; })).slice(0,3);
+    var allS=shuffle([t.symbol].concat(syms));
+    allS.forEach(function(s){
+      var scol=t.symbolColor||autoSymColor(t.colors);
+      addCraftOpt(opts,CRAFT_SYMBOLS[s],
+        {layout:t.layout,colors:t.colors,symbol:s,symbolColor:scol},
+        s===t.symbol,
+        function(){ CR.mine.symbol=s; CR.mine.symbolColor=scol; });
+    });
+  }
+}
+
+function autoSymColor(cols){
+  return (cols[0]==='#FFFFFF')?'#CC2222':'#FFFFFF';
+}
+
+function addCraftOpt(wrap,label,spec,isRight,apply){
+  var b=document.createElement('button');
+  b.className='copt';
+  var cv=document.createElement('canvas');
+  cv.width=224; cv.height=150;
+  drawCraftFlag(cv.getContext('2d'),224,150,spec);
+  b.appendChild(cv);
+  if(label){
+    var l=document.createElement('div');
+    l.className='col'; l.textContent=label;
+    b.appendChild(l);
+  }
+  b.onclick=function(){
+    if(CR.locked) return;
+    CR.locked=true;
+    if(isRight){
+      b.classList.add('correct');
+      SFX.correct();
+      apply();
+      renderMine();
+      setTimeout(function(){
+        CR.step++;
+        CR.locked=false;
+        if(CR.step>=3) craftClear();
+        else craftStep();
+      },520);
+    }else{
+      b.classList.add('wrong');
+      SFX.wrong();
+      setTimeout(function(){
+        b.classList.remove('wrong');
+        CR.locked=false;
+      },520);
+    }
+  };
+  wrap.appendChild(b);
+}
+
+function craftClear(){
+  craftSteps();
+  SAVE.craftDone++;
+  var isNew=markFound(CR.target.iso);
+  writeSave();
+  var c=byIso(CR.target.iso);
+  var cv=$('oc-flag');
+  drawTo(cv,CR.target.iso,300,200);
+  $('oc-icon').textContent=isNew?'✨':'🎨';
+  $('oc-title').textContent=isNew?'ずかんに くわわった！':'できた！';
+  $('oc-text').innerHTML='<b style="font-size:17px;color:#fff;">'+c.name+'</b><br>'+c.fact;
+  $('oc-next').textContent=(CR.idx+1>=CR.list.length)?'けっかを みる':'つぎの こっき';
+  resetCraftNext();
+  SFX.fanfare();
+  $('ov-craft').classList.add('active');
+}
+
+function craftFinish(){
+  $('oc-icon').textContent='🏆';
+  $('oc-title').textContent='ぜんぶ つくれた！';
+  var cv=$('oc-flag');
+  cv.width=300; cv.height=200;
+  var c=cv.getContext('2d');
+  c.clearRect(0,0,300,200);
+  c.fillStyle='rgba(255,255,255,0.06)'; c.fillRect(0,0,300,200);
+  var picks=CR.list.slice(0,6);
+  picks.forEach(function(p,i){
+    var w=94,h=62;
+    var x=6+(i%3)*98, y=16+Math.floor(i/3)*84;
+    var t=document.createElement('canvas');
+    t.width=w; t.height=h;
+    WakuFlags.draw(t.getContext('2d'),p.iso,w,h);
+    c.drawImage(t,x,y);
+  });
+  $('oc-text').innerHTML='つくった こっき ぜんぶで '+SAVE.craftDone+'こ！<br>'+
+    '<span style="font-size:12px;color:rgba(255,255,255,.6);">ずかん '+foundCount()+' / '+COUNTRIES.length+'</span>';
+  $('oc-next').textContent='もういちど';
+  $('oc-next').onclick=function(){ SFX.tap(); startCraft(); };
+  SFX.fanfare();
+  $('ov-craft').classList.add('active');
+}
+
+</script>
+<script>
+/* ============================================================
+   がめん きりかえ / イベント / きどう
+   ============================================================ */
+
+function onScreen(name){
+  if(name==='title'){
+    G3D.setGlobeScale(1.0);
+    G3D.attach($('title-globe'),'globe-title');
+    $('title-stats').textContent='あつめたこっき '+foundCount()+' / '+COUNTRIES.length;
+  }else if(name==='menu'){
+    G3D.detach();
+    buildMenu();
+  }else if(name==='region'){
+    G3D.setGlobeScale(0.92);
+    G3D.attach($('region-globe'),'globe');
+    var lab=$('region-label');
+    if(lab) lab.textContent='ちきゅうを ゆびで まわせるよ';
+    buildRegions();
+  }else if(name==='zukan'){
+    G3D.detach();
+    buildZukanTabs();
+    buildZukanGrid();
+  }
+  // quiz / zd / craft は それぞれの しょりの なかで attach する
+}
+
+/* ---- もどるボタン ---- */
+function wireBack(){
+  var bs=document.querySelectorAll('[data-back]');
+  for(var i=0;i<bs.length;i++){
+    (function(b){
+      b.onclick=function(){
+        SFX.page();
+        closeAllOv();
+        show(b.getAttribute('data-back'));
+      };
+    })(bs[i]);
+  }
+}
+
+/* ---- ちきゅうぎ を ゆびで まわす ---- */
+function wireGlobeDrag(){
+  var hosts=[$('title-globe'),$('region-globe')];
+  hosts.forEach(function(h){
+    if(!h) return;
+    var last=null;
+    h.style.pointerEvents='auto';
+    h.style.touchAction='none';
+    function down(e){
+      last=e.clientX;
+      if(h.setPointerCapture) h.setPointerCapture(e.pointerId);
+      if(e.cancelable) e.preventDefault();
+    }
+    function move(e){
+      if(last===null) return;
+      var dx=e.clientX-last;
+      last=e.clientX;
+      G3D.spinBy(dx);
+      if(e.cancelable) e.preventDefault();
+    }
+    function up(e){
+      last=null;
+      if(h.releasePointerCapture && h.hasPointerCapture && h.hasPointerCapture(e.pointerId)) h.releasePointerCapture(e.pointerId);
+    }
+    h.addEventListener('pointerdown',down,{passive:false});
+    h.addEventListener('pointermove',move,{passive:false});
+    h.addEventListener('pointerup',up,{passive:true});
+    h.addEventListener('pointercancel',up,{passive:true});
+  });
+}
+
+/* ---- ボタンを つなぐ ---- */
+function wireButtons(){
+  $('btn-start').onclick=function(){
+    SFX.tap();
+    startBGM();
+    show('menu');
+  };
+  $('bgm-btn').onclick=function(){ toggleBGM(); };
+
+  $('oa-next').onclick=function(){
+    SFX.tap();
+    $('ov-answer').classList.remove('active');
+    QZ.idx++;
+    nextQuestion();
+  };
+  $('or-again').onclick=function(){
+    SFX.tap();
+    $('ov-result').classList.remove('active');
+    startQuiz(QZ.region);
+  };
+  $('or-back').onclick=function(){
+    SFX.page();
+    $('ov-result').classList.remove('active');
+    show('region');
+  };
+  $('oc-back').onclick=function(){
+    SFX.page();
+    closeAllOv();
+    show('menu');
+  };
+  resetCraftNext();
+}
+function resetCraftNext(){
+  $('oc-next').onclick=function(){
+    SFX.tap();
+    $('ov-craft').classList.remove('active');
+    CR.idx++;
+    craftQuestion();
+  };
+}
+
+/* ---- リサイズ ---- */
+var resizeTimer=null;
+function onResize(){
+  drawStars();
+  if(resizeTimer) clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(function(){ G3D.resize(); },80);
+  G3D.resize();
+}
+
+/* ---- メインループ ---- */
+function loop(){
+  G3D.frame();
+  requestAnimationFrame(loop);
+}
+
+/* ---- きどう ---- */
+function boot(){
+  loadSave();
+  drawStars();
+
+  var glOK=false;
+  try{ glOK=G3D.init(); }catch(e){ glOK=false; }
+  if(!glOK){
+    $('nogl').style.display='flex';
+    return;
+  }
+
+  initBGM();
+  wireBack();
+  wireButtons();
+  wireGlobeDrag();
+
+  window.addEventListener('resize',onResize);
+  window.addEventListener('orientationchange',function(){ setTimeout(onResize,260); });
+
+  show('title');
+  loop();
+
+  // はじめての タップで おとを ゆるす（iOS たいさく）
+  var unlocked=false;
+  function unlock(){
+    if(unlocked) return;
+    unlocked=true;
+    SFX.tap();
+  }
+  document.addEventListener('pointerdown',unlock,{once:true,passive:true});
+}
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',boot);
+}else{
+  boot();
+}
+
+</script>
+</body>
+</html>

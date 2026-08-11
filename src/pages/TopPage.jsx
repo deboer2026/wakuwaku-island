@@ -627,24 +627,14 @@ const GAME_SVGS = {
   ),
   g15: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100" height="85" rx="12" fill="#dff4ff"/>
-      <rect x="6" y="7" width="27" height="12" rx="4" fill="#1b568e"/><circle cx="14" cy="13" r="2" fill="#fff"/><rect x="19" y="11" width="9" height="3" rx="1.5" fill="#a8dcff"/>
-      <circle cx="52" cy="47" r="30" fill="#1565C0" stroke="#0D47A1" strokeWidth="2.5"/>
-      <path d="M30 34Q40 28 48 34Q52 40 45 46Q38 50 33 44Z" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1"/>
-      <path d="M55 32Q65 26 72 34Q76 42 68 48Q60 52 55 44Z" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1"/>
-      <path d="M38 54Q50 51 56 59Q54 68 44 69Q36 66 36 58Z" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1"/>
-      <path d="M60 56Q70 54 74 62Q72 70 64 70Q58 66 60 58Z" fill="#66BB6A" stroke="#2E7D32" strokeWidth="1"/>
-      <ellipse cx="38" cy="34" rx="10" ry="7" fill="white" opacity=".2" transform="rotate(-30 38 34)"/>
-      <circle cx="46" cy="46" r="4" fill="white" stroke="#0D47A1" strokeWidth="1"/>
-      <circle cx="58" cy="46" r="4" fill="white" stroke="#0D47A1" strokeWidth="1"/>
-      <circle cx="47" cy="46" r="2.5" fill="#1a1a2e"/>
-      <circle cx="59" cy="46" r="2.5" fill="#1a1a2e"/>
-      <circle cx="47.8" cy="45" r="1" fill="white"/>
-      <circle cx="59.8" cy="45" r="1" fill="white"/>
-      <path d="M47 52Q52 56 57 52" stroke="#0D47A1" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-      <rect x="70" y="10" width="23" height="16" rx="3" fill="#fff" stroke="#5e86b0" strokeWidth="1.2"/>
-      <rect x="72" y="12" width="19" height="12" fill="#e64d56"/><path d="M72 16 H91" stroke="#fff" strokeWidth="2"/><path d="M78 12V24" stroke="#fff" strokeWidth="2"/>
-      <path d="M68 30 Q76 34 84 30" fill="none" stroke="#fff" strokeWidth="1.8" strokeDasharray="3 2"/>
+      <defs><radialGradient id="kokkiOcean"><stop stopColor="#61d8ff"/><stop offset="1" stopColor="#17458d"/></radialGradient></defs>
+      <rect width="100" height="85" rx="12" fill="#0b1a4b"/>
+      <circle cx="10" cy="13" r="1" fill="#fff"/><circle cx="88" cy="14" r="1.2" fill="#fff"/><circle cx="78" cy="32" r=".8" fill="#ffe98a"/>
+      <circle cx="48" cy="45" r="31" fill="url(#kokkiOcean)" stroke="#92e8ff" strokeWidth="1.5"/>
+      <path d="M26 34Q37 25 47 31T58 39Q52 48 42 48T28 43Z M54 50Q66 45 75 54Q70 67 57 67Q50 61 54 50Z" fill="#73c85e" stroke="#439c54" strokeWidth="1"/>
+      <path d="M18 46Q48 62 79 46M48 14V76" fill="none" stroke="#c7f3ff" strokeWidth=".8" opacity=".65"/>
+      <g transform="translate(67 13) rotate(8)"><path d="M0 0v22" stroke="#f7cf6b" strokeWidth="1.5"/><path d="M1 2h21v13H1Z" fill="#fff"/><path d="M1 2h21v4H1z" fill="#e94152"/><path d="M1 11h21v4H1z" fill="#3f67c6"/><circle cx="8" cy="8.5" r="2" fill="#fff"/></g>
+      <path d="M13 68q8-8 16 0" fill="none" stroke="#ffd44e" strokeWidth="2" strokeLinecap="round"/><path d="M20 61l1.7 4.8 5.1.1-4.1 3 1.5 4.8-4.2-2.8-4.2 2.8 1.5-4.8-4.1-3 5.1-.1z" fill="#ffe166"/>
     </svg>
   ),
   g16: (
@@ -1159,12 +1149,12 @@ const GAMES = [
     zh:{ name:'梦幻岛小镇',           desc:'漫步3D小岛，\n和动物一起建造小镇！'             },
     ko:{ name:'꿈의 섬 마을',          desc:'3D 섬을 걸으며\n동물과 마을을 만들어요!'         },
     es:{ name:'Pueblo Isla Soñada',  desc:'¡Recorre la isla 3D y\nconstruye con los animales!' } },
-  { id:'g15', route:'/kokki', icon:'🌍', num:15, color:'#0d47a1', stars:4, isNew:false, category:'がくしゅう',
-    ja:{ name:'こっきクイズ',    desc:'せかいの こっきを\nみわけよう！\n30かこく以上！'       },
-    en:{ name:'Flag Quiz',        desc:'Identify world flags!\n30+ countries!\nTest your knowledge!' },
-    zh:{ name:'国旗问答',          desc:'识别世界各国国旗！\n30多个国家！'                          },
-    ko:{ name:'국기 퀴즈',         desc:'세계 국기를 맞혀봐!\n30개국 이상!'                       },
-    es:{ name:'Quiz de Banderas', desc:'¡Identifica banderas!\n¡Más de 30 países!'                  } },
+  { id:'g15', route:'/kokki', icon:'🌍', num:15, color:'#0d47a1', stars:5, isNew:true, category:'がくしゅう',
+    ja:{ name:'こっきクイズ',    desc:'3Dちきゅうを まわして\n51かこくを たんけんしよう！'       },
+    en:{ name:'Flag World Explorer', desc:'Spin a 3D globe and\nexplore 51 country flags!' },
+    zh:{ name:'国旗世界探险',      desc:'转动3D地球，\n探索51个国家的国旗！' },
+    ko:{ name:'국기 세계 탐험',    desc:'3D 지구본을 돌리며\n51개 나라 국기를 탐험해요!' },
+    es:{ name:'Explora Banderas',  desc:'¡Gira el globo 3D y\nexplora 51 banderas!' } },
   { id:'g16', route:'/jewelry-master', icon:'💍', num:16, color:'#7b1fa2', stars:4, isNew:false, category:'そうぞう',
     ja:{ name:'ジュエリーマスター', desc:'げんせきを みがいて\nアクセサリーを つくり\nおみせを けいえい！'      },
     en:{ name:'Jewelry Master',    desc:'Polish gems, craft\naccessories, and run\nyour own shop!'        },
