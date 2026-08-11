@@ -17,7 +17,7 @@ export default function TokeiYomi() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/tokei_yomi_v1.html"
+          src="/games/tokei_yomi_v2.html"
           title="とけいよみ"
           allow="autoplay; fullscreen"
           allowFullScreen

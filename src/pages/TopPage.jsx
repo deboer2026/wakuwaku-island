@@ -985,14 +985,52 @@ const GAME_SVGS = {
   ),
   g_tokei: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100" height="85" rx="12" fill="#ede3ff"/>
-      <rect x="7" y="7" width="24" height="10" rx="4" fill="#6849a8"/><circle cx="14" cy="12" r="2" fill="#ffd24d"/><rect x="19" y="10" width="8" height="3" rx="1.5" fill="#fff"/>
-      <circle cx="40" cy="42" r="23" fill="#fff" stroke="#60408d" strokeWidth="2.5"/>
-      <g stroke="#60408d" strokeWidth="2"><line x1="40" y1="22" x2="40" y2="27"/><line x1="40" y1="57" x2="40" y2="62"/><line x1="20" y1="42" x2="25" y2="42"/><line x1="55" y1="42" x2="60" y2="42"/></g>
-      <line x1="40" y1="42" x2="40" y2="29" stroke="#f06b84" strokeWidth="3" strokeLinecap="round"/><line x1="40" y1="42" x2="53" y2="49" stroke="#3ca6d9" strokeWidth="2.5" strokeLinecap="round"/><circle cx="40" cy="42" r="3" fill="#ffd24d"/>
-      <g fill="#fff" stroke="#7f65aa" strokeWidth="1.2"><rect x="68" y="25" width="23" height="12" rx="4"/><rect x="68" y="42" width="23" height="12" rx="4"/><rect x="68" y="59" width="23" height="12" rx="4"/></g>
-      <path d="M75 31h9M75 48h9M75 65h9" stroke="#60408d" strokeWidth="2" strokeLinecap="round"/>
-      <text x="50" y="14" textAnchor="middle" fontSize="11" fill="white" fontWeight="bold">★</text>
+      <rect width="100" height="85" rx="12" fill="#BFE6FA"/>
+      <path d="M0 60c14-5 26-5 36-2 12 3 24 5 36 2 10-2 19-3 28-1v14a12 12 0 0 1-12 12H12A12 12 0 0 1 0 73z" fill="#8FD180"/>
+      <path d="M0 68c16-4 30-3 42 1 13 4 30 4 58-2v6a12 12 0 0 1-12 12H12A12 12 0 0 1 0 73z" fill="#7BC46E"/>
+      <ellipse cx="14" cy="14" rx="8.5" ry="4.4" fill="#FFFFFF" opacity=".95"/>
+      <ellipse cx="20" cy="15.6" rx="5.6" ry="3.4" fill="#FFFFFF" opacity=".95"/>
+      <ellipse cx="86" cy="12" rx="7.5" ry="4" fill="#FFFFFF" opacity=".88"/>
+      <ellipse cx="30" cy="58" rx="7" ry="5.4" fill="#5FBF6E"/>
+      <ellipse cx="83" cy="56" rx="9" ry="6.8" fill="#54B062"/>
+      <circle cx="37" cy="24" r="5" fill="#F2C25A" stroke="#C98F2C" strokeWidth="1.4"/>
+      <circle cx="63" cy="24" r="5" fill="#F2C25A" stroke="#C98F2C" strokeWidth="1.4"/>
+      <rect x="33.5" y="58" width="5.5" height="10" rx="2.4" fill="#D19B34" transform="rotate(-17 36 63)"/>
+      <rect x="61" y="58" width="5.5" height="10" rx="2.4" fill="#D19B34" transform="rotate(17 64 63)"/>
+      <circle cx="50" cy="43" r="25" fill="#E0A63C"/>
+      <circle cx="50" cy="43" r="22" fill="#F2C25A"/>
+      <circle cx="50" cy="43" r="19" fill="#FFFBEF"/>
+      <g stroke="#4A3B32" strokeWidth="2.2" strokeLinecap="round">
+        <line x1="50" y1="26.5" x2="50" y2="30"/><line x1="50" y1="56" x2="50" y2="59.5"/>
+        <line x1="33.5" y1="43" x2="37" y2="43"/><line x1="63" y1="43" x2="66.5" y2="43"/>
+      </g>
+      <g stroke="#4A3B32" strokeWidth="1.3" strokeLinecap="round" opacity=".7">
+        <line x1="58.5" y1="28.7" x2="57.1" y2="31"/><line x1="64.3" y1="34.5" x2="62" y2="35.9"/>
+        <line x1="64.3" y1="51.5" x2="62" y2="50.1"/><line x1="58.5" y1="57.3" x2="57.1" y2="55"/>
+        <line x1="41.5" y1="57.3" x2="42.9" y2="55"/><line x1="35.7" y1="51.5" x2="38" y2="50.1"/>
+        <line x1="35.7" y1="34.5" x2="38" y2="35.9"/><line x1="41.5" y1="28.7" x2="42.9" y2="31"/>
+      </g>
+      <text x="50" y="37" textAnchor="middle" fontSize="7.5" fontWeight="bold" fill="#3A2C22">12</text>
+      <text x="58.5" y="46" textAnchor="middle" fontSize="7.5" fontWeight="bold" fill="#3A2C22">3</text>
+      <text x="50" y="55.5" textAnchor="middle" fontSize="7.5" fontWeight="bold" fill="#3A2C22">6</text>
+      <text x="41.5" y="46" textAnchor="middle" fontSize="7.5" fontWeight="bold" fill="#3A2C22">9</text>
+      <line x1="50" y1="43" x2="50" y2="32" stroke="#D9463F" strokeWidth="2.4" strokeLinecap="round"/>
+      <circle cx="50" cy="32" r="2.5" fill="#D9463F"/>
+      <line x1="50" y1="43" x2="57.5" y2="48.5" stroke="#3E4A8E" strokeWidth="3" strokeLinecap="round"/>
+      <circle cx="57.5" cy="48.5" r="2.7" fill="#3E4A8E"/>
+      <circle cx="50" cy="43" r="2.7" fill="#F2C25A" stroke="#C98F2C" strokeWidth="1"/>
+      <path d="M13.4 67L11.2 55.6l9.4 5.2z" fill="#F7C5A0"/>
+      <path d="M26.6 67l2.2-11.4-9.4 5.2z" fill="#F7C5A0"/>
+      <path d="M14.4 65.2l-1.3-6.7 5.6 3.1z" fill="#FF9BB5"/>
+      <path d="M25.6 65.2l1.3-6.7-5.6 3.1z" fill="#FF9BB5"/>
+      <circle cx="20" cy="70.5" r="8.6" fill="#F7C5A0"/>
+      <ellipse cx="20" cy="73.6" rx="4.4" ry="3.1" fill="#FFF0E2"/>
+      <circle cx="16.7" cy="68.9" r="1.55" fill="#2A2028"/>
+      <circle cx="23.3" cy="68.9" r="1.55" fill="#2A2028"/>
+      <circle cx="17.3" cy="68.3" r=".55" fill="#FFFFFF"/>
+      <circle cx="23.9" cy="68.3" r=".55" fill="#FFFFFF"/>
+      <ellipse cx="20" cy="71.9" rx="1.4" ry="1" fill="#5A4038"/>
+      <path d="M85 60.5l1.9 3.9 4.3.6-3.1 3 .7 4.3-3.8-2-3.8 2 .7-4.3-3.1-3 4.3-.6z" fill="#FFE566" stroke="#E8A33D" strokeWidth="1.1"/>
     </svg>
   ),
   g_katakana: (
@@ -1303,12 +1341,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'蹦蹦跳跳甜点王国',     desc:'越过软糖车和巧克力河，\n看你能走多远！' },
     ko:{ name:'깡충깡충 과자나라',    desc:'젤리 자동차와 초콜릿 강을\n건너 멀리 가보자!' },
     es:{ name:'Saltitos por Dulcelandia', desc:'¡Cruza autos de gomita y\nríos de chocolate!' } },
-  { id:'g_tokei', route:'/tokei-yomi', icon:'🕐', num:14, color:'#7986CB', stars:3, isNew:true, category:'がくしゅう',
-    ja:{ name:'とけいよみ',         desc:'とけいの はりを よんだり\nあわせたり して あそぼう！' },
-    en:{ name:'Clock Reading',      desc:'Read and match\nthe clock hands!' },
-    zh:{ name:'认识时钟',           desc:'读时钟指针\n或对准时间！' },
-    ko:{ name:'시계 읽기',          desc:'시계 바늘을 읽고\n맞춰봐요!' },
-    es:{ name:'Lectura del Reloj',  desc:'¡Lee y ajusta\nlas manecillas!' } },
+  { id:'g_tokei', route:'/tokei-yomi', icon:'🕐', num:14, color:'#F2C25A', stars:3, isNew:true, category:'がくしゅう',
+    ja:{ name:'とけいよみ',         desc:'あいぼうと いちにちを ぼうけん！\nとけいを よんで すすもう！' },
+    en:{ name:'Clock Reading',      desc:'A day-long adventure!\nRead the clock to move on!' },
+    zh:{ name:'认识时钟',           desc:'和伙伴一起冒险一整天！\n读懂时钟继续前进！' },
+    ko:{ name:'시계 읽기',          desc:'친구와 하루를 모험!\n시계를 읽고 나아가요!' },
+    es:{ name:'Lectura del Reloj',  desc:'¡Una aventura de todo el día!\n¡Lee el reloj y avanza!' } },
   { id:'g_katakana', route:'/katakana-asobi', icon:'🔤', num:15, color:'#29B6F6', stars:3, isNew:true, category:'がくしゅう',
     ja:{ name:'カタカナあそび',     desc:'えや ひらがなを みて\nただしい カタカナを えらぼう！' },
     en:{ name:'Katakana Play',      desc:'Pick the right katakana\nfrom pictures & hiragana!' },
