@@ -584,18 +584,28 @@ const GAME_SVGS = {
   ),
   g13: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="88" cy="12" r="2" fill="white" opacity=".4"/>
-      <ellipse cx="50" cy="45" rx="36" ry="32" fill="#FFF3E0" stroke="#E65100" strokeWidth="2"/>
-      <ellipse cx="56" cy="50" rx="12" ry="10" fill="#FFF3E0" opacity=".9"/>
-      <circle cx="24" cy="38" r="8" fill="#E53935"/>
-      <circle cx="50" cy="20" r="8" fill="#FFD700"/>
-      <circle cx="76" cy="38" r="8" fill="#1565C0"/>
-      <circle cx="62" cy="58" r="7" fill="#66BB6A"/>
-      <circle cx="38" cy="58" r="7" fill="#9C27B0"/>
-      <ellipse cx="38" cy="30" rx="8" ry="5" fill="white" opacity=".3" transform="rotate(-30 38 30)"/>
-      <rect x="70" y="62" width="8" height="20" rx="3" fill="#E53935" stroke="#B71C1C" strokeWidth="1.2"/>
-      <rect x="71" y="60" width="6" height="5" rx="1" fill="#8D6E63"/>
-      <circle cx="50" cy="52" r="5" fill="#FF6B6B" opacity=".7"/>
+      <rect width="100" height="85" rx="12" fill="#CBE9FA"/>
+      <circle cx="84" cy="14" r="8" fill="#FFF3B0" opacity=".8"/>
+      <circle cx="15" cy="18" r="2" fill="#FFFFFF" opacity=".75"/>
+      <circle cx="24" cy="9" r="1.4" fill="#FFFFFF" opacity=".6"/>
+      <path d="M31 12c2.6 3.6 4.2 6 4.2 7.8a4.2 4.2 0 11-8.4 0c0-1.8 1.6-4.2 4.2-7.8z" fill="#E63946" stroke="#A81F2B" strokeWidth="1.5" strokeLinejoin="round"/>
+      <path d="M50 6c2.6 3.6 4.2 6 4.2 7.8a4.2 4.2 0 11-8.4 0c0-1.8 1.6-4.2 4.2-7.8z" fill="#FDD835" stroke="#B58F00" strokeWidth="1.5" strokeLinejoin="round"/>
+      <path d="M69 12c2.6 3.6 4.2 6 4.2 7.8a4.2 4.2 0 11-8.4 0c0-1.8 1.6-4.2 4.2-7.8z" fill="#1E88E5" stroke="#125A9E" strokeWidth="1.5" strokeLinejoin="round"/>
+      <ellipse cx="50" cy="66" rx="40" ry="11" fill="#8FD46A"/>
+      <path d="M14 68c6 9 16 13 36 13s30-4 36-13z" fill="#B08A63"/>
+      <ellipse cx="50" cy="64" rx="33" ry="8" fill="#D9AF7E"/>
+      <path d="M24 40h52l-5.5 17.5A9 9 0 0162 64H38a9 9 0 01-8.5-6.5z" fill="#5C6A7E" stroke="#36404F" strokeWidth="2.4" strokeLinejoin="round"/>
+      <ellipse cx="50" cy="40" rx="26" ry="8.5" fill="#788697" stroke="#36404F" strokeWidth="2.4"/>
+      <ellipse cx="50" cy="40.5" rx="21" ry="6.4" fill="#FB8C00"/>
+      <circle cx="41" cy="39.6" r="4.4" fill="#E63946" opacity=".92"/>
+      <circle cx="58" cy="40.4" r="4.4" fill="#8E24AA" opacity=".85"/>
+      <circle cx="50" cy="38.8" r="3.6" fill="#FDD835" opacity=".95"/>
+      <ellipse cx="43" cy="37.4" rx="4.5" ry="1.5" fill="#FFFFFF" opacity=".45"/>
+      <path d="M27.5 51h45" stroke="#B08A5A" strokeWidth="3" strokeLinecap="round"/>
+      <circle cx="35" cy="65" r="3.2" fill="#4A5665"/>
+      <circle cx="65" cy="65" r="3.2" fill="#4A5665"/>
+      <path d="M19 30l1.5 3.6 3.6 1.5-3.6 1.5L19 40.2l-1.5-3.6L13.9 35l3.6-1.5z" fill="#FFE066"/>
+      <path d="M81 45l1.1 2.7 2.9 1.1-2.9 1.1L81 52.6l-1.1-2.7-2.9-1.1 2.9-1.1z" fill="#FFE066" opacity=".9"/>
     </svg>
   ),
   g14: (
@@ -1131,12 +1141,12 @@ const GAMES = [
     zh:{ name:'加法游戏',             desc:'数动物\n选答案！'                             },
     ko:{ name:'덧셈 게임',             desc:'동물을 세어\n답을 골라요!'                    },
     es:{ name:'Suma',                  desc:'¡Cuenta animales y\nelige la respuesta!'       } },
-  { id:'g13', route:'/iro',            icon:'🎨', num:13, color:'#9C27B0', stars:3, isNew:false, category:'パズル',
-    ja:{ name:'いろあわせ',         desc:'いろを まぜると\nなんいろになるかな？'              },
-    en:{ name:'Color Match',         desc:'Mix colors and find\nthe right answer!'             },
-    zh:{ name:'颜色配对',             desc:'混合颜色\n是什么颜色？'                       },
-    ko:{ name:'색깔 맞추기',           desc:'색을 섞으면\n무슨 색이 될까요?'                },
-    es:{ name:'Colores',               desc:'¡Mezcla colores y\nencontra el resultado!'     } },
+  { id:'g13', route:'/iro',            icon:'🎨', num:13, color:'#7E57C2', stars:5, isNew:true, category:'パズル',
+    ja:{ name:'いろまぜこうぼう3D', desc:'そらの アトリエで えのぐを まぜて\nいろの せいれいを あつめよう！' },
+    en:{ name:'Color Mixing Workshop 3D', desc:'Mix paints in a sky atelier and\ncollect 24 color spirits!' },
+    zh:{ name:'调色工坊3D',           desc:'在天空工坊调颜料，\n收集24个颜色精灵！' },
+    ko:{ name:'색섞기 공방 3D',        desc:'하늘 아틀리에에서 물감을 섞어\n색의 정령을 모아요!' },
+    es:{ name:'Taller de Colores 3D',  desc:'¡Mezcla pinturas en el taller\ny colecciona espíritus de color!' } },
   { id:'g_mura', route:'/mura', icon:'🏡', num:21, color:'#6bb04a', stars:5, isNew:true, category:'そうぞう',
     ja:{ name:'どうぶつのむら',   desc:'やさいをそだてて りょうり！\nどうぶつに とどけよう！' },
     en:{ name:'Animal Village',   desc:'Grow veggies, cook meals,\nand deliver to animals!' },
@@ -1396,7 +1406,7 @@ const BEGINNER_ROUTES = [
 
 /* NEWを乱立させず、直近の代表作だけに絞る。 */
 const FEATURED_NEW_ROUTES = new Set([
-  '/donguri',
+  '/iro',
   '/shabondama',
   '/nijiiro-oukoku',
   '/astral-fang',
