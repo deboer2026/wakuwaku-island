@@ -2418,6 +2418,7 @@ export default function TopPage() {
         kisekaeState={kisekaeState}
         onStateChange={handleKisekaeChange}
         lang={lang}
+        onCoinsChange={setCoins}
       />
 
       {/* ── ショップ ── */}
