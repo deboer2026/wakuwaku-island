@@ -1399,18 +1399,20 @@ const CATEGORY_FILTERS = [
     label:{ja:'ぼうけん', en:'Adventure', zh:'冒险', ko:'모험', es:'Aventura'} },
 ];
 
-/* 棚だけに適用する優先順。未登録のゲームは元の登録順のまま後ろへ並ぶ。 */
-const SHELF_PRIORITY = {
-  asobu: ['/kudamono-catch','/otakara-horihori','/astral-fang','/mahou-nakama'],
-  nerau: ['/donguri','/mori','/sora','/shooting','/block','/sniper'],
-  race: ['/kart','/bike','/neon-drive','/houki','/runner'],
-  kangaeru: ['/nijiiro-oukoku','/doubutsu-puzzle','/kakurenbo','/mahou-meiro','/iro','/kokki'],
-  tsukuru: ['/machi','/mura','/jewelry-master','/nurie'],
-  manabu: ['/katachi','/katakana-asobi','/tokei-yomi'],
-};
-
-function sortShelfItems(items, groupKey) {
-  const ranks = new Map((SHELF_PRIORITY[groupKey] || []).map((route, index) => [route, index]));
+/* Fisher-Yates。呼び出し側で「マウント時に1回だけ」呼ぶことで、以降の再レンダーでは
+   同じ配列を再利用し、順番を固定する。 */
+function shuffleOnce(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+/* ジャンル棚専用: マウント時に決めたroute順(shelfOrderRef)でitemsを並べ替える。
+   フィルターで一部のゲームが除外されても、残ったゲーム同士の相対順はぶれない。 */
+function sortShelfItemsByOrder(items, order) {
+  const ranks = new Map((order || []).map((route, index) => [route, index]));
   return items
     .map((game, index) => ({ game, index }))
     .sort((a, b) => (ranks.has(a.game.route) ? ranks.get(a.game.route) : Number.MAX_SAFE_INTEGER)
@@ -1726,6 +1728,18 @@ export default function TopPage() {
   const [recentRoutes,   setRecentRoutes]   = useState(() => typeof localStorage !== 'undefined' ? getRecentGames() : []);
   const [catKey,  setCatKey]  = useState('all');
   const [ageKey,  setAgeKey]  = useState('all');
+
+  /* ジャンル棚だけ「表示ごとに」ランダム化する。マウント時に1回だけ並びを決め、
+     以降はフィルター切替・きせかえ開閉・BGM/言語切替があっても順番を固定する
+     （「最近あそんだ」「おすすめ」等の意味のあるリストはここでは対象外）。 */
+  const shelfOrderRef = useRef(null);
+  if (!shelfOrderRef.current) {
+    const orders = {};
+    SHELF_GROUPS.forEach(grp => {
+      orders[grp.key] = shuffleOnce(ALL_SHELF_GAMES.filter(grp.match).map(g => g.route));
+    });
+    shelfOrderRef.current = orders;
+  }
 
   const season    = getSeason();
   const daysSince = getDaysSinceUpdate();
@@ -2167,7 +2181,10 @@ export default function TopPage() {
         {SHELF_GROUPS.map(grp => {
           const chip  = CATEGORY_FILTERS.find(c => c.key === catKey) || CATEGORY_FILTERS[0];
           const age   = AGE_FILTERS.find(item => item.key === ageKey) || AGE_FILTERS[0];
-          const items = sortShelfItems(ALL_SHELF_GAMES.filter(grp.match).filter(chip.match).filter(age.match), grp.key);
+          const items = sortShelfItemsByOrder(
+            ALL_SHELF_GAMES.filter(grp.match).filter(chip.match).filter(age.match),
+            shelfOrderRef.current[grp.key]
+          );
           if (items.length === 0) return null;
           return (
             <div className="tp-shelf" key={grp.key}>

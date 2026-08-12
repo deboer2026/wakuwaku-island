@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { getUnlockedItems } from '../utils/coins';
 import { SHOP_ITEMS } from '../utils/shopItems';
 import './Kisekae.css';
@@ -167,41 +167,43 @@ function findKisekaeItem(chara, cat, id) {
 }
 
 export function PrincessSVG({ state }) {
+  const uid = useId();
   const dress = findKisekaeItem('princess','dress',state.dress) ?? KISEKAE_ITEMS.princess.dress[0];
   const crown = findKisekaeItem('princess','crown',state.crown);
   const acc   = findKisekaeItem('princess','accessory',state.accessory);
   const item  = findKisekaeItem('princess','item',state.item);
+  const gSkirt = `${uid}-psSkirt`, gDrape = `${uid}-psDrape`, gHair = `${uid}-psHair`, gGold = `${uid}-psGold`, gIris = `${uid}-psIris`;
 
   return (
     <svg className="ksk-svg" viewBox="0 0 72 114" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="psSkirt" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={gSkirt} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%"  stopColor={dress.c2}/>
           <stop offset="55%" stopColor={dress.c1}/>
           <stop offset="100%" stopColor={dress.c1}/>
         </linearGradient>
-        <linearGradient id="psDrape" x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id={gDrape} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%"  stopColor="#ffffff" stopOpacity="0.5"/>
           <stop offset="100%" stopColor="#ffffff" stopOpacity="0.05"/>
         </linearGradient>
-        <linearGradient id="psHair" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={gHair} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%"  stopColor={dress.hair}/>
           <stop offset="100%" stopColor={dress.hair} stopOpacity="0.82"/>
         </linearGradient>
-        <linearGradient id="psGold" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={gGold} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#FFE58A"/>
           <stop offset="100%" stopColor="#E6A700"/>
         </linearGradient>
-        <radialGradient id="psIris" cx="0.4" cy="0.35" r="0.8">
+        <radialGradient id={gIris} cx="0.4" cy="0.35" r="0.8">
           <stop offset="0%" stopColor="#7A5238"/>
           <stop offset="100%" stopColor="#3B2416"/>
         </radialGradient>
       </defs>
 
       {/* ── ボールガウン(釣鐘型スカート) ── */}
-      <path d="M36,58 C25,64 13,79 11,102 Q13,106 18,105 Q22,108 28,106 Q32,109 36,107 Q40,109 44,106 Q50,108 54,105 Q59,106 61,102 C59,79 47,64 36,58 Z" fill="url(#psSkirt)"/>
+      <path d="M36,58 C25,64 13,79 11,102 Q13,106 18,105 Q22,108 28,106 Q32,109 36,107 Q40,109 44,106 Q50,108 54,105 Q59,106 61,102 C59,79 47,64 36,58 Z" fill={`url(#${gSkirt})`}/>
       {/* オーバースカートのドレープ */}
-      <path d="M36,60 C29,66 21,78 19,99 Q30,88 36,86 Q42,88 53,99 C51,78 43,66 36,60 Z" fill="url(#psDrape)"/>
+      <path d="M36,60 C29,66 21,78 19,99 Q30,88 36,86 Q42,88 53,99 C51,78 43,66 36,60 Z" fill={`url(#${gDrape})`}/>
       {/* 裾レース(スカラップ) */}
       <path d="M12,101 Q15,97 18,101 Q21,97 25,101 Q28,97 32,101 Q35,97 39,101 Q43,97 46,101 Q50,97 53,101 Q56,97 60,101 L61,104 Q48,108 36,108 Q24,108 11,104 Z" fill="#fff" opacity="0.85"/>
       {/* スカートのきらめき */}
@@ -211,10 +213,10 @@ export function PrincessSVG({ state }) {
       <circle cx="51" cy="78" r="0.9" fill="#fff" opacity="0.65"/>
 
       {/* ── ウエストとサッシュリボン ── */}
-      <path d="M28,58 Q36,62 44,58 L44,62 Q36,66 28,62 Z" fill="url(#psGold)"/>
+      <path d="M28,58 Q36,62 44,58 L44,62 Q36,66 28,62 Z" fill={`url(#${gGold})`}/>
       <path d="M33,61 Q30,55 26,58 Q29,63 33,63 Z" fill={dress.c2}/>
       <path d="M39,61 Q42,55 46,58 Q43,63 39,63 Z" fill={dress.c2}/>
-      <circle cx="36" cy="61" r="2.4" fill="url(#psGold)" stroke="#C98F00" strokeWidth="0.5"/>
+      <circle cx="36" cy="61" r="2.4" fill={`url(#${gGold})`} stroke="#C98F00" strokeWidth="0.5"/>
 
       {/* ── ボディス(上身頃) ── */}
       <path d="M28,50 Q36,47 44,50 L44,59 Q36,63 28,59 Z" fill={dress.c1}/>
@@ -227,28 +229,29 @@ export function PrincessSVG({ state }) {
 
       {/* ── 首・ネックレス ── */}
       <rect x="33" y="46" width="6" height="8" rx="3" fill="#FFCCBC"/>
-      <path d="M31,51 Q36,55 41,51" stroke="url(#psGold)" strokeWidth="1.2" fill="none"/>
+      <path d="M31,51 Q36,55 41,51" stroke={`url(#${gGold})`} strokeWidth="1.2" fill="none"/>
       <circle cx="36" cy="54.5" r="1.6" fill="#FF6FA5" stroke="#C98F00" strokeWidth="0.5"/>
 
       {/* ── 顔 ── */}
       <circle cx="36" cy="37" r="17" fill="#FFE0B2"/>
       {/* 髪(後ろ+サイドの巻き髪) */}
-      <ellipse cx="36" cy="27" rx="18" ry="14" fill="url(#psHair)"/>
-      <path d="M18,32 C14,42 17,50 21,53 C24,49 24,40 23,34 Z" fill="url(#psHair)"/>
-      <path d="M54,32 C58,42 55,50 51,53 C48,49 48,40 49,34 Z" fill="url(#psHair)"/>
-      <circle cx="21.5" cy="50" r="3.4" fill="url(#psHair)"/>
-      <circle cx="50.5" cy="50" r="3.4" fill="url(#psHair)"/>
+      <ellipse cx="36" cy="27" rx="18" ry="14" fill={`url(#${gHair})`}/>
+      <path d="M18,32 C14,42 17,50 21,53 C24,49 24,40 23,34 Z" fill={`url(#${gHair})`}/>
+      <path d="M54,32 C58,42 55,50 51,53 C48,49 48,40 49,34 Z" fill={`url(#${gHair})`}/>
+      <circle cx="21.5" cy="50" r="3.4" fill={`url(#${gHair})`}/>
+      <circle cx="50.5" cy="50" r="3.4" fill={`url(#${gHair})`}/>
       {/* 前髪ハイライト */}
       <path d="M25,22 Q30,17 36,17" stroke="rgba(255,255,255,0.5)" strokeWidth="1.6" fill="none" strokeLinecap="round"/>
 
-      {/* ── ティアラ ── */}
-      {crown?.emoji
+      {/* ── ティアラ(デフォルト'おうかん'もベクターで統一) ── */}
+      {crown?.emoji && state.crown !== 'c0'
         ? <text x="36" y="20" fontSize="15" textAnchor="middle" dominantBaseline="middle">{crown.emoji}</text>
-        : <>
-            <path d="M24,22 Q36,17 48,22 L47,25 Q36,21 25,25 Z" fill="url(#psGold)" stroke="#C98F00" strokeWidth="0.6"/>
-            <path d="M30,21 L31.5,15 L34,20 Z" fill="url(#psGold)" stroke="#C98F00" strokeWidth="0.5"/>
-            <path d="M34.5,19.5 L36,12 L37.5,19.5 Z" fill="url(#psGold)" stroke="#C98F00" strokeWidth="0.5"/>
-            <path d="M38,20 L40.5,15 L42,21 Z" fill="url(#psGold)" stroke="#C98F00" strokeWidth="0.5"/>
+        : crown?.id !== 'c7' && (
+        <>
+            <path d="M24,22 Q36,17 48,22 L47,25 Q36,21 25,25 Z" fill={`url(#${gGold})`} stroke="#C98F00" strokeWidth="0.6"/>
+            <path d="M30,21 L31.5,15 L34,20 Z" fill={`url(#${gGold})`} stroke="#C98F00" strokeWidth="0.5"/>
+            <path d="M34.5,19.5 L36,12 L37.5,19.5 Z" fill={`url(#${gGold})`} stroke="#C98F00" strokeWidth="0.5"/>
+            <path d="M38,20 L40.5,15 L42,21 Z" fill={`url(#${gGold})`} stroke="#C98F00" strokeWidth="0.5"/>
             <circle cx="36" cy="13.5" r="2.2" fill="#FF4E8B"/>
             <circle cx="35.4" cy="12.9" r="0.7" fill="#fff" opacity="0.9"/>
             <circle cx="31.5" cy="16.5" r="1.2" fill="#69D2FF"/>
@@ -256,11 +259,11 @@ export function PrincessSVG({ state }) {
             <circle cx="27" cy="22.5" r="0.9" fill="#fff"/>
             <circle cx="45" cy="22.5" r="0.9" fill="#fff"/>
           </>
-      }
+      )}
 
       {/* ── 目(グラデ虹彩+二重ハイライト) ── */}
-      <ellipse cx="29.5" cy="36" rx="4.2" ry="4.6" fill="url(#psIris)"/>
-      <ellipse cx="42.5" cy="36" rx="4.2" ry="4.6" fill="url(#psIris)"/>
+      <ellipse cx="29.5" cy="36" rx="4.2" ry="4.6" fill={`url(#${gIris})`}/>
+      <ellipse cx="42.5" cy="36" rx="4.2" ry="4.6" fill={`url(#${gIris})`}/>
       <circle cx="31"   cy="34.2" r="1.7" fill="#fff"/>
       <circle cx="44"   cy="34.2" r="1.7" fill="#fff"/>
       <circle cx="28.3" cy="37.5" r="0.8" fill="#fff" opacity="0.8"/>
@@ -278,8 +281,8 @@ export function PrincessSVG({ state }) {
       <ellipse cx="22.5" cy="41" rx="5" ry="3.2" fill="#FFB3C1" opacity="0.6"/>
       <ellipse cx="49.5" cy="41" rx="5" ry="3.2" fill="#FFB3C1" opacity="0.6"/>
       {/* イヤリング */}
-      <circle cx="19.5" cy="42.5" r="1.4" fill="url(#psGold)"/>
-      <circle cx="52.5" cy="42.5" r="1.4" fill="url(#psGold)"/>
+      <circle cx="19.5" cy="42.5" r="1.4" fill={`url(#${gGold})`}/>
+      <circle cx="52.5" cy="42.5" r="1.4" fill={`url(#${gGold})`}/>
 
       {/* アクセサリ */}
       {acc?.emoji && <text x="36" y="52" fontSize="9" textAnchor="middle" dominantBaseline="middle">{acc.emoji}</text>}
@@ -297,42 +300,44 @@ export function PrincessSVG({ state }) {
    SVG: プリンス
 ════════════════════════════════════════════════════ */
 export function PrinceSVG({ state }) {
+  const uid = useId();
   const dress = findKisekaeItem('prince','dress',state.dress) ?? KISEKAE_ITEMS.prince.dress[0];
   const crown = findKisekaeItem('prince','crown',state.crown);
   const acc   = findKisekaeItem('prince','accessory',state.accessory);
   const item  = findKisekaeItem('prince','item',state.item);
   const eyebrowColor = dress.hair === '#212121' ? '#555' : dress.hair;
+  const gCape = `${uid}-prCape`, gCoat = `${uid}-prCoat`, gHair = `${uid}-prHair`, gGold = `${uid}-prGold`, gIris = `${uid}-prIris`;
 
   return (
     <svg className="ksk-svg" viewBox="0 0 72 114" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="prCape" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={gCape} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%"  stopColor={dress.c2}/>
           <stop offset="100%" stopColor={dress.c2} stopOpacity="0.78"/>
         </linearGradient>
-        <linearGradient id="prCoat" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={gCoat} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%"  stopColor={dress.c1}/>
           <stop offset="100%" stopColor={dress.c1} stopOpacity="0.85"/>
         </linearGradient>
-        <linearGradient id="prHair" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={gHair} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%"  stopColor={dress.hair}/>
           <stop offset="100%" stopColor={dress.hair} stopOpacity="0.85"/>
         </linearGradient>
-        <linearGradient id="prGold" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={gGold} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#FFE58A"/>
           <stop offset="100%" stopColor="#E6A700"/>
         </linearGradient>
-        <radialGradient id="prIris" cx="0.4" cy="0.35" r="0.8">
+        <radialGradient id={gIris} cx="0.4" cy="0.35" r="0.8">
           <stop offset="0%" stopColor="#553B22"/>
           <stop offset="100%" stopColor="#241708"/>
         </radialGradient>
       </defs>
 
       {/* ── マント(流れる形+金縁) ── */}
-      <path d="M20,52 C10,64 6,84 9,100 Q17,104 24,100 L24,74 Q21,62 24,54 Z" fill="url(#prCape)"/>
-      <path d="M52,52 C62,64 66,84 63,100 Q55,104 48,100 L48,74 Q51,62 48,54 Z" fill="url(#prCape)"/>
-      <path d="M9,100 Q17,104 24,100" stroke="url(#prGold)" strokeWidth="1.6" fill="none"/>
-      <path d="M63,100 Q55,104 48,100" stroke="url(#prGold)" strokeWidth="1.6" fill="none"/>
+      <path d="M20,52 C10,64 6,84 9,100 Q17,104 24,100 L24,74 Q21,62 24,54 Z" fill={`url(#${gCape})`}/>
+      <path d="M52,52 C62,64 66,84 63,100 Q55,104 48,100 L48,74 Q51,62 48,54 Z" fill={`url(#${gCape})`}/>
+      <path d="M9,100 Q17,104 24,100" stroke={`url(#${gGold})`} strokeWidth="1.6" fill="none"/>
+      <path d="M63,100 Q55,104 48,100" stroke={`url(#${gGold})`} strokeWidth="1.6" fill="none"/>
 
       {/* ── ズボン ── */}
       <rect x="23" y="74" width="11" height="28" rx="4" fill={dress.c2}/>
@@ -341,24 +346,24 @@ export function PrinceSVG({ state }) {
       <path d="M43.5,76 L43.5,98" stroke="rgba(255,255,255,0.25)" strokeWidth="1.2"/>
 
       {/* ── 上着(ロイヤルコート) ── */}
-      <path d="M20,54 Q36,49 52,54 L52,76 Q36,80 20,76 Z" fill="url(#prCoat)"/>
+      <path d="M20,54 Q36,49 52,54 L52,76 Q36,80 20,76 Z" fill={`url(#${gCoat})`}/>
       {/* 金トリム縁取り */}
-      <path d="M20,54 Q36,49 52,54" stroke="url(#prGold)" strokeWidth="1.4" fill="none"/>
-      <path d="M36,52 L36,78" stroke="url(#prGold)" strokeWidth="1.2"/>
+      <path d="M20,54 Q36,49 52,54" stroke={`url(#${gGold})`} strokeWidth="1.4" fill="none"/>
+      <path d="M36,52 L36,78" stroke={`url(#${gGold})`} strokeWidth="1.2"/>
       {/* エポーレット(肩章)+フリンジ */}
-      <ellipse cx="21" cy="54.5" rx="5" ry="3" fill="url(#prGold)" stroke="#C98F00" strokeWidth="0.5"/>
-      <ellipse cx="51" cy="54.5" rx="5" ry="3" fill="url(#prGold)" stroke="#C98F00" strokeWidth="0.5"/>
+      <ellipse cx="21" cy="54.5" rx="5" ry="3" fill={`url(#${gGold})`} stroke="#C98F00" strokeWidth="0.5"/>
+      <ellipse cx="51" cy="54.5" rx="5" ry="3" fill={`url(#${gGold})`} stroke="#C98F00" strokeWidth="0.5"/>
       <path d="M17,56 L17,60 M19.5,57 L19.5,61 M22.5,57 L22.5,61" stroke="#E6A700" strokeWidth="1" strokeLinecap="round"/>
       <path d="M49.5,57 L49.5,61 M52.5,57 L52.5,61 M55,56 L55,60" stroke="#E6A700" strokeWidth="1" strokeLinecap="round"/>
       {/* サッシュ(斜めたすき)+勲章 */}
       <path d="M23,55 L47,74 L44,77 L20,58 Z" fill="#fff" opacity="0.85"/>
-      <path d="M23,55 L47,74" stroke="url(#prGold)" strokeWidth="0.8" opacity="0.7"/>
-      <circle cx="42" cy="70" r="2.6" fill="url(#prGold)" stroke="#C98F00" strokeWidth="0.6"/>
+      <path d="M23,55 L47,74" stroke={`url(#${gGold})`} strokeWidth="0.8" opacity="0.7"/>
+      <circle cx="42" cy="70" r="2.6" fill={`url(#${gGold})`} stroke="#C98F00" strokeWidth="0.6"/>
       <path d="M42,68 l0.6,1.2 1.3,0.2 -0.95,0.9 0.25,1.3 -1.2,-0.6 -1.2,0.6 0.25,-1.3 -0.95,-0.9 1.3,-0.2 Z" fill="#fff" opacity="0.9"/>
       {/* 金ボタン */}
-      <circle cx="31" cy="60" r="1.4" fill="url(#prGold)"/>
-      <circle cx="31" cy="66" r="1.4" fill="url(#prGold)"/>
-      <circle cx="31" cy="72" r="1.4" fill="url(#prGold)"/>
+      <circle cx="31" cy="60" r="1.4" fill={`url(#${gGold})`}/>
+      <circle cx="31" cy="66" r="1.4" fill={`url(#${gGold})`}/>
+      <circle cx="31" cy="72" r="1.4" fill={`url(#${gGold})`}/>
       {/* 立ち襟 */}
       <path d="M28,51 L33,54 L33,49 Z" fill={dress.c2}/>
       <path d="M44,51 L39,54 L39,49 Z" fill={dress.c2}/>
@@ -369,19 +374,20 @@ export function PrinceSVG({ state }) {
       {/* ── 顔 ── */}
       <circle cx="36" cy="33" r="17" fill="#FFE0B2"/>
       {/* 髪 */}
-      <ellipse cx="36" cy="23" rx="18" ry="13" fill="url(#prHair)"/>
-      <path d="M18,28 C16,36 18,41 21,44 C23,40 23,33 22,29 Z" fill="url(#prHair)"/>
-      <path d="M54,28 C56,36 54,41 51,44 C49,40 49,33 50,29 Z" fill="url(#prHair)"/>
+      <ellipse cx="36" cy="23" rx="18" ry="13" fill={`url(#${gHair})`}/>
+      <path d="M18,28 C16,36 18,41 21,44 C23,40 23,33 22,29 Z" fill={`url(#${gHair})`}/>
+      <path d="M54,28 C56,36 54,41 51,44 C49,40 49,33 50,29 Z" fill={`url(#${gHair})`}/>
       {/* 前髪の流れ */}
       <path d="M26,18 Q31,14 37,15" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
       <path d="M40,15 Q45,15 48,18" stroke="rgba(255,255,255,0.25)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
 
-      {/* ── 王冠 ── */}
-      {crown?.emoji
+      {/* ── 王冠(デフォルト'おうかん'もベクターで統一) ── */}
+      {crown?.emoji && state.crown !== 'c0'
         ? <text x="36" y="16" fontSize="15" textAnchor="middle" dominantBaseline="middle">{crown.emoji}</text>
-        : <>
-            <path d="M24,21 L26,11 L31,17 L36,9 L41,17 L46,11 L48,21 Q36,17.5 24,21 Z" fill="url(#prGold)" stroke="#C98F00" strokeWidth="0.7"/>
-            <path d="M24.5,21 Q36,17.5 47.5,21 L47.5,23.5 Q36,20 24.5,23.5 Z" fill="url(#prGold)" stroke="#C98F00" strokeWidth="0.5"/>
+        : crown?.id !== 'c7' && (
+        <>
+            <path d="M24,21 L26,11 L31,17 L36,9 L41,17 L46,11 L48,21 Q36,17.5 24,21 Z" fill={`url(#${gGold})`} stroke="#C98F00" strokeWidth="0.7"/>
+            <path d="M24.5,21 Q36,17.5 47.5,21 L47.5,23.5 Q36,20 24.5,23.5 Z" fill={`url(#${gGold})`} stroke="#C98F00" strokeWidth="0.5"/>
             <circle cx="36" cy="10.5" r="2.4" fill="#2196F3"/>
             <circle cx="35.3" cy="9.8" r="0.8" fill="#fff" opacity="0.9"/>
             <circle cx="26.5" cy="12.5" r="1.2" fill="#FF4E8B"/>
@@ -389,11 +395,11 @@ export function PrinceSVG({ state }) {
             <circle cx="30" cy="21" r="0.9" fill="#fff"/>
             <circle cx="42" cy="21" r="0.9" fill="#fff"/>
           </>
-      }
+      )}
 
       {/* ── 目 ── */}
-      <ellipse cx="29.5" cy="32" rx="4" ry="4.4" fill="url(#prIris)"/>
-      <ellipse cx="42.5" cy="32" rx="4" ry="4.4" fill="url(#prIris)"/>
+      <ellipse cx="29.5" cy="32" rx="4" ry="4.4" fill={`url(#${gIris})`}/>
+      <ellipse cx="42.5" cy="32" rx="4" ry="4.4" fill={`url(#${gIris})`}/>
       <circle cx="31"   cy="30.3" r="1.6" fill="#fff"/>
       <circle cx="44"   cy="30.3" r="1.6" fill="#fff"/>
       <circle cx="28.4" cy="33.4" r="0.7" fill="#fff" opacity="0.8"/>
@@ -415,8 +421,8 @@ export function PrinceSVG({ state }) {
       {/* ── ブーツ(金カフ付き) ── */}
       <rect x="20" y="100" width="14" height="8" rx="3.5" fill={dress.c2}/>
       <rect x="38" y="100" width="14" height="8" rx="3.5" fill={dress.c2}/>
-      <rect x="20" y="100" width="14" height="2.4" rx="1.2" fill="url(#prGold)"/>
-      <rect x="38" y="100" width="14" height="2.4" rx="1.2" fill="url(#prGold)"/>
+      <rect x="20" y="100" width="14" height="2.4" rx="1.2" fill={`url(#${gGold})`}/>
+      <rect x="38" y="100" width="14" height="2.4" rx="1.2" fill={`url(#${gGold})`}/>
 
       {/* きらめき */}
       <path d="M60,56 l1,2.2 2.2,1 -2.2,1 -1,2.2 -1,-2.2 -2.2,-1 2.2,-1 Z" fill="#FFE58A" opacity="0.9"/>
