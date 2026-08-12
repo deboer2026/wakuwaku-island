@@ -5,7 +5,7 @@ import { startBGM, stopBGM, toggleBGM } from '../utils/audio';
 import { transitionTo } from '../utils/transition';
 import { getPlayCount } from '../utils/playCounter';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
-import { KisekaeCharacters, KisekaePanel, DEFAULT_KISEKAE } from '../components/Kisekae';
+import { KisekaeCharacters, KisekaePanel, DEFAULT_KISEKAE, normalizeKisekaeState } from '../components/Kisekae';
 import LoginBonus from '../components/LoginBonus';
 import Shop from '../components/Shop';
 import { getCoins, checkLoginBonus, claimLoginBonus } from '../utils/coins';
@@ -1696,7 +1696,7 @@ export default function TopPage() {
   const [kisekaeState,setKisekaeState]= useState(() => {
     try {
       const saved = typeof localStorage !== 'undefined' && localStorage.getItem('kisekae_state');
-      return saved ? JSON.parse(saved) : DEFAULT_KISEKAE;
+      return saved ? normalizeKisekaeState(JSON.parse(saved)) : DEFAULT_KISEKAE;
     } catch { return DEFAULT_KISEKAE; }
   });
   const [panelOpen,   setPanelOpen]   = useState(false);

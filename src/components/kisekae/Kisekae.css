@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   KISEKAE  —  着せ替え スタイル
+   KISEKAE  —  着せ替え スタイル (Phase2)
 ═══════════════════════════════════════════════ */
 
 /* ── アニメーション ── */
@@ -24,6 +24,30 @@
   50%       { box-shadow: 0 0 14px 4px rgba(0, 212, 255, 0.5); }
 }
 
+@keyframes ksk-equip-star-out {
+  0%   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2); }
+}
+
+@keyframes ksk-item-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+@keyframes ksk-preview-jump {
+  0%, 100% { transform: translateY(0); }
+  40%       { transform: translateY(-10px); }
+  60%       { transform: translateY(-6px); }
+}
+
+@keyframes ksk-bubble-in {
+  0%   { opacity: 0; transform: translate(-50%, 6px) scale(0.7); }
+  15%  { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  85%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -6px) scale(0.95); }
+}
+
 /* ── タイトルゾーン（キャラクターのアンカー） ── */
 .ksk-title-zone {
   position: relative;
@@ -31,14 +55,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* キャラクターが立つ余白をタイトル下に確保 */
   padding-bottom: 40px;
 }
 
 /* ── キャラクターラップ ── */
 .ksk-chara-wrap {
   position: absolute;
-  bottom: 0;          /* タイトルゾーン下端（サブタイトル直下）に配置 */
+  bottom: 0;
   background: none;
   border: none;
   cursor: pointer;
@@ -51,7 +74,6 @@
   animation: ksk-float 3.5s ease-in-out infinite;
 }
 
-/* スマホ: タイトル直下左・右に寄せる */
 .ksk-chara-wrap--left  { left:  4px; }
 .ksk-chara-wrap--right { right: 4px; animation-duration: 4.1s; animation-delay: 0.6s; }
 
@@ -69,25 +91,27 @@
   transition: transform 0.2s ease;
 }
 
-/* ── SVG 本体（睫毛・宝石・髪の束感などが見える大きさへ拡大） ── */
+/* ── SVG 本体（睫毛・宝石・髪の束感・服のシルエットが見える大きさ） ── */
 .ksk-svg {
-  width: 92px;   /* スマホ基準サイズ */
+  width: 92px;
   height: 146px;
   display: block;
   transition: filter 0.2s;
 }
 
-/* ── ペット絵文字 ── */
+/* ── ペット（SVG化。絵文字は使わない） ── */
 .ksk-pet {
   position: absolute;
-  font-size: 18px;
-  bottom: 6px;
+  width: 26px;
+  height: 26px;
+  bottom: 4px;
   animation: ksk-float 2.4s ease-in-out infinite;
 }
-.ksk-pet--left  { left:  -14px; animation-delay: 0.4s; }
-.ksk-pet--right { right: -14px; animation-delay: 0.9s; }
+.ksk-pet svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
+.ksk-pet--left  { left:  -16px; animation-delay: 0.4s; }
+.ksk-pet--right { right: -16px; animation-delay: 0.9s; }
 
-/* ── ラベルバッジ（常時表示・金枠プレート。hover前提にしない） ── */
+/* ── ラベルバッジ（常時表示・金枠プレート） ── */
 @keyframes ksk-badge-pulse {
   0%, 100% { transform: scale(1); }
   50%       { transform: scale(1.045); }
@@ -119,11 +143,12 @@
   .ksk-pet { animation: none; }
   .ksk-chara-tab.active { animation: none; }
   .ksk-panel { animation: none; }
+  .ksk-preview.ksk-jump { animation: none !important; }
+  .ksk-react-bubble { animation: ksk-bubble-in 0.15s ease forwards !important; }
 }
 
 /* ── 👗きがえボタン（右上） ── */
 .ksk-top-btn {
-  /* tp-top-btn のスタイルを継承しつつ強調 */
   background: linear-gradient(135deg, rgba(255, 150, 200, 0.25), rgba(180, 100, 255, 0.25)) !important;
   border-color: rgba(255, 150, 200, 0.5) !important;
   animation: ksk-btn-pulse 2s ease infinite;
@@ -139,11 +164,23 @@
   animation: ksk-sparkle-out 0.72s ease forwards;
 }
 
+/* ── 装備変更ミニ演出の星粒 ── */
+.ksk-equip-star {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1200;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #FFF6C8, #FFE58A 60%, #E6A700);
+  box-shadow: 0 0 4px rgba(255, 215, 120, .8);
+  animation: ksk-equip-star-out 0.6s ease-out forwards;
+}
+
 /* ══════════════════════════════════════════════
    パネル
 ══════════════════════════════════════════════ */
 
-/* ── オーバーレイ（背景） ── */
 .ksk-overlay {
   position: fixed;
   inset: 0;
@@ -154,12 +191,12 @@
   backdrop-filter: blur(5px);
 }
 
-/* ── パネル本体（宝石箱：深いプラム外装＋ベルベット内装＋金縁） ── */
+/* 宝石箱：深いプラム外装＋ベルベット内装＋金縁 */
 .ksk-panel {
   width: 100%;
   max-width: 640px;
   margin: 0 auto;
-  max-height: 84vh;
+  max-height: 88vh;
   background:
     radial-gradient(120% 70% at 50% 0%, rgba(180, 90, 130, 0.30), transparent 60%),
     linear-gradient(170deg, #8E3D63 0%, #6B2E4F 55%, #3E1730 100%);
@@ -176,12 +213,11 @@
   scrollbar-color: rgba(255, 229, 138, 0.4) transparent;
 }
 
-/* ── パネルヘッダー ── */
 .ksk-panel-hd {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .ksk-panel-title {
@@ -214,7 +250,7 @@
 .ksk-chara-tabs {
   display: flex;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .ksk-chara-tab {
@@ -240,6 +276,38 @@
   color: #FFE58A;
 }
 .ksk-tab-icon { font-size: 24px; line-height: 1; }
+
+/* ── プレビュー（選択中キャラを大きく表示し、装備変更の反応を見せる） ── */
+.ksk-preview {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 6px 0 10px;
+  min-height: 150px;
+}
+.ksk-preview .ksk-svg {
+  width: 108px;
+  height: 172px;
+  filter: drop-shadow(0 6px 8px rgba(0,0,0,.3));
+}
+.ksk-preview.ksk-jump { animation: ksk-preview-jump 0.5s ease; }
+.ksk-react-bubble {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  background: #fff;
+  color: #6B2E4F;
+  font-weight: 900;
+  font-size: 13px;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  padding: 5px 12px;
+  border-radius: 999px;
+  box-shadow: 0 3px 10px rgba(0,0,0,.3);
+  animation: ksk-bubble-in 1.2s ease forwards;
+  pointer-events: none;
+  white-space: nowrap;
+}
 
 /* ── カテゴリ行 ── */
 .ksk-cat-row {
@@ -276,17 +344,17 @@
   color: #fff;
 }
 
-/* ── アイテムグリッド（台座は明るいオフホワイトに保ち、暗くなりすぎない） ── */
+/* ── アイテムグリッド ── */
 .ksk-items-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .ksk-item-btn {
   position: relative;
-  padding: 10px 4px 7px;
+  padding: 8px 4px 7px;
   border: 2px solid rgba(255, 255, 255, 0.5);
   border-radius: 14px;
   background: #FFF6FA;
@@ -296,9 +364,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 3px;
   transition: all 0.12s;
-  min-height: 70px;
+  min-height: 62px;
 }
 .ksk-item-btn.active {
   background: #FFFBEF;
@@ -310,16 +379,28 @@
   transform: scale(1.05);
 }
 .ksk-item-btn:active { transform: scale(0.95); }
+.ksk-item-btn.ksk-item-pop { animation: ksk-item-pop 0.26s ease; }
 
-.ksk-ib-emoji {
-  font-size: 24px;
-  line-height: 1;
-  min-height: 28px;
+.ksk-ib-swatch {
   display: flex;
   align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  width: 100%;
+}
+.ksk-swatch-svg { width: 40px; height: 26px; }
+.ksk-swatch-svg--item { width: 22px; height: 22px; }
+.ksk-swatch-pet { display: block; width: 28px; height: 28px; }
+.ksk-swatch-dot {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.8);
+  box-shadow: 0 1px 3px rgba(0,0,0,.25);
 }
 .ksk-ib-name {
-  font-size: 10px;
+  font-size: 9.5px;
   color: rgba(74, 42, 56, 0.75);
   text-align: center;
   line-height: 1.2;
@@ -332,27 +413,6 @@
   color: #C98F00;
   font-weight: 900;
 }
-
-/* ── ミニプレビュー ── */
-.ksk-mini-preview {
-  display: flex;
-  justify-content: center;
-  gap: 28px;
-  padding: 14px 0 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.ksk-mini-chara {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-.ksk-mini-chara .ksk-svg {
-  width: 52px;
-  height: 83px;
-}
-.ksk-mini-chara > span { font-size: 16px; }
 
 /* ── レスポンシブ ── */
 
@@ -367,10 +427,4 @@
   }
   .ksk-chara-wrap--left  { left:  10px; }
   .ksk-chara-wrap--right { right: 10px; }
-}
-
-/* ミニプレビュー内は常に小さく */
-.ksk-mini-chara .ksk-svg {
-  width: 52px !important;
-  height: 83px !important;
 }
