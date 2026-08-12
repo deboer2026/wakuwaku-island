@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<script src="/games/analytics_bridge.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>しゃぼんだまポン 3D</title>
@@ -1108,6 +1109,8 @@ function applySkills(){
 }
 function resetBubbles(){for(let i=0;i<pool.length;i++){killBubble(pool[i]);}}
 function startStage(i){
+  WakuwakuAnalytics.startGame({game_id:'/shabondama',game_name:'しゃぼんだまポン',game_category:'casual'});
+  WakuwakuAnalytics.stageStart(i+1);
   G.stage=i;
   const S=STAGES[i];
   maybeTuto(i,function(){
@@ -1260,6 +1263,7 @@ function gameOver(){
   setTimeout(()=>showResult(false,0,isNew),700);
 }
 function showResult(cleared,star,isNew){
+  if(cleared)WakuwakuAnalytics.stageComplete({game_id:'/shabondama',game_name:'しゃぼんだまポン',game_category:'casual',stage_id:G.stage+1,stars:star,score:Math.floor(G.score),result:'complete'});
   $('res-ttl').textContent=cleared?'クリア！':'また あそぼう！';
   const sp=$('res-stars').children;
   for(let i=0;i<3;i++)sp[i].classList.toggle('on',i<star);
@@ -1268,6 +1272,7 @@ function showResult(cleared,star,isNew){
   $('r-score').textContent=Math.floor(G.score);
   $('res-new').classList.toggle('on',!!isNew);
   const last=(G.stage>=STAGE_COUNT-1);
+  if(cleared&&last)WakuwakuAnalytics.gameComplete({game_id:'/shabondama',game_name:'しゃぼんだまポン',game_category:'casual',stage_id:G.stage+1,stars:star,score:Math.floor(G.score),result:'complete'});
   $('btn-next').style.display=(cleared&&!last)?'block':'none';
   $('btn-retry').textContent=cleared?'↻ もういちど':'↻ リトライ';
   showOv('ov-res');

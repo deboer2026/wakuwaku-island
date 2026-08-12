@@ -1,98 +1,106 @@
-/**
- * Google Analytics 4 Event Tracking Utility
- * Provides helper functions to track game events and user interactions
- */
-
+/** Shared, privacy-safe GA4 event layer for Wakuwaku Island. */
 import { incrementPlayCount } from './playCounter';
 
-/**
- * Track when a user starts playing a game
- * @param {string} gameName - Name of the game (e.g., 'Shabondama', 'KudamonoCatch')
- */
-export function trackGameStart(gameName) {
-  // 累計プレイ数をlocalStorageに記録（トップページのカウンター表示用）
+const SITE_SCOPE = 'wakuwaku_island';
+const ALLOWED_KEYS = new Set([
+  'site_scope', 'hostname', 'page_path', 'page_title', 'content_type',
+  'content_id', 'content_name', 'series_name', 'game_id', 'game_name',
+  'game_category', 'source_context', 'stage_id', 'result', 'stars',
+  'score', 'engagement_seconds', 'value', 'source_page'
+]);
+const sent = new Map();
+
+function cleanValue(value) {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
+  if (typeof value === 'boolean') return value;
+  return String(value).slice(0, 100);
+}
+
+function commonParams(params = {}) {
+  const output = {
+    site_scope: SITE_SCOPE,
+    hostname: window.location.hostname,
+    page_path: window.location.pathname
+  };
+  Object.entries(params).forEach(([key, value]) => {
+    if (!ALLOWED_KEYS.has(key)) return;
+    const clean = cleanValue(value);
+    if (clean !== undefined && clean !== '') output[key] = clean;
+  });
+  return output;
+}
+
+export function trackEvent(eventName, params = {}, options = {}) {
+  if (typeof window === 'undefined') return false;
+  const name = String(eventName || '').trim();
+  if (!/^[a-z][a-z0-9_]{0,39}$/.test(name)) return false;
+  const payload = commonParams(params);
+  const dedupeKey = options.dedupeKey || `${name}:${JSON.stringify(payload)}`;
+  const now = Date.now();
+  if (sent.has(dedupeKey) && now - sent.get(dedupeKey) < (options.dedupeMs || 1500)) return false;
+  sent.set(dedupeKey, now);
+  window.__WW_ANALYTICS_EVENTS__ = window.__WW_ANALYTICS_EVENTS__ || [];
+  window.__WW_ANALYTICS_EVENTS__.push({ event: name, params: payload });
+  if (window.__WW_ANALYTICS_EVENTS__.length > 100) window.__WW_ANALYTICS_EVENTS__.shift();
+  if (typeof window.gtag !== 'function') return false;
+  window.gtag('event', name, payload);
+  return true;
+}
+
+export function trackPageView(path, title) {
+  return trackEvent('page_view', {
+    page_path: path || window.location.pathname,
+    page_title: title || document.title
+  }, { dedupeKey: `page_view:${path}`, dedupeMs: 5000 });
+}
+
+export function trackGameSelect(game, sourceContext) {
+  return trackEvent('game_select', {
+    game_id: game?.route || game?.id || '',
+    game_name: game?.name || '',
+    game_category: game?.category || '',
+    source_context: sourceContext || 'unknown'
+  });
+}
+
+export function trackGameView(game) {
+  return trackEvent('game_view', {
+    game_id: game?.route || '',
+    game_name: game?.name || '',
+    game_category: game?.category || ''
+  }, { dedupeKey: `game_view:${game?.route}`, dedupeMs: 5000 });
+}
+
+export function trackGameStart(gameName, extra = {}) {
   incrementPlayCount();
-
-  if (window.gtag) {
-    gtag('event', 'game_start', {
-      game_name: gameName,
-      timestamp: new Date().toISOString()
-    });
-  }
+  return trackEvent('game_start', { game_name: gameName, ...extra }, {
+    dedupeKey: `game_start:${extra.game_id || gameName}`, dedupeMs: 5000
+  });
 }
 
-/**
- * Track when a user clears/completes a game stage or the entire game
- * @param {string} gameName - Name of the game
- * @param {number} score - Final score or points earned
- * @param {number} stage - Current stage or level (default 1)
- */
 export function trackGameClear(gameName, score, stage = 1) {
-  if (window.gtag) {
-    gtag('event', 'game_clear', {
-      game_name: gameName,
-      score: score,
-      stage: stage,
-      timestamp: new Date().toISOString()
-    });
-  }
+  return trackEvent('stage_complete', { game_name: gameName, score, stage_id: stage, result: 'complete' });
 }
 
-/**
- * Track when a user's game ends (game over, out of lives, etc.)
- * @param {string} gameName - Name of the game
- * @param {number} score - Final score or points earned
- * @param {number} stage - Current stage or level when game ended (default 1)
- */
 export function trackGameOver(gameName, score, stage = 1) {
-  if (window.gtag) {
-    gtag('event', 'game_over', {
-      game_name: gameName,
-      score: score,
-      stage: stage,
-      timestamp: new Date().toISOString()
-    });
-  }
+  return trackEvent('game_complete', { game_name: gameName, score, stage_id: stage, result: 'ended' });
 }
 
-/**
- * Track when a user achieves a new high score
- * @param {string} gameName - Name of the game
- * @param {number} score - New high score
- */
 export function trackNewHighScore(gameName, score) {
-  if (window.gtag) {
-    gtag('event', 'new_high_score', {
-      game_name: gameName,
-      high_score: score,
-      timestamp: new Date().toISOString()
-    });
-  }
+  return trackEvent('new_high_score', { game_name: gameName, score });
 }
 
-/**
- * Track when user toggles sound/mute
- * @param {boolean} isMuted - Whether audio is muted (true) or unmuted (false)
- */
 export function trackAudioToggle(isMuted) {
-  if (window.gtag) {
-    gtag('event', 'audio_toggle', {
-      muted: isMuted,
-      timestamp: new Date().toISOString()
-    });
-  }
+  return trackEvent('audio_toggle', { result: isMuted ? 'muted' : 'unmuted' });
 }
 
-/**
- * Track custom events
- * @param {string} eventName - Name of the event
- * @param {object} eventData - Event parameters (optional)
- */
-export function trackEvent(eventName, eventData = {}) {
-  if (window.gtag) {
-    gtag('event', eventName, {
-      ...eventData,
-      timestamp: new Date().toISOString()
-    });
-  }
+export function handleGameAnalyticsMessage(event, gameMeta = {}) {
+  if (event.origin !== window.location.origin || !event.data || event.data.type !== 'wakuwaku-analytics') return;
+  const eventName = event.data.eventName;
+  const params = { ...gameMeta, ...(event.data.params || {}) };
+  trackEvent(eventName, params, {
+    dedupeKey: `${eventName}:${params.game_id || ''}:${params.stage_id || ''}:${params.engagement_seconds || ''}`,
+    dedupeMs: eventName === 'game_engagement' ? 1000 : 5000
+  });
 }

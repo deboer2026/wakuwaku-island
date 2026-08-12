@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<script src="/games/analytics_bridge.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>どうぶつパズル 3D</title>
@@ -671,6 +672,8 @@ function fitCamera(){
 
 /* ================= build stage ================= */
 function buildStage(idx){
+  WakuwakuAnalytics.startGame({game_id:'/doubutsu-puzzle',game_name:'どうぶつパズル',game_category:'puzzle'});
+  WakuwakuAnalytics.stageStart(idx+1);
   clearWorld();
   const st=STAGES[idx];
   G.stageIdx=idx;
@@ -1073,6 +1076,7 @@ function buildMap(){
 }
 function showResult(stars){
   const st=STAGES[G.stageIdx];
+  WakuwakuAnalytics.stageComplete({game_id:'/doubutsu-puzzle',game_name:'どうぶつパズル',game_category:'puzzle',stage_id:G.stageIdx+1,stars:stars,result:'complete'});
   document.getElementById('r-stars').textContent=starStr(stars);
   document.getElementById('r-title').textContent=(stars===3)?'かんぺき！':'クリア！';
   let msg='ミス '+G.miss+'かい でクリア！<br>';
@@ -1081,6 +1085,7 @@ function showResult(stars){
   else msg+='クリアおめでとう！もういちど やってみよう！';
   document.getElementById('r-msg').innerHTML=msg;
   const isLast=(G.stageIdx>=STAGES.length-1);
+  if(isLast)WakuwakuAnalytics.gameComplete({game_id:'/doubutsu-puzzle',game_name:'どうぶつパズル',game_category:'puzzle',stage_id:G.stageIdx+1,stars:stars,result:'complete'});
   document.getElementById('r-next').style.display=isLast?'none':'';
   if(isLast&&stars>0)document.getElementById('r-title').textContent='ぜんステージ クリア！';
   document.getElementById('hud').classList.remove('on');

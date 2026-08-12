@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<script src="/games/analytics_bridge.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>かずあそび</title>
@@ -433,6 +434,8 @@ function renderMap(){
 
 /* ===== Stage flow ===== */
 function startStage(i){
+  WakuwakuAnalytics.startGame({game_id:'/kazu-asobi',game_name:'かずあそび',game_category:'education'});
+  WakuwakuAnalytics.stageStart(i+1);
   ensureBgm();
   curStage = i; qIdx = 0; misses = 0; combo = 0; qResults = [];
   bgTheme = STAGES[i].theme;
@@ -660,6 +663,8 @@ function pop(text,color){
 /* ===== End stage ===== */
 function endStage(){
   var stars = misses===0 ? 3 : misses<=2 ? 2 : 1;
+  WakuwakuAnalytics.stageComplete({game_id:'/kazu-asobi',game_name:'かずあそび',game_category:'education',stage_id:curStage+1,stars:stars,result:'complete'});
+  if(curStage>=STAGES.length-1)WakuwakuAnalytics.gameComplete({game_id:'/kazu-asobi',game_name:'かずあそび',game_category:'education',stage_id:curStage+1,stars:stars,result:'complete'});
   if (stars > prog.stars[curStage]){ prog.stars[curStage] = stars; saveProg(prog); }
   document.getElementById('hud').style.display='none';
   document.getElementById('game-area').style.display='none';

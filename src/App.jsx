@@ -49,9 +49,20 @@ import TermsPage from './pages/TermsPage'
 import ParentsPage from './pages/ParentsPage'
 import { recordRecentGame } from './utils/recentGames'
 import { recordGamePlay } from './utils/playHistory'
+import { handleGameAnalyticsMessage, trackGameView, trackPageView } from './utils/analytics'
 
 function GameWithSEO({ route, children }) {
   const meta = GAME_META[route];
+  useEffect(() => {
+    const game = { route, name: meta?.name || '', category: meta?.category || '' };
+    const onMessage = (event) => handleGameAnalyticsMessage(event, {
+      game_id: game.route,
+      game_name: game.name,
+      game_category: game.category
+    });
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [route, meta]);
   if (!meta) return children;
   return (
     <>
@@ -92,6 +103,7 @@ function RouteTracker() {
     }
     // ルート遷移ごとに最上部へ戻す（ゲームは必ず開始画面から見せる）
     window.scrollTo(0, 0);
+    trackPageView(location.pathname, document.title);
 
     navCount.current += 1;
     // 着地の初回では立てず、サイト内で動いた2回目以降にフラグを立てる
@@ -101,6 +113,8 @@ function RouteTracker() {
     if (GAME_ROUTES.has(location.pathname)) {
       recordRecentGame(location.pathname);
       recordGamePlay(location.pathname);
+      const meta = GAME_META[location.pathname];
+      trackGameView({ route: location.pathname, name: meta?.name || '', category: meta?.category || '' });
     }
   }, [location.pathname]);
   return null;

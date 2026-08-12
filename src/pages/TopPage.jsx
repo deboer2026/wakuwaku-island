@@ -2181,7 +2181,7 @@ export default function TopPage() {
                 key={game.route}
                 game={game}
                 lang={lang}
-                onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY); }}
+                onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY, { name:(game[lang] || game.ja).name, category:game.category, sourceContext:'top_featured' }); }}
               />
             ))}
           </div>
@@ -2255,7 +2255,7 @@ export default function TopPage() {
                     key={game.id}
                     game={game}
                     lang={lang}
-                    onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY); }}
+                    onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY, { name:(game[lang] || game.ja).name, category:game.category, sourceContext:'category' }); }}
                   />
                 ))}
               </HorizontalRail>
@@ -2274,7 +2274,7 @@ export default function TopPage() {
                 <button
                   key={g.route}
                   className="tp-recent-card"
-                  onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY); }}
+                  onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY, { name:(g[lang] || g.ja).name, category:g.category, sourceContext:'recent' }); }}
                 >
                   <span className="tp-recent-icon">{g.icon}</span>
                   <span className="tp-recent-name">{(g[lang] || g.ja).name}</span>
@@ -2295,7 +2295,7 @@ export default function TopPage() {
                 <button
                   key={g.route}
                   className="tp-recent-card"
-                  onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY); }}
+                  onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY, { name:(g[lang] || g.ja).name, category:g.category, sourceContext:'recommended' }); }}
                 >
                   <span className="tp-recent-icon">{g.icon}</span>
                   <span className="tp-recent-name">{(g[lang] || g.ja).name}</span>
@@ -2357,7 +2357,7 @@ export default function TopPage() {
               {!rouletteSpin && (
                 <div className="tp-roulette-actions">
                   <button className="tp-roulette-play"
-                    onClick={(e) => { closeRoulette(); spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY); }}>
+                    onClick={(e) => { closeRoulette(); spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY, { name:(g[lang] || g.ja).name, category:g.category, sourceContext:'recommended' }); }}>
                     ▶ {{ja:'これであそぶ！', en:'Play this!', zh:'就玩这个！', ko:'이걸로 놀기!', es:'¡Jugar!'}[lang] || 'これであそぶ！'}
                   </button>
                   <button className="tp-roulette-retry" onClick={startRoulette}>

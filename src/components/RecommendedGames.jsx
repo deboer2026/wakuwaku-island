@@ -25,7 +25,7 @@ export default function RecommendedGames({ currentRoute }) {
           <button
             key={g.route}
             className="rec-card"
-            onClick={(e) => transitionTo(navigate, g.route, e.clientX, e.clientY)}
+            onClick={(e) => transitionTo(navigate, g.route, e.clientX, e.clientY, { name:g[lang] || g.ja, category:g.category, sourceContext:'recommended' })}
           >
             <span className="rec-icon">{g.icon}</span>
             <span className="rec-name">{g[lang] || g.ja}</span>

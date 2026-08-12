@@ -1,14 +1,16 @@
 // src/utils/transition.js
 // ===== Screen transition effects =====
+import { trackGameSelect } from './analytics'
 
 const STAR_EMOJIS = ['⭐', '🌟', '✨', '💫']
 
 /**
  * Top → Game transition: gold disc expands from click point + star burst (600ms)
  */
-export function transitionTo(navigate, path, cx, cy) {
+export function transitionTo(navigate, path, cx, cy, analytics = {}) {
   if (window._wwTransitioning) return
   window._wwTransitioning = true
+  trackGameSelect({ route: path, ...analytics }, analytics.sourceContext || analytics.source_context || 'unknown')
 
   const x = cx ?? window.innerWidth / 2
   const y = cy ?? window.innerHeight / 2
