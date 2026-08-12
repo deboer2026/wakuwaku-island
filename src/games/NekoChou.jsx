@@ -17,8 +17,8 @@ export default function NekoChou() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/neko_chou_v1.html"
-          title="ねことちょうちょ"
+          src="/games/neko_chou_v2.html"
+          title="ねことちょうちょ 〜ひみつの花園〜"
           allow="autoplay; fullscreen"
           allowFullScreen
           sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
