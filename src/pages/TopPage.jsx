@@ -5,7 +5,7 @@ import { startBGM, stopBGM, toggleBGM } from '../utils/audio';
 import { transitionTo } from '../utils/transition';
 import { getPlayCount } from '../utils/playCounter';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
-import { KisekaeCharacters, KisekaePanel, DEFAULT_KISEKAE, normalizeKisekaeState } from '../components/Kisekae';
+import { KisekaeCharacters, KisekaePanel, DEFAULT_KISEKAE, normalizeKisekaeState, syncSpecialUnlocks } from '../components/Kisekae';
 import LoginBonus from '../components/LoginBonus';
 import Shop from '../components/Shop';
 import { getCoins, checkLoginBonus, claimLoginBonus } from '../utils/coins';
@@ -1696,9 +1696,21 @@ export default function TopPage() {
   const [kisekaeState,setKisekaeState]= useState(() => {
     try {
       const saved = typeof localStorage !== 'undefined' && localStorage.getItem('kisekae_state');
-      return saved ? normalizeKisekaeState(JSON.parse(saved)) : DEFAULT_KISEKAE;
-    } catch { return DEFAULT_KISEKAE; }
+      return normalizeKisekaeState(saved ? JSON.parse(saved) : null);
+    } catch { return normalizeKisekaeState(null); }
   });
+
+  /* Phase4: マウント時にあそび実績(ちがうゲームを遊んだ数)を再評価し、★★★を
+     sticky解放する。既存ユーザーも遡及解放。ここでは演出は出さず状態のみ同期する
+     (演出はきせかえPanelを開いた時にKisekaePanel側で行う)。 */
+  useEffect(() => {
+    setKisekaeState(prev => {
+      const { state: synced, newlyUnlocked } = syncSpecialUnlocks(prev);
+      if (newlyUnlocked.length === 0) return prev;
+      try { localStorage.setItem('kisekae_state', JSON.stringify(synced)); } catch {}
+      return synced;
+    });
+  }, []);
   const [panelOpen,   setPanelOpen]   = useState(false);
   const [panelChara,  setPanelChara]  = useState('princess');
   const [shopOpen,    setShopOpen]    = useState(false);

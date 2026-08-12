@@ -142,6 +142,36 @@ export function CrownArt({ kind, gGold, headX = 36, headTopY = 21, accent = '#FF
       </g>
     );
   }
+  /* ── ★★★実績スペシャル: ほしのティアラ(Princess) ── */
+  if (kind === 'starTiara') {
+    return (
+      <g>
+        <path d={`M${cx-13},${y+2} Q${cx},${y-3} ${cx+13},${y+2} L${cx+12},${y+5} Q${cx},${y+1} ${cx-12},${y+5} Z`} fill={`url(#${gGold})`} stroke="#C98F00" strokeWidth="0.6"/>
+        <StarShape cx={cx-8} cy={y-1} r={2.1} fill="#FFF6D8" stroke="#E6A700" strokeWidth="0.35"/>
+        <StarShape cx={cx+8} cy={y-1} r={2.1} fill="#FFF6D8" stroke="#E6A700" strokeWidth="0.35"/>
+        <StarShape cx={cx} cy={y-9.5} r={1.6} fill="#FFF6D8" stroke="#E6A700" strokeWidth="0.3"/>
+        <path d={`M${cx-3.4},${y-1} L${cx},${y-7.6} L${cx+3.4},${y-1} L${cx},${y+2} Z`} fill="#B7E9FF" stroke="#5CB7E0" strokeWidth="0.5"/>
+        <path d={`M${cx},${y-7.6} L${cx-1.6},${y-1} L${cx},${y-2.4} Z`} fill="#E6FBFF" opacity="0.85"/>
+        <circle cx={cx-1} cy={y-4.6} r="0.8" fill="#fff" opacity="0.95"/>
+        <circle cx={cx-11.5} cy={y+3} r="1" fill="#fff" opacity="0.85"/>
+        <circle cx={cx+11.5} cy={y+3} r="1" fill="#fff" opacity="0.85"/>
+      </g>
+    );
+  }
+  /* ── ★★★実績スペシャル: ほしのクラウン(Prince) ── */
+  if (kind === 'starCrown') {
+    return (
+      <g>
+        <path d={`M${cx-12},${y+3} L${cx-12},${y-1} L${cx-6},${y+2} L${cx-2},${y-6} L${cx+2},${y-6} L${cx+6},${y+2} L${cx+12},${y-1} L${cx+12},${y+3} Z`}
+          fill={`url(#${gGold})`} stroke="#C98F00" strokeWidth="0.6" strokeLinejoin="round"/>
+        <rect x={cx-12.5} y={y+2.6} width="25" height="2.4" rx="1" fill={`url(#${gGold})`} stroke="#C98F00" strokeWidth="0.4"/>
+        <StarShape cx={cx} cy={y-9} r={2.6} fill="#FFF6D8" stroke="#E6A700" strokeWidth="0.4"/>
+        <circle cx={cx-1} cy={y-9.6} r="0.7" fill="#fff" opacity="0.9"/>
+        <circle cx={cx-6} cy={y-0.5} r="1" fill="#8FE0FF"/>
+        <circle cx={cx+6} cy={y-0.5} r="1" fill="#8FE0FF"/>
+      </g>
+    );
+  }
   return null;
 }
 
@@ -298,6 +328,28 @@ export function PrincessOutfit({ kind, gSkirt, gDrape, gGold, c1, c2 }) {
           <path d="M28,50 Q36,46 44,50 L44,59 Q36,63 28,59 Z" fill={c2}/>
         </g>
       );
+    /* ── ★★★実績スペシャル: ようせいドレス ── */
+    case 'starGown':
+      return (
+        <g>
+          <path d="M36,60 C26,66 16,80 15,101 Q25,94 36,92 Q47,94 57,101 C56,80 46,66 36,60 Z" fill={`url(#${gSkirt})`}/>
+          <path d="M36,56 C22,61 8,78 6,100 Q13,104 20,99 Q17,80 27,65 Z" fill="#fff" opacity="0.32"/>
+          <path d="M36,56 C50,61 64,78 66,100 Q59,104 52,99 Q55,80 45,65 Z" fill="#fff" opacity="0.32"/>
+          <StarShape cx={14} cy={90} r={2.2} fill="#fff" opacity="0.8"/>
+          <StarShape cx={58} cy={90} r={2.2} fill="#fff" opacity="0.8"/>
+          <StarShape cx={36} cy={99} r={1.8} fill="#FFF6D8" opacity="0.9"/>
+          <circle cx="24" cy="80" r="1" fill="#fff" opacity="0.75"/>
+          <circle cx="48" cy="83" r="1.1" fill="#fff" opacity="0.7"/>
+          <path d="M28,58 Q36,62 44,58 L44,62 Q36,66 28,62 Z" fill={`url(#${gGold})`}/>
+          <path d="M28,50 Q36,47 44,50 L44,59 Q36,63 28,59 Z" fill={c1}/>
+          <ellipse cx="25" cy="53" rx="4.5" ry="5" fill={c2}/>
+          <ellipse cx="47" cy="53" rx="4.5" ry="5" fill={c2}/>
+          <path d="M20,56 Q14,62 16,70 Q19,64 24,62" fill="#fff" opacity="0.5"/>
+          <path d="M52,56 Q58,62 56,70 Q53,64 48,62" fill="#fff" opacity="0.5"/>
+          <path d="M23,57 Q19,64 21,71" stroke="#fff" strokeWidth="4" fill="none" strokeLinecap="round"/>
+          <path d="M49,57 Q53,64 51,71" stroke="#fff" strokeWidth="4" fill="none" strokeLinecap="round"/>
+        </g>
+      );
     case 'ballgown':
     default:
       return (
@@ -367,6 +419,27 @@ export function PrinceOutfit({ kind, gCape, gCoat, gGold, c1, c2 }) {
           <path d="M22,55 Q36,50 50,55 L48,78 Q36,82 24,78 Z" fill={c1}/>
           <path d="M8,101 Q16,105 23,100" stroke={`url(#${gGold})`} strokeWidth="1.6" fill="none"/>
           <path d="M64,101 Q56,105 49,100" stroke={`url(#${gGold})`} strokeWidth="1.6" fill="none"/>
+        </g>
+      );
+    /* ── ★★★実績スペシャル: てんくうマント ── */
+    case 'skyCape':
+      return (
+        <g>
+          <path d="M15,50 C2,66 -3,94 3,112 Q15,117 24,111 L24,72 Q19,60 23,52 Z" fill={`url(#${gCape})`}/>
+          <path d="M57,50 C70,66 75,94 69,112 Q57,117 48,111 L48,72 Q53,60 49,52 Z" fill={`url(#${gCape})`}/>
+          <path d="M3,112 Q15,117 24,111" stroke={`url(#${gGold})`} strokeWidth="1.8" fill="none"/>
+          <path d="M69,112 Q57,117 48,111" stroke={`url(#${gGold})`} strokeWidth="1.8" fill="none"/>
+          <StarShape cx={12} cy={78} r={1.8} fill="#FFF6D8" opacity="0.85"/>
+          <StarShape cx={9} cy={96} r="1.6" fill="#FFF6D8" opacity="0.75"/>
+          <StarShape cx={60} cy={78} r={1.8} fill="#FFF6D8" opacity="0.85"/>
+          <StarShape cx={63} cy={96} r="1.6" fill="#FFF6D8" opacity="0.75"/>
+          <rect x="24" y="76" width="10" height="26" rx="4" fill={c2}/>
+          <rect x="38" y="76" width="10" height="26" rx="4" fill={c2}/>
+          <path d="M22,55 Q36,50 50,55 L48,78 Q36,82 24,78 Z" fill={c1}/>
+          <circle cx="21" cy="55" r="3.4" fill={`url(#${gGold})`} stroke="#C98F00" strokeWidth="0.5"/>
+          <circle cx="51" cy="55" r="3.4" fill={`url(#${gGold})`} stroke="#C98F00" strokeWidth="0.5"/>
+          <circle cx="20.3" cy="54.3" r="1" fill="#fff" opacity="0.85"/>
+          <circle cx="50.3" cy="54.3" r="1" fill="#fff" opacity="0.85"/>
         </g>
       );
     case 'jacket':
@@ -541,6 +614,9 @@ const PET_COLORS = {
   butterfly:{body:'#9A7EFF',belly:'#D9CCFF',accent:'#6a55cc'},
   panda:{body:'#FAFAFA',belly:'#FFFFFF',accent:'#2A2028'},
   unicorn:{body:'#FFFFFF',belly:'#FFF0FA',accent:'#C9A6F0'},
+  unicornJewel:{body:'#EDE3FB',belly:'#FFFFFF',accent:'#9B6FE0'},
+  unicornLight:{body:'#FFF8EA',belly:'#FFE9F5',accent:'#E6A700'},
+  dragonMini:{body:'#FFD37A',belly:'#FFF3D9',accent:'#C98F00'},
   bear:{body:'#B08A5A',belly:'#F0DCC2',accent:'#6a4a28'},
   lion:{body:'#F2C25A',belly:'#FFF0C8',accent:'#C98F2C'},
   tiger:{body:'#F2A245',belly:'#FFF0DC',accent:'#3A2A18'},
@@ -579,6 +655,37 @@ export function PetSVG({ kind }) {
           <ellipse cx="10" cy="6" rx="4" ry="5" fill={c.body}/>
           <ellipse cx="30" cy="6" rx="4" ry="5" fill={c.body}/>
           <path d="M20,-2 L17,10 L23,10 Z" fill="#FFE58A" stroke="#E6A700" strokeWidth="0.5"/>
+        </>;
+      /* ★★Shop: ジュエルユニコーン — 宝石つきの角、耳元に小さな飾り */
+      case 'unicornJewel':
+        return <>
+          <ellipse cx="10" cy="6" rx="4" ry="5" fill={c.body}/>
+          <ellipse cx="30" cy="6" rx="4" ry="5" fill={c.body}/>
+          <path d="M20,-2 L17,10 L23,10 Z" fill="#FFE58A" stroke="#E6A700" strokeWidth="0.5"/>
+          <circle cx="20" cy="6" r="1.6" fill="#8FE0FF" stroke="#3a97c9" strokeWidth="0.4"/>
+          <circle cx="19.5" cy="5.5" r="0.5" fill="#fff" opacity="0.9"/>
+          <circle cx="9" cy="3" r="1.1" fill="#9B6FE0"/>
+          <circle cx="31" cy="3" r="1.1" fill="#9B6FE0"/>
+        </>;
+      /* ★★★実績: ひかりのユニコーン — 金+宝石の角、虹色のたてがみを伴う */
+      case 'unicornLight':
+        return <>
+          <ellipse cx="10" cy="6" rx="4" ry="5" fill={c.body}/>
+          <ellipse cx="30" cy="6" rx="4" ry="5" fill={c.body}/>
+          <path d="M20,-3 L16.5,11 L23.5,11 Z" fill="#FFE58A" stroke="#E6A700" strokeWidth="0.5"/>
+          <path d="M20,-3 L18,11 L20,11 Z" fill="#FFF6D8" opacity="0.85"/>
+          <circle cx="20" cy="4.5" r="1.8" fill="#FF9BC4" stroke="#E6A700" strokeWidth="0.5"/>
+          <circle cx="19.3" cy="3.8" r="0.6" fill="#fff" opacity="0.95"/>
+        </>;
+      /* ★★★実績: ちびドラゴン — 金の角と小さな翼 */
+      case 'dragonMini':
+        return <>
+          <circle cx="12" cy="4" r="4.6" fill={c.body}/>
+          <circle cx="28" cy="4" r="4.6" fill={c.body}/>
+          <circle cx="12" cy="4" r="2.2" fill="#fff"/>
+          <circle cx="28" cy="4" r="2.2" fill="#fff"/>
+          <path d="M13,-1 L11,-6 L15,-2 Z" fill="#FFE58A" stroke="#E6A700" strokeWidth="0.4"/>
+          <path d="M27,-1 L29,-6 L25,-2 Z" fill="#FFE58A" stroke="#E6A700" strokeWidth="0.4"/>
         </>;
       case 'frog': case 'dragon':
         return <>
@@ -620,8 +727,37 @@ export function PetSVG({ kind }) {
         return <circle cx="34" cy="30" r="3.2" fill="#fff"/>;
       case 'unicorn': case 'horse':
         return <path d="M32,30 Q42,32 40,42" stroke={c.accent} strokeWidth="3" fill="none" strokeLinecap="round"/>;
-      case 'wolf': case 'dragon':
+      case 'unicornJewel':
+        return <path d="M32,30 Q43,31 42,40" stroke="#9B6FE0" strokeWidth="3" fill="none" strokeLinecap="round"/>;
+      case 'unicornLight':
+        return <path d="M32,30 Q44,32 43,42" stroke="#FF9BC4" strokeWidth="3.2" fill="none" strokeLinecap="round"/>;
+      case 'wolf': case 'dragon': case 'dragonMini':
         return <path d="M32,30 Q40,30 40,22" stroke={c.body} strokeWidth="3.6" fill="none" strokeLinecap="round"/>;
+      default:
+        return null;
+    }
+  };
+  /* ── たてがみ／羽(角以外での見た目差)。unicorn系と小竜のみ描画 ── */
+  const maneShape = () => {
+    switch (kind) {
+      case 'unicornJewel':
+        return <path d="M27,10 Q33,14 29,22 Q34,20 31,28" stroke="#9B6FE0" strokeWidth="2.6" fill="none" strokeLinecap="round" opacity="0.85"/>;
+      case 'unicornLight':
+        return (
+          <g opacity="0.92">
+            <path d="M26,9 Q34,13 28,22" stroke="#FF9BC4" strokeWidth="2.4" fill="none" strokeLinecap="round"/>
+            <path d="M27,12 Q36,17 30,26" stroke="#8FE0FF" strokeWidth="2.2" fill="none" strokeLinecap="round"/>
+            <path d="M27,16 Q35,22 29,30" stroke="#FFE58A" strokeWidth="2" fill="none" strokeLinecap="round"/>
+          </g>
+        );
+      case 'dragonMini':
+        return (
+          <g>
+            <path d="M9,20 Q1,16 3,9 Q7,14 12,15 Z" fill={c.accent} opacity="0.9"/>
+            <path d="M31,20 Q39,16 37,9 Q33,14 28,15 Z" fill={c.accent} opacity="0.9"/>
+            <SparkleMark cx={20} cy={27} r={1.6} fill="#FFF6D8" opacity="0.85"/>
+          </g>
+        );
       default:
         return null;
     }
@@ -629,6 +765,7 @@ export function PetSVG({ kind }) {
   return (
     <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
       {kind !== 'butterfly' && tailShape()}
+      {maneShape()}
       {earShape()}
       {kind === 'butterfly' ? (
         <>

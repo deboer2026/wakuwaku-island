@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useId } from 'react';
-import { CATS, KISEKAE_ITEMS, DEFAULT_KISEKAE, normalizeKisekaeState, findKisekaeItem, getCategoryItems, isFieldOwned, triedKey } from './data';
+import { CATS, KISEKAE_ITEMS, DEFAULT_KISEKAE, normalizeKisekaeState, findKisekaeItem, getCategoryItems, isFieldOwned, triedKey, syncSpecialUnlocks } from './data';
 import { PrincessSVG, PrinceSVG } from './Character';
 import { CrownArt, HairBack, HairFront, PrincessOutfit, PrinceOutfit, ItemArt, PetSVG } from './parts';
 import { getCoins, spendCoins, unlockItem } from '../../utils/coins';
 import './Kisekae.css';
 
-export { KISEKAE_ITEMS, DEFAULT_KISEKAE, normalizeKisekaeState };
+export { KISEKAE_ITEMS, DEFAULT_KISEKAE, normalizeKisekaeState, syncSpecialUnlocks };
 
 /* ════════════════════════════════════════════════════
    キラキラエフェクト(既存踏襲)
@@ -53,6 +53,35 @@ function spawnEquipBurst(el) {
 
 function isReducedMotion() {
   return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+/* ★★★実績解放の演出: 通常の装備演出より少し多めの星粒＋柔らかいリング。
+   全画面フラッシュや高速点滅は使わない。 */
+function spawnSpecialBurst(el) {
+  if (!el) return;
+  const reduce = isReducedMotion();
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2, cy = rect.top + rect.height * 0.45;
+  const ring = document.createElement('div');
+  ring.className = 'ksk-special-ring';
+  ring.style.cssText = `left:${cx}px;top:${cy}px;`;
+  document.body.appendChild(ring);
+  setTimeout(() => { if (ring.parentNode) ring.remove(); }, reduce ? 400 : 800);
+
+  const n = reduce ? 6 : (16 + Math.floor(Math.random() * 5));
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement('div');
+    s.className = 'ksk-equip-star ksk-equip-star--special';
+    const a = (i / n) * Math.PI * 2;
+    const d = 26 + Math.random() * 24;
+    s.style.cssText = [
+      `left:${cx}px`, `top:${cy}px`,
+      `--dx:${(Math.cos(a) * d).toFixed(1)}px`,
+      `--dy:${(Math.sin(a) * d).toFixed(1)}px`,
+    ].join(';');
+    document.body.appendChild(s);
+    setTimeout(() => { if (s.parentNode) s.remove(); }, reduce ? 300 : 700);
+  }
 }
 
 /* ════════════════════════════════════════════════════
@@ -124,8 +153,9 @@ export function KisekaeCharacters({ kisekaeState, onOpen, lang }) {
   const psPet = findKisekaeItem('princess', 'pet', kisekaeState.princess.pet);
   const prPet = findKisekaeItem('prince',   'pet', kisekaeState.prince.pet);
   const tried = kisekaeState.tried || [];
+  const specialUnlocked = kisekaeState.specialUnlocked || [];
   const charaHasNew = (chara) => CATS.some(c =>
-    getCategoryItems(chara, c.id).some(i => i.shopId && i.owned && !tried.includes(triedKey(chara, c.id, i.id)))
+    getCategoryItems(chara, c.id, specialUnlocked).some(i => (i.shopId || i.special) && i.owned && !tried.includes(triedKey(chara, c.id, i.id)))
   );
 
   return (
@@ -203,6 +233,42 @@ function PurchaseConfirm({ item, cat, chara, coins, lang, onBuy, onCancel, onPla
   );
 }
 
+/* ════════════════════════════════════════════════════
+   ★★★未解放スペシャルの説明ミニパネル(購入不可・条件表示のみ)
+════════════════════════════════════════════════════ */
+function SpecialLockedInfo({ item, chara, cat, lang, onClose, onPlayGames }) {
+  const dots = Array.from({ length: item.requirement }, (_, i) => i < item.progress);
+  return (
+    <div
+      className="ksk-buy-overlay"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onTouchEnd={(e)  => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="ksk-buy-card ksk-buy-card--special">
+        <div className="ksk-buy-preview"><ItemSwatch chara={chara} cat={cat} item={item}/></div>
+        <div className="ksk-buy-name">★★★ {item.name}</div>
+        <div className="ksk-special-dots">
+          {dots.map((filled, i) => <span key={i} className={`ksk-progress-dot${filled ? ' filled' : ''}`}/>)}
+        </div>
+        <div className="ksk-buy-short ksk-buy-short--soft">
+          {lang === 'en'
+            ? `Play ${item.requirement} different games to get this!`
+            : `ちがうゲームを ${item.requirement}こ あそぶと もらえるよ！`}
+        </div>
+        <div className="ksk-buy-btns">
+          <button className="ksk-buy-btn ksk-buy-btn--play" onClick={onPlayGames}>{lang === 'en' ? 'See games' : 'ゲームを みる'}</button>
+          <button className="ksk-buy-btn ksk-buy-btn--no" onClick={onClose}>{lang === 'en' ? 'Close' : 'とじる'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RareBadge({ rare }) {
+  if (!rare || rare < 1) return null;
+  return <span className={`ksk-rare-badge${rare === 3 ? ' ksk-rare-badge--special' : ''}`}>{'★'.repeat(rare)}</span>;
+}
+
 const SLOT_FIELDS = ['crown', 'hair', 'outfit', 'dress', 'item', 'pet'];
 
 /* ════════════════════════════════════════════════════
@@ -246,6 +312,7 @@ export function KisekaePanel({ isOpen, initialChara, onClose, kisekaeState, onSt
   const [reactMsg, setReactMsg] = useState(null);
   const [coins, setCoins] = useState(() => typeof localStorage !== 'undefined' ? getCoins() : 0);
   const [pendingBuy, setPendingBuy] = useState(null); // { item, cat, chara }
+  const [pendingSpecialInfo, setPendingSpecialInfo] = useState(null); // { item, cat, chara }
   const [savedFlash, setSavedFlash] = useState(null);
   /* 連打耐性: 変更ごとにtokenを進め、古いsetTimeoutの反応を無効化する */
   const seqRef = useRef(0);
@@ -258,18 +325,47 @@ export function KisekaePanel({ isOpen, initialChara, onClose, kisekaeState, onSt
       setActiveCat('crown');
       setReactMsg(null);
       setPendingBuy(null);
+      setPendingSpecialInfo(null);
       setCoins(getCoins());
       seqRef.current++;
+
+      /* Panel mount時にも最新のあそび実績を再評価する(TopPage側でも評価済みだが、
+         同一セッション内で長時間経ってから開いた場合の保険)。sticky unlockなので
+         新規解放のみ演出し、既存解放分は再演出しない。 */
+      const { state: synced, newlyUnlocked } = syncSpecialUnlocks(kisekaeState);
+      if (newlyUnlocked.length > 0) {
+        onStateChange(synced);
+        const mySeq = ++seqRef.current;
+        const reduce = isReducedMotion();
+        setTimeout(() => {
+          spawnSpecialBurst(previewRef.current);
+          const pv = previewRef.current;
+          if (pv && !reduce) {
+            pv.classList.remove('ksk-jump'); void pv.offsetWidth; pv.classList.add('ksk-jump');
+            setTimeout(() => { if (pv) pv.classList.remove('ksk-jump'); }, 520);
+          }
+          setReactMsg({ seq: mySeq, text: lang === 'en' ? 'Special!' : 'スペシャル！' });
+          setTimeout(() => { if (seqRef.current === mySeq) setReactMsg(null); }, reduce ? 900 : 1400);
+        }, 120);
+      }
     }
   }, [isOpen, initialChara]);
 
   if (!isOpen) return null;
 
   const cat = activeCat === 'dress' ? 'dress' : activeCat;
-  const items      = getCategoryItems(activeChara, cat);
+  const specialUnlocked = kisekaeState.specialUnlocked || [];
+  const rawItems   = getCategoryItems(activeChara, cat, specialUnlocked);
   const currentVal = kisekaeState[activeChara][cat] || '';
   const tried      = kisekaeState.tried || [];
   const outfits    = kisekaeState.outfits || [null, null, null];
+
+  /* 並び順: 現在選択中 → ★所有 → ★★購入品 → ★★★実績品。ランダム化しない。 */
+  const items = [...rawItems].sort((a, b) => {
+    const aCur = a.id === currentVal, bCur = b.id === currentVal;
+    if (aCur !== bCur) return aCur ? -1 : 1;
+    return (a.rare || 1) - (b.rare || 1);
+  });
 
   function markTried(state, chara, c, id) {
     const key = triedKey(chara, c, id);
@@ -369,7 +465,7 @@ export function KisekaePanel({ isOpen, initialChara, onClose, kisekaeState, onSt
     for (const key of SLOT_FIELDS) {
       const val = slot[key];
       if (!val) continue;
-      if (isFieldOwned(targetChara, key, val)) next[key] = val;
+      if (isFieldOwned(targetChara, key, val, specialUnlocked)) next[key] = val;
     }
     setActiveChara(targetChara);
     setActiveCat('crown');
@@ -431,7 +527,7 @@ export function KisekaePanel({ isOpen, initialChara, onClose, kisekaeState, onSt
         {/* カテゴリ */}
         <div className="ksk-cat-row">
           {CATS.map(c => {
-            const hasNew = getCategoryItems(activeChara, c.id).some(i => i.shopId && i.owned && !tried.includes(triedKey(activeChara, c.id, i.id)));
+            const hasNew = getCategoryItems(activeChara, c.id, specialUnlocked).some(i => (i.shopId || i.special) && i.owned && !tried.includes(triedKey(activeChara, c.id, i.id)));
             return (
               <button
                 key={c.id}
@@ -445,26 +541,38 @@ export function KisekaePanel({ isOpen, initialChara, onClose, kisekaeState, onSt
           })}
         </div>
 
-        {/* アイテムグリッド(未所持も常に表示する) */}
+        {/* アイテムグリッド(未所持・未解放も常に表示する) */}
         <div className="ksk-items-grid">
           {items.map(item => {
+            const isSpecial = item.rare === 3;
             const locked = item.owned === false;
             const isCurrent = !locked && currentVal === item.id;
-            const isNewItem = !locked && item.shopId && !tried.includes(triedKey(activeChara, cat, item.id));
+            const isNewItem = !locked && (item.shopId || item.special) && !tried.includes(triedKey(activeChara, cat, item.id));
             return (
               <button
                 key={item.id}
-                className={`ksk-item-btn${isCurrent ? ' active' : ''}${locked ? ' ksk-item-btn--locked' : ''}`}
-                onClick={(e) => (locked ? handleBuyOpen(item) : handleSelect(item, e))}
+                className={`ksk-item-btn${isCurrent ? ' active' : ''}${locked ? ' ksk-item-btn--locked' : ''}${locked && isSpecial ? ' ksk-item-btn--special-locked' : ''}`}
+                onClick={(e) => {
+                  if (!locked) { handleSelect(item, e); return; }
+                  if (isSpecial) { setPendingSpecialInfo({ item, cat, chara: activeChara }); return; }
+                  handleBuyOpen(item);
+                }}
               >
+                <RareBadge rare={item.rare}/>
                 <span className="ksk-ib-swatch"><ItemSwatch chara={activeChara} cat={cat} item={item}/></span>
                 <span className="ksk-ib-name">{item.name}</span>
                 {isCurrent && <span className="ksk-ib-check">✓</span>}
                 {isNewItem && <span className="ksk-ib-new">NEW</span>}
-                {locked && (
+                {locked && !isSpecial && (
                   <span className="ksk-ib-lock">
                     <span className="ksk-ib-lock-icon" aria-hidden="true">🔒</span>
                     <span className="ksk-ib-lock-price">🪙{item.price}</span>
+                  </span>
+                )}
+                {locked && isSpecial && (
+                  <span className="ksk-ib-lock ksk-ib-lock--special">
+                    <span className="ksk-ib-lock-icon" aria-hidden="true">🔒</span>
+                    <span className="ksk-ib-lock-progress">{item.progress}/{item.requirement}</span>
                   </span>
                 )}
               </button>
@@ -473,6 +581,17 @@ export function KisekaePanel({ isOpen, initialChara, onClose, kisekaeState, onSt
         </div>
 
       </div>
+
+      {pendingSpecialInfo && (
+        <SpecialLockedInfo
+          item={pendingSpecialInfo.item}
+          cat={pendingSpecialInfo.cat}
+          chara={pendingSpecialInfo.chara}
+          lang={lang}
+          onClose={() => setPendingSpecialInfo(null)}
+          onPlayGames={() => { setPendingSpecialInfo(null); onClose(); }}
+        />
+      )}
 
       {pendingBuy && (
         <PurchaseConfirm

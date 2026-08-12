@@ -5,30 +5,56 @@
 ════════════════════════════════════════════════════ */
 import { isItemUnlocked } from '../../utils/coins';
 import { SHOP_ITEMS } from '../../utils/shopItems';
+import { getPlayHistory } from '../../utils/playHistory';
 
 /* Phase3: 価格・所有状態は SHOP_ITEMS(utils/shopItems.js) を唯一の情報源とする。
    Kisekaeパネル側で別の価格を定義しない(Shopと二重価格を作らない)。 */
 export function getShopExtras(chara, cat) {
   return SHOP_ITEMS
     .filter(s => s.chara === chara && s.cat === cat)
-    .map(s => ({ ...s.itemData, price: s.price, shopId: s.id, owned: isItemUnlocked(s.id) }));
+    .map(s => ({ ...s.itemData, price: s.price, shopId: s.id, owned: isItemUnlocked(s.id), rare: 2 }));
+}
+
+/* Phase4: 「ちがうゲームを遊んだ数」= playHistory(既存スタンプずかん基盤)のキー数。
+   同じゲームを何度遊んでも1としてしか数えない。route正規形はplayHistory側の既存仕様に従う。 */
+export function getDistinctGamesPlayed() {
+  try {
+    const h = getPlayHistory() || {};
+    return Object.keys(h).filter(k => h[k] > 0).length;
+  } catch {
+    return 0;
+  }
 }
 
 /* カテゴリの全アイテム(所持/未所持を問わず)。未所持を隠さないための一覧生成。
-   base(初期所持・無料)は常にowned:trueとして扱う。 */
-export function getCategoryItems(chara, cat) {
-  const base = (KISEKAE_ITEMS[chara]?.[cat] || []).map(i => ({ ...i, price: 0, owned: true }));
+   base(初期所持・無料)は常にowned:true・rare:1。shopはrare:2。実績はrare:3。 */
+export function getCategoryItems(chara, cat, specialUnlocked) {
+  const base = (KISEKAE_ITEMS[chara]?.[cat] || []).map(i => ({ ...i, price: 0, owned: true, rare: 1 }));
   const shop = getShopExtras(chara, cat);
-  return [...base, ...shop];
+  const played = getDistinctGamesPlayed();
+  const specials = SPECIAL_ITEMS
+    .filter(s => s.chara === chara && s.cat === cat)
+    .map(s => ({
+      ...s,
+      price: 0,
+      rare: 3,
+      special: true,
+      owned: (specialUnlocked || []).includes(s.id),
+      progress: Math.min(played, s.requirement),
+      requirement: s.requirement,
+    }));
+  return [...base, ...shop, ...specials];
 }
 
 /* 指定フィールドが「所持済み」かどうか。base/未知IDは常にtrue(既存互換を壊さない)。
-   コーデ適用時に、未所持装備を勝手に解放しないための判定に使う。 */
-export function isFieldOwned(chara, cat, id) {
+   コーデ適用時に、未所持(未購入/未実績解放)装備を勝手に解放しないための判定に使う。 */
+export function isFieldOwned(chara, cat, id, specialUnlocked) {
   if (!id) return true;
   const shopEntry = SHOP_ITEMS.find(s => s.chara === chara && s.cat === cat && s.itemData.id === id);
-  if (!shopEntry) return true;
-  return isItemUnlocked(shopEntry.id);
+  if (shopEntry) return isItemUnlocked(shopEntry.id);
+  const special = SPECIAL_ITEMS.find(s => s.chara === chara && s.cat === cat && s.id === id);
+  if (special) return (specialUnlocked || []).includes(special.id);
+  return true;
 }
 
 export const CATS = [
@@ -181,6 +207,36 @@ export const KISEKAE_ITEMS = {
   },
 };
 
+/* ════════════════════════════════════════════════════
+   Phase4: ★★★ あそび実績スペシャル(コインでは買えない)
+   「ちがうゲームを遊んだ数」が条件。一度解放したら再ロックしない(sticky)。
+════════════════════════════════════════════════════ */
+export const SPECIAL_ITEMS = [
+  { id: 'sp_ps_crown',  chara: 'princess', cat: 'crown',  kind: 'starTiara',   name: 'ほしのティアラ',     requirement: 3  },
+  { id: 'sp_ps_outfit', chara: 'princess', cat: 'outfit', kind: 'starGown',    name: 'ようせいドレス',     requirement: 8  },
+  { id: 'sp_ps_pet',    chara: 'princess', cat: 'pet',    kind: 'unicornLight', name: 'ひかりのユニコーン', requirement: 15 },
+  { id: 'sp_pr_crown',  chara: 'prince',   cat: 'crown',  kind: 'starCrown',   name: 'ほしのクラウン',     requirement: 3  },
+  { id: 'sp_pr_outfit', chara: 'prince',   cat: 'outfit', kind: 'skyCape',     name: 'てんくうマント',     requirement: 8  },
+  { id: 'sp_pr_pet',    chara: 'prince',   cat: 'pet',    kind: 'dragonMini',  name: 'ちびドラゴン',       requirement: 15 },
+];
+
+/* 実績の再評価。sticky unlock: 一度解放したIDは実績が読めなくなっても維持する。
+   新規に解放されたIDのみ newlyUnlocked として返す(演出トリガー用)。 */
+export function syncSpecialUnlocks(state) {
+  const played = getDistinctGamesPlayed();
+  const cur = state.specialUnlocked || [];
+  const curSet = new Set(cur);
+  const newlyUnlocked = [];
+  for (const sp of SPECIAL_ITEMS) {
+    if (!curSet.has(sp.id) && played >= sp.requirement) {
+      curSet.add(sp.id);
+      newlyUnlocked.push(sp.id);
+    }
+  }
+  if (newlyUnlocked.length === 0) return { state, newlyUnlocked };
+  return { state: { ...state, specialUnlocked: Array.from(curSet) }, newlyUnlocked };
+}
+
 export const DEFAULT_KISEKAE = {
   princess: { crown: 'c0', hair: 'h0', outfit: 'o0', dress: 'd0', accessory: '', item: '', pet: '' },
   prince:   { crown: 'c0', hair: 'h0', outfit: 'o0', dress: 'd0', accessory: '', item: '', pet: '' },
@@ -209,11 +265,18 @@ function normalizeTried(raw) {
   return raw.filter(x => typeof x === 'string');
 }
 
+/* ★★★実績解放済みIDの一覧。不正値は空配列へ、未知IDは無視(sticky unlockを壊さない)。 */
+function normalizeSpecialUnlocked(raw) {
+  if (!Array.isArray(raw)) return [];
+  const validIds = new Set(SPECIAL_ITEMS.map(s => s.id));
+  return raw.filter(x => typeof x === 'string' && validIds.has(x));
+}
+
 export function triedKey(chara, cat, id) {
   return `${chara}:${cat}:${id}`;
 }
 
-/* 旧stateにhair/outfit/tried/outfitsが無い場合はdefaultを補い、値の型も検証する。
+/* 旧stateにhair/outfit/tried/outfits/specialUnlockedが無い場合はdefaultを補い、値の型も検証する。
    crown/dress/accessory/item/petなど既存フィールドは壊さずそのまま通す。 */
 export function normalizeKisekaeState(raw) {
   const base = {
@@ -221,6 +284,7 @@ export function normalizeKisekaeState(raw) {
     prince:   { ...DEFAULT_KISEKAE.prince },
     outfits:  normalizeOutfits(raw && raw.outfits),
     tried:    normalizeTried(raw && raw.tried),
+    specialUnlocked: normalizeSpecialUnlocked(raw && raw.specialUnlocked),
   };
   if (!raw || typeof raw !== 'object') return base;
   for (const chara of ['princess', 'prince']) {
@@ -239,5 +303,7 @@ export function findKisekaeItem(chara, cat, id) {
   if (!list) return null;
   const base = list.find(i => i.id === id);
   if (base) return base;
-  return getShopExtras(chara, cat).find(i => i.id === id) || null;
+  const shop = getShopExtras(chara, cat).find(i => i.id === id);
+  if (shop) return shop;
+  return SPECIAL_ITEMS.find(s => s.chara === chara && s.cat === cat && s.id === id) || null;
 }

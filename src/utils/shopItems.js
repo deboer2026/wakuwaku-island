@@ -15,8 +15,8 @@ export const SHOP_ITEMS = [
   {
     id: 'ps_pet_unicorn',
     chara: 'princess', cat: 'pet',
-    shopEmoji: '🦄', shopName: 'ユニコーンペット', price: 40,
-    itemData: { id: 'shop_ps_p_unicorn', kind: 'unicorn', emoji: '🦄', name: 'ユニコーン' },
+    shopEmoji: '🦄', shopName: 'ジュエルユニコーン', price: 40,
+    itemData: { id: 'shop_ps_p_unicorn', kind: 'unicornJewel', emoji: '🦄', name: 'ジュエルユニコーン' },
   },
   {
     id: 'ps_item_wand_star',
