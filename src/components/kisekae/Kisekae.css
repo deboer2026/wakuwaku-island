@@ -111,34 +111,63 @@
 .ksk-pet--left  { left:  -16px; animation-delay: 0.4s; }
 .ksk-pet--right { right: -16px; animation-delay: 0.9s; }
 
-/* ── ラベルバッジ（常時表示・金枠プレート） ── */
-@keyframes ksk-badge-pulse {
-  0%, 100% { transform: scale(1); }
-  50%       { transform: scale(1.045); }
+/* ── ラベルバッジ（常時表示・宝石箱プレート） ──
+   キャラごとに石の色を変え、通常のWebボタンではなく「専用アクセサリー」に見せる。 */
+@keyframes ksk-gem-flash {
+  0%, 88%, 100% { opacity: 0.55; transform: translateY(-50%) rotate(45deg) scale(1); }
+  93%            { opacity: 1;    transform: translateY(-50%) rotate(45deg) scale(1.4); }
 }
 .ksk-chara-badge {
   position: relative;
   font-size: 10.5px;
   font-weight: 800;
   font-family: 'M PLUS Rounded 1c', sans-serif;
-  color: #3A2A18;
-  background: linear-gradient(180deg, #FFE58A, #E6A700);
-  border: 1.5px solid #C98F00;
   border-radius: 999px;
-  padding: 3px 10px;
+  padding: 4px 20px;
   white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.6);
   opacity: 1;
   transform: none;
-  animation: ksk-badge-pulse 2.4s ease-in-out infinite;
   pointer-events: none;
+}
+.ksk-chara-badge::before,
+.ksk-chara-badge::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  background: linear-gradient(135deg, #fff, var(--ksk-gem, #E6A700));
+  border-radius: 1px;
+  transform: translateY(-50%) rotate(45deg);
+  box-shadow: 0 0 3px rgba(255, 255, 255, 0.85);
+  animation: ksk-gem-flash 4.5s ease-in-out infinite;
+}
+.ksk-chara-badge::before { left: 7px; }
+.ksk-chara-badge::after  { right: 7px; animation-delay: 2.2s; }
+
+/* プリンセス：クリーム × ピンクゴールド */
+.ksk-chara-wrap--left .ksk-chara-badge {
+  color: #8A2F52;
+  background: linear-gradient(180deg, #FFFBF6 0%, #FFE3EE 55%, #FFD1E4 100%);
+  border: 1.5px solid #E6839F;
+  box-shadow: 0 2px 6px rgba(138, 47, 82, 0.28), inset 0 1px 0 rgba(255,255,255,.85), inset 0 -2px 0 rgba(230,131,159,.35);
+  --ksk-gem: #FF8FBC;
+}
+/* プリンス：クリーム × ロイヤルブルーゴールド */
+.ksk-chara-wrap--right .ksk-chara-badge {
+  color: #2C3E7A;
+  background: linear-gradient(180deg, #FBFCFF 0%, #E2EAFF 55%, #CFDBFF 100%);
+  border: 1.5px solid #6C86D9;
+  box-shadow: 0 2px 6px rgba(44, 62, 122, 0.28), inset 0 1px 0 rgba(255,255,255,.85), inset 0 -2px 0 rgba(108,134,217,.35);
+  --ksk-gem: #8FB3FF;
 }
 .ksk-chara-wrap:hover .ksk-chara-badge,
 .ksk-chara-wrap:focus-visible .ksk-chara-badge {
   filter: brightness(1.08);
 }
 @media (prefers-reduced-motion: reduce) {
-  .ksk-chara-badge { animation: none; }
+  .ksk-chara-badge::before,
+  .ksk-chara-badge::after { animation: none; opacity: 0.85; }
   .ksk-chara-wrap { animation: none; }
   .ksk-pet { animation: none; }
   .ksk-chara-tab.active { animation: none; }

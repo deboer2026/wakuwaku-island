@@ -2051,21 +2051,94 @@ export default function TopPage() {
                 <linearGradient id="tpGrassG" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0" stopColor="#9BE87F" /><stop offset="1" stopColor="#4FBF63" />
                 </linearGradient>
+                <linearGradient id="tpTowerG" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stopColor="#FFFDF7" /><stop offset="1" stopColor="#EFE1FA" />
+                </linearGradient>
+                <linearGradient id="tpTowerRearG" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stopColor="#E9DCF6" /><stop offset="1" stopColor="#CFC0E8" />
+                </linearGradient>
+                <linearGradient id="tpRoofPinkG" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stopColor="#FFAFCF" /><stop offset="1" stopColor="#E85D95" />
+                </linearGradient>
+                <linearGradient id="tpRoofBlueG" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stopColor="#A9C6FF" /><stop offset="1" stopColor="#5B7FE0" />
+                </linearGradient>
+                <linearGradient id="tpGoldG2" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stopColor="#FFE58A" /><stop offset="1" stopColor="#E6A700" />
+                </linearGradient>
+                <radialGradient id="tpWindowG">
+                  <stop offset="0" stopColor="#FFF6D8" /><stop offset="100%" stopColor="#FFC968" />
+                </radialGradient>
+                <linearGradient id="tpDoorG" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stopColor="#C9A6EF" /><stop offset="1" stopColor="#8F6BEF" />
+                </linearGradient>
               </defs>
               <ellipse cx="280" cy="168" rx="262" ry="20" fill="url(#tpSeaG)" />
               <ellipse cx="280" cy="158" rx="216" ry="27" fill="url(#tpSandG)" />
               <ellipse cx="280" cy="149" rx="176" ry="21" fill="url(#tpGrassG)" />
-              <g stroke="#3D3450" strokeWidth="3">
-                <rect x="242" y="52" width="76" height="82" rx="6" fill="#FFF4FB" />
-                <rect x="225" y="68" width="24" height="66" rx="5" fill="#F6E6FF" />
-                <rect x="311" y="68" width="24" height="66" rx="5" fill="#F6E6FF" />
-                <polygon points="225,70 237,44 249,70" fill="#8F6BEF" />
-                <polygon points="311,70 323,44 335,70" fill="#8F6BEF" />
-                <polygon points="240,54 280,20 320,54" fill="#FF7BA9" />
-                <rect x="269" y="94" width="22" height="40" rx="10" fill="#B78BE8" />
-                <circle cx="280" cy="74" r="8" fill="#FFC93C" />
+
+              {/* ── 小さくても豪華な王国の城（約78%スケール・奥行きあり） ── */}
+              <g aria-hidden="true">
+                {/* 奥の小塔（背後にちらっと見える。淡色で遠近感） */}
+                <g stroke="#7A6693" strokeWidth="1.6" opacity="0.88">
+                  <rect x="216" y="96" width="12" height="36" rx="3" fill="url(#tpTowerRearG)" />
+                  <polygon points="216,98 222,84 228,98" fill="url(#tpRoofBlueG)" />
+                  <rect x="332" y="96" width="12" height="36" rx="3" fill="url(#tpTowerRearG)" />
+                  <polygon points="332,98 338,84 344,98" fill="url(#tpRoofPinkG)" />
+                </g>
+
+                {/* 城壁の土台（左右） */}
+                <g stroke="#7A6693" strokeWidth="1.8">
+                  <rect x="232" y="118" width="96" height="16" rx="3" fill="url(#tpTowerG)" />
+                  <rect x="232" y="118" width="96" height="4" fill="url(#tpGoldG2)" stroke="none" />
+                </g>
+
+                {/* 左右のドラム塔 */}
+                <g stroke="#7A6693" strokeWidth="1.8">
+                  <rect x="233" y="88" width="20" height="46" rx="5" fill="url(#tpTowerG)" />
+                  <rect x="307" y="88" width="20" height="46" rx="5" fill="url(#tpTowerG)" />
+                  <polygon points="231,90 243,68 255,90" fill="url(#tpRoofBlueG)" />
+                  <polygon points="305,90 317,68 329,90" fill="url(#tpRoofPinkG)" />
+                  <circle cx="243" cy="104" r="4.2" fill="url(#tpWindowG)" stroke="#C98F00" strokeWidth="1" />
+                  <circle cx="317" cy="104" r="4.2" fill="url(#tpWindowG)" stroke="#C98F00" strokeWidth="1" />
+                </g>
+                {/* 側塔の旗竿・小旗 */}
+                <path d="M243 68 l0 -9 M243 59 l8 2.5 -8 3.5z" stroke="#7A6693" strokeWidth="1.6" fill="url(#tpGoldG2)" />
+                <path d="M317 68 l0 -9 M317 59 l8 2.5 -8 3.5z" stroke="#7A6693" strokeWidth="1.6" fill="url(#tpGoldG2)" />
+
+                {/* 中央本館 */}
+                <g stroke="#7A6693" strokeWidth="2">
+                  <rect x="252" y="76" width="56" height="58" rx="5" fill="url(#tpTowerG)" />
+                  <rect x="252" y="76" width="56" height="5" fill="url(#tpGoldG2)" stroke="none" />
+                  <polygon points="248,78 280,45 312,78" fill="url(#tpRoofPinkG)" />
+                  <path d="M280 45 L248 78 M280 45 L312 78" stroke="#FFDCEB" strokeWidth="1" opacity="0.7" />
+                </g>
+                <path d="M280 45 l0 -11 M280 34 l9 3 -9 4.4z" stroke="#7A6693" strokeWidth="1.8" fill="url(#tpGoldG2)" />
+
+                {/* 中央窓（明かり） */}
+                <circle cx="280" cy="92" r="7" fill="url(#tpWindowG)" stroke="#C98F00" strokeWidth="1.3" />
+                <circle cx="280" cy="92" r="2.6" fill="#FFFCF0" opacity="0.9" />
+
+                {/* 正面扉と階段 */}
+                <g stroke="#7A6693" strokeWidth="1.6">
+                  <rect x="271" y="112" width="18" height="22" rx="8" fill="url(#tpDoorG)" />
+                  <rect x="273" y="120" width="14" height="3" fill="url(#tpGoldG2)" stroke="none" />
+                  <rect x="266" y="134" width="28" height="4" rx="1.5" fill="#F6E6FF" />
+                  <rect x="262" y="138" width="36" height="4" rx="1.5" fill="#EFDCFA" />
+                </g>
+
+                {/* 紋章 */}
+                <circle cx="280" cy="70" r="4" fill="url(#tpGoldG2)" stroke="#7A6693" strokeWidth="1" />
+
+                {/* 城前の小さな装飾（花・光粒） */}
+                <g opacity="0.9">
+                  <circle cx="222" cy="142" r="2.2" fill="#FF9BC4" />
+                  <circle cx="338" cy="144" r="2.2" fill="#FFD37A" />
+                  <circle cx="252" cy="146" r="1.6" fill="#FFF6D8" />
+                  <circle cx="308" cy="147" r="1.6" fill="#FFF6D8" />
+                </g>
               </g>
-              <path d="M280 20 l0 -12 M280 8 l14 4 -14 6z" stroke="#3D3450" strokeWidth="3" fill="#FFC93C" />
+
               <g stroke="#3D3450" strokeWidth="3">
                 <path d="M448 152 q5 -30 -2 -46" fill="none" stroke="#9A6B3F" strokeWidth="7" />
                 <path d="M446 106 q-26 -16 -38 -2 M446 106 q3 -24 22 -21 M446 106 q26 -10 31 5" fill="#4FBF63" />
