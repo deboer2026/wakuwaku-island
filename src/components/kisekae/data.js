@@ -3,14 +3,32 @@
    既存アイテムIDはすべて維持し、絵文字の代わりに
    ベクターパーツの種類(kind)を対応させる。
 ════════════════════════════════════════════════════ */
-import { getUnlockedItems } from '../../utils/coins';
+import { isItemUnlocked } from '../../utils/coins';
 import { SHOP_ITEMS } from '../../utils/shopItems';
 
+/* Phase3: 価格・所有状態は SHOP_ITEMS(utils/shopItems.js) を唯一の情報源とする。
+   Kisekaeパネル側で別の価格を定義しない(Shopと二重価格を作らない)。 */
 export function getShopExtras(chara, cat) {
-  const unlocked = getUnlockedItems();
   return SHOP_ITEMS
-    .filter(s => s.chara === chara && s.cat === cat && unlocked.includes(s.id))
-    .map(s => s.itemData);
+    .filter(s => s.chara === chara && s.cat === cat)
+    .map(s => ({ ...s.itemData, price: s.price, shopId: s.id, owned: isItemUnlocked(s.id) }));
+}
+
+/* カテゴリの全アイテム(所持/未所持を問わず)。未所持を隠さないための一覧生成。
+   base(初期所持・無料)は常にowned:trueとして扱う。 */
+export function getCategoryItems(chara, cat) {
+  const base = (KISEKAE_ITEMS[chara]?.[cat] || []).map(i => ({ ...i, price: 0, owned: true }));
+  const shop = getShopExtras(chara, cat);
+  return [...base, ...shop];
+}
+
+/* 指定フィールドが「所持済み」かどうか。base/未知IDは常にtrue(既存互換を壊さない)。
+   コーデ適用時に、未所持装備を勝手に解放しないための判定に使う。 */
+export function isFieldOwned(chara, cat, id) {
+  if (!id) return true;
+  const shopEntry = SHOP_ITEMS.find(s => s.chara === chara && s.cat === cat && s.itemData.id === id);
+  if (!shopEntry) return true;
+  return isItemUnlocked(shopEntry.id);
 }
 
 export const CATS = [
@@ -168,10 +186,42 @@ export const DEFAULT_KISEKAE = {
   prince:   { crown: 'c0', hair: 'h0', outfit: 'o0', dress: 'd0', accessory: '', item: '', pet: '' },
 };
 
-/* 旧stateにhair/outfitが無い場合はdefaultを補い、値の型も検証する。
+const OUTFIT_SLOT_FIELDS = ['crown', 'hair', 'outfit', 'dress', 'item', 'pet'];
+
+/* コーデ保存3枠。壊れた/旧形式の入力でも安全に[null,null,null]相当へ正規化する。 */
+function normalizeOutfits(raw) {
+  const out = [null, null, null];
+  if (!Array.isArray(raw)) return out;
+  for (let i = 0; i < 3; i++) {
+    const slot = raw[i];
+    if (slot && typeof slot === 'object' && (slot.chara === 'princess' || slot.chara === 'prince')) {
+      const entry = { chara: slot.chara };
+      for (const key of OUTFIT_SLOT_FIELDS) entry[key] = typeof slot[key] === 'string' ? slot[key] : '';
+      out[i] = entry;
+    }
+  }
+  return out;
+}
+
+/* 試着済み("chara:cat:id")の一覧。文字列配列以外は安全に空配列へ。 */
+function normalizeTried(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(x => typeof x === 'string');
+}
+
+export function triedKey(chara, cat, id) {
+  return `${chara}:${cat}:${id}`;
+}
+
+/* 旧stateにhair/outfit/tried/outfitsが無い場合はdefaultを補い、値の型も検証する。
    crown/dress/accessory/item/petなど既存フィールドは壊さずそのまま通す。 */
 export function normalizeKisekaeState(raw) {
-  const base = { princess: { ...DEFAULT_KISEKAE.princess }, prince: { ...DEFAULT_KISEKAE.prince } };
+  const base = {
+    princess: { ...DEFAULT_KISEKAE.princess },
+    prince:   { ...DEFAULT_KISEKAE.prince },
+    outfits:  normalizeOutfits(raw && raw.outfits),
+    tried:    normalizeTried(raw && raw.tried),
+  };
   if (!raw || typeof raw !== 'object') return base;
   for (const chara of ['princess', 'prince']) {
     const src = raw[chara];
@@ -185,7 +235,7 @@ export function normalizeKisekaeState(raw) {
 }
 
 export function findKisekaeItem(chara, cat, id) {
-  const list = KISEKAE_ITEMS[chara][cat];
+  const list = KISEKAE_ITEMS[chara]?.[cat];
   if (!list) return null;
   const base = list.find(i => i.id === id);
   if (base) return base;
