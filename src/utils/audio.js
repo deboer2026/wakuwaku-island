@@ -147,8 +147,10 @@ if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       _pauseBgm();
+      _pauseTopBgmForVisibility();
     } else {
       _resumeBgm();
+      _resumeTopBgmForVisibility();
     }
   });
 
@@ -157,10 +159,12 @@ if (typeof document !== 'undefined') {
     if (e.persisted) {
       // BFCache（前後移動）: 一時停止のみ
       _pauseBgm();
+      _pauseTopBgmForVisibility();
     } else {
       // 実際のアンロード（タブ閉じ等）: 完全破棄
       _cancelLoop();
       try { if (_ctx) { _ctx.close(); _ctx = null; } } catch(e) {}
+      stopBGM();
     }
   });
 
@@ -168,13 +172,17 @@ if (typeof document !== 'undefined') {
   window.addEventListener('blur', () => {
     // 仮想キーボード等の誤検知を避けるため 200ms 遅延してから hidden を確認
     setTimeout(() => {
-      if (document.hidden) _pauseBgm();
+      if (document.hidden) { _pauseBgm(); _pauseTopBgmForVisibility(); }
     }, 200);
     // blur 単体でも pause（Android でアプリ切替時に hidden より早く発火する場合がある）
     _pauseBgm();
+    _pauseTopBgmForVisibility();
   });
   window.addEventListener('focus', () => {
-    if (!document.hidden) _resumeBgm();
+    if (!document.hidden) {
+      _resumeBgm();
+      _resumeTopBgmForVisibility();
+    }
   });
 
   // ④ beforeunload — ページ離脱時にクリーンアップ
@@ -184,39 +192,178 @@ if (typeof document !== 'undefined') {
       try { _ctx.close(); } catch(e) {}
       _ctx = null;
     }
+    stopBGM();
   });
 }
 
-// ===== MP3 BGM (top page) =====
-let _bgmAudio = null;
+// ===== MP3 BGM (top page) — 2要素交互再生によるクロスフェードループ =====
+// 30秒程度の短い曲をloop=trueで単純ループすると継ぎ目が耳につくため、
+// 同じ音源を2つのAudio要素に読み込み、曲末近くで次を頭出し再生して
+// 音量をクロスフェードすることでループ境界を目立たなくする。
+const TOP_BGM_SRC       = '/games/wakuwaku_top_theme.mp3';
+const TOP_BGM_VOLUME    = 0.30;
+const TOP_BGM_CROSSFADE = 0.7; // 秒
+
+let _bgmEls          = null;  // [AudioA, AudioB]
+let _bgmActiveIdx    = 0;     // 現在再生中(または再生予定)側のindex
+let _bgmEnabled      = false; // ユーザー操作上「ON」かどうか(pause中でも保持したい状態)
+let _bgmHidden       = false; // visibilitychange等による一時停止フラグ
+let _bgmScheduleTimer = null; // 次のクロスフェード開始をスケジュールするtimeout
+let _bgmFadeRaf       = null; // クロスフェード中の音量補間 rAF
+let _bgmRetryAttached = false;
+
+function _ensureBgmEls() {
+  if (_bgmEls) return;
+  const a = new Audio(TOP_BGM_SRC);
+  const b = new Audio(TOP_BGM_SRC);
+  a.preload = 'auto';
+  b.preload = 'auto';
+  a.volume = 0;
+  b.volume = 0;
+  _bgmEls = [a, b];
+}
+
+function _clearBgmSchedule() {
+  if (_bgmScheduleTimer) { clearTimeout(_bgmScheduleTimer); _bgmScheduleTimer = null; }
+  if (_bgmFadeRaf) { cancelAnimationFrame(_bgmFadeRaf); _bgmFadeRaf = null; }
+}
+
+function _bgmTryPlay(el, onSuccess) {
+  let p;
+  try { p = el.play(); } catch (e) { p = null; }
+  if (p && typeof p.catch === 'function') {
+    p.then(() => onSuccess && onSuccess()).catch(() => _attachBgmRetry());
+  } else {
+    onSuccess && onSuccess();
+  }
+}
+
+// Autoplay policyで最初の再生が拒否された場合、次の1回のユーザー操作で再試行する。
+function _attachBgmRetry() {
+  if (_bgmRetryAttached) return;
+  _bgmRetryAttached = true;
+  window.addEventListener('pointerdown', function handler() {
+    _bgmRetryAttached = false;
+    if (!_bgmEnabled || _bgmHidden || !_bgmEls) return;
+    const active = _bgmEls[_bgmActiveIdx];
+    active.volume = TOP_BGM_VOLUME;
+    _bgmTryPlay(active, () => _scheduleBgmCrossfade(active));
+  }, { once: true });
+}
+
+// activeElの残り時間からクロスフェード開始タイミングを予約する。
+function _scheduleBgmCrossfade(activeEl) {
+  _clearBgmSchedule();
+  const check = () => {
+    if (!_bgmEnabled || _bgmHidden || !_bgmEls) return;
+    const dur = activeEl.duration;
+    if (!dur || !isFinite(dur)) {
+      // メタデータ未取得: 短い間隔でリトライ
+      _bgmScheduleTimer = setTimeout(check, 100);
+      return;
+    }
+    const remain = Math.max(0, dur - activeEl.currentTime - TOP_BGM_CROSSFADE);
+    _bgmScheduleTimer = setTimeout(() => {
+      if (!_bgmEnabled || _bgmHidden) return;
+      _runBgmCrossfade();
+    }, remain * 1000);
+  };
+  check();
+}
+
+function _runBgmCrossfade() {
+  if (!_bgmEls || !_bgmEnabled || _bgmHidden) return;
+  const fromIdx = _bgmActiveIdx;
+  const toIdx   = 1 - fromIdx;
+  const from = _bgmEls[fromIdx];
+  const to   = _bgmEls[toIdx];
+  to.currentTime = 0;
+  to.volume = 0;
+  _bgmTryPlay(to);
+  const startTime = performance.now();
+  const durationMs = TOP_BGM_CROSSFADE * 1000;
+  function step(now) {
+    const t = Math.min(1, (now - startTime) / durationMs);
+    from.volume = TOP_BGM_VOLUME * (1 - t);
+    to.volume   = TOP_BGM_VOLUME * t;
+    if (t < 1) {
+      _bgmFadeRaf = requestAnimationFrame(step);
+    } else {
+      _bgmFadeRaf = null;
+      from.pause();
+      from.currentTime = 0;
+      from.volume = 0;
+      _bgmActiveIdx = toIdx;
+      _scheduleBgmCrossfade(to);
+    }
+  }
+  _bgmFadeRaf = requestAnimationFrame(step);
+}
 
 export function startBGM() {
-  if (_bgmAudio) return;
-  _bgmAudio = new Audio('/games/Sandcastle_Parade.mp3');
-  _bgmAudio.loop = true;
-  _bgmAudio.volume = 0.35;
-  _bgmAudio.play().catch(() => {});
+  if (_bgmEnabled) return; // 多重起動防止
+  _ensureBgmEls();
+  _bgmEnabled = true;
+  _bgmHidden  = false;
+  _bgmActiveIdx = 0;
+  const [a, b] = _bgmEls;
+  b.pause(); b.currentTime = 0; b.volume = 0;
+  a.currentTime = 0;
+  a.volume = TOP_BGM_VOLUME;
+  _bgmTryPlay(a, () => _scheduleBgmCrossfade(a));
 }
 
 export function stopBGM() {
-  if (_bgmAudio) {
-    _bgmAudio.pause();
-    _bgmAudio.currentTime = 0;
-    _bgmAudio = null;
+  _bgmEnabled = false;
+  _bgmHidden  = false;
+  _clearBgmSchedule();
+  if (_bgmEls) {
+    _bgmEls.forEach(el => { el.pause(); el.currentTime = 0; el.volume = 0; });
   }
 }
 
 export function toggleBGM() {
-  if (!_bgmAudio || _bgmAudio.paused) {
-    if (!_bgmAudio) startBGM();
-    else _bgmAudio.play().catch(() => {});
-  } else {
-    _bgmAudio.pause();
+  if (!_bgmEls) {
+    startBGM();
+    return;
   }
+  if (!_bgmEnabled) {
+    // OFF → ON: currentTime=0へは戻さず、現在の曲位置から再開する
+    _bgmEnabled = true;
+    _bgmHidden  = false;
+    const active = _bgmEls[_bgmActiveIdx];
+    const other  = _bgmEls[1 - _bgmActiveIdx];
+    other.pause();
+    active.volume = TOP_BGM_VOLUME;
+    _bgmTryPlay(active, () => _scheduleBgmCrossfade(active));
+    return;
+  }
+  // ON → OFF: 現在位置を保持したまま一時停止するだけ(完全リセットしない)
+  _bgmEnabled = false;
+  _clearBgmSchedule();
+  _bgmEls.forEach(el => el.pause());
+}
+
+// トップページ非表示時の一時停止/復帰(ゲーム側WebAudioの
+// visibilitychange等ライフサイクルとは独立して動作させる)。
+function _pauseTopBgmForVisibility() {
+  if (!_bgmEnabled || _bgmHidden || !_bgmEls) return;
+  _bgmHidden = true;
+  _clearBgmSchedule();
+  _bgmEls.forEach(el => el.pause());
+}
+function _resumeTopBgmForVisibility() {
+  if (!_bgmEnabled || !_bgmHidden || !_bgmEls) return;
+  _bgmHidden = false;
+  const active = _bgmEls[_bgmActiveIdx];
+  const other  = _bgmEls[1 - _bgmActiveIdx];
+  other.pause();
+  active.volume = TOP_BGM_VOLUME;
+  _bgmTryPlay(active, () => _scheduleBgmCrossfade(active));
 }
 
 export function setMuted(muted) {
-  if (_bgmAudio) _bgmAudio.muted = muted;
+  if (_bgmEls) _bgmEls.forEach(el => { el.muted = muted; });
 }
 
 // ===== Public API =====
