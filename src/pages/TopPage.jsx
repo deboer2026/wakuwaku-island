@@ -571,22 +571,27 @@ const GAME_SVGS = {
   ),
   g12: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="90" cy="12" r="2" fill="#FFD700" opacity=".6"/>
-      <rect x="8" y="38" width="24" height="30" rx="4" fill="#FF5252" stroke="#B71C1C" strokeWidth="2"/>
-      <rect x="10" y="40" width="10" height="7" rx="2" fill="#FF8A80" opacity=".5"/>
-      <text x="20" y="62" textAnchor="middle" fontSize="20" fontWeight="bold" fill="white">1</text>
-      <text x="38" y="59" textAnchor="middle" fontSize="20" fontWeight="bold" fill="white">+</text>
-      <rect x="52" y="38" width="24" height="30" rx="4" fill="#66BB6A" stroke="#2E7D32" strokeWidth="2"/>
-      <rect x="54" y="40" width="10" height="7" rx="2" fill="#A5D6A7" opacity=".5"/>
-      <text x="64" y="62" textAnchor="middle" fontSize="20" fontWeight="bold" fill="white">2</text>
-      <text x="83" y="59" textAnchor="middle" fontSize="20" fontWeight="bold" fill="white">=</text>
-      <rect x="18" y="12" width="64" height="20" rx="5" fill="rgba(255,255,255,.2)" stroke="rgba(255,255,255,.5)" strokeWidth="1.5"/>
-      <text x="50" y="26" textAnchor="middle" fontSize="14" fontWeight="bold" fill="white">？</text>
-      <circle cx="20" cy="72" r="4" fill="#FF8F00" stroke="#E65100" strokeWidth="1"/>
-      <circle cx="30" cy="72" r="4" fill="#FF8F00" stroke="#E65100" strokeWidth="1"/>
-      <circle cx="56" cy="72" r="4" fill="#388E3C" stroke="#1B5E20" strokeWidth="1"/>
-      <circle cx="66" cy="72" r="4" fill="#388E3C" stroke="#1B5E20" strokeWidth="1"/>
-      <circle cx="76" cy="72" r="4" fill="#388E3C" stroke="#1B5E20" strokeWidth="1"/>
+      <rect width="100" height="85" rx="12" fill="#BEE3F8"/>
+      <circle cx="88" cy="14" r="7" fill="#FFF3B0" opacity=".8"/>
+      <rect x="4" y="66" width="92" height="6" rx="2" fill="#8D7B63"/>
+      <rect x="8" y="34" width="18" height="20" rx="3" fill="#E04A3F" stroke="#A8362D" strokeWidth="2"/>
+      <circle cx="17" cy="26" r="9" fill="#E04A3F" stroke="#A8362D" strokeWidth="2"/>
+      <rect x="12" y="20" width="10" height="6" rx="1" fill="#8FC9E8"/>
+      <circle cx="12" cy="60" r="4" fill="#4A3B32"/>
+      <circle cx="22" cy="60" r="4" fill="#4A3B32"/>
+      <rect x="30" y="36" width="22" height="24" rx="3" fill="#F2B24D" stroke="#C77E1E" strokeWidth="2"/>
+      <rect x="34" y="41" width="14" height="9" rx="1.5" fill="#FFF6E3"/>
+      <text x="41" y="49" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#C77E1E">1</text>
+      <circle cx="35" cy="60" r="4" fill="#4A3B32"/>
+      <circle cx="47" cy="60" r="4" fill="#4A3B32"/>
+      <text x="58" y="52" textAnchor="middle" fontSize="16" fontWeight="bold" fill="#4A3B32">+</text>
+      <rect x="64" y="36" width="22" height="24" rx="3" fill="#6EC46E" stroke="#3C8A3C" strokeWidth="2"/>
+      <rect x="68" y="41" width="14" height="9" rx="1.5" fill="#FFF6E3"/>
+      <text x="75" y="49" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#3C8A3C">2</text>
+      <circle cx="69" cy="60" r="4" fill="#4A3B32"/>
+      <circle cx="81" cy="60" r="4" fill="#4A3B32"/>
+      <circle cx="93" cy="46" r="10" fill="#3B79C4" stroke="#2C5FA0" strokeWidth="2"/>
+      <text x="93" y="50" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#FFFCF6">？</text>
     </svg>
   ),
   g13: (
@@ -1158,12 +1163,12 @@ const GAMES = [
     zh:{ name:'文字森林3D',           desc:'在3D森林中收集文字，\n拼出单词！'                    },
     ko:{ name:'글자의 숲 3D',         desc:'3D 숲에서 글자를 모아\n단어를 만들어요!'               },
     es:{ name:'Bosque de Letras 3D',  desc:'¡Recoge letras en un bosque 3D\ny forma palabras!'            } },
-  { id:'g12', route:'/tashizan',       icon:'➕', num:12, color:'#2196F3', stars:3, isNew:false, category:'がくしゅう',
-    ja:{ name:'たしざんゲーム',     desc:'どうぶつを かぞえて\nこたえをえらんでね！'          },
-    en:{ name:'Math Quiz',           desc:'Count animals and\nchoose the right answer!'        },
-    zh:{ name:'加法游戏',             desc:'数动物\n选答案！'                             },
-    ko:{ name:'덧셈 게임',             desc:'동물을 세어\n답을 골라요!'                    },
-    es:{ name:'Suma',                  desc:'¡Cuenta animales y\nelige la respuesta!'       } },
+  { id:'g12', route:'/tashizan',       icon:'🚂', num:12, color:'#2196F3', stars:5, isNew:true, category:'かずあそび',
+    ja:{ name:'たしざんトレイン3D', desc:'どうぶつを かぞえて\nきしゃを はっしゃ！\n3ろせん・24のえき'          },
+    en:{ name:'Addition Train 3D',   desc:'Count animals and\nsend off the train!\n3 routes, 24 stations'        },
+    zh:{ name:'加法列车3D',           desc:'数一数动物，\n发车出发！\n3条路线・24个车站'                             },
+    ko:{ name:'덧셈 기차 3D',          desc:'동물을 세어\n기차를 출발시켜요!\n3개 노선・24개 역'                    },
+    es:{ name:'Tren de Sumas 3D',     desc:'¡Cuenta animales y\nhaz partir el tren!\n3 rutas, 24 estaciones'       } },
   { id:'g13', route:'/iro',            icon:'🎨', num:13, color:'#7E57C2', stars:5, isNew:true, category:'パズル',
     ja:{ name:'いろまぜこうぼう3D', desc:'そらの アトリエで えのぐを まぜて\nいろの せいれいを あつめよう！' },
     en:{ name:'Color Mixing Workshop 3D', desc:'Mix paints in a sky atelier and\ncollect 24 color spirits!' },
@@ -1435,7 +1440,7 @@ const FEATURED_NEW_ROUTES = new Set([
   '/shabondama',
   '/nijiiro-oukoku',
   '/astral-fang',
-  '/neon-drive',
+  '/tashizan',
   '/neko-chou',
 ]);
 
