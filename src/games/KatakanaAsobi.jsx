@@ -17,8 +17,8 @@ export default function KatakanaAsobi() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/katakana_asobi_v1.html"
-          title="カタカナあそび"
+          src="/games/shiritori_bridge_v1.html"
+          title="しりとりブリッジ3D"
           allow="autoplay; fullscreen"
           allowFullScreen
           sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"

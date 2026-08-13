@@ -548,18 +548,25 @@ const GAME_SVGS = {
   ),
   g11: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="88" cy="12" r="2" fill="white" opacity=".4"/>
-      <rect x="12" y="20" width="32" height="32" rx="6" fill="#66BB6A" stroke="#2E7D32" strokeWidth="2"/>
-      <rect x="14" y="22" width="14" height="7" rx="2" fill="#A5D6A7" opacity=".5"/>
-      <text x="28" y="44" textAnchor="middle" fontSize="22" fontWeight="bold" fill="white">あ</text>
-      <rect x="56" y="14" width="32" height="32" rx="6" fill="#42A5F5" stroke="#1565C0" strokeWidth="2"/>
-      <rect x="58" y="16" width="14" height="7" rx="2" fill="#90CAF9" opacity=".5"/>
-      <text x="72" y="38" textAnchor="middle" fontSize="22" fontWeight="bold" fill="white">い</text>
-      <rect x="30" y="52" width="40" height="28" rx="6" fill="#FFA726" stroke="#E65100" strokeWidth="2"/>
-      <rect x="32" y="54" width="18" height="6" rx="2" fill="#FFCC80" opacity=".5"/>
-      <text x="50" y="72" textAnchor="middle" fontSize="20" fontWeight="bold" fill="white">う</text>
-      <circle cx="8" cy="52" r="3" fill="#FFD700" opacity=".7"/>
-      <circle cx="94" cy="48" r="2.5" fill="#FF6B6B" opacity=".6"/>
+      <rect width="100" height="85" rx="12" fill="#1B4332"/>
+      <circle cx="86" cy="14" r="7" fill="#FFF3B0" opacity=".7"/>
+      <path d="M18 85V44l-9 9v-6l9-9v-8l-7 7v-6l7-7V16h6v8l7-7v6l-7 7v8l9-9v6l-9 9v41z" fill="#2E7D32"/>
+      <path d="M84 85V50l-8 8v-6l8-8v-7l-6 6v-6l6-6v-9h5v9l6-6v6l-6 6v7l8-8v6l-8 8v35z" fill="#2E7D32" opacity=".85"/>
+      <g>
+        <path d="M40 18l6 10-6 10-6-10z" fill="#66BB6A" stroke="#1B5E20" strokeWidth="1.6" strokeLinejoin="round"/>
+        <text x="40" y="32" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#FFFCF6">あ</text>
+      </g>
+      <g>
+        <path d="M62 34l6.5 10.5-6.5 10.5-6.5-10.5z" fill="#42A5F5" stroke="#0D47A1" strokeWidth="1.6" strokeLinejoin="round"/>
+        <text x="62" y="49" textAnchor="middle" fontSize="11.5" fontWeight="bold" fill="#FFFCF6">A</text>
+      </g>
+      <g>
+        <path d="M32 52l6 9.5-6 9.5-6-9.5z" fill="#FFA726" stroke="#E65100" strokeWidth="1.6" strokeLinejoin="round"/>
+        <text x="32" y="65.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#FFFCF6">ア</text>
+      </g>
+      <circle cx="14" cy="14" r="2" fill="#FFFCF6" opacity=".5"/>
+      <circle cx="92" cy="60" r="2.4" fill="#FFE066" opacity=".7"/>
+      <circle cx="52" cy="14" r="1.6" fill="#FFFCF6" opacity=".4"/>
     </svg>
   ),
   g12: (
@@ -1013,17 +1020,23 @@ const GAME_SVGS = {
   ),
   g_katakana: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="10" cy="12" r="1.8" fill="#FFD700" opacity=".6"/>
-      <circle cx="90" cy="18" r="1.5" fill="white" opacity=".5"/>
-      <rect x="8" y="34" width="34" height="38" rx="6" fill="#29B6F6" stroke="#01579B" strokeWidth="2.5"/>
-      <rect x="11" y="37" width="15" height="8" rx="2" fill="#B3E5FC" opacity=".5"/>
-      <text x="25" y="63" textAnchor="middle" fontSize="24" fontWeight="bold" fill="white">ア</text>
-      <rect x="58" y="34" width="34" height="38" rx="6" fill="#26A69A" stroke="#004D40" strokeWidth="2.5"/>
-      <rect x="61" y="37" width="15" height="8" rx="2" fill="#B2DFDB" opacity=".5"/>
-      <text x="75" y="63" textAnchor="middle" fontSize="24" fontWeight="bold" fill="white">カ</text>
-      <circle cx="50" cy="24" r="13" fill="#FFD700" stroke="#B8860B" strokeWidth="2"/>
-      <text x="50" y="30" textAnchor="middle" fontSize="15" fill="#5c3a00" fontWeight="bold">ナ</text>
-      <path d="M44 44 L50 38 L56 44" fill="none" stroke="#FFD700" strokeWidth="2.5" strokeLinecap="round"/>
+      <rect width="100" height="85" rx="12" fill="#7FC7E8"/>
+      <circle cx="84" cy="14" r="8" fill="#FFF3B0" opacity=".8"/>
+      <path d="M0 58c10-5 20-5 30 0s20 5 30 0 20-5 40 0v27H0z" fill="#4FA8D8"/>
+      <ellipse cx="14" cy="52" rx="16" ry="12" fill="#8FC46E" stroke="#5C8A3E" strokeWidth="2"/>
+      <ellipse cx="90" cy="56" rx="14" ry="11" fill="#8FC46E" stroke="#5C8A3E" strokeWidth="2"/>
+      <path d="M22 50h58" stroke="#B08A5A" strokeWidth="5" strokeLinecap="round"/>
+      <rect x="24" y="43" width="5" height="14" rx="1.5" fill="#C79A46" stroke="#8A6A3A" strokeWidth="1.4"/>
+      <rect x="34" y="43" width="5" height="14" rx="1.5" fill="#C79A46" stroke="#8A6A3A" strokeWidth="1.4"/>
+      <rect x="44" y="43" width="5" height="14" rx="1.5" fill="#C79A46" stroke="#8A6A3A" strokeWidth="1.4"/>
+      <rect x="54" y="43" width="5" height="14" rx="1.5" fill="#C79A46" stroke="#8A6A3A" strokeWidth="1.4"/>
+      <rect x="64" y="43" width="5" height="14" rx="1.5" fill="#C79A46" stroke="#8A6A3A" strokeWidth="1.4"/>
+      <rect x="74" y="43" width="5" height="14" rx="1.5" fill="#C79A46" stroke="#8A6A3A" strokeWidth="1.4"/>
+      <circle cx="14" cy="44" r="6.5" fill="#FFE9A8" stroke="#C79A46" strokeWidth="1.6"/>
+      <text x="14" y="47.5" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#8A6A3A">ネコ</text>
+      <circle cx="90" cy="48" r="6.5" fill="#FFE9A8" stroke="#C79A46" strokeWidth="1.6" opacity=".85"/>
+      <text x="90" y="51.5" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#8A6A3A" opacity=".85">コマ</text>
+      <path d="M19 22l1.5 3.6 3.6 1.5-3.6 1.5L19 32.2l-1.5-3.6L13.9 27l3.6-1.5z" fill="#FFE066"/>
     </svg>
   ),
   g_nurie: (
@@ -1146,11 +1159,11 @@ const GAMES = [
     ko:{ name:'동물 숨바꼭질 3D',         desc:'3D 섬을 돌려가며 찾아봐요!\n2가지 모드, 8스테이지, 파트너 선택'              },
     es:{ name:'Escondite Animal 3D',        desc:'¡Gira la isla 3D y explora!\n2 modos, 8 niveles, elige compañero'         } },
   { id:'g11', route:'/moji',           icon:'🔤', num:11, color:'#4CAF50', stars:3, isNew:false, category:'がくしゅう',
-    ja:{ name:'もじあそび',         desc:'えをみて ただしい\nひらがなを えらんでね！'        },
-    en:{ name:'Letter Fun',          desc:'Look at the picture\nand choose the right hiragana!' },
-    zh:{ name:'文字游戏',             desc:'看图选择\n正确的平假名！'                    },
-    ko:{ name:'글자 놀이',             desc:'그림을 보고\n히라가나를 골라요!'               },
-    es:{ name:'Letras',                desc:'¡Mira el dibujo y\nelige la letra!'            } },
+    ja:{ name:'もじのもり3D',         desc:'3Dのもりで もじをあつめて\nことばを つくろう！'        },
+    en:{ name:'Letter Forest 3D',    desc:'Collect letters in a 3D forest\nand build words!' },
+    zh:{ name:'文字森林3D',           desc:'在3D森林中收集文字，\n拼出单词！'                    },
+    ko:{ name:'글자의 숲 3D',         desc:'3D 숲에서 글자를 모아\n단어를 만들어요!'               },
+    es:{ name:'Bosque de Letras 3D',  desc:'¡Recoge letras en un bosque 3D\ny forma palabras!'            } },
   { id:'g12', route:'/tashizan',       icon:'➕', num:12, color:'#2196F3', stars:3, isNew:false, category:'がくしゅう',
     ja:{ name:'たしざんゲーム',     desc:'どうぶつを かぞえて\nこたえをえらんでね！'          },
     en:{ name:'Math Quiz',           desc:'Count animals and\nchoose the right answer!'        },
@@ -1326,11 +1339,11 @@ const SCHOOL_GAMES = [
     ko:{ name:'시계 읽기',          desc:'친구와 하루를 모험!\n시계를 읽고 나아가요!' },
     es:{ name:'Lectura del Reloj',  desc:'¡Una aventura de todo el día!\n¡Lee el reloj y avanza!' } },
   { id:'g_katakana', route:'/katakana-asobi', icon:'🔤', num:15, color:'#29B6F6', stars:3, isNew:true, category:'がくしゅう',
-    ja:{ name:'カタカナあそび',     desc:'えや ひらがなを みて\nただしい カタカナを えらぼう！' },
-    en:{ name:'Katakana Play',      desc:'Pick the right katakana\nfrom pictures & hiragana!' },
-    zh:{ name:'片假名游戏',         desc:'看图片和平假名\n选出正确的片假名！' },
-    ko:{ name:'가타카나 놀이',      desc:'그림과 히라가나를 보고\n맞는 가타카나를 골라요!' },
-    es:{ name:'Juego de Katakana',  desc:'¡Elige el katakana\ncorrecto con dibujos!' } },
+    ja:{ name:'しりとりブリッジ3D',     desc:'ことばを つないで\nはしを わたろう！' },
+    en:{ name:'Shiritori Bridge 3D',    desc:'Chain words together\nand cross the bridge!' },
+    zh:{ name:'接龙桥3D',               desc:'接龙连接单词，\n跨过大桥！' },
+    ko:{ name:'끝말잇기 다리 3D',        desc:'단어를 이어서\n다리를 건너요!' },
+    es:{ name:'Puente de Palabras 3D',  desc:'¡Encadena palabras\ny cruza el puente!' } },
   { id:'g_katachi', route:'/katachi', icon:'🔷', num:21, color:'#7C7CE8', stars:3, isNew:true, category:'がくしゅう',
     ja:{ name:'かたちあわせ',       desc:'うちゅうで かたちを\nはめたり しわけたり しよう！' },
     en:{ name:'Shape Match',        desc:'Fit and sort shapes\nin outer space!' },
@@ -1439,6 +1452,8 @@ const THUMB_ALIASES = {
 };
 const NO_THUMB_ROUTES = new Set([
   '/neon-drive',
+  '/moji',
+  '/katakana-asobi',
 ]);
 
 function thumbFor(game) {

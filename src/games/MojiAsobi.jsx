@@ -17,8 +17,8 @@ export default function MojiAsobi() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/moji_asobi_v2.html"
-          title="もじあそび"
+          src="/games/moji_asobi_v3.html"
+          title="もじのもり3D"
           allow="autoplay; fullscreen"
           allowFullScreen
           sandbox="allow-scripts allow-same-origin allow-popups"
