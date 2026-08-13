@@ -12,6 +12,7 @@ import { getCoins, checkLoginBonus, claimLoginBonus } from '../utils/coins';
 import { getRecentGames } from '../utils/recentGames';
 import { getPlayHistory } from '../utils/playHistory';
 import { detectLang } from '../utils/i18n';
+import { trackEvent } from '../utils/analytics';
 import GAME_META from '../seo/gameMeta';
 import './TopPage.css';
 
@@ -2018,7 +2019,7 @@ export default function TopPage() {
       </div>
       <Helmet>
         <title>わくわくアイランド｜こども向け無料ブラウザゲーム</title>
-        <meta name="description" content={`幼児・小学生向けの無料ミニゲームが${TOTAL_GAME_COUNT}種類。かず・もじ・パズル・アクション・レースなどを登録不要・インストール不要でブラウザですぐ遊べます。`} />
+        <meta name="description" content="幼児・小学生向けの無料ブラウザゲームがたくさん。かず・もじ・パズル・アクション・レースなどを、登録不要・インストール不要でスマホ・タブレット・PCからすぐ遊べます。" />
         <link rel="canonical" href="https://wakuwakuislands.com/" />
       </Helmet>
 
@@ -2435,11 +2436,16 @@ export default function TopPage() {
           <button className="tp-footer-link" onClick={() => navigate('/parents')}>
             {{ja:'👪 保護者の方へ', en:'👪 For Parents', zh:'👪 致家长', ko:'👪 보호자 안내', es:'👪 Para familias'}[lang] || '👪 保護者の方へ'}
           </button>
-          <span className="tp-footer-sep">|</span>
+          <a className="tp-footer-link tp-footer-robobella"
+            href="https://robobella.wakuwakuislands.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackEvent('robobella_portal_click', { source_context:'footer', source_page:'/' })}>
+            {{ja:'🤖 RoboBellaを見る', en:'🤖 Visit RoboBella', zh:'🤖 前往 RoboBella', ko:'🤖 RoboBella 보기', es:'🤖 Visitar RoboBella'}[lang] || '🤖 RoboBellaを見る'}
+          </a>
           <button className="tp-footer-link" onClick={() => navigate('/privacy')}>
             {{ja:'🔒 プライバシーポリシー', en:'🔒 Privacy Policy', zh:'🔒 隐私政策', ko:'🔒 개인정보 처리방침', es:'🔒 Privacidad'}[lang] || '🔒 プライバシーポリシー'}
           </button>
-          <span className="tp-footer-sep">|</span>
           <button className="tp-footer-link" onClick={() => navigate('/terms')}>
             {{ja:'📜 利用規約', en:'📜 Terms of Use', zh:'📜 使用条款', ko:'📜 이용약관', es:'📜 Términos'}[lang] || '📜 利用規約'}
           </button>

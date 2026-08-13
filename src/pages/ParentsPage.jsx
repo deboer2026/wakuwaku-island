@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StaticPageSEO from '../seo/StaticPageSEO';
+import { trackEvent } from '../utils/analytics';
 import './LegalPage.css';
 
 export default function ParentsPage() {
@@ -61,6 +62,20 @@ export default function ParentsPage() {
           <p>{en
             ? 'Wakuwaku Island is operated by the Wakuwaku Island team. A public contact channel is being prepared; details will be added here and to the policy pages when available.'
             : '当サイトは「わくわくアイランド運営」が企画・制作・運営しています。公開用のお問い合わせ窓口は現在整備中で、開設後にこのページとポリシーへ掲載します。'}</p>
+        </div>
+
+        <div className="legal-section legal-highlight">
+          <h2>🤖 RoboBella</h2>
+          <p>{en
+            ? 'RoboBella is a related site for enjoying AI videos, games, and AI information. It opens in a new tab.'
+            : 'RoboBellaは、AI動画・ゲーム・AI情報を楽しめる関連サイトです。新しいタブで開きます。'}</p>
+          <a className="legal-link-btn legal-external-link"
+            href="https://robobella.wakuwakuislands.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackEvent('robobella_portal_click', { source_context:'parents', source_page:'/parents' })}>
+            🤖 {en ? 'Visit RoboBella' : 'RoboBellaを見る'}
+          </a>
         </div>
 
         <p className="legal-footnote">© 2026 Wakuwaku Island. All rights reserved.</p>

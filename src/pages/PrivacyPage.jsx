@@ -82,7 +82,7 @@ export default function PrivacyPage() {
           <ul>
             {en ? (
               <>
-                <li>Language setting (Japanese / English)</li>
+                <li>Display language setting</li>
                 <li>Mute setting (sound on / off)</li>
                 <li>High scores for each game</li>
                 <li>Coin count and login bonus streak</li>
@@ -92,7 +92,7 @@ export default function PrivacyPage() {
               </>
             ) : (
               <>
-                <li>言語設定（日本語 / 英語）</li>
+                <li>表示言語の設定</li>
                 <li>ミュート設定（音あり / 音なし）</li>
                 <li>各ゲームのハイスコア</li>
                 <li>コイン枚数・ログインボーナスの連続日数</li>
