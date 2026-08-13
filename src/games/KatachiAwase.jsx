@@ -17,7 +17,7 @@ export default function KatachiAwase() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/katachi_awase_v1.html"
+          src="/games/katachi_awase_v2.html"
           title="かたちあわせ"
           allow="autoplay; fullscreen"
           allowFullScreen

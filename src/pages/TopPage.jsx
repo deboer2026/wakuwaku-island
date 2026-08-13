@@ -1059,21 +1059,15 @@ const GAME_SVGS = {
   ),
   g_katachi: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0" y="0" width="100" height="85" fill="#141042"/>
-      <circle cx="12" cy="10" r="1.6" fill="white" opacity=".7"/>
-      <circle cx="88" cy="14" r="1.3" fill="#FFD700" opacity=".6"/>
-      <circle cx="72" cy="6" r="1.2" fill="white" opacity=".5"/>
-      <circle cx="24" cy="72" r="1.4" fill="white" opacity=".5"/>
-      <ellipse cx="50" cy="40" rx="30" ry="11" fill="#B39DDB" stroke="#7E57C2" strokeWidth="2"/>
-      <path d="M34 33 A18 12 0 0 1 66 33" fill="#B3E5FC" opacity=".55" stroke="#81D4FA" strokeWidth="1.5"/>
-      <rect x="26" y="40" width="48" height="26" rx="9" fill="#D1C4E9" stroke="#9575CD" strokeWidth="2"/>
-      <circle cx="38" cy="53" r="6.5" fill="#0b0524" stroke="white" strokeWidth="1.5" strokeDasharray="3 2"/>
-      <path d="M50 46.5 L56.2 57.5 L43.8 57.5 Z" fill="#66BB6A" stroke="#1B5E20" strokeWidth="1.5"/>
-      <rect x="57" y="47" width="12" height="12" rx="2" fill="#0b0524" stroke="white" strokeWidth="1.5" strokeDasharray="3 2"/>
-      <circle cx="18" cy="74" r="7" fill="#EF5350" stroke="#B71C1C" strokeWidth="1.8"/>
-      <path d="M50 68 L52.6 74.2 L59.3 74.6 L54.1 79 L55.8 85.4 L50 81.8 L44.2 85.4 L45.9 79 L40.7 74.6 L47.4 74.2 Z" fill="#FFD54F" stroke="#B8860B" strokeWidth="1.5"/>
-      <rect x="74" y="67" width="14" height="14" rx="2.5" fill="#42A5F5" stroke="#0D47A1" strokeWidth="1.8"/>
-      <path d="M35 20 L38 26 L32 26 Z" fill="#F48FB1" opacity=".85"/>
+      <rect width="100" height="85" rx="12" fill="#E9BE86"/>
+      <rect x="8" y="14" width="84" height="42" rx="7" fill="#F3DCB6" stroke="#C9782B" strokeWidth="2.5"/>
+      <rect x="4" y="10" width="92" height="10" rx="4" fill="#C9782B"/>
+      <circle cx="26" cy="35" r="10" fill="#FF6B6B" stroke="#C94A4A" strokeWidth="2"/>
+      <path d="M50 25 L58.5 41 L41.5 41 Z" fill="#5AA9E6" stroke="#3B7FB5" strokeWidth="2" strokeLinejoin="round"/>
+      <rect x="66" y="26" width="18" height="18" rx="3" fill="#FFC84D" stroke="#D69B21" strokeWidth="2"/>
+      <path d="M18 68l2 4.4 4.8.7-3.5 3.4.8 4.8-4.1-2.2-4.1 2.2.8-4.8-3.5-3.4 4.8-.7z" fill="#5BC98C" stroke="#3D9E68" strokeWidth="1.6"/>
+      <circle cx="50" cy="72" r="9" fill="#A98CE0" stroke="#7D63B5" strokeWidth="2"/>
+      <path d="M78 62l3.5 7.2 8 1.1-5.8 5.6 1.4 7.9-6.8-3.6-6.8 3.6 1.4-7.9-5.8-5.6 8-1.1z" fill="#FF8FC6" stroke="#DB6BA3" strokeWidth="1.6"/>
     </svg>
   ),
 };
@@ -1344,12 +1338,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'接龙桥3D',               desc:'接龙连接单词，\n跨过大桥！' },
     ko:{ name:'끝말잇기 다리 3D',        desc:'단어를 이어서\n다리를 건너요!' },
     es:{ name:'Puente de Palabras 3D',  desc:'¡Encadena palabras\ny cruza el puente!' } },
-  { id:'g_katachi', route:'/katachi', icon:'🔷', num:21, color:'#7C7CE8', stars:3, isNew:true, category:'がくしゅう',
-    ja:{ name:'かたちあわせ',       desc:'うちゅうで かたちを\nはめたり しわけたり しよう！' },
-    en:{ name:'Shape Match',        desc:'Fit and sort shapes\nin outer space!' },
-    zh:{ name:'形状配对',           desc:'在宇宙中拼合\n和分类形状！' },
-    ko:{ name:'모양 맞추기',        desc:'우주에서 모양을\n끼우고 분류해요!' },
-    es:{ name:'Formas Espaciales',  desc:'¡Encaja y clasifica\nformas en el espacio!' } },
+  { id:'g_katachi', route:'/katachi', icon:'🔷', num:21, color:'#C9782B', stars:5, isNew:true, category:'がくしゅう',
+    ja:{ name:'かたちあわせ',       desc:'おもちゃこうじょうで\nかたちを はめよう！' },
+    en:{ name:'Shape Workshop',     desc:'Fit, sort & match shapes\nin a toy factory!' },
+    zh:{ name:'形状工坊',           desc:'在玩具工厂里\n拼合、分类形状！' },
+    ko:{ name:'모양 공방',          desc:'장난감 공장에서\n모양을 맞춰봐요!' },
+    es:{ name:'Taller de Formas',   desc:'¡Encaja y clasifica formas\nen una fábrica de juguetes!' } },
   { id:'g_nijiiro', route:'/nijiiro-oukoku', icon:'🌈', num:24, color:'#F2C14E', stars:5, isNew:true, category:'ぼうけん',
     ja:{ name:'にじいろおうこく', desc:'きもちを みて えらぼう！\nどうぶつと なかよしRPG' },
     en:{ name:'Rainbow Kingdom',  desc:'Guess their feelings and\nbefriend every animal!' },
