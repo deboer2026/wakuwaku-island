@@ -503,15 +503,100 @@ const GAME_SVGS = {
   ),
   g9: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100" height="85" rx="12" fill="#94ddff"/>
-      <path d="M0 45Q18 35 35 44T68 41T100 46V85H0Z" fill="#88ca61"/>
-      <path d="M0 61Q18 52 38 61T72 56T100 62V85H0Z" fill="#61b45a"/>
-      <rect x="77" y="27" width="15" height="17" rx="2" fill="#d8f8f2" stroke="#fff7de" strokeWidth="2"/><path d="M75 28L84 20L94 28" fill="none" stroke="#f7e8bb" strokeWidth="3"/>
-      <path d="M12 62V38M4 45H24M12 38L4 33M12 38L20 32" stroke="#b67a42" strokeWidth="2.5" strokeLinecap="round"/>
-      <g transform="translate(50 50)"><ellipse cx="0" cy="21" rx="19" ry="5" fill="#4b8d52" opacity=".25"/><ellipse cx="0" cy="2" rx="16" ry="15" fill="#fffaf3" stroke="#e6b2c4" strokeWidth="1.2"/><ellipse cx="-8" cy="-15" rx="5" ry="15" fill="#fffaf3" stroke="#e6b2c4" strokeWidth="1.2" transform="rotate(-9 -8 -15)"/><ellipse cx="8" cy="-15" rx="5" ry="15" fill="#fffaf3" stroke="#e6b2c4" strokeWidth="1.2" transform="rotate(9 8 -15)"/><ellipse cx="-8" cy="-15" rx="2" ry="10" fill="#ffa5bd"/><ellipse cx="8" cy="-15" rx="2" ry="10" fill="#ffa5bd"/><circle cx="-6" cy="-2" r="2.5" fill="#493047"/><circle cx="6" cy="-2" r="2.5" fill="#493047"/><circle cx="-5.3" cy="-2.7" r=".8" fill="#fff"/><circle cx="6.7" cy="-2.7" r=".8" fill="#fff"/><ellipse cx="0" cy="3" rx="2" ry="1.5" fill="#ef85a2"/><path d="M0 5q-3 3-6 0M0 5q3 3 6 0" fill="none" stroke="#b75778" strokeWidth="1"/><path d="M-10 8q-5 2-8 0M10 8q5 2 8 0" stroke="#b75778" strokeWidth="1"/></g>
-      <g fill="#f54773" stroke="#ba244d" strokeWidth="1"><path d="M24 56q-6 2-5 9q2 7 8 8q6-1 8-8q1-7-5-9Z"/><path d="M68 56q-6 2-5 9q2 7 8 8q6-1 8-8q1-7-5-9Z"/><path d="M38 67q-5 2-4 8q2 5 7 6q5-1 6-6q1-6-4-8Z"/></g>
-      <g fill="#4ca348"><path d="M22 57l3-4 2 4 2-4 2 4z"/><path d="M66 57l3-4 2 4 2-4 2 4z"/><path d="M36 68l3-4 2 4 2-4 2 4z"/></g>
-      <g fill="#fff4a4"><circle cx="16" cy="20" r="2"/><circle cx="63" cy="14" r="1.7"/><circle cx="91" cy="13" r="1.4"/></g>
+      <rect x="0" y="0" width="100" height="85" rx="12" fill="#BFE7F7"/>
+      <circle cx="84" cy="13" r="7.5" fill="#FFE28A"/>
+      <circle cx="84" cy="13" r="4.6" fill="#FFF6D0"/>
+      <ellipse cx="20" cy="14" rx="10" ry="4.2" fill="#ffffff" opacity=".9"/>
+      <ellipse cx="28" cy="11" rx="6.4" ry="3.4" fill="#ffffff" opacity=".9"/>
+      <path d="M12 27h5.5v10H12z" fill="#8A5E36"/>
+      <circle cx="14.8" cy="23" r="8.2" fill="#4E9E42"/>
+      <circle cx="11" cy="26" r="5.2" fill="#6FC65C"/>
+      <path d="M82 28h5.5v10H82z" fill="#8A5E36"/>
+      <circle cx="84.8" cy="24" r="8.2" fill="#4E9E42"/>
+      <circle cx="88.6" cy="27" r="5.2" fill="#6FC65C"/>
+      <ellipse cx="50" cy="63" rx="45" ry="17" fill="#7A5334"/>
+      <ellipse cx="50" cy="57" rx="45" ry="17" fill="#6FBE5C"/>
+      <ellipse cx="50" cy="55" rx="45" ry="16" fill="#8FD478"/>
+      <rect x="26" y="41" width="48" height="4.4" rx="2.2" fill="#8B5E3C"/>
+      <rect x="26" y="41" width="48" height="1.6" rx="0.8" fill="#A5764F"/>
+      <rect x="21" y="50" width="58" height="5" rx="2.5" fill="#8B5E3C"/>
+      <rect x="21" y="50" width="58" height="1.8" rx="0.9" fill="#A5764F"/>
+      <rect x="15" y="59" width="70" height="5.6" rx="2.8" fill="#8B5E3C"/>
+      <rect x="15" y="59" width="70" height="2" rx="1" fill="#A5764F"/>
+      <ellipse cx="33" cy="42" rx="6.4" ry="2.6" fill="#4E9E42"/>
+      <ellipse cx="33" cy="41" rx="5.2" ry="2" fill="#6FC65C"/>
+      <ellipse cx="33" cy="37.6" rx="3.1" ry="2.8" fill="#E8365F"/>
+      <path d="M29.9 37.6q3.1 6.4 6.2 0z" fill="#E8365F"/>
+      <ellipse cx="33" cy="34.6" rx="3.7" ry="1.5" fill="#5FB84E"/>
+      <circle cx="31.8" cy="38.4" r=".6" fill="#FFE9A8"/>
+      <circle cx="34.2" cy="37.4" r=".6" fill="#FFE9A8"/>
+      <ellipse cx="50" cy="42" rx="6.4" ry="2.6" fill="#4E9E42"/>
+      <ellipse cx="50" cy="41" rx="5.2" ry="2" fill="#6FC65C"/>
+      <ellipse cx="50" cy="37.6" rx="3.1" ry="2.8" fill="#E8365F"/>
+      <path d="M46.9 37.6q3.1 6.4 6.2 0z" fill="#E8365F"/>
+      <ellipse cx="50" cy="34.6" rx="3.7" ry="1.5" fill="#5FB84E"/>
+      <circle cx="48.8" cy="38.4" r=".6" fill="#FFE9A8"/>
+      <circle cx="51.2" cy="37.4" r=".6" fill="#FFE9A8"/>
+      <ellipse cx="67" cy="42" rx="6.4" ry="2.6" fill="#4E9E42"/>
+      <ellipse cx="67" cy="41" rx="5.2" ry="2" fill="#6FC65C"/>
+      <ellipse cx="67" cy="37.6" rx="3.1" ry="2.8" fill="#E8365F"/>
+      <path d="M63.9 37.6q3.1 6.4 6.2 0z" fill="#E8365F"/>
+      <ellipse cx="67" cy="34.6" rx="3.7" ry="1.5" fill="#5FB84E"/>
+      <circle cx="65.8" cy="38.4" r=".6" fill="#FFE9A8"/>
+      <circle cx="68.2" cy="37.4" r=".6" fill="#FFE9A8"/>
+      <ellipse cx="29" cy="51.4" rx="7.2" ry="3" fill="#4E9E42"/>
+      <ellipse cx="29" cy="50.2" rx="5.8" ry="2.3" fill="#6FC65C"/>
+      <ellipse cx="29" cy="46.2" rx="3.6" ry="3.2" fill="#E8365F"/>
+      <path d="M25.4 46.2q3.6 7.4 7.2 0z" fill="#E8365F"/>
+      <ellipse cx="29" cy="42.8" rx="4.3" ry="1.7" fill="#5FB84E"/>
+      <circle cx="27.6" cy="47.2" r=".7" fill="#FFE9A8"/>
+      <circle cx="30.4" cy="46" r=".7" fill="#FFE9A8"/>
+      <circle cx="29" cy="49.2" r=".7" fill="#FFE9A8"/>
+      <ellipse cx="50" cy="51.4" rx="7.2" ry="3" fill="#4E9E42"/>
+      <ellipse cx="50" cy="50.2" rx="5.8" ry="2.3" fill="#6FC65C"/>
+      <ellipse cx="50" cy="46.2" rx="3.6" ry="3.2" fill="#FFDD55"/>
+      <path d="M46.4 46.2q3.6 7.4 7.2 0z" fill="#FFDD55"/>
+      <ellipse cx="50" cy="42.8" rx="4.3" ry="1.7" fill="#5FB84E"/>
+      <path d="M50 25.6l1.5 3.4 3.4 1.5-3.4 1.5-1.5 3.4-1.5-3.4-3.4-1.5 3.4-1.5z" fill="#FFF6D0"/>
+      <ellipse cx="71" cy="51.4" rx="7.2" ry="3" fill="#4E9E42"/>
+      <ellipse cx="71" cy="50.2" rx="5.8" ry="2.3" fill="#6FC65C"/>
+      <ellipse cx="71" cy="46.2" rx="3.6" ry="3.2" fill="#E8365F"/>
+      <path d="M67.4 46.2q3.6 7.4 7.2 0z" fill="#E8365F"/>
+      <ellipse cx="71" cy="42.8" rx="4.3" ry="1.7" fill="#5FB84E"/>
+      <circle cx="69.6" cy="47.2" r=".7" fill="#FFE9A8"/>
+      <circle cx="72.4" cy="46" r=".7" fill="#FFE9A8"/>
+      <circle cx="71" cy="49.2" r=".7" fill="#FFE9A8"/>
+      <ellipse cx="23" cy="60.6" rx="8" ry="3.4" fill="#4E9E42"/>
+      <ellipse cx="23" cy="59.2" rx="6.4" ry="2.6" fill="#6FC65C"/>
+      <ellipse cx="23" cy="54.8" rx="4" ry="3.6" fill="#E8365F"/>
+      <path d="M19 54.8q4 8.2 8 0z" fill="#E8365F"/>
+      <ellipse cx="23" cy="51" rx="4.8" ry="1.9" fill="#5FB84E"/>
+      <circle cx="21.4" cy="55.9" r=".8" fill="#FFE9A8"/>
+      <circle cx="24.6" cy="54.6" r=".8" fill="#FFE9A8"/>
+      <circle cx="23" cy="58.1" r=".8" fill="#FFE9A8"/>
+      <ellipse cx="77" cy="60.6" rx="8" ry="3.4" fill="#4E9E42"/>
+      <ellipse cx="77" cy="59.2" rx="6.4" ry="2.6" fill="#6FC65C"/>
+      <ellipse cx="77" cy="54.8" rx="4" ry="3.6" fill="#E8365F"/>
+      <path d="M73 54.8q4 8.2 8 0z" fill="#E8365F"/>
+      <ellipse cx="77" cy="51" rx="4.8" ry="1.9" fill="#5FB84E"/>
+      <circle cx="75.4" cy="55.9" r=".8" fill="#FFE9A8"/>
+      <circle cx="78.6" cy="54.6" r=".8" fill="#FFE9A8"/>
+      <circle cx="77" cy="58.1" r=".8" fill="#FFE9A8"/>
+      <ellipse cx="50" cy="65" rx="18" ry="6.4" fill="#A96E36"/>
+      <ellipse cx="50" cy="65" rx="15.2" ry="4.8" fill="#8A5A2A"/>
+      <ellipse cx="41.5" cy="63.6" rx="4.4" ry="3.8" fill="#E8365F"/>
+      <ellipse cx="41.5" cy="60.7" rx="4.6" ry="1.8" fill="#5FB84E"/>
+      <ellipse cx="58.5" cy="63.6" rx="4.4" ry="3.8" fill="#E8365F"/>
+      <ellipse cx="58.5" cy="60.7" rx="4.6" ry="1.8" fill="#5FB84E"/>
+      <ellipse cx="50" cy="62.2" rx="5" ry="4.4" fill="#FF5C8D"/>
+      <ellipse cx="50" cy="58.8" rx="5.2" ry="2.1" fill="#5FB84E"/>
+      <circle cx="48.4" cy="63" r=".8" fill="#FFF0C8"/>
+      <circle cx="51.6" cy="61.8" r=".8" fill="#FFF0C8"/>
+      <path d="M32 65q0 12 18 12t18-12z" fill="#C98A4B"/>
+      <path d="M35 69.4q15 4.6 30 0v3.2q-15 4.6-30 0z" fill="#AE7238"/>
+      <path d="M32 65a18 6.4 0 0 0 36 0" fill="none" stroke="#A96E36" strokeWidth="3"/>
+      <path d="M11 41l1.4 3 3 1.4-3 1.4-1.4 3-1.4-3-3-1.4 3-1.4z" fill="#FFF6D0" opacity=".9"/>
+      <path d="M92 46l1.1 2.4 2.4 1.1-2.4 1.1-1.1 2.4-1.1-2.4-2.4-1.1 2.4-1.1z" fill="#FFF6D0" opacity=".85"/>
     </svg>
   ),
   g10: (
@@ -1145,12 +1230,12 @@ const GAMES = [
     zh:{ name:'三文鱼回转寿司店',         desc:'按照订单\n点击3D回转寿司！' },
     ko:{ name:'연어 회전초밥집',          desc:'주문에 맞춰\n3D 초밥을 터치해요!' },
     es:{ name:'Sushi de Salmón 3D',     desc:'¡Sirve cada pedido\nde la cinta 3D!' } },
-  { id:'g9', route:'/ichigo',          icon:'🍓', num:9, color:'#E91E63', stars:5, isNew:false, category:'アクション',
-    ja:{ name:'いちご',             desc:'いちごばたけで\nたくさん あつめよう！'       },
-    en:{ name:'Strawberry Time',      desc:'Pick lots of berries\nin a sunny field!'      },
-    zh:{ name:'草莓时间',             desc:'在阳光草莓田里\n收集好多草莓！'               },
-    ko:{ name:'딸기 모으기',           desc:'햇살 가득 딸기밭에서\n딸기를 모아요!'         },
-    es:{ name:'Tiempo de Fresa',       desc:'¡Recoge muchas fresas\nen el campo!'           } },
+  { id:'g9', route:'/ichigo',          icon:'🍓', num:9, color:'#E91E63', stars:5, isNew:true, category:'そうぞう',
+    ja:{ name:'いちごのおか',       desc:'そだてて しゅうかく！\n3Dいちごのうえん'       },
+    en:{ name:'Strawberry Hill',      desc:'Grow and harvest\nin a 3D berry farm!'        },
+    zh:{ name:'草莓山丘',             desc:'种植与收获！\n3D草莓农场'                     },
+    ko:{ name:'딸기 언덕',             desc:'키우고 수확해요!\n3D 딸기 농장'               },
+    es:{ name:'Colina de Fresas',      desc:'¡Cultiva y cosecha\nen la granja 3D!'         } },
   { id:'g10', route:'/kakurenbo',      icon:'🔍', num:10, color:'#2d6a4f', stars:5, isNew:true, category:'パズル',
     ja:{ name:'どうぶつかくれんぼ3D', desc:'3Dのしまをまわしてさがそう！\n2つのあそびと8ステージ' },
     en:{ name:'Animal Hide & Seek 3D',   desc:'Spin the 3D island and explore!\n2 modes, 8 stages, pick a partner'      },

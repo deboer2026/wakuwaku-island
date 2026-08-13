@@ -1,0 +1,1822 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>いちごのおか 3D</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'M PLUS Rounded 1c',sans-serif;user-select:none;-webkit-user-select:none;}
+body{background:linear-gradient(180deg,#FFD3E0,#FFF0F4);transition:background 0.8s;}
+body.sky-morning{background:linear-gradient(180deg,#9BD9F5 0%,#FFE7C9 68%,#FFF4E2 100%);}
+body.sky-dew{background:linear-gradient(180deg,#8FD3EF 0%,#D6F2E6 65%,#F2FBF3 100%);}
+body.sky-flower{background:linear-gradient(180deg,#A8DCF7 0%,#FFDCEA 62%,#FFF1F6 100%);}
+body.sky-house{background:linear-gradient(180deg,#BFE9F7 0%,#E4F7EC 60%,#FFFDF0 100%);}
+body.sky-fall{background:linear-gradient(180deg,#7EC7EE 0%,#CDEFF7 55%,#EAFBFF 100%);}
+body.sky-sunset{background:linear-gradient(180deg,#F79BA6 0%,#FFC48A 55%,#FFE9C4 100%);}
+body.sky-night{background:linear-gradient(180deg,#1E2B58 0%,#3A3F7C 58%,#5D5A9E 100%);}
+body.sky-snow{background:linear-gradient(180deg,#AEC9E8 0%,#DFEDFA 58%,#F7FBFF 100%);}
+body.sky-rainbow{background:linear-gradient(180deg,#7FC9F0 0%,#CDE7FA 45%,#FFE3F0 100%);}
+body.sky-magic{background:linear-gradient(180deg,#4A2C6B 0%,#8B4E9E 52%,#F0A3D2 100%);}
+
+#wrap{position:fixed;inset:0;overflow:hidden;}
+#cv{display:block;position:absolute;inset:0;width:100%;height:100%;z-index:0;touch-action:none;}
+
+/* ================= HUD ================= */
+#hud{position:fixed;top:0;left:0;right:0;z-index:40;display:none;flex-direction:column;gap:6px;
+  padding:max(10px,var(--sat,0px)) max(12px,var(--sar,0px)) 6px max(12px,var(--sal,0px));pointer-events:none;}
+#hud.on{display:flex;}
+#hud button{pointer-events:auto;}
+.hud-row{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+#hud-left{display:flex;align-items:center;gap:8px;min-width:0;}
+#back-btn{background:rgba(90,20,50,0.42);border:1px solid rgba(255,255,255,0.35);border-radius:14px;padding:6px 12px;font-size:13px;font-weight:800;color:#fff;cursor:pointer;font-family:inherit;flex:none;}
+#stage-name{font-size:15px;font-weight:900;color:#fff;text-shadow:0 2px 5px rgba(0,0,0,0.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#hud-right{display:flex;gap:6px;align-items:center;flex:none;}
+.chip{background:rgba(90,20,50,0.36);border-radius:12px;padding:5px 10px;font-size:14px;font-weight:900;color:#fff;display:flex;align-items:center;gap:4px;}
+#ui-bgm-btn{background:rgba(90,20,50,0.34);border:none;border-radius:50%;width:36px;height:36px;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.bgm-btn{background:rgba(90,20,50,0.34);border:none;border-radius:50%;width:36px;height:36px;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+#title-bgm-btn{position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.55);color:#8E5470;}
+#map-bgm-btn{background:rgba(255,255,255,0.9);color:#C4632A;}
+
+/* かごゲージ */
+#basket-bar{margin:0 auto;width:min(340px,86%);height:20px;border-radius:12px;background:rgba(255,255,255,0.42);
+  border:2px solid rgba(255,255,255,0.75);overflow:hidden;position:relative;box-shadow:0 2px 8px rgba(0,0,0,0.16);}
+#basket-fill{position:absolute;inset:0;width:0%;background:linear-gradient(90deg,#FF7BA0,#F0426F);transition:width 0.45s cubic-bezier(.3,1.4,.5,1);border-radius:10px;}
+#basket-txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.5);}
+
+/* とくべついちご表示 */
+#rare-row{display:flex;justify-content:center;gap:6px;pointer-events:none;}
+.rare-dot{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.82);display:flex;align-items:center;justify-content:center;
+  font-size:14px;box-shadow:0 2px 5px rgba(0,0,0,0.18);filter:grayscale(1) opacity(0.5);transition:filter .4s,transform .4s;}
+.rare-dot.got{filter:none;transform:scale(1.15);}
+
+/* ================= toast ================= */
+#toast{position:fixed;top:34%;left:50%;transform:translate(-50%,-50%) scale(0.6);z-index:60;pointer-events:none;
+  font-family:'DotGothic16',sans-serif;font-size:32px;font-weight:900;color:#fff;text-align:center;
+  text-shadow:0 3px 0 #C43062,0 6px 14px rgba(0,0,0,0.32);opacity:0;transition:all .3s;}
+#toast.on{opacity:1;transform:translate(-50%,-50%) scale(1);}
+
+#guide-tip{position:fixed;left:50%;bottom:max(22px,var(--sab,0px));transform:translateX(-50%);z-index:39;
+  background:rgba(80,20,45,0.55);color:#fff;font-size:13px;font-weight:800;border-radius:16px;padding:8px 16px;
+  pointer-events:none;opacity:0;transition:opacity .5s;white-space:nowrap;}
+#guide-tip.on{opacity:1;}
+
+/* ================= screens ================= */
+.screen{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;
+  padding:max(18px,var(--sat,0px)) max(16px,var(--sar,0px)) max(18px,var(--sab,0px)) max(16px,var(--sal,0px));
+  overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.screen.on{display:flex;}
+.sub-title{font-family:'DotGothic16',sans-serif;font-size:19px;color:#fff;text-shadow:2px 2px 0 #A32255;margin-bottom:14px;text-align:center;}
+
+/* ===== title ===== */
+#screen-title{justify-content:flex-end;gap:0;padding-bottom:0;background:none;overflow:hidden;}
+/* 3Dが使えない端末用のフォールバック背景 */
+#screen-title.no3d{background:radial-gradient(125% 95% at 50% 0%,#FFC1D5 0%,#F5789F 46%,#B02659 100%);}
+#title-vig{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 78% at 50% 6%,rgba(255,214,232,0.42) 0%,rgba(255,150,190,0.16) 42%,rgba(120,20,60,0.30) 100%);}
+#title-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;
+  width:100%;padding-bottom:max(30px,var(--sab,0px));}
+
+#title-ribbon{display:flex;align-items:center;gap:6px;background:linear-gradient(180deg,#FFFFFF,#FFE7F0);
+  border-radius:999px;padding:5px 16px;font-size:12px;font-weight:900;color:#C43C70;letter-spacing:.06em;
+  box-shadow:0 3px 10px rgba(120,20,60,0.28);margin-bottom:10px;}
+#title-ribbon b{color:#E8365F;}
+
+#big-title{position:relative;font-family:'DotGothic16',sans-serif;font-size:clamp(34px,11.5vw,60px);
+  line-height:1.12;text-align:center;margin-bottom:6px;filter:drop-shadow(0 10px 22px rgba(120,15,60,0.42));}
+#big-title .t{position:relative;display:block;color:#FFF3F8;
+  text-shadow:
+    0 3px 0 #E8548A, 0 4px 0 #D63E77, 0 5px 0 #C22F68,
+    0 6px 0 #A82458, 0 9px 0 #7E1740,
+    -2px 0 0 #fff, 2px 0 0 #fff, 0 -2px 0 #fff,
+    0 12px 26px rgba(70,8,36,0.5);}
+#big-title .sheen{position:absolute;left:0;right:0;top:0;display:block;color:transparent;
+  background:linear-gradient(104deg,transparent 38%,rgba(255,255,255,0.92) 50%,transparent 62%);
+  background-size:260% 100%;-webkit-background-clip:text;background-clip:text;
+  animation:sheen 3.6s ease-in-out infinite;pointer-events:none;}
+@keyframes sheen{0%{background-position:160% 0}55%,100%{background-position:-60% 0}}
+
+#title-sub{font-size:13.5px;font-weight:900;color:#FFF0F6;text-align:center;margin-bottom:16px;
+  text-shadow:0 2px 6px rgba(90,10,45,0.6);letter-spacing:.02em;}
+#title-sub span{display:inline-block;background:rgba(255,255,255,0.20);border:1px solid rgba(255,255,255,0.38);
+  border-radius:999px;padding:4px 12px;margin:0 3px 4px;backdrop-filter:blur(3px);}
+
+/* スタートボタン */
+#btn-start{position:relative;overflow:hidden;padding:17px 52px;font-size:22px;border-radius:26px;
+  background:linear-gradient(180deg,#FFFCE0 0%,#FFE07A 46%,#FFB93E 100%);color:#8A2247;
+  box-shadow:0 6px 0 #C98418,0 12px 26px rgba(80,12,40,0.42),inset 0 2px 0 rgba(255,255,255,0.9);
+  animation:startPulse 2.1s ease-in-out infinite;}
+#btn-start:active{animation:none;transform:translateY(5px);box-shadow:0 1px 0 #C98418,0 5px 12px rgba(80,12,40,0.36);}
+#btn-start::after{content:'';position:absolute;top:-60%;left:-70%;width:45%;height:220%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,0.85),transparent);
+  transform:rotate(16deg);animation:btnShine 3.2s ease-in-out infinite;pointer-events:none;}
+@keyframes btnShine{0%{left:-70%}45%,100%{left:135%}}
+@keyframes startPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+
+#title-btns{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin-top:13px;}
+#title-btns .btn{background:rgba(255,255,255,0.92);color:#B0335F;box-shadow:0 4px 0 rgba(150,60,95,0.55),0 8px 18px rgba(80,12,40,0.3);}
+#title-btns .btn:active{box-shadow:0 1px 0 rgba(150,60,95,0.55);}
+
+/* まいちる花びら */
+#petals{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1;}
+#petals i{position:absolute;top:-8%;border-radius:60% 20% 60% 20%;opacity:0;
+  animation:petalFall linear infinite;}
+@keyframes petalFall{
+  0%{opacity:0;transform:translate3d(0,-10vh,0) rotate(0deg)}
+  10%{opacity:.92}
+  90%{opacity:.85}
+  100%{opacity:0;transform:translate3d(var(--dx,20px),112vh,0) rotate(540deg)}}
+
+.btn{font-family:'M PLUS Rounded 1c',sans-serif;font-weight:900;border:none;cursor:pointer;
+  border-radius:22px;padding:15px 34px;font-size:19px;color:#7A1638;
+  background:linear-gradient(180deg,#FFF6B0,#FFD05A);box-shadow:0 5px 0 #D19A22,0 9px 18px rgba(0,0,0,0.24);
+  transition:transform .1s,box-shadow .1s;}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #D19A22,0 4px 10px rgba(0,0,0,0.22);}
+.btn.sm{padding:11px 22px;font-size:15px;border-radius:17px;}
+.btn.ghost{background:linear-gradient(180deg,#FFFFFF,#FFE3EC);color:#B0335F;box-shadow:0 5px 0 #D89AAF,0 9px 18px rgba(0,0,0,0.2);}
+.btn.ghost:active{box-shadow:0 1px 0 #D89AAF;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px;}
+
+/* map */
+#screen-map{background:linear-gradient(180deg,#FFC7DC 0%,#FFE9F0 55%,#FFF7EF 100%);}
+#map-top{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:560px;margin-bottom:8px;gap:8px;}
+#map-title{font-family:'DotGothic16',sans-serif;font-size:22px;color:#B0335F;text-shadow:1px 1px 0 #fff;}
+#map-coins{background:#fff;border-radius:14px;padding:6px 12px;font-size:14px;font-weight:900;color:#C4632A;box-shadow:0 2px 6px rgba(0,0,0,0.12);}
+#stage-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:11px;width:100%;max-width:560px;padding-bottom:16px;}
+.stage-card{background:#fff;border-radius:19px;padding:12px 10px;text-align:center;cursor:pointer;
+  box-shadow:0 4px 12px rgba(160,60,100,0.2);border:3px solid #fff;transition:transform .12s;position:relative;overflow:hidden;}
+.stage-card:active{transform:scale(0.96);}
+.stage-card.locked{filter:grayscale(0.85) opacity(0.62);cursor:default;}
+.sc-art{height:62px;border-radius:13px;margin-bottom:7px;display:flex;align-items:center;justify-content:center;font-size:31px;}
+.sc-no{font-size:11px;font-weight:900;color:#E2789B;}
+.sc-name{font-size:13px;font-weight:900;color:#8E2A52;margin:1px 0 4px;line-height:1.25;}
+.sc-stars{font-size:14px;letter-spacing:1px;color:#FFC107;}
+.sc-lock{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:29px;background:rgba(255,255,255,0.35);}
+
+/* result */
+#screen-result{background:rgba(90,20,50,0.72);backdrop-filter:blur(4px);justify-content:center;gap:9px;}
+#res-card{background:linear-gradient(180deg,#FFFFFF,#FFF0F5);border-radius:28px;padding:24px 22px;max-width:400px;width:94%;
+  text-align:center;box-shadow:0 14px 40px rgba(0,0,0,0.34);border:5px solid #FFD9E6;}
+#res-title{font-family:'DotGothic16',sans-serif;font-size:27px;color:#D6417A;margin-bottom:8px;}
+#res-stars{font-size:42px;letter-spacing:5px;margin:5px 0 10px;min-height:48px;}
+#res-stars span{display:inline-block;opacity:0;transform:scale(0.2) rotate(-40deg);transition:all .45s cubic-bezier(.25,1.6,.4,1);}
+#res-stars span.on{opacity:1;transform:scale(1) rotate(0);}
+#res-body{font-size:14px;font-weight:800;color:#8E5470;line-height:1.75;margin-bottom:6px;}
+#res-guest{background:#FFF3F8;border-radius:18px;padding:11px;margin:9px 0;display:none;}
+#res-guest.on{display:block;}
+#res-guest .g-emoji{font-size:40px;}
+#res-guest .g-txt{font-size:13px;font-weight:800;color:#B0335F;margin-top:3px;}
+
+/* book / shop */
+#screen-book{background:linear-gradient(180deg,#FFDCE8,#FFF6F9);}
+#screen-shop{background:linear-gradient(180deg,#FFE7CF,#FFF8EE);}
+.panel-head{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:560px;margin-bottom:10px;gap:8px;}
+.panel-head h2{font-family:'DotGothic16',sans-serif;font-size:21px;color:#B0335F;}
+#book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;width:100%;max-width:560px;padding-bottom:16px;}
+.book-cell{background:#fff;border-radius:17px;padding:10px 6px;text-align:center;box-shadow:0 3px 9px rgba(160,60,100,0.16);}
+.book-cell.no{filter:grayscale(1) opacity(0.5);}
+.bc-art{width:46px;height:46px;margin:0 auto 5px;border-radius:50%;}
+.bc-name{font-size:11px;font-weight:900;color:#8E2A52;line-height:1.3;}
+#shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;width:100%;max-width:560px;padding-bottom:16px;}
+.shop-cell{background:#fff;border-radius:17px;padding:11px 6px;text-align:center;box-shadow:0 3px 9px rgba(170,110,50,0.16);}
+.shop-cell.no{filter:grayscale(1) opacity(0.45);}
+.sh-emoji{font-size:33px;}
+.sh-name{font-size:11px;font-weight:900;color:#95562A;margin-top:3px;}
+.sh-like{font-size:10px;font-weight:800;color:#C58B5C;margin-top:2px;}
+
+/* fallback */
+#nogl{position:fixed;inset:0;z-index:90;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  background:linear-gradient(180deg,#F5789F,#B02659);color:#fff;text-align:center;padding:30px;}
+#nogl.on{display:flex;}
+#nogl .ng-t{font-family:'DotGothic16',sans-serif;font-size:22px;}
+#nogl .ng-b{font-size:14px;font-weight:800;line-height:1.8;}
+
+/* fx layer */
+#fx{position:fixed;inset:0;z-index:45;pointer-events:none;overflow:hidden;}
+.pop-num{position:absolute;font-family:'DotGothic16',sans-serif;font-size:22px;font-weight:900;color:#fff;
+  text-shadow:0 2px 0 #C43062,0 4px 8px rgba(0,0,0,0.3);animation:popUp 1s ease-out forwards;}
+@keyframes popUp{0%{opacity:0;transform:translate(-50%,0) scale(.5)}25%{opacity:1;transform:translate(-50%,-18px) scale(1.15)}100%{opacity:0;transform:translate(-50%,-62px) scale(1)}}
+.spark{position:absolute;width:9px;height:9px;border-radius:50%;animation:sparkFly .85s ease-out forwards;}
+@keyframes sparkFly{0%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.2)}}
+</style>
+</head>
+<body class="sky-morning">
+<div id="wrap"><canvas id="cv"></canvas></div>
+<div id="fx"></div>
+
+<div id="hud">
+  <div class="hud-row">
+    <div id="hud-left">
+      <button id="back-btn">← もどる</button>
+      <div id="stage-name">はじまりのはたけ</div>
+    </div>
+    <div id="hud-right">
+      <div class="chip" id="coin-chip">🪙 <span id="coin-val">0</span></div>
+      <button id="ui-bgm-btn">🔊</button>
+    </div>
+  </div>
+  <div id="basket-bar"><div id="basket-fill"></div><div id="basket-txt">0 / 12</div></div>
+  <div id="rare-row"></div>
+</div>
+
+<div id="guide-tip"></div>
+<div id="toast"></div>
+
+<div class="screen on" id="screen-title">
+  <button class="bgm-btn" id="title-bgm-btn">🔊</button>
+  <div id="title-vig"></div>
+  <div id="petals"></div>
+  <div id="title-inner">
+    <div id="title-ribbon">🍓 <b>3D</b> いちごのうえん</div>
+    <div id="big-title"><span class="t">いちごのおか</span><span class="sheen" aria-hidden="true">いちごのおか</span></div>
+    <div id="title-sub"><span>そだてて しゅうかく</span><span>じかんせいげん なし</span></div>
+    <button class="btn" id="btn-start">▶ はじめる</button>
+    <div id="title-btns">
+      <button class="btn sm" id="btn-book-t">📖 いちごずかん</button>
+      <button class="btn sm" id="btn-shop-t">🏠 おみせ</button>
+      <button class="btn sm" id="btn-home-t">🏝 トップ</button>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="screen-map">
+  <div id="map-top">
+    <div id="map-title">🍓 はたけを えらぼう</div>
+    <div id="map-coins">🪙 <span id="map-coin-val">0</span></div>
+    <button class="bgm-btn" id="map-bgm-btn">🔊</button>
+  </div>
+  <div class="sub-title">すきな はたけを タップ</div>
+  <div id="stage-grid"></div>
+  <div class="btn-row" style="margin-bottom:18px;">
+    <button class="btn sm ghost" id="btn-book-m">📖 ずかん</button>
+    <button class="btn sm ghost" id="btn-shop-m">🏠 おみせ</button>
+    <button class="btn sm ghost" id="btn-home-m">🏝 トップ</button>
+  </div>
+</div>
+
+<div class="screen" id="screen-result">
+  <div id="res-card">
+    <div id="res-title">できた！</div>
+    <div id="res-stars"><span>⭐</span><span>⭐</span><span>⭐</span></div>
+    <div id="res-body"></div>
+    <div id="res-guest"><div class="g-emoji"></div><div class="g-txt"></div></div>
+    <div class="btn-row">
+      <button class="btn sm" id="btn-again">もういちど</button>
+      <button class="btn sm ghost" id="btn-next">つぎのはたけ →</button>
+      <button class="btn sm ghost" id="btn-tomap">はたけ いちらん</button>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="screen-book">
+  <div class="panel-head"><h2>📖 いちごずかん</h2><button class="btn sm ghost" id="btn-book-close">とじる</button></div>
+  <div class="sub-title" id="book-count">0 / 12 しゅるい</div>
+  <div id="book-grid"></div>
+</div>
+
+<div class="screen" id="screen-shop">
+  <div class="panel-head"><h2>🏠 いちごのおみせ</h2><button class="btn sm ghost" id="btn-shop-close">とじる</button></div>
+  <div class="sub-title" id="shop-count">0 / 10 にん</div>
+  <div id="shop-grid"></div>
+</div>
+
+<div id="nogl">
+  <div style="font-size:56px;">🍓</div>
+  <div class="ng-t">3Dが つかえません</div>
+  <div class="ng-b">この ブラウザでは 3Dが うごきません。<br>べつの ブラウザで あそんでね。</div>
+  <button class="btn sm ghost" id="nogl-back">🏝 トップへ もどる</button>
+</div>
+
+<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/safe_area.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+/* ================= SAFE_LS ================= */
+var SAFE_LS=(function(){
+  try{var t='__ichigo_t';localStorage.setItem(t,'1');localStorage.removeItem(t);return localStorage;}
+  catch(e){var m={};return{getItem:function(k){return (k in m)?m[k]:null;},setItem:function(k,v){m[k]=String(v);},removeItem:function(k){delete m[k];}};}
+})();
+var SAVE_KEY='ichigo_v5_progress';
+var COIN_KEY='ichigo_v5_coins';
+
+/* ================= data: いちご ================= */
+/* c1=本体色 c2=影色 label=図鑑名 */
+var BERRIES={
+  aka:   {name:'あかいちご',   c1:0xE8365F, c2:0xB01F42, seed:0xFFE9A8, rare:false},
+  shiro: {name:'しろいちご',   c1:0xFFF1F3, c2:0xE3CBD3, seed:0xF5C34E, rare:false},
+  kiiro: {name:'きいろいちご', c1:0xFFC942, c2:0xD79A18, seed:0xFFF4CE, rare:false},
+  momo:  {name:'ももいちご',   c1:0xFF8FB4, c2:0xE0688F, seed:0xFFF0C8, rare:false},
+  mizu:  {name:'みずいちご',   c1:0x5BC8E8, c2:0x3496B6, seed:0xE8FAFF, rare:false},
+  midori:{name:'みどりいちご', c1:0x76D06A, c2:0x4E9E46, seed:0xF2FFD9, rare:false},
+  murasa:{name:'むらさきいちご',c1:0x9B5BD6, c2:0x6B3E9E, seed:0xF0E2FF, rare:false},
+  yuki:  {name:'ゆきいちご',   c1:0xDCF0FF, c2:0xB4D2E8, seed:0xFFFFFF, rare:false},
+  niji:  {name:'にじいちご',   c1:0xFF7BC8, c2:0x9B5BE0, seed:0xFFFFFF, rare:false},
+  ouka:  {name:'おうかんいちご',c1:0xFFD24A, c2:0xE0A014, seed:0xFFFFFF, rare:false},
+  hoshi: {name:'ほしいちご',   c1:0xFFE96B, c2:0xE8B928, seed:0xFFFFFF, rare:true},
+  heart: {name:'ハートいちご', c1:0xFF5C8D, c2:0xD22B60, seed:0xFFE3EF, rare:true}
+};
+var BOOK_ORDER=['aka','shiro','kiiro','momo','mizu','midori','murasa','yuki','niji','ouka','hoshi','heart'];
+
+/* ================= data: どうぶつのお客さん ================= */
+var GUESTS=[
+  {id:'usagi', name:'うさぎ',   emoji:'🐰', like:'ジャムパン'},
+  {id:'risu',  name:'りす',     emoji:'🐿️', like:'いちごタルト'},
+  {id:'kotori',name:'ことり',   emoji:'🐤', like:'いちごゼリー'},
+  {id:'neko',  name:'ねこ',     emoji:'🐱', like:'いちごミルク'},
+  {id:'kuma',  name:'くま',     emoji:'🐻', like:'いちごパフェ'},
+  {id:'kitsune',name:'きつね',  emoji:'🦊', like:'いちごだいふく'},
+  {id:'panda', name:'ぱんだ',   emoji:'🐼', like:'いちごケーキ'},
+  {id:'pengin',name:'ぺんぎん', emoji:'🐧', like:'いちごかきごおり'},
+  {id:'hitsuji',name:'ひつじ',  emoji:'🐑', like:'いちごプリン'},
+  {id:'zou',   name:'ぞう',     emoji:'🐘', like:'いちごホットケーキ'}
+];
+
+/* ================= data: ステージ ================= */
+/* rows/cols = 畑の株の並び, goal = ノルマ, berry = 主ないちご, deco = 飾り種別 */
+var STAGES=[
+  {name:'はじまりのはたけ', sky:'sky-morning', berry:'aka',    goal:10, rows:3, cols:4, deco:'fence',  ground:0x9BD46E, soil:0x8B5E3C, bgm:'fruity',  emoji:'🍓', cardA:'#FFB3C9', cardB:'#FF7BA0'},
+  {name:'あさつゆのおか',   sky:'sky-dew',     berry:'shiro',  goal:12, rows:3, cols:4, deco:'pond',   ground:0x8ED07A, soil:0x7E5334, bgm:'forest',  emoji:'💧', cardA:'#BDE9DA', cardB:'#6FC7AE'},
+  {name:'おはなのにわ',     sky:'sky-flower',  berry:'momo',   goal:14, rows:3, cols:5, deco:'flower', ground:0xA4DC7C, soil:0x8B5E3C, bgm:'cute',    emoji:'🌸', cardA:'#FFCBE0', cardB:'#F58AB6'},
+  {name:'ちいさなおんしつ', sky:'sky-house',   berry:'kiiro',  goal:14, rows:3, cols:5, deco:'green',  ground:0x9ED989, soil:0x7A5433, bgm:'building',emoji:'🏡', cardA:'#D8F0C4', cardB:'#8FCB6E'},
+  {name:'たきのそば',       sky:'sky-fall',    berry:'mizu',   goal:16, rows:4, cols:5, deco:'fall',   ground:0x86CFA0, soil:0x6E5A44, bgm:'ocean',   emoji:'⛲', cardA:'#BEE7F5', cardB:'#63BEDD'},
+  {name:'ゆうやけばたけ',   sky:'sky-sunset',  berry:'midori', goal:16, rows:4, cols:5, deco:'windmill',ground:0xB6C96A,soil:0x8A5C33, bgm:'sky',     emoji:'🌇', cardA:'#FFD3AE', cardB:'#F79B6B'},
+  {name:'つきよのはたけ',   sky:'sky-night',   berry:'murasa', goal:18, rows:4, cols:5, deco:'night',  ground:0x4E7A62, soil:0x4A3A2E, bgm:'magical', emoji:'🌙', cardA:'#B9BEE8', cardB:'#6E71B8'},
+  {name:'ゆきのおんしつ',   sky:'sky-snow',    berry:'yuki',   goal:18, rows:4, cols:6, deco:'snow',   ground:0xDCEBF5, soil:0x8A7460, bgm:'quiz',    emoji:'❄️', cardA:'#DCEEFA', cardB:'#93C4E3'},
+  {name:'にじのたに',       sky:'sky-rainbow', berry:'niji',   goal:20, rows:4, cols:6, deco:'rainbow',ground:0x9BDC8B, soil:0x8B5E3C, bgm:'happy',   emoji:'🌈', cardA:'#FFD9EE', cardB:'#9FA8F0'},
+  {name:'まほうのおか',     sky:'sky-magic',   berry:'ouka',   goal:22, rows:4, cols:6, deco:'magic',  ground:0x7E6BB0, soil:0x5A4478, bgm:'sweets',  emoji:'👑', cardA:'#E0BDF0', cardB:'#A163CC'}
+];
+
+/* ================= セーブ ================= */
+function safeParse(key){
+  try{var raw=SAFE_LS.getItem(key);if(!raw)return null;var v=JSON.parse(raw);return (v&&typeof v==='object')?v:null;}catch(e){return null;}
+}
+function clampStar(v){v=Math.floor(Number(v));if(!isFinite(v)||v<0)return 0;if(v>3)return 3;return v;}
+function normalizeSave(p){
+  var out={schemaVersion:5,stages:{},book:{},guests:{}};
+  var src=(p&&typeof p.stages==='object'&&p.stages)?p.stages:{};
+  for(var i=0;i<STAGES.length;i++){
+    var e=src[i]||{};
+    out.stages[i]={stars:clampStar(e.stars),cleared:!!e.cleared};
+  }
+  var b=(p&&typeof p.book==='object'&&p.book)?p.book:{};
+  for(var j=0;j<BOOK_ORDER.length;j++){var k=BOOK_ORDER[j];out.book[k]=!!b[k];}
+  var g=(p&&typeof p.guests==='object'&&p.guests)?p.guests:{};
+  for(var m=0;m<GUESTS.length;m++){var gid=GUESTS[m].id;out.guests[gid]=!!g[gid];}
+  return out;
+}
+function loadProg(){
+  var raw=safeParse(SAVE_KEY);
+  if(raw&&typeof raw.stages==='object')return normalizeSave(raw);
+  var fresh=normalizeSave(null);saveProg(fresh);return fresh;
+}
+function saveProg(p){try{SAFE_LS.setItem(SAVE_KEY,JSON.stringify(p));}catch(e){}}
+var PROG=loadProg();
+
+function getCoins(){var v=parseInt(SAFE_LS.getItem(COIN_KEY)||'0',10);return isFinite(v)&&v>0?v:0;}
+function addCoins(n){var v=getCoins()+n;try{SAFE_LS.setItem(COIN_KEY,String(v));}catch(e){}syncCoinUI();return v;}
+function syncCoinUI(){
+  var c=getCoins();
+  var a=document.getElementById('coin-val');if(a)a.textContent=c;
+  var b=document.getElementById('map-coin-val');if(b)b.textContent=c;
+}
+
+/* ================= BGM / SFX ================= */
+var _bgm=null,_bgmTheme='fruity';
+function initBGM(theme){
+  if(typeof WakuwakuBGM==='undefined'){syncBgmBtn();return;}
+  if(_bgm&&theme&&theme!==_bgmTheme){try{_bgm.stop();}catch(e){}_bgm=null;}
+  if(!_bgm){
+    _bgmTheme=theme||_bgmTheme;
+    try{
+      _bgm=new WakuwakuBGM(_bgmTheme);
+      var on=WakuwakuBGM.loadState();_bgm.setEnabled(on);if(on)_bgm.start();
+    }catch(e){_bgm=null;}
+  }
+  syncBgmBtn();
+}
+function toggleBGM(){
+  if(!_bgm){
+    initBGM(_bgmTheme);
+    if(_bgm&&!_bgm.enabled){_bgm.setEnabled(true);_bgm.start();}
+    if(_bgm&&typeof WakuwakuBGM!=='undefined'&&WakuwakuBGM.saveState)WakuwakuBGM.saveState(_bgm.enabled);
+    syncBgmBtn();
+    return;
+  }
+  var on=_bgm.toggle();
+  if(typeof WakuwakuBGM!=='undefined'&&WakuwakuBGM.saveState)WakuwakuBGM.saveState(on);
+  syncBgmBtn();
+}
+var BGM_BTN_IDS=['ui-bgm-btn','title-bgm-btn','map-bgm-btn'];
+function syncBgmBtn(){
+  /* _bgm未生成(初回操作まえ)でも、保存ずみの設定値で アイコンを あわせておく */
+  var enabled=_bgm?_bgm.enabled:(typeof WakuwakuBGM!=='undefined'&&typeof WakuwakuBGM.loadState==='function'?WakuwakuBGM.loadState():true);
+  var icon=enabled?'🔊':'🔇';
+  for(var i=0;i<BGM_BTN_IDS.length;i++){
+    var el=document.getElementById(BGM_BTN_IDS[i]);if(el)el.textContent=icon;
+  }
+}
+for(var _bi=0;_bi<BGM_BTN_IDS.length;_bi++){
+  (function(id){var el=document.getElementById(id);if(el)el.addEventListener('click',toggleBGM);})(BGM_BTN_IDS[_bi]);
+}
+syncBgmBtn();
+
+var _ac=null;
+function ac(){if(!_ac){try{_ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(_ac&&_ac.state==='suspended'){try{_ac.resume();}catch(e){}}return _ac;}
+function beep(f,t,dur,vol,wave){
+  var c=ac();if(!c)return;
+  try{
+    var o=c.createOscillator(),g=c.createGain();
+    o.type=wave||'sine';o.frequency.setValueAtTime(f,c.currentTime+t);
+    g.gain.setValueAtTime(0,c.currentTime+t);
+    g.gain.linearRampToValueAtTime(vol||0.14,c.currentTime+t+0.014);
+    g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+t+dur);
+    o.connect(g);g.connect(c.destination);
+    o.start(c.currentTime+t);o.stop(c.currentTime+t+dur+0.05);
+  }catch(e){}
+}
+function sfxWater(){beep(660,0,0.09,0.06,'sine');beep(880,0.06,0.11,0.05,'sine');}
+function sfxGrow(){[523,659,784].forEach(function(f,i){beep(f,i*0.06,0.2,0.1,'triangle');});}
+function sfxPick(){[784,1047,1319].forEach(function(f,i){beep(f,i*0.05,0.2,0.13,'triangle');});}
+function sfxRare(){[659,784,988,1319,1568,2093].forEach(function(f,i){beep(f,i*0.075,0.34,0.13,'triangle');});}
+function sfxClear(){[523,659,784,1047,1319,1568].forEach(function(f,i){beep(f,i*0.105,0.42,0.14,'triangle');});}
+function sfxBug(){beep(1200,0,0.06,0.07,'square');beep(1600,0.05,0.08,0.05,'square');}
+function sfxTap(){beep(480,0,0.05,0.05,'square');}
+
+/* ================= navigation ================= */
+function goHome(){
+  if(window.parent!==window){try{window.parent.postMessage({type:'goBack'},'*');}catch(e){}}
+  else{try{history.back();}catch(e){}}
+}
+
+/* ================= Three.js 基盤 ================= */
+var cv=document.getElementById('cv');
+var renderer=null,scene=null,camera=null,glOK=true;
+var world=null;      // ステージごとに差し替えるルート
+var CLOCK=null;
+
+function initGL(){
+  if(renderer)return true;
+  try{
+    renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+  }catch(e){glOK=false;}
+  if(!renderer||!renderer.getContext||!renderer.getContext()){glOK=false;}
+  if(!glOK){document.getElementById('nogl').classList.add('on');return false;}
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,TUNE.DPR_MAX));
+  renderer.setSize(window.innerWidth,window.innerHeight,false);
+  renderer.shadowMap.enabled=false;
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(46,window.innerWidth/window.innerHeight,0.1,300);
+  CLOCK=new THREE.Clock();
+
+  var amb=new THREE.AmbientLight(0xffffff,0.72);scene.add(amb);
+  var dir=new THREE.DirectionalLight(0xffffff,0.78);dir.position.set(6,12,7);scene.add(dir);
+  var fill=new THREE.DirectionalLight(0xFFD9E6,0.32);fill.position.set(-7,5,-5);scene.add(fill);
+  scene.userData.amb=amb;scene.userData.dir=dir;scene.userData.fill=fill;
+  return true;
+}
+function onResize(){
+  if(!renderer)return;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,TUNE.DPR_MAX));
+  renderer.setSize(window.innerWidth,window.innerHeight,false);
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  if(typeof GS!=='undefined'&&GS&&GS.titleMode){
+    var ar=window.innerWidth/Math.max(1,window.innerHeight);
+    GS.camR=ar<0.72?16.5:(ar<1?14.5:12.5);
+    updateCamera();
+  }else if(typeof fitCamera==='function'&&GS&&GS.field){fitCamera(null);}
+}
+window.addEventListener('resize',onResize);
+
+/* ================= 共有ジオメトリ ================= */
+var GEO={};
+function initGeo(){
+  if(GEO.berry)return;
+  // いちご本体（ロースで断面から回転体を作る）
+  var pts=[];
+  /* 下(先端)→上(へた側)の順。逆順にすると法線が内向きになり実機で裏返って見える */
+  var prof=[[0.001,-1.10],[0.12,-1.04],[0.31,-0.88],[0.53,-0.60],[0.70,-0.28],[0.80,0.05],
+            [0.81,0.34],[0.74,0.62],[0.56,0.84],[0.30,0.96],[0.001,1.00]];
+  for(var i=0;i<prof.length;i++)pts.push(new THREE.Vector2(prof[i][0],prof[i][1]));
+  GEO.berry=new THREE.LatheGeometry(pts,22);
+
+  GEO.sphere =new THREE.SphereGeometry(1,14,10);
+  GEO.sphereLow=new THREE.SphereGeometry(1,10,8);
+  GEO.cone   =new THREE.ConeGeometry(1,1,10);
+  GEO.cyl    =new THREE.CylinderGeometry(1,1,1,12);
+  GEO.cylTap =new THREE.CylinderGeometry(0.72,1,1,14);
+  GEO.box    =new THREE.BoxGeometry(1,1,1);
+  GEO.torus  =new THREE.TorusGeometry(1,0.06,8,40);
+  GEO.plane  =new THREE.PlaneGeometry(1,1);
+  GEO.leaf   =new THREE.SphereGeometry(1,10,7);
+  GEO.oct    =new THREE.OctahedronGeometry(1,0);
+}
+
+/* ================= いちごテクスチャ ================= */
+var BERRY_TEX={};
+function makeBerryTex(kind){
+  if(BERRY_TEX[kind])return BERRY_TEX[kind];
+  var B=BERRIES[kind];
+  var W=128,H=128;
+  var c=document.createElement('canvas');c.width=W;c.height=H;
+  var x=c.getContext('2d');
+  function hex(n){return '#'+('000000'+n.toString(16)).slice(-6);}
+  var g=x.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,hex(B.c1));
+  g.addColorStop(0.55,hex(B.c1));
+  g.addColorStop(1,hex(B.c2));
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  // ハイライト帯
+  x.globalAlpha=0.18;x.fillStyle='#ffffff';
+  x.fillRect(W*0.06,0,W*0.10,H);
+  x.globalAlpha=1;
+  // たね
+  x.fillStyle=hex(B.seed);
+  for(var row=0;row<9;row++){
+    var yy=10+row*13;
+    var off=(row%2)*8;
+    for(var col=0;col<8;col++){
+      var xx=6+col*16+off;
+      x.save();x.translate(xx,yy);x.rotate(0.35);
+      x.beginPath();x.ellipse(0,0,2.6,1.5,0,0,Math.PI*2);x.fill();
+      x.restore();
+    }
+  }
+  var t=new THREE.CanvasTexture(c);
+  t.wrapS=THREE.RepeatWrapping;
+  t.needsUpdate=true;
+  BERRY_TEX[kind]=t;
+  return t;
+}
+var BERRY_MAT={};
+function berryMat(kind){
+  if(BERRY_MAT[kind])return BERRY_MAT[kind];
+  var B=BERRIES[kind];
+  var m=new THREE.MeshLambertMaterial({map:makeBerryTex(kind)});
+  if(B.rare||kind==='niji'||kind==='ouka'){m.emissive=new THREE.Color(B.c1);m.emissiveIntensity=0.28;}
+  BERRY_MAT[kind]=m;
+  return m;
+}
+
+/* ================= マテリアル ================= */
+var MAT={};
+function mat(key,color,opts){
+  var k=key+'_'+color+'_'+(opts?JSON.stringify(opts):'');
+  if(MAT[k])return MAT[k];
+  var o=Object.assign({color:color},opts||{});
+  MAT[k]=new THREE.MeshLambertMaterial(o);
+  return MAT[k];
+}
+function basicMat(color,opts){
+  var k='b_'+color+'_'+(opts?JSON.stringify(opts):'');
+  if(MAT[k])return MAT[k];
+  MAT[k]=new THREE.MeshBasicMaterial(Object.assign({color:color},opts||{}));
+  return MAT[k];
+}
+function m(geo,material,px,py,pz,sx,sy,sz){
+  var o=new THREE.Mesh(geo,material);
+  o.position.set(px||0,py||0,pz||0);
+  o.scale.set(sx===undefined?1:sx, sy===undefined?(sx===undefined?1:sx):sy, sz===undefined?(sx===undefined?1:sx):sz);
+  return o;
+}
+
+/* ================= いちご1個のメッシュ ================= */
+function buildBerry(kind,size){
+  var s=size||1;
+  var g=new THREE.Group();
+  var body=m(GEO.berry,berryMat(kind),0,0,0,0.52*s,0.52*s,0.52*s);
+  g.add(body);
+  // へた（緑の葉）
+  var calyx=new THREE.Group();
+  var gm=mat('leaf',0x5FB84E);
+  for(var i=0;i<6;i++){
+    var a=i/6*Math.PI*2;
+    var lf=m(GEO.leaf,gm,Math.cos(a)*0.20*s,0,Math.sin(a)*0.20*s,0.16*s,0.045*s,0.09*s);
+    lf.rotation.y=-a;lf.rotation.z=0.34;
+    calyx.add(lf);
+  }
+  calyx.position.y=0.49*s;
+  g.add(calyx);
+  var stem=m(GEO.cyl,mat('stem',0x4E9E3F),0,0.60*s,0,0.028*s,0.14*s,0.028*s);
+  g.add(stem);
+  g.userData.body=body;
+  g.userData.kind=kind;
+  return g;
+}
+
+/* ================= 花 ================= */
+function buildFlower(color){
+  var g=new THREE.Group();
+  var pm=mat('petal',color===undefined?0xFFFBF2:color);
+  for(var i=0;i<5;i++){
+    var a=i/5*Math.PI*2;
+    var p=m(GEO.leaf,pm,Math.cos(a)*0.15,0,Math.sin(a)*0.15,0.13,0.04,0.13);
+    g.add(p);
+  }
+  g.add(m(GEO.sphereLow,mat('fc',0xFFD24A),0,0.03,0,0.075,0.05,0.075));
+  return g;
+}
+
+/* ================= 株（プラント）================= */
+/* stage: 0=め 1=はな 2=み  */
+function buildPlant(stgIdx){
+  var st=STAGES[stgIdx];
+  var g=new THREE.Group();
+
+  // 土の盛り上がり
+  var mound=m(GEO.cylTap,mat('soil',st.soil),0,0.06,0,0.40,0.12,0.40);
+  g.add(mound);
+
+  // 葉っぱ（根元）
+  var leaves=new THREE.Group();
+  var lm=mat('pleaf',0x57B24A),lm2=mat('pleaf2',0x6FC65C);
+  for(var i=0;i<5;i++){
+    var a=i/5*Math.PI*2+0.4;
+    var lf=m(GEO.leaf,(i%2?lm:lm2),Math.cos(a)*0.24,0.16,Math.sin(a)*0.24,0.23,0.055,0.16);
+    lf.rotation.y=-a;lf.rotation.z=0.30;
+    leaves.add(lf);
+  }
+  g.add(leaves);
+
+  // 若芽（stage0でも「ここをタップ」と分かるように）
+  var sprout=new THREE.Group();
+  var sm=mat('sprout',0x8FE06A);
+  var sp1=m(GEO.leaf,sm,-0.07,0.22,0,0.12,0.035,0.07); sp1.rotation.z=0.62;
+  var sp2=m(GEO.leaf,sm, 0.07,0.22,0,0.12,0.035,0.07); sp2.rotation.z=-0.62;
+  sprout.add(sp1);sprout.add(sp2);
+  sprout.add(m(GEO.cyl,mat('sstem',0x6FC65C),0,0.15,0,0.024,0.16,0.024));
+  g.add(sprout);
+
+  // 茎
+  var stemG=new THREE.Group();
+  var stem=m(GEO.cyl,mat('stem',0x4E9E3F),0,0.28,0,0.030,0.56,0.030);
+  stemG.add(stem);
+  stemG.position.set(0.15,0,0.06);
+  g.add(stemG);
+
+  // 花
+  var flower=buildFlower(0xFFFBF2);
+  flower.position.set(0.15,0.56,0.06);
+  flower.visible=false;
+  g.add(flower);
+
+  // 実（あとで差し替え）
+  var berryHolder=new THREE.Group();
+  berryHolder.position.set(0.15,0.56,0.06);
+  berryHolder.visible=false;
+  g.add(berryHolder);
+
+  // 水しぶき用パーティクル
+  g.userData={stage:0,leaves:leaves,sprout:sprout,stemG:stemG,flower:flower,berryHolder:berryHolder,
+              berry:null,kind:null,rare:false,anim:0,bug:null,regrow:0,idx:-1};
+  applyPlantStage(g,0,true);
+  return g;
+}
+
+function applyPlantStage(p,stage,instant){
+  var d=p.userData;
+  d.stage=stage;
+  if(stage===0){
+    d.leaves.scale.setScalar(instant?0.45:d.leaves.scale.x);
+    d.leaves.userData_target=0.45;
+    d.stemG.visible=false;d.flower.visible=false;d.berryHolder.visible=false;
+    if(d.sprout)d.sprout.visible=true;
+    d.targetLeaf=0.5;
+  }else if(stage===1){
+    d.targetLeaf=1.0;
+    if(d.sprout)d.sprout.visible=false;
+    d.stemG.visible=true;d.flower.visible=true;d.berryHolder.visible=false;
+    d.flower.scale.setScalar(instant?1:0.01);
+  }else{
+    d.targetLeaf=1.05;
+    if(d.sprout)d.sprout.visible=false;
+    d.stemG.visible=true;d.flower.visible=false;d.berryHolder.visible=true;
+    d.berryHolder.scale.setScalar(instant?1:0.01);
+  }
+  if(instant)d.leaves.scale.setScalar(d.targetLeaf);
+}
+
+function setPlantBerry(p,kind,rare){
+  var d=p.userData;
+  if(d.berry){d.berryHolder.remove(d.berry);d.berry=null;}
+  var b=buildBerry(kind,0.62);
+  d.berryHolder.add(b);
+  d.berry=b;d.kind=kind;d.rare=!!rare;
+}
+
+/* ================= ステージのジオラマ生成 ================= */
+var PLANTS=[];      // 現在の株
+var DECO_ANIM=[];   // 毎フレーム動かす飾り
+var FIELD={w:0,d:0,r:0};
+
+function clearWorld(){
+  if(world){
+    scene.remove(world);
+    world.traverse(function(o){
+      if(o.geometry&&o.geometry.__temp)o.geometry.dispose();
+      if(o.material&&o.material.__temp)o.material.dispose();
+    });
+  }
+  world=new THREE.Group();
+  scene.add(world);
+  PLANTS=[];DECO_ANIM=[];
+}
+
+function buildStage(stgIdx){
+  var st=STAGES[stgIdx];
+  clearWorld();
+
+  var SP=1.30;                       // 株の間隔
+  var fw=(st.cols-1)*SP, fd=(st.rows-1)*SP;
+  FIELD.w=fw;FIELD.d=fd;
+  var islandR=Math.max(fw*0.62+1.5, fd/2+2.95);
+  FIELD.r=islandR;
+
+  // ---- 島本体 ----
+  var soilBase=m(GEO.cyl,mat('isoil',st.deco==='magic'?0x6B4E8E:0x8A6242),0,-0.85,0,islandR*0.99,1.5,islandR*0.99);
+  world.add(soilBase);
+  var rock=m(GEO.cone,mat('irock',st.deco==='magic'?0x4E3768:0x6E4B31),0,-2.55,0,islandR*0.94,2.3,islandR*0.94);
+  rock.rotation.x=Math.PI;
+  world.add(rock);
+  var grass=m(GEO.cyl,mat('grass',st.ground),0,0,0,islandR,0.34,islandR);
+  world.add(grass);
+  var rim=m(GEO.torus,mat('rim',st.ground),0,0.10,0,islandR,islandR,1);
+  rim.rotation.x=Math.PI/2;rim.scale.set(islandR,islandR,2.4);
+  world.add(rim);
+
+  // ---- 畑のうね ----
+  var soilM=mat('fsoil',st.soil);
+  for(var r=0;r<st.rows;r++){
+    var z=-fd/2+r*SP;
+    var furrow=m(GEO.box,soilM,0,0.22,z,fw+1.5,0.20,0.98);
+    world.add(furrow);
+  }
+
+  // ---- 株を配置 ----
+  var idx=0;
+  for(var rr=0;rr<st.rows;rr++){
+    for(var cc=0;cc<st.cols;cc++){
+      var p=buildPlant(stgIdx);
+      p.position.set(-fw/2+cc*SP, 0.31, -fd/2+rr*SP);
+      p.rotation.y=(Math.random()-0.5)*0.9;
+      p.userData.idx=idx++;
+      world.add(p);
+      PLANTS.push(p);
+    }
+  }
+
+  // ---- かご（手前）----
+  var basket=new THREE.Group();
+  var bm=mat('basket',0xC98A4B),bm2=mat('basket2',0xA96E36);
+  basket.add(m(GEO.cylTap,bm,0,0.34,0,0.92,0.68,0.92));
+  var ring=m(GEO.torus,bm2,0,0.66,0,1,1,1);ring.rotation.x=Math.PI/2;ring.scale.set(0.92,0.92,2.6);
+  basket.add(ring);
+  basket.position.set(0,0.34,fd/2+1.60);
+  var pile=new THREE.Group();          // 収穫したいちごが積まれる
+  pile.position.y=0.30;
+  basket.add(pile);
+  basket.userData.pile=pile;
+  world.add(basket);
+  world.userData.basket=basket;
+
+  buildDeco(st,islandR,fw,fd);
+  applyStageLight(st);
+  return {islandR:islandR,fw:fw,fd:fd};
+}
+
+function applyStageLight(st){
+  var d=scene.userData.dir,a=scene.userData.amb,f=scene.userData.fill;
+  if(st.deco==='night'){a.intensity=0.42;a.color.setHex(0x9FA8E8);d.intensity=0.42;d.color.setHex(0xBFD0FF);f.color.setHex(0x6E7ED0);f.intensity=0.28;}
+  else if(st.deco==='magic'){a.intensity=0.6;a.color.setHex(0xE0C8FF);d.intensity=0.66;d.color.setHex(0xFFE8FF);f.color.setHex(0xB07BE8);f.intensity=0.4;}
+  else if(st.deco==='windmill'){a.intensity=0.7;a.color.setHex(0xFFE0C0);d.intensity=0.82;d.color.setHex(0xFFD3A0);f.color.setHex(0xFFB27A);f.intensity=0.35;}
+  else if(st.deco==='snow'){a.intensity=0.82;a.color.setHex(0xEAF3FF);d.intensity=0.7;d.color.setHex(0xFFFFFF);f.color.setHex(0xCFE2F5);f.intensity=0.35;}
+  else{a.intensity=0.74;a.color.setHex(0xFFFFFF);d.intensity=0.78;d.color.setHex(0xFFFFFF);f.color.setHex(0xFFD9E6);f.intensity=0.32;}
+}
+
+
+/* 手前（かご・カメラ側）を塞がない配置角度を返す。
+   +z方向 ±55度 は視界確保のため空ける。 */
+function decoAngle(i,n,offset){
+  var GAP=1.05;                              // 手前に空ける半角(rad) ≒60度
+  var span=Math.PI*2-GAP*2;
+  var a=(i+0.5)/n*span + (Math.PI/2+GAP) + (offset||0);
+  return a;
+}
+
+/* ---- 木・小物のパーツ ---- */
+function makeTree(leafCol,trunkCol,h){
+  var g=new THREE.Group();
+  g.add(m(GEO.cyl,mat('trunk',trunkCol||0x8A5E36),0,h*0.3,0,0.13,h*0.6,0.13));
+  g.add(m(GEO.sphereLow,mat('tleaf',leafCol||0x57B24A),0,h*0.72,0,0.56,0.5,0.56));
+  g.add(m(GEO.sphereLow,mat('tleaf2',leafCol||0x57B24A),0.26,h*0.55,0.14,0.36,0.32,0.36));
+  g.add(m(GEO.sphereLow,mat('tleaf2',leafCol||0x57B24A),-0.24,h*0.58,-0.16,0.33,0.3,0.33));
+  return g;
+}
+/* 手前(+z方向)は入口として開けておく。かごが柵で隠れるのを防ぐ。 */
+function makeFence(r,count,col){
+  var g=new THREE.Group();
+  var fm=mat('fence',col||0xD8A96B);
+  var GAP=1.15;
+  function inGap(a){
+    var d=Math.atan2(Math.sin(a-Math.PI/2),Math.cos(a-Math.PI/2));
+    return Math.abs(d)<GAP;
+  }
+  for(var i=0;i<count;i++){
+    var a=i/count*Math.PI*2;
+    if(!inGap(a)){
+      var post=m(GEO.box,fm,Math.cos(a)*r,0.42,Math.sin(a)*r,0.13,0.84,0.13);
+      post.rotation.y=-a;
+      g.add(post);
+    }
+    var ab=a+Math.PI/count;
+    if(!inGap(ab)&&!inGap(a)&&!inGap(a+2*Math.PI/count)){
+      var bar=m(GEO.box,fm,Math.cos(ab)*r,0.55,Math.sin(ab)*r,0.10,0.10,2*Math.PI*r/count);
+      bar.rotation.y=-ab;
+      g.add(bar);
+    }
+  }
+  return g;
+}
+function makePoints(count,spread,size,color,yBase,yRange){
+  var pos=new Float32Array(count*3);
+  for(var i=0;i<count;i++){
+    pos[i*3]=(Math.random()-0.5)*spread;
+    pos[i*3+1]=yBase+Math.random()*yRange;
+    pos[i*3+2]=(Math.random()-0.5)*spread;
+  }
+  var geo=new THREE.BufferGeometry();
+  geo.__temp=true;
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  var pm=new THREE.PointsMaterial({color:color,size:size,transparent:true,opacity:0.9,depthWrite:false});
+  pm.__temp=true;
+  return new THREE.Points(geo,pm);
+}
+
+function buildDeco(st,R,fw,fd){
+  var d=st.deco;
+
+  if(d==='fence'){
+    world.add(makeFence(R-0.55,16,0xE0B073));
+    for(var i=0;i<5;i++){
+      var a=decoAngle(i,5);
+      var t=makeTree(0x5FB84E,0x8A5E36,1.5);
+      t.position.set(Math.cos(a)*(R-1.35),0.16,Math.sin(a)*(R-1.35));
+      t.scale.setScalar(0.9+Math.random()*0.35);
+      world.add(t);
+    }
+  }
+  else if(d==='pond'){
+    var pond=m(GEO.cyl,mat('pond',0x66C8E8,{transparent:true,opacity:0.86}),R-1.6,0.20,-(R-1.9),1.35,0.10,1.35);
+    world.add(pond);
+    for(var j=0;j<9;j++){
+      var ang=j/9*Math.PI*2;
+      var reed=m(GEO.cyl,mat('reed',0x4E9E3F),(R-1.6)+Math.cos(ang)*1.4,0.5,-(R-1.9)+Math.sin(ang)*1.4,0.04,0.7,0.04);
+      world.add(reed);
+    }
+    var drops=makePoints(40,R*1.6,0.10,0xBFEFFF,1.5,3.0);
+    world.add(drops);DECO_ANIM.push({t:'rain',o:drops,sp:1.4,top:4.5,bot:0.6});
+    world.add(makeFence(R-0.55,14,0xC8E0B0));
+  }
+  else if(d==='flower'){
+    var cols=[0xFF7BA8,0xFFD24A,0xB48CF0,0xFF9F5A,0xFFFFFF];
+    for(var k=0;k<26;k++){
+      var aa=decoAngle(k%26,26,(Math.random()-0.5)*0.16), rr=(R-0.9)*(0.55+Math.random()*0.45);
+      var px=Math.cos(aa)*rr, pz=Math.sin(aa)*rr;
+      if(Math.abs(px)<fw/2+1.0&&Math.abs(pz)<fd/2+1.0)continue;
+      var fl=buildFlower(cols[k%cols.length]);
+      fl.position.set(px,0.34,pz);fl.scale.setScalar(0.75+Math.random()*0.5);
+      world.add(fl);
+      var stm=m(GEO.cyl,mat('fstem',0x4E9E3F),px,0.26,pz,0.022,0.18,0.022);
+      world.add(stm);
+    }
+    var pet=makePoints(30,R*1.8,0.13,0xFFB6D0,1.0,3.4);
+    world.add(pet);DECO_ANIM.push({t:'rain',o:pet,sp:0.6,top:4.4,bot:0.4});
+  }
+  else if(d==='green'){
+    var arcM=mat('arc',0xFFFFFF,{transparent:true,opacity:0.5});
+    for(var q=0;q<4;q++){
+      var arc=new THREE.Mesh(new THREE.TorusGeometry(fw/2+1.0,0.075,6,26,Math.PI),arcM);
+      arc.geometry.__temp=true;
+      arc.position.set(0,0.3,-fd/2-0.4+q*((fd+0.8)/3));
+      world.add(arc);
+    }
+    var beamM=mat('beam',0xFFFFFF,{transparent:true,opacity:0.45});
+    world.add(m(GEO.box,beamM,fw/2+1.0,fw/2*0.55+0.3,0,0.09,0.09,fd+1.2));
+    world.add(m(GEO.box,beamM,-(fw/2+1.0),fw/2*0.55+0.3,0,0.09,0.09,fd+1.2));
+    for(var w=0;w<4;w++){
+      var pang=decoAngle(w,4);
+      var pxp=Math.cos(pang)*(R-1.2), pzp=Math.sin(pang)*(R-1.2);
+      var pot=m(GEO.cylTap,mat('pot',0xD98A5A),pxp,0.42,pzp,0.36,0.34,0.36);
+      world.add(pot);
+      var tt=makeTree(0x6FC65C,0x8A5E36,0.8);
+      tt.position.set(pxp,0.72,pzp);tt.scale.setScalar(0.55);
+      world.add(tt);
+    }
+  }
+  else if(d==='fall'){
+    var cliff=m(GEO.box,mat('cliff',0x8FA08A),0,1.4,-(R+0.4),4.4,3.4,1.4);
+    world.add(cliff);
+    var fallM=mat('fallw',0x8FE0F5,{transparent:true,opacity:0.78});
+    var wf=m(GEO.plane,fallM,0,1.5,-(R-0.35),2.2,3.2,1);
+    world.add(wf);
+    var basin=m(GEO.cyl,mat('basin',0x66C8E8,{transparent:true,opacity:0.85}),0,0.22,-(R-1.4),1.7,0.10,1.2);
+    world.add(basin);
+    for(var s=0;s<7;s++){
+      var sa=decoAngle(s,7,(Math.random()-0.5)*0.2);
+      var st2=m(GEO.oct,mat('stone',0x9AA69A),Math.cos(sa)*(R-1.0),0.28,Math.sin(sa)*(R-1.0),0.24+Math.random()*0.22);
+      st2.rotation.set(Math.random(),Math.random(),Math.random());
+      world.add(st2);
+    }
+    var mist=makePoints(46,4.2,0.14,0xE8FBFF,0.4,2.6);
+    mist.position.z=-(R-1.2);
+    world.add(mist);DECO_ANIM.push({t:'up',o:mist,sp:0.7,top:3.2,bot:0.3});
+  }
+  else if(d==='windmill'){
+    var wm=new THREE.Group();
+    wm.add(m(GEO.cylTap,mat('wmb',0xF0E0C0),0,1.35,0,0.55,2.7,0.55));
+    wm.add(m(GEO.cone,mat('wmr',0xE0705A),0,2.95,0,0.72,0.85,0.72));
+    var blades=new THREE.Group();
+    for(var b=0;b<4;b++){
+      var bl=m(GEO.box,mat('wmbl',0xFFF6E0),0,0.85,0,0.20,1.7,0.05);
+      bl.position.set(Math.sin(b/4*Math.PI*2)*0.0,0,0);
+      var holder=new THREE.Group();holder.add(bl);
+      holder.rotation.z=b/4*Math.PI*2;
+      blades.add(holder);
+    }
+    blades.position.set(0,2.3,0.62);
+    wm.add(blades);
+    wm.position.set(-(R-1.5),0.16,-(R-1.6));
+    world.add(wm);
+    DECO_ANIM.push({t:'spin',o:blades,sp:0.9});
+    for(var h=0;h<4;h++){
+      var hang=decoAngle(h,4);
+      var hay=m(GEO.cyl,mat('hay',0xE8C060),Math.cos(hang)*(R-1.3),0.5,Math.sin(hang)*(R-1.3),0.34,0.42,0.34);
+      hay.rotation.x=Math.PI/2;hay.position.y=0.5;
+      world.add(hay);
+    }
+  }
+  else if(d==='night'){
+    var moon=m(GEO.sphere,basicMat(0xFFF6C8),-(R+2.2),7.2,-(R+2.0),1.25);
+    world.add(moon);
+    var stars=makePoints(120,R*4.2,0.16,0xFFFFFF,3.0,8.0);
+    world.add(stars);DECO_ANIM.push({t:'twinkle',o:stars,sp:1.0});
+    var fly=makePoints(34,R*1.7,0.15,0xFFF08A,0.6,2.4);
+    world.add(fly);DECO_ANIM.push({t:'float',o:fly,sp:0.5,amp:0.5});
+    for(var n=0;n<4;n++){
+      var na=decoAngle(n,4);
+      var nt=makeTree(0x2E6B4E,0x5A4030,1.6);
+      nt.position.set(Math.cos(na)*(R-1.3),0.16,Math.sin(na)*(R-1.3));
+      world.add(nt);
+    }
+  }
+  else if(d==='snow'){
+    var arcM2=mat('arc2',0xFFFFFF,{transparent:true,opacity:0.42});
+    for(var q2=0;q2<4;q2++){
+      var arc2=new THREE.Mesh(new THREE.TorusGeometry(fw/2+1.1,0.08,6,26,Math.PI),arcM2);
+      arc2.geometry.__temp=true;
+      arc2.position.set(0,0.3,-fd/2-0.5+q2*((fd+1.0)/3));
+      world.add(arc2);
+    }
+    var snow=makePoints(110,R*2.6,0.15,0xFFFFFF,1.0,6.0);
+    world.add(snow);DECO_ANIM.push({t:'rain',o:snow,sp:0.85,top:7.0,bot:0.4});
+    for(var sn=0;sn<5;sn++){
+      var sa2=decoAngle(sn,5);
+      var snt=makeTree(0xD8ECF7,0x8A7460,1.4);
+      snt.position.set(Math.cos(sa2)*(R-1.2),0.16,Math.sin(sa2)*(R-1.2));
+      world.add(snt);
+    }
+  }
+  else if(d==='rainbow'){
+    var rcs=[0xFF6B6B,0xFFA94D,0xFFE066,0x8CE99A,0x74C0FC,0xB197FC];
+    for(var ri=0;ri<rcs.length;ri++){
+      var rb=new THREE.Mesh(new THREE.TorusGeometry(R+1.6+ri*0.34,0.16,6,40,Math.PI),basicMat(rcs[ri]));
+      rb.geometry.__temp=true;
+      rb.position.set(0,0.2,-(R*0.4));
+      rb.rotation.y=-0.35;
+      world.add(rb);
+    }
+    var cl=makePoints(26,R*2.4,0.4,0xFFFFFF,4.0,2.0);
+    world.add(cl);DECO_ANIM.push({t:'float',o:cl,sp:0.25,amp:0.35});
+    world.add(makeFence(R-0.55,16,0xFFE0B0));
+  }
+  else if(d==='magic'){
+    var crCols=[0xFF9FE0,0x9FD8FF,0xFFE99F,0xC79FFF];
+    for(var ci=0;ci<7;ci++){
+      var ca=decoAngle(ci,7);
+      var cr=m(GEO.oct,mat('cry',crCols[ci%4],{transparent:true,opacity:0.85}),
+               Math.cos(ca)*(R-1.1),1.5+Math.sin(ci*1.7)*0.6,Math.sin(ca)*(R-1.1),0.34,0.62,0.34);
+      world.add(cr);
+      DECO_ANIM.push({t:'float',o:cr,sp:0.6+ci*0.1,amp:0.3,base:cr.position.y});
+      DECO_ANIM.push({t:'spinY',o:cr,sp:0.6});
+    }
+    var sp=makePoints(80,R*2.2,0.17,0xFFD9FF,0.8,5.0);
+    world.add(sp);DECO_ANIM.push({t:'float',o:sp,sp:0.4,amp:0.6});
+    var ring2=new THREE.Mesh(new THREE.TorusGeometry(R+0.7,0.10,6,50),basicMat(0xE0B0FF));
+    ring2.geometry.__temp=true;ring2.rotation.x=Math.PI/2;ring2.position.y=0.15;
+    world.add(ring2);
+  }
+}
+
+
+/* ================= タイトル用ジオラマ ================= */
+/* 起動直後にうしろで回りつづける小さないちご農園。
+   実ステージと違い操作は受け付けず、見せることだけが目的。 */
+function buildTitleScene(){
+  clearWorld();
+  var soil=0x8B5E3C, ground=0x8FD478;
+  var R=5.6;
+
+  world.add(m(GEO.cyl,mat('tsoilb',0x8A6242),0,-0.85,0,R*0.99,1.5,R*0.99));
+  var rk=m(GEO.cone,mat('trock',0x6E4B31),0,-2.55,0,R*0.94,2.3,R*0.94);
+  rk.rotation.x=Math.PI; world.add(rk);
+  world.add(m(GEO.cyl,mat('tgrass',ground),0,0,0,R,0.34,R));
+
+  var SP=1.35, rows=2, cols=3;
+  var fw=(cols-1)*SP, fd=(rows-1)*SP;
+  var soilM=mat('tfsoil',soil);
+  for(var r=0;r<rows;r++){
+    world.add(m(GEO.box,soilM,0,0.22,-fd/2+r*SP,fw+1.5,0.20,0.98));
+  }
+  for(var rr=0;rr<rows;rr++){
+    for(var cc=0;cc<cols;cc++){
+      var p=buildPlant(0);
+      p.position.set(-fw/2+cc*SP,0.31,-fd/2+rr*SP);
+      p.rotation.y=(Math.random()-0.5)*0.8;
+      applyPlantStage(p,2,true);
+      setPlantBerry(p,'aka',false);
+      world.add(p);
+    }
+  }
+
+  // かご（いちご入り）
+  var basket=new THREE.Group();
+  basket.add(m(GEO.cylTap,mat('tbasket',0xC98A4B),0,0.34,0,0.92,0.68,0.92));
+  var ring=m(GEO.torus,mat('tbasket2',0xA96E36),0,0.66,0,1,1,1);
+  ring.rotation.x=Math.PI/2;ring.scale.set(0.92,0.92,2.6);
+  basket.add(ring);
+  var pile=new THREE.Group();pile.position.y=0.30;basket.add(pile);
+  for(var q=0;q<6;q++){
+    var bb=buildBerry(q===2?'heart':'aka',0.46);
+    var aa=q/6*Math.PI*2;
+    bb.position.set(Math.cos(aa)*0.40,0,Math.sin(aa)*0.40);
+    bb.rotation.set(1.35,Math.random()*Math.PI*2,0.3);
+    pile.add(bb);
+  }
+  basket.position.set(0,0.34,fd/2+1.55);
+  world.add(basket);
+
+  // 木と柵
+  world.add(makeFence(R-0.55,14,0xE0B073));
+  for(var t2=0;t2<4;t2++){
+    var a2=decoAngle(t2,4);
+    var tr=makeTree(0x5FB84E,0x8A5E36,1.5);
+    tr.position.set(Math.cos(a2)*(R-1.3),0.16,Math.sin(a2)*(R-1.3));
+    tr.scale.setScalar(0.9+Math.random()*0.3);
+    world.add(tr);
+  }
+
+  // 主役の大きないちご（宙に浮いて回る）
+  var hero=buildBerry('aka',2.15);
+  hero.position.set(0,4.15,0);
+  world.add(hero);
+  world.userData.hero=hero;
+
+  var halo=new THREE.Mesh(new THREE.TorusGeometry(1.20,0.05,6,44),basicMat(0xFFF0B0,{transparent:true,opacity:0.7}));
+  halo.geometry.__temp=true;
+  halo.position.set(0,3.0,0);halo.rotation.x=Math.PI/2;
+  world.add(halo);
+  world.userData.halo=halo;
+
+  var sparkle=makePoints(48,5.0,0.19,0xFFF0C8,2.0,3.2);
+  world.add(sparkle);
+  DECO_ANIM.push({t:'float',o:sparkle,sp:0.5,amp:0.5});
+
+  applyStageLight({deco:'fence'});
+}
+
+function animDeco(dt,t){
+  for(var i=0;i<DECO_ANIM.length;i++){
+    var a=DECO_ANIM[i];
+    if(a.t==='spin'){a.o.rotation.z+=dt*a.sp;}
+    else if(a.t==='spinY'){a.o.rotation.y+=dt*a.sp;}
+    else if(a.t==='rain'||a.t==='up'){
+      var pos=a.o.geometry.attributes.position;
+      var arr=pos.array,dir=(a.t==='rain')?-1:1;
+      for(var k=1;k<arr.length;k+=3){
+        arr[k]+=dir*dt*a.sp*(a.t==='rain'?2.2:1.0);
+        if(dir<0&&arr[k]<a.bot)arr[k]=a.top;
+        if(dir>0&&arr[k]>a.top)arr[k]=a.bot;
+      }
+      pos.needsUpdate=true;
+    }
+    else if(a.t==='twinkle'){a.o.material.opacity=0.55+Math.sin(t*a.sp*2.0)*0.35;}
+    else if(a.t==='float'){
+      if(a.base!==undefined)a.o.position.y=a.base+Math.sin(t*a.sp)*a.amp;
+      else a.o.position.y=Math.sin(t*a.sp)*a.amp*0.4;
+    }
+  }
+}
+
+/* ================= チューニングち（じっさいの こどもテストで ちょうせいする かのうせいが たかい あたい） ================= */
+var TUNE={
+  DPR_MAX:2,               /* devicePixelRatio の じょうげん */
+
+  RARE_CHANCE:0.20,        /* とくべついちごの きほん しゅつげんりつ */
+  RARE_PITY_NORMALS:3,     /* このかいすう ふつうが つづいたら つぎは とくべつ かくてい */
+
+  REGROW_SEC:0.9,          /* しゅうかくごに かぶが さいせいするまでの じかん(びょう) */
+  BERRY_FLY_SEC:0.62,      /* いちごが かごへ とんでいく えんしゅつの ながさ(びょう) */
+
+  BUG_FIRST_SEC:8,         /* ステージ開始から さいしょの むしが でるまでの じかん(びょう) */
+  BUG_MIN_SEC:12,          /* つぎの むしが でるまでの さいしょう じかん(びょう) */
+  BUG_RANDOM_SEC:8,        /* BUG_MIN_SECに たされる らんすう はば(びょう) */
+  BUG_LIFE_SEC:14,         /* むしが ほうちされたまま きえるまでの じかん(びょう) */
+
+  IDLE_HINT_SEC:9,         /* このびょう そうさが ないと ヒントを だす */
+
+  DRAG_X:0.0072,           /* ドラッグかいてん: よこの かんど */
+  DRAG_Y:0.0035,           /* ドラッグかいてん: たての かんど */
+  DRAG_THRESHOLD:12,       /* この いどうりょうを こえたら ドラッグと みなす(タップと くべつ) */
+
+  BASKET_PILE_MAX:14,      /* かごに つみあげる いちごの じょうげん(みため・ふか たいさく) */
+
+  MAX_FX_DOM:120           /* どうじに でる ポップアップ すうじ DOM の じょうげん */
+};
+
+/* ================= ゲーム状態 ================= */
+var GS={
+  stage:0, collected:0, goal:10, rares:0, playing:false, cleared:false,
+  camAz:0, camEl:0.62, camR:12, lookZ:0, lookLift:0, field:null, dragging:false, lastX:0, lastY:0, moved:0,
+  flying:[], pops:[], bug:null, bugT:6, idleT:0, titleMode:false, normalSinceRare:0, pointerId:null
+};
+var SCREEN='title';
+
+function showScreen(id){
+  var ids=['screen-title','screen-map','screen-result','screen-book','screen-shop'];
+  for(var i=0;i<ids.length;i++){
+    var el=document.getElementById(ids[i]);
+    if(el)el.classList.toggle('on',ids[i]===id);
+  }
+  document.getElementById('hud').classList.toggle('on',id==='');
+  SCREEN=id||'play';
+}
+
+/* ================= カメラ ================= */
+var HUD_TOP=118, HUD_BOT=54;   // HUD/ヒントに隠れる帯（px）
+
+function updateCamera(){
+  var cx=Math.sin(GS.camAz)*Math.cos(GS.camEl)*GS.camR;
+  var cy=Math.sin(GS.camEl)*GS.camR;
+  var cz=Math.cos(GS.camAz)*Math.cos(GS.camEl)*GS.camR;
+  var lz=GS.lookZ||0;
+  camera.position.set(cx,cy+0.8,cz+lz);
+  // 注視点を少し上げると、絵が画面の下側（HUDを避けた位置）に来る
+  camera.lookAt(0,0.7+(GS.lookLift||0),lz);
+}
+
+function fitCamera(info){
+  if(GS.titleMode)return;
+  if(info)GS.field=info;else info=GS.field;
+  if(!info)return;
+  var W=window.innerWidth,H=Math.max(1,window.innerHeight);
+  var aspect=W/H;
+  var vfov=camera.fov*Math.PI/180;
+  var hfov=2*Math.atan(Math.tan(vfov/2)*aspect);
+  var basketZ=info.fd/2+1.60;
+
+  GS.camEl=aspect<0.72?0.74:(aspect<1?0.66:0.58);
+  GS.lookZ=basketZ*0.34;
+
+  // HUDに隠れない範囲だけを「使える高さ」として扱う
+  var usable=Math.max(0.42,(H-HUD_TOP-HUD_BOT)/H);
+
+  var halfW=info.fw/2+0.85;
+  var rH=halfW/Math.tan(hfov/2);
+  var depth=info.fd+3.6;
+  var halfV=depth/2*Math.sin(GS.camEl)+0.95;
+  var rV=halfV/(Math.tan(vfov/2)*usable);
+
+  GS.camR=Math.max(9,rH,rV);
+
+  // 安全域の中心と画面中心のズレぶんだけ絵を下げる
+  var deltaPx=(HUD_TOP-HUD_BOT)/2;
+  GS.lookLift=(deltaPx/H)*2*GS.camR*Math.tan(vfov/2);
+
+  GS.camAz=0;
+  updateCamera();
+}
+
+/* ================= 入力 ================= */
+var ray=new THREE.Raycaster();
+var ndc=new THREE.Vector2();
+
+function pointerPos(e){
+  if(e.touches&&e.touches.length)return {x:e.touches[0].clientX,y:e.touches[0].clientY};
+  if(e.changedTouches&&e.changedTouches.length)return {x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY};
+  return {x:e.clientX,y:e.clientY};
+}
+function onDown(e){
+  if(e.cancelable)e.preventDefault();
+  if(SCREEN!=='play')return;
+  var p=pointerPos(e);
+  GS.dragging=true;GS.lastX=p.x;GS.lastY=p.y;GS.moved=0;GS.idleT=0;GS.pointerId=e.pointerId;
+  try{if(cv.setPointerCapture)cv.setPointerCapture(e.pointerId);}catch(err){}
+}
+function onMove(e){
+  if(!GS.dragging||SCREEN!=='play')return;
+  var p=pointerPos(e);
+  var dx=p.x-GS.lastX, dy=p.y-GS.lastY;
+  GS.moved+=Math.abs(dx)+Math.abs(dy);
+  GS.camAz-=dx*TUNE.DRAG_X;
+  GS.camEl=Math.max(0.30,Math.min(1.05,GS.camEl+dy*TUNE.DRAG_Y));
+  GS.lastX=p.x;GS.lastY=p.y;
+  updateCamera();
+  if(e.cancelable)e.preventDefault();
+}
+function releaseCapture(e){
+  try{if(cv.releasePointerCapture&&GS.pointerId!=null)cv.releasePointerCapture(GS.pointerId);}catch(err){}
+  GS.pointerId=null;
+}
+function onUp(e){
+  releaseCapture(e);
+  if(SCREEN!=='play'){GS.dragging=false;return;}
+  var wasDrag=GS.moved>TUNE.DRAG_THRESHOLD;
+  GS.dragging=false;
+  if(wasDrag)return;
+  var p=pointerPos(e);
+  handleTap(p.x,p.y);
+}
+cv.addEventListener('pointerdown',onDown,{passive:false});
+cv.addEventListener('pointermove',onMove,{passive:false});
+cv.addEventListener('pointerup',onUp);
+cv.addEventListener('pointercancel',function(e){GS.dragging=false;releaseCapture(e);});
+
+function handleTap(sx,sy){
+  if(!GS.playing)return;
+  ndc.x=(sx/window.innerWidth)*2-1;
+  ndc.y=-(sy/window.innerHeight)*2+1;
+  ray.setFromCamera(ndc,camera);
+
+  // むしを優先
+  if(GS.bug){
+    var hb=ray.intersectObject(GS.bug,true);
+    if(hb.length){shooBug(sx,sy);return;}
+  }
+  var hits=ray.intersectObjects(PLANTS,true);
+  if(!hits.length){sfxTap();return;}
+  var o=hits[0].object;
+  while(o&&PLANTS.indexOf(o)<0)o=o.parent;
+  if(!o)return;
+  tapPlant(o,sx,sy);
+}
+
+/* ================= 株のタップ処理 ================= */
+function tapPlant(p,sx,sy){
+  var d=p.userData;
+  if(d.anim>0||d.regrow>0)return;
+  GS.idleT=0;
+  if(d.stage===0){
+    applyPlantStage(p,1,false);
+    d.anim=0.42;
+    sfxWater();
+    sparkAt(sx,sy,['#7FD8F5','#B6ECFF','#FFFFFF'],9);
+    waterRing(p);
+  }else if(d.stage===1){
+    var st=STAGES[GS.stage];
+    var isRare=(GS.normalSinceRare>=TUNE.RARE_PITY_NORMALS)||Math.random()<TUNE.RARE_CHANCE;
+    GS.normalSinceRare=isRare?0:GS.normalSinceRare+1;
+    var kind=st.berry;
+    if(isRare)kind=(Math.random()<0.5)?'hoshi':'heart';
+    applyPlantStage(p,2,false);
+    setPlantBerry(p,kind,isRare);
+    d.anim=0.42;
+    sfxGrow();
+    sparkAt(sx,sy,isRare?['#FFE96B','#FFFFFF','#FFC0E0']:['#7FD8F5','#FFFFFF','#B6ECFF'],isRare?16:9);
+    waterRing(p);
+    if(isRare)tip('✨ とくべつな いちごだ！');
+  }else if(d.stage===2){
+    harvest(p,sx,sy);
+  }
+}
+
+function harvest(p,sx,sy){
+  var d=p.userData;
+  var kind=d.kind||STAGES[GS.stage].berry;
+  var rare=d.rare;
+  // 飛ぶいちご
+  var wp=new THREE.Vector3();
+  d.berryHolder.getWorldPosition(wp);
+  var fly=buildBerry(kind,0.62);
+  fly.position.copy(wp);
+  world.add(fly);
+  var target=world.userData.basket.position.clone();
+  target.y+=0.55;
+  GS.flying.push({o:fly,from:wp.clone(),to:target,t:0,dur:TUNE.BERRY_FLY_SEC,rare:rare,kind:kind});
+
+  // 株をリセット
+  if(d.berry){d.berryHolder.remove(d.berry);d.berry=null;}
+  d.kind=null;d.rare=false;
+  applyPlantStage(p,0,false);
+  d.regrow=TUNE.REGROW_SEC;
+  d.anim=0.3;
+
+  var col=BERRIES[kind];
+  sparkAt(sx,sy,rare?['#FFE96B','#FFFFFF','#FF9FD8']:['#FF7BA0','#FFD3E0','#FFFFFF'],rare?18:11);
+  if(rare)sfxRare();else sfxPick();
+}
+
+function addToPile(kind){
+  var b=world.userData.basket;
+  if(!b||!b.userData.pile)return;
+  var pile=b.userData.pile;
+  var n=pile.children.length;
+  if(n>=TUNE.BASKET_PILE_MAX)return; // 積みすぎ防止（見た目・負荷）
+  var berry=buildBerry(kind,0.46);
+  var ring=n<6?0:1;
+  var per=ring===0?6:8;
+  var ri=ring===0?n:(n-6);
+  var a=ri/per*Math.PI*2+ring*0.4;
+  var rad=ring===0?0.40:0.62;
+  berry.position.set(Math.cos(a)*rad,ring*0.16,Math.sin(a)*rad);
+  berry.rotation.set(1.35+Math.random()*0.4,Math.random()*Math.PI*2,Math.random()*0.5);
+  pile.add(berry);
+}
+
+function onBerryArrived(f){
+  GS.collected++;
+  addToPile(f.kind);
+  var add=f.rare?5:1;
+  addCoins(add);
+  if(f.rare){GS.rares++;markRare(f.kind);}
+  markBook(f.kind);
+  updateBasketUI();
+  // かごバウンド
+  var b=world.userData.basket;
+  b.userData.bounce=0.26;
+  var sp=toScreen(f.to);
+  popNum(sp.x,sp.y-30,f.rare?'+5 🪙':'+1');
+  if(!GS.cleared&&GS.collected>=GS.goal){doClear();}
+}
+
+/* ================= むし（てんとうむし）================= */
+function spawnBug(){
+  if(GS.bug||!PLANTS.length)return;
+  var cand=[];
+  for(var i=0;i<PLANTS.length;i++)if(PLANTS[i].userData.stage>0)cand.push(PLANTS[i]);
+  if(!cand.length)return;
+  var p=cand[Math.floor(Math.random()*cand.length)];
+  var g=new THREE.Group();
+  g.add(m(GEO.sphereLow,mat('bugb',0xE8443F),0,0,0,0.16,0.13,0.18));
+  g.add(m(GEO.sphereLow,mat('bugh',0x2E2E33),0,0.02,0.15,0.10,0.09,0.08));
+  g.add(m(GEO.sphereLow,mat('bugd',0x2E2E33),0.07,0.10,0.02,0.042));
+  g.add(m(GEO.sphereLow,mat('bugd',0x2E2E33),-0.07,0.10,-0.03,0.042));
+  var wp=new THREE.Vector3();p.getWorldPosition(wp);
+  g.position.set(wp.x,wp.y+0.62,wp.z);
+  g.userData.base=g.position.y;
+  world.add(g);
+  GS.bug=g;GS.bug.userData.life=0;
+  tip('🐞 むしさんを タップして おいはらおう');
+}
+function shooBug(sx,sy){
+  if(!GS.bug)return;
+  var b=GS.bug;GS.bug=null;
+  GS.pops.push({o:b,t:0,dur:0.7,type:'shoo',from:b.position.clone()});
+  addCoins(3);
+  sfxBug();
+  sparkAt(sx,sy,['#FFD24A','#FFF0B0','#FFFFFF'],10);
+  popNum(sx,sy-24,'+3 🪙');
+  GS.bugT=9+Math.random()*7;
+}
+
+/* ================= エフェクト ================= */
+function waterRing(p){
+  /* 複数リングが同時に存在しても opacity を奪い合わないよう、
+     water ringだけは共有basicMat()を使わず個別materialにする */
+  var ringMat=new THREE.MeshBasicMaterial({color:0x9FE8FF,transparent:true,opacity:0.9});
+  var ring=new THREE.Mesh(GEO.torus,ringMat);
+  var wp=new THREE.Vector3();p.getWorldPosition(wp);
+  ring.position.set(wp.x,wp.y+0.10,wp.z);
+  ring.rotation.x=Math.PI/2;
+  ring.scale.set(0.2,0.2,2);
+  world.add(ring);
+  GS.pops.push({o:ring,t:0,dur:0.5,type:'ring'});
+}
+function toScreen(v3){
+  var v=v3.clone().project(camera);
+  return {x:(v.x*0.5+0.5)*window.innerWidth, y:(-v.y*0.5+0.5)*window.innerHeight};
+}
+var fxLayer=document.getElementById('fx');
+function sparkAt(x,y,cols,n){
+  for(var i=0;i<n;i++){
+    var s=document.createElement('div');
+    s.className='spark';
+    s.style.left=x+'px';s.style.top=y+'px';
+    s.style.background=cols[i%cols.length];
+    var a=Math.random()*Math.PI*2, r=24+Math.random()*46;
+    s.style.setProperty('--dx',(Math.cos(a)*r-4)+'px');
+    s.style.setProperty('--dy',(Math.sin(a)*r-4)+'px');
+    fxLayer.appendChild(s);
+    (function(el){setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},900);})(s);
+  }
+}
+function popNum(x,y,txt){
+  if(fxLayer.children.length>=TUNE.MAX_FX_DOM){
+    var old=fxLayer.firstChild;if(old)fxLayer.removeChild(old);
+  }
+  var d=document.createElement('div');
+  d.className='pop-num';d.textContent=txt;
+  d.style.left=x+'px';d.style.top=y+'px';
+  fxLayer.appendChild(d);
+  setTimeout(function(){if(d.parentNode)d.parentNode.removeChild(d);},1050);
+}
+var toastEl=document.getElementById('toast'),toastT=null;
+function toast(txt,ms){
+  toastEl.textContent=txt;toastEl.classList.add('on');
+  if(toastT)clearTimeout(toastT);
+  toastT=setTimeout(function(){toastEl.classList.remove('on');},ms||1200);
+}
+var tipEl=document.getElementById('guide-tip'),tipT=null;
+function tip(txt,ms){
+  tipEl.textContent=txt;tipEl.classList.add('on');
+  if(tipT)clearTimeout(tipT);
+  tipT=setTimeout(function(){tipEl.classList.remove('on');},ms||2600);
+}
+
+/* ================= 図鑑 / お客さん ================= */
+function markBook(kind){
+  if(!PROG.book[kind]){
+    PROG.book[kind]=true;saveProg(PROG);
+    toast('📖 ずかんに ふえた！\n'+BERRIES[kind].name,1500);
+  }
+}
+function markRare(kind){}
+function markGuest(id){
+  if(!PROG.guests[id]){PROG.guests[id]=true;saveProg(PROG);return true;}
+  return false;
+}
+
+/* ================= HUD ================= */
+function updateBasketUI(){
+  var pct=Math.min(100,GS.collected/GS.goal*100);
+  document.getElementById('basket-fill').style.width=pct+'%';
+  document.getElementById('basket-txt').textContent=GS.collected+' / '+GS.goal;
+  var row=document.getElementById('rare-row');
+  var dots=row.children;
+  for(var i=0;i<dots.length;i++)dots[i].classList.toggle('got',i<GS.rares);
+}
+function buildRareRow(){
+  var row=document.getElementById('rare-row');
+  row.innerHTML='';
+  for(var i=0;i<3;i++){
+    var d=document.createElement('div');
+    d.className='rare-dot';d.textContent='✨';
+    row.appendChild(d);
+  }
+}
+
+/* ================= visibility ================= */
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden)return;
+  /* 復帰時: 大きなdeltaTimeを持ち込まないよう基準時間をリセットする */
+  if(CLOCK)CLOCK.getDelta();
+  try{
+    if(_bgm&&_bgm._ctx&&_bgm._ctx.state==='suspended')_bgm._ctx.resume();
+  }catch(e){}
+});
+
+/* ================= メインループ ================= */
+var _raf=null;
+function loop(){
+  _raf=requestAnimationFrame(loop);
+  if(!renderer)return;
+  var dt=Math.min(0.1,CLOCK.getDelta());
+  var t=CLOCK.getElapsedTime();
+
+  if(world){
+    animDeco(dt,t);
+
+    // タイトル：ジオラマをゆっくり回し、主役のいちごを浮かせる
+    if(GS.titleMode){
+      world.rotation.y+=dt*0.16;
+      var hero=world.userData.hero, halo=world.userData.halo;
+      if(hero){
+        hero.position.y=4.15+Math.sin(t*1.25)*0.30;
+        hero.rotation.y+=dt*0.75;
+        hero.rotation.z=Math.sin(t*0.9)*0.10;
+      }
+      if(halo){
+        halo.position.y=(hero?hero.position.y:4.15)-1.15;
+        halo.scale.setScalar(1+Math.sin(t*1.25)*0.06);
+        halo.rotation.z+=dt*0.8;
+        halo.material.opacity=0.5+Math.sin(t*2.2)*0.28;
+      }
+    }
+
+    // 株の成長アニメ
+    for(var i=0;i<PLANTS.length;i++){
+      var p=PLANTS[i],d=p.userData;
+      var tl=d.targetLeaf||0.45;
+      d.leaves.scale.x+=(tl-d.leaves.scale.x)*Math.min(1,dt*9);
+      d.leaves.scale.y=d.leaves.scale.x;d.leaves.scale.z=d.leaves.scale.x;
+      if(d.flower.visible){
+        var fs=d.flower.scale.x+( 1-d.flower.scale.x)*Math.min(1,dt*10);
+        d.flower.scale.setScalar(fs);
+        d.flower.rotation.y+=dt*0.5;
+      }
+      if(d.berryHolder.visible){
+        var bs=d.berryHolder.scale.x+(1-d.berryHolder.scale.x)*Math.min(1,dt*9);
+        d.berryHolder.scale.setScalar(bs);
+        d.berryHolder.position.y=0.56+Math.sin(t*1.6+i)*0.022;
+        if(d.rare&&d.berry){
+          d.berry.rotation.y+=dt*1.4;
+          var pulse=1+Math.sin(t*5+i)*0.06;
+          d.berry.scale.setScalar(pulse);
+        }
+      }
+      if(d.anim>0)d.anim-=dt;
+      if(d.regrow>0){
+        d.regrow-=dt;
+        if(d.regrow<=0){d.regrow=0;}
+      }
+    }
+
+    // 飛ぶいちご
+    for(var f=GS.flying.length-1;f>=0;f--){
+      var fl=GS.flying[f];
+      fl.t+=dt;
+      var k=Math.min(1,fl.t/fl.dur);
+      var ke=k<0.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+      fl.o.position.lerpVectors(fl.from,fl.to,ke);
+      fl.o.position.y+=Math.sin(k*Math.PI)*1.5;
+      fl.o.rotation.y+=dt*6;
+      fl.o.scale.setScalar(1-k*0.45);
+      if(k>=1){
+        world.remove(fl.o);
+        GS.flying.splice(f,1);
+        onBerryArrived(fl);
+      }
+    }
+
+    // ポップ（リング・むし退散）
+    for(var q=GS.pops.length-1;q>=0;q--){
+      var pp=GS.pops[q];
+      pp.t+=dt;
+      var kk=Math.min(1,pp.t/pp.dur);
+      if(pp.type==='ring'){
+        pp.o.scale.set(0.2+kk*1.5,0.2+kk*1.5,2);
+        pp.o.material.opacity=0.9*(1-kk);
+      }else if(pp.type==='shoo'){
+        pp.o.position.y=pp.from.y+kk*3.2;
+        pp.o.position.x=pp.from.x+Math.sin(kk*9)*0.5;
+        pp.o.rotation.z+=dt*7;
+        pp.o.scale.setScalar(Math.max(0.01,1-kk));
+      }
+      if(kk>=1){
+        world.remove(pp.o);
+        if(pp.type==='ring'&&pp.o.material)pp.o.material.dispose();
+        GS.pops.splice(q,1);
+      }
+    }
+
+    // かごバウンド
+    var bk=world.userData.basket;
+    if(bk){
+      if(bk.userData.bounce>0){bk.userData.bounce-=dt;if(bk.userData.bounce<0)bk.userData.bounce=0;}
+      var bb=bk.userData.bounce||0;
+      bk.scale.setScalar(1+bb*0.5);
+    }
+
+    // むし
+    if(GS.playing&&SCREEN==='play'){
+      if(GS.bug){
+        GS.bug.userData.life+=dt;
+        GS.bug.position.y=GS.bug.userData.base+Math.sin(t*4)*0.06;
+        GS.bug.rotation.y=Math.sin(t*1.4)*0.6;
+        if(GS.bug.userData.life>TUNE.BUG_LIFE_SEC){var ob=GS.bug;GS.bug=null;GS.pops.push({o:ob,t:0,dur:0.7,type:'shoo',from:ob.position.clone()});GS.bugT=10;}
+      }else{
+        GS.bugT-=dt;
+        if(GS.bugT<=0){spawnBug();GS.bugT=TUNE.BUG_MIN_SEC+Math.random()*TUNE.BUG_RANDOM_SEC;}
+      }
+      // 放置ヒント
+      GS.idleT+=dt;
+      if(GS.idleT>TUNE.IDLE_HINT_SEC){GS.idleT=0;hintTip();}
+    }
+  }
+  if(scene&&camera)renderer.render(scene,camera);
+}
+
+function hintTip(){
+  var nSeed=0,nFlower=0,nBerry=0;
+  for(var i=0;i<PLANTS.length;i++){
+    var s=PLANTS[i].userData.stage;
+    if(s===0)nSeed++;else if(s===1)nFlower++;else nBerry++;
+  }
+  if(nBerry>0)tip('🍓 あかい いちごを タップして しゅうかく！');
+  else if(nFlower>0)tip('💧 おはなを タップすると みが なるよ');
+  else tip('💧 めを タップして みずを あげよう');
+}
+
+/* ================= ステージ開始 ================= */
+function startStage(idx){
+  if(!initGL())return;
+  initGeo();
+  GS.titleMode=false;
+  GS.stage=idx;
+  var st=STAGES[idx];
+  GS.collected=0;GS.rares=0;GS.cleared=false;GS.playing=true;
+  GS.flying=[];GS.pops=[];GS.bug=null;GS.bugT=TUNE.BUG_FIRST_SEC;GS.idleT=0;GS.normalSinceRare=0;
+  GS.goal=st.goal;
+
+  document.body.className=st.sky;
+  document.getElementById('stage-name').textContent=st.name;
+  buildRareRow();updateBasketUI();syncCoinUI();
+
+  var info=buildStage(idx);
+  fitCamera(info);
+  showScreen('');
+  initBGM(st.bgm);
+  onResize();
+  if(!_raf)loop();
+  tip('💧 めを タップして そだてよう！',3200);
+}
+
+function doClear(){
+  GS.cleared=true;
+  sfxClear();
+  toast('🍓 いっぱいに なった！',1600);
+  var stars=GS.rares>=3?3:(GS.rares>=1?2:1);
+  var rec=PROG.stages[GS.stage];
+  if(stars>rec.stars)rec.stars=stars;
+  rec.cleared=true;
+  var g=GUESTS[GS.stage];
+  var newGuest=g?markGuest(g.id):false;
+  saveProg(PROG);
+  setTimeout(function(){showResult(stars,newGuest);},1500);
+}
+
+function showResult(stars,newGuest){
+  GS.playing=false;
+  document.getElementById('res-title').textContent='できた！';
+  var body=document.getElementById('res-body');
+  body.innerHTML='あつめた いちご：<b>'+GS.collected+'こ</b><br>とくべつな いちご：<b>'+GS.rares+'こ</b>';
+  var g=GUESTS[GS.stage];
+  var gp=document.getElementById('res-guest');
+  if(g&&newGuest){
+    gp.classList.add('on');
+    gp.querySelector('.g-emoji').textContent=g.emoji;
+    gp.querySelector('.g-txt').textContent=g.name+'が おみせに きたよ！\nすきなもの：'+g.like;
+  }else{gp.classList.remove('on');}
+  var sp=document.getElementById('res-stars').children;
+  for(var i=0;i<3;i++)sp[i].classList.remove('on');
+  showScreen('screen-result');
+  for(var j=0;j<stars;j++){
+    (function(n){setTimeout(function(){sp[n].classList.add('on');beep(700+n*180,0,0.24,0.14,'triangle');},220+n*260);})(j);
+  }
+  document.getElementById('btn-next').style.display=(GS.stage<STAGES.length-1)?'':'none';
+}
+
+/* ================= マップ ================= */
+function unlockedCount(){
+  var n=1;
+  for(var i=0;i<STAGES.length;i++){if(PROG.stages[i].cleared)n=Math.max(n,i+2);}
+  return Math.min(n,STAGES.length);
+}
+function buildMap(){
+  var grid=document.getElementById('stage-grid');
+  grid.innerHTML='';
+  var unl=unlockedCount();
+  for(var i=0;i<STAGES.length;i++){
+    (function(i){
+      var st=STAGES[i],rec=PROG.stages[i];
+      var locked=i>=unl;
+      var card=document.createElement('div');
+      card.className='stage-card'+(locked?' locked':'');
+      var stars='';
+      for(var s=0;s<3;s++)stars+=(s<rec.stars?'⭐':'☆');
+      card.innerHTML='<div class="sc-art" style="background:linear-gradient(160deg,'+st.cardA+','+st.cardB+')">'+st.emoji+'</div>'+
+        '<div class="sc-no">はたけ '+(i+1)+'</div>'+
+        '<div class="sc-name">'+st.name+'</div>'+
+        '<div class="sc-stars">'+stars+'</div>'+
+        (locked?'<div class="sc-lock">🔒</div>':'');
+      if(!locked)card.addEventListener('click',function(){sfxTap();startStage(i);});
+      grid.appendChild(card);
+    })(i);
+  }
+  syncCoinUI();
+}
+function showMap(){
+  GS.playing=false;GS.titleMode=false;
+  document.body.className='sky-morning';
+  buildMap();
+  showScreen('screen-map');
+}
+
+/* ================= 図鑑 ================= */
+function buildBook(){
+  var grid=document.getElementById('book-grid');
+  grid.innerHTML='';
+  var got=0;
+  for(var i=0;i<BOOK_ORDER.length;i++){
+    var k=BOOK_ORDER[i],B=BERRIES[k],has=PROG.book[k];
+    if(has)got++;
+    var c1='#'+('000000'+B.c1.toString(16)).slice(-6);
+    var c2='#'+('000000'+B.c2.toString(16)).slice(-6);
+    var cell=document.createElement('div');
+    cell.className='book-cell'+(has?'':' no');
+    cell.innerHTML='<div class="bc-art" style="background:radial-gradient(60% 55% at 38% 32%,#fff9,'+c1+' 42%,'+c2+')"></div>'+
+      '<div class="bc-name">'+(has?B.name:'？？？')+'</div>';
+    grid.appendChild(cell);
+  }
+  document.getElementById('book-count').textContent=got+' / '+BOOK_ORDER.length+' しゅるい';
+}
+/* ================= おみせ ================= */
+function buildShop(){
+  var grid=document.getElementById('shop-grid');
+  grid.innerHTML='';
+  var got=0;
+  for(var i=0;i<GUESTS.length;i++){
+    var g=GUESTS[i],has=PROG.guests[g.id];
+    if(has)got++;
+    var cell=document.createElement('div');
+    cell.className='shop-cell'+(has?'':' no');
+    cell.innerHTML='<div class="sh-emoji">'+(has?g.emoji:'❓')+'</div>'+
+      '<div class="sh-name">'+(has?g.name:'？？？')+'</div>'+
+      '<div class="sh-like">'+(has?g.like:'まだ こない')+'</div>';
+    grid.appendChild(cell);
+  }
+  document.getElementById('shop-count').textContent=got+' / '+GUESTS.length+' にん';
+}
+
+/* ================= ボタン配線 ================= */
+function bind(id,fn){var el=document.getElementById(id);if(el)el.addEventListener('click',fn);}
+var _bookFrom='title',_shopFrom='title';
+
+bind('btn-start',function(){sfxTap();initBGM('fruity');showMap();});
+bind('btn-book-t',function(){sfxTap();_bookFrom='screen-title';buildBook();showScreen('screen-book');});
+bind('btn-shop-t',function(){sfxTap();_shopFrom='screen-title';buildShop();showScreen('screen-shop');});
+bind('btn-book-m',function(){sfxTap();_bookFrom='screen-map';buildBook();showScreen('screen-book');});
+bind('btn-shop-m',function(){sfxTap();_shopFrom='screen-map';buildShop();showScreen('screen-shop');});
+bind('btn-book-close',function(){sfxTap();showScreen(_bookFrom);});
+bind('btn-shop-close',function(){sfxTap();showScreen(_shopFrom);});
+bind('btn-home-m',function(){sfxTap();goHome();});
+bind('btn-home-t',function(){sfxTap();goHome();});
+bind('nogl-back',goHome);
+bind('btn-again',function(){sfxTap();startStage(GS.stage);});
+bind('btn-next',function(){sfxTap();var n=Math.min(STAGES.length-1,GS.stage+1);startStage(n);});
+bind('btn-tomap',function(){sfxTap();showMap();});
+bind('back-btn',function(){
+  sfxTap();
+  if(SCREEN==='play'){
+    if(GS.cleared||GS.collected>0){showMap();}
+    else{showMap();}
+  }else goHome();
+});
+
+/* ================= 起動 ================= */
+function buildPetals(){
+  var host=document.getElementById('petals');
+  if(!host)return;
+  var cols=['#FF8FB4','#FFC4D8','#FFFFFF','#FFE28A','#FF6E9C'];
+  var html='';
+  for(var i=0;i<16;i++){
+    var sz=5+Math.random()*7;
+    var left=Math.random()*100;
+    var dur=7+Math.random()*7;
+    var delay=-Math.random()*12;
+    var dx=(Math.random()*2-1)*90;
+    html+='<i style="left:'+left.toFixed(1)+'%;width:'+sz.toFixed(1)+'px;height:'+(sz*0.78).toFixed(1)+'px;'+
+          'background:'+cols[i%cols.length]+';animation-duration:'+dur.toFixed(1)+'s;'+
+          'animation-delay:'+delay.toFixed(1)+'s;--dx:'+dx.toFixed(0)+'px;"></i>';
+  }
+  host.innerHTML=html;
+}
+
+function showTitle(){
+  GS.playing=false;GS.cleared=false;
+  document.body.className='sky-morning';
+  showScreen('screen-title');
+  if(initGL()){
+    initGeo();
+    GS.titleMode=true;
+    buildTitleScene();
+    GS.camAz=0;GS.camEl=0.28;GS.lookZ=0;GS.lookLift=1.15;
+    var aspect=window.innerWidth/Math.max(1,window.innerHeight);
+    GS.camR=aspect<0.72?16.5:(aspect<1?14.5:12.5);
+    updateCamera();
+    onResize();
+    if(!_raf)loop();
+  }else{
+    document.getElementById('screen-title').classList.add('no3d');
+  }
+}
+
+syncCoinUI();
+buildMap();
+buildPetals();
+showTitle();
+</script>
+</body>
+</html>
