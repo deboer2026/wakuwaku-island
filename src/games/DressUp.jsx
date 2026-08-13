@@ -1,6 +1,8 @@
 ﻿import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIframeBridge } from '../hooks/useIframeBridge';
+import HomeChip from '../components/HomeChip';
+import '../seo/GameContent.css';
 
 export default function DressUp() {
   const navigate = useNavigate();
@@ -17,29 +19,18 @@ export default function DressUp() {
   }, [navigate]);
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0, left: 0, right: 0, bottom: 0,
-      zIndex: 0,
-      overflow: 'hidden'
-    }}>
-      <iframe
-        ref={iframeRef}
-        src="/games/dressup_v2.html"
-        style={{
-          width: '100%',
-          height: '100%',
-          border: 'none',
-          display: 'block',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-        }}
-        title="きせかえプリンセス"
-        allow="autoplay; fullscreen"
-        allowFullScreen
-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
-      />
+    <div className="game-page">
+      <div className="game-frame">
+        <HomeChip />
+        <iframe
+          ref={iframeRef}
+          src="/games/dressup_v2.html"
+          title="きせかえプリンセス"
+          allow="autoplay; fullscreen"
+          allowFullScreen
+          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+        />
+      </div>
     </div>
   );
 }
