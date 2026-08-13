@@ -17,7 +17,7 @@ export default function KazuAsobi() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/kazu_asobi_v3.html"
+          src="/games/kazu_asobi_v4.html"
           title="かずあそび"
           allow="autoplay; fullscreen"
           allowFullScreen

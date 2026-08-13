@@ -458,14 +458,16 @@ const GAME_SVGS = {
   ),
   g5: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100" height="85" rx="12" fill="#dff4ff"/>
-      <rect x="7" y="8" width="25" height="11" rx="4" fill="#2e78c7"/><rect x="10" y="11" width="11" height="3" rx="1.5" fill="#fff" opacity=".8"/>
-      <rect x="68" y="8" width="25" height="11" rx="4" fill="#ff866c"/><rect x="71" y="11" width="11" height="3" rx="1.5" fill="#fff" opacity=".8"/>
-      <path d="M0 70 Q25 63 50 71 Q75 78 100 68 V85H0Z" fill="#93d66e"/>
-      <g fill="#ffb347" stroke="#d97a21" strokeWidth="1"><circle cx="24" cy="42" r="6"/><circle cx="38" cy="50" r="6"/><circle cx="67" cy="40" r="6"/></g>
-      <g transform="translate(52 58)"><circle cy="-12" r="9" fill="#ffd6aa"/><path d="M-7 -16 L-10 -24 L-3 -19 M7 -16 L10 -24 L3 -19" fill="#ffd6aa"/><rect x="-9" y="-3" width="18" height="17" rx="7" fill="#4ba0e8"/><circle cx="-3" cy="-12" r="1" fill="#372e43"/><circle cx="3" cy="-12" r="1" fill="#372e43"/></g>
-      <rect x="73" y="55" width="18" height="19" rx="5" fill="#fff" stroke="#5788be" strokeWidth="1.5"/><circle cx="82" cy="65" r="5" fill="#ffcf4d"/><path d="M80 65h4M82 63v4" stroke="#9d681a" strokeWidth="1"/>
-      <text x="50" y="17" textAnchor="middle" fontSize="12" fill="white" fontWeight="bold">★</text>
+      <rect width="100" height="85" rx="12" fill="#241645"/>
+      <circle cx="82" cy="14" r="9" fill="#3a2159"/>
+      <circle cx="14" cy="10" r="1.6" fill="#FFF6E8" opacity=".8"/><circle cx="27" cy="18" r="1.1" fill="#FFF6E8" opacity=".6"/><circle cx="60" cy="8" r="1.3" fill="#FFF6E8" opacity=".7"/>
+      <path d="M0 66 Q25 58 50 65 Q75 72 100 62 V85H0Z" fill="#2e2340"/>
+      <g stroke="#6b4a2f" strokeWidth="2"><path d="M20 30V58"/><path d="M35 30V58"/></g>
+      <path d="M16 30H39" stroke="#b94d45" strokeWidth="3"/><path d="M18.5 26H36.5" stroke="#b94d45" strokeWidth="2.5"/>
+      <g transform="translate(59 40)"><ellipse rx="8" ry="9.5" fill="#E8564F"/><rect x="-6" y="-4" width="12" height="2.6" fill="#FFE5A0"/><rect x="-6" y="4" width="12" height="2.6" fill="#FFE5A0"/><rect x="-3.6" y="-2.8" width="7.2" height="7.2" fill="#FFF6E8"/><text x="0" y="2.6" textAnchor="middle" fontSize="7" fill="#633D30" fontWeight="bold">3</text></g>
+      <g transform="translate(78 46)"><ellipse rx="6.5" ry="7.8" fill="#E8564F"/><rect x="-4.8" y="-3.2" width="9.6" height="2.1" fill="#FFE5A0"/><rect x="-4.8" y="3.2" width="9.6" height="2.1" fill="#FFE5A0"/><rect x="-3" y="-2.3" width="6" height="6" fill="#FFF6E8"/><text x="0" y="2.2" textAnchor="middle" fontSize="6" fill="#633D30" fontWeight="bold">5</text></g>
+      <g transform="translate(30 66)"><circle cy="-11" r="8" fill="#C78B5C"/><circle cx="-6.5" cy="-16.5" r="2.6" fill="#C78B5C"/><circle cx="6.5" cy="-16.5" r="2.6" fill="#C78B5C"/><rect x="-8" y="-3" width="16" height="15" rx="6" fill="#D95562"/><circle cx="-2.8" cy="-11.5" r="1" fill="#2E2A33"/><circle cx="2.8" cy="-11.5" r="1" fill="#2E2A33"/></g>
+      <path d="M50 26 L52.4 32.1 L58.5 34.5 L52.4 36.9 L50 43 L47.6 36.9 L41.5 34.5 L47.6 32.1 Z" fill="#FFD76A"/>
     </svg>
   ),
   g6: (
@@ -1212,12 +1214,12 @@ const GAMES = [
     zh:{ name:'动物翻牌',             desc:'翻开卡片\n找出相同的动物！'                   },
     ko:{ name:'동물 퍼즐',             desc:'카드를 뒤집어\n같은 동물을 찾아요!'           },
     es:{ name:'Puzzle Animal',         desc:'¡Voltea cartas y busca\nanimales iguales!'    } },
-  { id:'g5', route:'/kazu-asobi',      icon:'🔢', num:5, color:'#F4D03F', stars:3, isNew:false, category:'がくしゅう',
-    ja:{ name:'かずあそび',         desc:'かずを かぞえて\nたのしく まなぼう！'          },
-    en:{ name:'Number Fun',           desc:'Count and learn\nnumbers with fun!'           },
-    zh:{ name:'数字游戏',             desc:'数数字\n快乐学习！'                           },
-    ko:{ name:'숫자 놀이',             desc:'숫자를 세며\n즐겁게 배워요!'                  },
-    es:{ name:'Juego de Números',      desc:'¡Cuenta y aprende\nnúmeros!'                  } },
+  { id:'g5', route:'/kazu-asobi',      icon:'🔢', num:5, color:'#F4D03F', stars:3, isNew:true, category:'がくしゅう',
+    ja:{ name:'かずあそび',         desc:'よるの おまつりで\n6つの やたいを かぞえよう！'  },
+    en:{ name:'Number Fun',           desc:'Count your way through\n6 night-festival stalls!' },
+    zh:{ name:'数字游戏',             desc:'在夜市祭典中\n数一数6个摊位吧！'               },
+    ko:{ name:'숫자 놀이',             desc:'밤 축제에서\n6개 포장마차를 세어봐요!'         },
+    es:{ name:'Juego de Números',      desc:'¡Cuenta en 6 puestos\nde un festival nocturno!' } },
   { id:'g6', route:'/animal-soccer',   icon:'⚽', num:6, color:'#00BCD4', stars:5, isNew:false, category:'アクション',
     ja:{ name:'どうぶつサッカー',   desc:'3たい3+GKの\n3Dサッカー！'                    },
     en:{ name:'Animal Soccer',        desc:'3v3 + GK\n3D soccer!'                         },
