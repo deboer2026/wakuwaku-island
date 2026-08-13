@@ -1214,7 +1214,7 @@ const GAMES = [
     zh:{ name:'动物翻牌',             desc:'翻开卡片\n找出相同的动物！'                   },
     ko:{ name:'동물 퍼즐',             desc:'카드를 뒤집어\n같은 동물을 찾아요!'           },
     es:{ name:'Puzzle Animal',         desc:'¡Voltea cartas y busca\nanimales iguales!'    } },
-  { id:'g5', route:'/kazu-asobi',      icon:'🔢', num:5, color:'#F4D03F', stars:3, isNew:true, category:'がくしゅう',
+  { id:'g5', route:'/kazu-asobi',      icon:'🔢', num:5, color:'#F4D03F', stars:3, isNew:true, category:'かずあそび',
     ja:{ name:'かずあそび',         desc:'よるの おまつりで\n6つの やたいを かぞえよう！'  },
     en:{ name:'Number Fun',           desc:'Count your way through\n6 night-festival stalls!' },
     zh:{ name:'数字游戏',             desc:'在夜市祭典中\n数一数6个摊位吧！'               },
