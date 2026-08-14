@@ -1802,6 +1802,8 @@ export default function TopPage() {
      sticky解放する。既存ユーザーも遡及解放。ここでは演出は出さず状態のみ同期する
      (演出はきせかえPanelを開いた時にKisekaePanel側で行う)。 */
   useEffect(() => {
+    // Browser-only post-hydration reconciliation preserves deterministic SSR.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setKisekaeState(prev => {
       const { state: synced, newlyUnlocked } = syncSpecialUnlocks(prev);
       if (newlyUnlocked.length === 0) return prev;
@@ -1855,12 +1857,16 @@ export default function TopPage() {
       const pool = fav
         ? ALL_SHELF_GAMES.filter(g => fav.match(g) && !hist[g.route])
         : ALL_SHELF_GAMES.filter(g => g.isNew && !hist[g.route]);
+      // Recommendations depend on client-only play history.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRecoGames(pool.slice(0, 4));
     } catch { /* noop */ }
   }, []);
 
   useEffect(() => {
     if (localStorage.getItem('wakuwaku_bgm') !== 'off') startBGM();
+    // Startup-only browser side effect; it must not run during SSR.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPlayCount(getPlayCount() + 1312);
     const bonus = checkLoginBonus();
     if (bonus) setLoginBonus(bonus);
@@ -1874,7 +1880,10 @@ export default function TopPage() {
     if (localStorage.getItem('wakuwaku_lang')) return;
     const detected = detectLang();
     localStorage.setItem('wakuwaku_lang', detected);
-    if (detected !== lang) setLang(detected);
+    // Browser-only language detection intentionally runs after the prerendered
+    // first paint so SSR output stays deterministic.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLang(prev => prev === detected ? prev : detected);
   }, []);
 
   function handleMuteToggle() {
@@ -1923,6 +1932,8 @@ export default function TopPage() {
   useEffect(() => {
     const h = new Date().getHours();
     const slot = h < 11 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+    // This effect synchronizes the localized greeting and its interval.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMascotText(MASCOT_GREETING[slot][lang] || MASCOT_GREETING[slot].ja);
     const t = setInterval(() => setMascotText(pickMascotLine(lang)), 8000);
     return () => clearInterval(t);
@@ -2525,15 +2536,14 @@ export default function TopPage() {
       })()}
 
       {/* ── 着せ替えパネル ── */}
-      <KisekaePanel
-        isOpen={panelOpen}
+      {panelOpen && <KisekaePanel
         initialChara={panelChara}
         onClose={() => setPanelOpen(false)}
         kisekaeState={kisekaeState}
         onStateChange={handleKisekaeChange}
         lang={lang}
         onCoinsChange={setCoins}
-      />
+      />}
 
       {/* ── ショップ ── */}
       <Shop

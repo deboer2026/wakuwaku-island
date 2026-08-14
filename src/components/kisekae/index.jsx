@@ -304,7 +304,11 @@ function OutfitSlots({ outfits, savedFlash, lang, onSave, onApply }) {
 /* ════════════════════════════════════════════════════
    着せ替えパネル（スライドアップモーダル）
 ════════════════════════════════════════════════════ */
-export function KisekaePanel({ isOpen, initialChara, onClose, kisekaeState, onStateChange, lang, onCoinsChange }) {
+function pickRandom(items) {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+export function KisekaePanel({ initialChara, onClose, kisekaeState, onStateChange, lang, onCoinsChange }) {
   const [activeChara, setActiveChara] = useState(initialChara || 'princess');
   const [activeCat,   setActiveCat]   = useState('crown');
   const [reactMsg, setReactMsg] = useState(null);
@@ -318,15 +322,6 @@ export function KisekaePanel({ isOpen, initialChara, onClose, kisekaeState, onSt
   const previewRef = useRef(null);
 
   useEffect(() => {
-    if (isOpen) {
-      setActiveChara(initialChara || 'princess');
-      setActiveCat('crown');
-      setReactMsg(null);
-      setPendingBuy(null);
-      setPendingSpecialInfo(null);
-      setCoins(getCoins());
-      seqRef.current++;
-
       /* Panel mount時にも最新のあそび実績を再評価する(TopPage側でも評価済みだが、
          同一セッション内で長時間経ってから開いた場合の保険)。sticky unlockなので
          新規解放のみ演出し、既存解放分は再演出しない。 */
@@ -346,10 +341,10 @@ export function KisekaePanel({ isOpen, initialChara, onClose, kisekaeState, onSt
           setTimeout(() => { if (seqRef.current === mySeq) setReactMsg(null); }, reduce ? 900 : 1400);
         }, 120);
       }
-    }
-  }, [isOpen, initialChara]);
-
-  if (!isOpen) return null;
+    // The panel is conditionally mounted. This reconciliation deliberately
+    // consumes the opening snapshot exactly once, before parent state changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const cat = activeCat === 'dress' ? 'dress' : activeCat;
   const specialUnlocked = kisekaeState.specialUnlocked || [];
@@ -398,7 +393,7 @@ export function KisekaePanel({ isOpen, initialChara, onClose, kisekaeState, onSt
     setTimeout(() => { if (btn) btn.classList.remove('ksk-item-pop'); }, 260);
 
     const msgs = lang === 'en' ? ['Wow!', 'Cute!', 'Great!'] : ['わぁ！', 'かわいい！', 'にあう！'];
-    const msg = msgs[Math.floor(Math.random() * msgs.length)];
+    const msg = pickRandom(msgs);
     triggerReaction(mySeq, msg, e.clientX, e.clientY);
   }
 
