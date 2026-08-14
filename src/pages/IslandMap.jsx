@@ -9,7 +9,7 @@ import './IslandMap.css';
    - GAMES/ルート定義は一切変更しない表示層のみの追加。
 ════════════════════════════════════════════════════ */
 
-export const AREA_THEMES = {
+const AREA_THEMES = {
   asobu:    { bg:'linear-gradient(180deg,#c9f0bd,#a9e39b)', sign:'#3f9d4a', deco:['🌳','🍄','🌼','🐿️'] },
   nerau:    { bg:'linear-gradient(180deg,#cdeaff,#a9d8ff)', sign:'#3a86d4', deco:['⛰️','🪁','🎈','🦅'] },
   race:     { bg:'linear-gradient(180deg,#ffe6c4,#ffd0a0)', sign:'#e07a1f', deco:['🏁','🚦','🌵','⛽'] },

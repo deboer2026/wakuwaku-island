@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIframeBridge } from '../hooks/useIframeBridge';
 import GameContent from '../seo/GameContent';
@@ -25,10 +25,10 @@ export default function OkashiCrossing() {
     return () => window.removeEventListener('message', handler);
   }, [navigate]);
 
-  const send = (dir) => {
+  const send = useCallback((dir) => {
     iframeRef.current?.contentWindow?.postMessage({ type: 'okashi-move', dir }, '*');
-  };
-  const press = (dir) => (e) => { e.preventDefault(); send(dir); };
+  }, []);
+  const press = useCallback((dir) => (e) => { e.preventDefault(); send(dir); }, [send]);
 
   const pad = {
     position: 'fixed',

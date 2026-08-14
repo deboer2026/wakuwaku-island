@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { getCoins, spendCoins } from '../utils/coins';
 import { unlockItem, isItemUnlocked } from '../utils/coins';
 import { SHOP_ITEMS } from '../utils/shopItems';
-import { spawnSparkles } from './Kisekae';
+import { spawnSparkles } from './kisekae/effects';
 import './Shop.css';
 
 const CAT_LABELS = {

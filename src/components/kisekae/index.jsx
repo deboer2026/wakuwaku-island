@@ -1,16 +1,14 @@
 import { useState, useEffect, useRef, useId } from 'react';
-import { CATS, KISEKAE_ITEMS, DEFAULT_KISEKAE, normalizeKisekaeState, findKisekaeItem, getCategoryItems, isFieldOwned, triedKey, syncSpecialUnlocks } from './data';
+import { CATS, KISEKAE_ITEMS, DEFAULT_KISEKAE, findKisekaeItem, getCategoryItems, isFieldOwned, triedKey, syncSpecialUnlocks } from './data';
 import { PrincessSVG, PrinceSVG } from './Character';
 import { CrownArt, HairBack, HairFront, PrincessOutfit, PrinceOutfit, ItemArt, PetSVG } from './parts';
 import { getCoins, spendCoins, unlockItem } from '../../utils/coins';
 import './Kisekae.css';
 
-export { KISEKAE_ITEMS, DEFAULT_KISEKAE, normalizeKisekaeState, syncSpecialUnlocks };
-
 /* ════════════════════════════════════════════════════
    キラキラエフェクト(既存踏襲)
 ════════════════════════════════════════════════════ */
-export function spawnSparkles(x, y) {
+function spawnSparkles(x, y) {
   const emojis = ['✨', '⭐', '💫', '🌟', '💖'];
   emojis.forEach((em, i) => {
     const el = document.createElement('div');

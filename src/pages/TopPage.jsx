@@ -5,7 +5,8 @@ import { startBGM, stopBGM, toggleBGM } from '../utils/audio';
 import { transitionTo } from '../utils/transition';
 import { getPlayCount } from '../utils/playCounter';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
-import { KisekaeCharacters, KisekaePanel, DEFAULT_KISEKAE, normalizeKisekaeState, syncSpecialUnlocks } from '../components/Kisekae';
+import { KisekaeCharacters, KisekaePanel } from '../components/Kisekae';
+import { DEFAULT_KISEKAE, normalizeKisekaeState, syncSpecialUnlocks } from '../components/kisekae/data';
 import LoginBonus from '../components/LoginBonus';
 import Shop from '../components/Shop';
 import { getCoins, checkLoginBonus, claimLoginBonus } from '../utils/coins';
@@ -1820,14 +1821,13 @@ export default function TopPage() {
   /* ジャンル棚だけ「表示ごとに」ランダム化する。マウント時に1回だけ並びを決め、
      以降はフィルター切替・きせかえ開閉・BGM/言語切替があっても順番を固定する
      （「最近あそんだ」「おすすめ」等の意味のあるリストはここでは対象外）。 */
-  const shelfOrderRef = useRef(null);
-  if (!shelfOrderRef.current) {
+  const [shelfOrder] = useState(() => {
     const orders = {};
     SHELF_GROUPS.forEach(grp => {
       orders[grp.key] = shuffleOnce(ALL_SHELF_GAMES.filter(grp.match).map(g => g.route));
     });
-    shelfOrderRef.current = orders;
-  }
+    return orders;
+  });
 
   const season    = getSeason();
   const daysSince = getDaysSinceUpdate();
@@ -2344,7 +2344,7 @@ export default function TopPage() {
           const age   = AGE_FILTERS.find(item => item.key === ageKey) || AGE_FILTERS[0];
           const items = sortShelfItemsByOrder(
             ALL_SHELF_GAMES.filter(grp.match).filter(chip.match).filter(age.match),
-            shelfOrderRef.current[grp.key]
+            shelfOrder[grp.key]
           );
           if (items.length === 0) return null;
           return (
