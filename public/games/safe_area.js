@@ -27,7 +27,7 @@
   function request(){
     try { if (window.parent && window.parent !== window) {
       window.parent.postMessage({ type: 'requestSafeArea' }, '*');
-    }} catch(e){}
+    }} catch { /* parent access can be blocked by iframe sandboxing */ }
   }
   request();
   setTimeout(request, 300);

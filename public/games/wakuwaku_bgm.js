@@ -200,7 +200,7 @@
       this._gain = this._ctx.createGain();
       this._gain.gain.value = 0.14;
       this._gain.connect(this._ctx.destination);
-    } catch (e) {}
+    } catch { /* Web Audio is unavailable in this browser */ }
   };
 
   WakuwakuBGM.prototype._note = function(freq, t, dur, vol, wave) {

@@ -163,7 +163,7 @@ if (typeof document !== 'undefined') {
     } else {
       // 実際のアンロード（タブ閉じ等）: 完全破棄
       _cancelLoop();
-      try { if (_ctx) { _ctx.close(); _ctx = null; } } catch(e) {}
+      try { if (_ctx) { _ctx.close(); _ctx = null; } } catch { /* audio context may already be closed */ }
       stopBGM();
     }
   });
@@ -189,7 +189,7 @@ if (typeof document !== 'undefined') {
   window.addEventListener('beforeunload', () => {
     _cancelLoop();
     if (_ctx) {
-      try { _ctx.close(); } catch(e) {}
+      try { _ctx.close(); } catch { /* audio context may already be closed */ }
       _ctx = null;
     }
     stopBGM();
@@ -230,7 +230,7 @@ function _clearBgmSchedule() {
 
 function _bgmTryPlay(el, onSuccess) {
   let p;
-  try { p = el.play(); } catch (e) { p = null; }
+  try { p = el.play(); } catch { p = null; }
   if (p && typeof p.catch === 'function') {
     p.then(() => onSuccess && onSuccess()).catch(() => _attachBgmRetry());
   } else {
@@ -378,7 +378,7 @@ export async function ensureAudioStarted() {
   if (ctx.state === 'suspended') {
     try {
       await ctx.resume();
-    } catch (e) {
+    } catch {
       // resume に失敗してもクラッシュしない
     }
   }

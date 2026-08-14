@@ -1188,11 +1188,6 @@ function getSeason() {
 /* ════════════════════════════════════════════════════
    ④ 今日のおすすめ（日付ハッシュ）
 ════════════════════════════════════════════════════ */
-function getTodayIndex(n) {
-  const s = new Date().toDateString();
-  return s.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % n;
-}
-
 /* ════════════════════════════════════════════════════
    ゲームリスト（ja / en 両対応）
 ════════════════════════════════════════════════════ */
@@ -1794,7 +1789,7 @@ export default function TopPage() {
   const navigate   = useNavigate();
   const [lang,        setLang]        = useState(() => (typeof localStorage !== 'undefined' ? localStorage.getItem('wakuwaku_lang') : null) || 'ja');
   const [isMuted,     setIsMuted]     = useState(() => typeof localStorage !== 'undefined' && localStorage.getItem('wakuwaku_bgm') === 'off');
-  const [playCount,   setPlayCount]   = useState(0);
+  const [_playCount,  setPlayCount]   = useState(0);
   const [kisekaeState,setKisekaeState]= useState(() => {
     try {
       const saved = typeof localStorage !== 'undefined' && localStorage.getItem('kisekae_state');
@@ -1809,7 +1804,7 @@ export default function TopPage() {
     setKisekaeState(prev => {
       const { state: synced, newlyUnlocked } = syncSpecialUnlocks(prev);
       if (newlyUnlocked.length === 0) return prev;
-      try { localStorage.setItem('kisekae_state', JSON.stringify(synced)); } catch {}
+      try { localStorage.setItem('kisekae_state', JSON.stringify(synced)); } catch { /* storage remains optional */ }
       return synced;
     });
   }, []);
@@ -1818,7 +1813,7 @@ export default function TopPage() {
   const [shopOpen,    setShopOpen]    = useState(false);
   const [coins,       setCoins]       = useState(() => typeof localStorage !== 'undefined' ? getCoins() : 0);
   const [loginBonus,  setLoginBonus]  = useState(null);
-  const [recentRoutes,   setRecentRoutes]   = useState(() => typeof localStorage !== 'undefined' ? getRecentGames() : []);
+  const [recentRoutes,   _setRecentRoutes]  = useState(() => typeof localStorage !== 'undefined' ? getRecentGames() : []);
   const [catKey,  setCatKey]  = useState('all');
   const [ageKey,  setAgeKey]  = useState('all');
 
@@ -2002,7 +1997,7 @@ export default function TopPage() {
     localStorage.setItem('wakuwaku_lang', next);
   }
 
-  const lastUpdateText =
+  const _lastUpdateText =
     lang === 'en' ? (daysSince === 0 ? 'Today!' : `${daysSince} days ago`) :
     lang === 'zh' ? (daysSince === 0 ? '今天！' : `${daysSince}天前`) :
     lang === 'ko' ? (daysSince === 0 ? '오늘!' : `${daysSince}일 전`) :

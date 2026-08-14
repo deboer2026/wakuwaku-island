@@ -6,7 +6,7 @@ export function useGameNav(navigate) {
       if (e.data?.type === 'goHome') { navigate('/'); return; }
       if (e.data?.type === 'goBack') {
         let internal = false;
-        try { internal = sessionStorage.getItem('ww_nav_internal') === '1'; } catch {}
+        try { internal = sessionStorage.getItem('ww_nav_internal') === '1'; } catch { /* storage is optional */ }
         navigate(internal ? -1 : '/');
       }
     };

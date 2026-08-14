@@ -8,7 +8,7 @@ export function recordGamePlay(route) {
     const h = JSON.parse(localStorage.getItem(KEY) || '{}');
     h[route] = (h[route] || 0) + 1;
     localStorage.setItem(KEY, JSON.stringify(h));
-  } catch {}
+  } catch { /* local storage is optional */ }
 }
 
 // プレイ履歴を取得。既存プレイヤー救済として recentGames もスタンプに反映

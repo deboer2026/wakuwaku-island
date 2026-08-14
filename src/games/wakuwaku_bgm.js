@@ -155,7 +155,7 @@ class WakuwakuBGM {
   }
 
   _killOscs() {
-    this.oscs.forEach(o => { try { o.stop(); } catch(_){} });
+    this.oscs.forEach(o => { try { o.stop(); } catch { /* oscillator may already be stopped */ } });
     this.oscs = [];
   }
 

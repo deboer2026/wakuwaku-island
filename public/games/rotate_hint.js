@@ -52,7 +52,8 @@
         // when same-origin parent is reachable this is fine; otherwise screen still
         // reports device dimensions which rotate with the device.
       }
-    } catch(e){
+    } catch {
+      // Keep the iframe's own viewport as a safe fallback.
       w = window.innerWidth; h = window.innerHeight;
     }
     var landscape = w > h;
@@ -71,7 +72,7 @@
   window.addEventListener('orientationchange', function(){ setTimeout(check, 250); });
   // screen.orientation API as a third signal where available
   if (window.screen && window.screen.orientation && window.screen.orientation.addEventListener){
-    try { window.screen.orientation.addEventListener('change', function(){ setTimeout(check, 100); }); } catch(e){}
+    try { window.screen.orientation.addEventListener('change', function(){ setTimeout(check, 100); }); } catch { /* optional API */ }
   }
   // Accept an explicit signal from the parent frame (most robust)
   window.addEventListener('message', function(ev){

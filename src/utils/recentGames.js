@@ -10,7 +10,7 @@ export function recordRecentGame(route) {
     const recent = Array.isArray(parsed) ? parsed : [];
     const updated = [route, ...recent.filter(r => r !== route)].slice(0, MAX);
     localStorage.setItem(KEY, JSON.stringify(updated));
-  } catch {}
+  } catch { /* local storage is optional */ }
 }
 
 // 最近遊んだゲームのルートリストを取得

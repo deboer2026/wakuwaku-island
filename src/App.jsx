@@ -121,7 +121,7 @@ function RouteTracker() {
     navCount.current += 1;
     // 着地の初回では立てず、サイト内で動いた2回目以降にフラグを立てる
     if (navCount.current >= 2) {
-      try { sessionStorage.setItem('ww_nav_internal', '1'); } catch {}
+      try { sessionStorage.setItem('ww_nav_internal', '1'); } catch { /* private-mode storage can be unavailable */ }
     }
     if (GAME_ROUTES.has(location.pathname)) {
       recordRecentGame(location.pathname);
