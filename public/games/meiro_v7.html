@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <script src="/games/safe_area.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -1226,25 +1227,22 @@ function goHome(){
   if(window.parent!==window){window.parent.postMessage({type:'goHome'},'*');}
   else{window.location.href='/';}
 }
-// ── BGM (WakuwakuBGM library) ──────────────────────
+// ── BGM (WakuwakuMP3BGM — trial MP3 rollout for this game) ─
 let _bgm = null;
 function _startBGM() {
   if (_bgm) return;
-  if (typeof WakuwakuBGM === 'undefined') return;
-  _bgm = new WakuwakuBGM('adventure');
-  const on = WakuwakuBGM.loadState();
-  _bgm.setEnabled(on);
-  if (on) _bgm.start();
+  if (typeof WakuwakuMP3BGM === 'undefined') return;
+  _bgm = new WakuwakuMP3BGM('adventure');
+  _bgm.start();
   _syncBgmBtn();
 }
 function toggleCommonBGM() {
   if (!_bgm) { _startBGM(); return; }
-  const on = _bgm.toggle();
-  WakuwakuBGM.saveState(on);
+  _bgm.toggle();
   _syncBgmBtn();
 }
 function _syncBgmBtn() {
-  const on = _bgm ? _bgm.enabled : (typeof WakuwakuBGM!=='undefined'&&WakuwakuBGM.loadState());
+  const on = _bgm ? _bgm.enabled : (typeof WakuwakuMP3BGM!=='undefined'&&WakuwakuMP3BGM.loadState());
   document.querySelectorAll('#bgm-btn,#ui-bgm-btn,#bgm-toggle,#sound-btn,.bgm-btn')
     .forEach(b => { b.textContent = on ? '🔊' : '🔇'; });
 }
