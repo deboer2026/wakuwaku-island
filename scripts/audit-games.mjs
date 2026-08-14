@@ -169,8 +169,11 @@ function extractSvgKeys(text) {
 }
 
 function extractApp(text, metaRoutes) {
-  const imports = allMatches(text, /^import\s+([A-Za-z_$][\w$]*)\s+from\s+['"]\.\/games\/([^'"]+)['"]/gm)
-    .map((match) => ({ component: match[1], module: match[2], index: match.index }));
+  const imports = [
+    ...allMatches(text, /^import\s+([A-Za-z_$][\w$]*)\s+from\s+['"]\.\/games\/([^'"]+)['"]/gm),
+    ...allMatches(text, /^const\s+([A-Za-z_$][\w$]*)\s+=\s+lazy\(\(\)\s*=>\s*import\(['"]\.\/games\/([^'"]+)['"]\)\)/gm),
+    ...allMatches(text, /^const\s+([A-Za-z_$][\w$]*)\s+=\s+lazy\(\(\)\s*=>\s*import\(['"]\.\/pages\/([^'"]+)['"]\)\)/gm),
+  ].map((match) => ({ component: match[1], module: match[2], index: match.index }));
   const setStart = text.indexOf('const GAME_ROUTES');
   const setOpen = text.indexOf('[', setStart);
   const setClose = matchingDelimiter(text, setOpen, '[', ']');

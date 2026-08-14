@@ -54,7 +54,7 @@ function syncTopGameCount(html) {
 }
 
 for (const url of routes) {
-  const { html, helmet } = render(url)
+  const { html, helmet } = await render(url)
   const { hoisted, body } = hoistHeadTags(html)
   let page
   if (url === '/') {

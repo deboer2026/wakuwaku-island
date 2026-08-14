@@ -1,55 +1,68 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
-import { useEffect, useRef } from 'react'
+import { lazy, Suspense, useEffect, useRef } from 'react'
 import GameSEO from './seo/GameSEO'
 import GAME_META from './seo/gameMeta'
 import TopPage from './pages/TopPage'
-import Shabondama from './games/Shabondama'
-import KudamonoCatch from './games/KudamonoCatch'
-import DoubutsuPuzzle from './games/DoubutsuPuzzle'
-import KazuAsobi from './games/KazuAsobi'
-import AnimalSoccer from './games/AnimalSoccer'
-import SushiGame from './games/SushiGame'
-import IchigoGame from './games/IchigoGame'
-import DoubutsuKakurenbo from './games/DoubutsuKakurenbo'
-import MojiAsobi from './games/MojiAsobi'
-import TashizanGame from './games/TashizanGame'
-import IroAwase from './games/IroAwase'
-import MachiDukuri from './games/MachiDukuri'
-import DoubutsuBlock from './games/DoubutsuBlock'
-import DoubutsuRunner from './games/DoubutsuRunner'
-import DoubutsuShoot from './games/DoubutsuShoot'
-import DoubutsuSniper from './games/DoubutsuSniper'
-import KokkiQuiz from './games/KokkiQuiz'
-import JewelryMaster from './games/JewelryMaster'
-import DressUp from './games/DressUp'
-import OkashiCrossing from './games/OkashiCrossing'
-import MoriGame from './games/MoriGame'
-import DonguriGame from './games/DonguriGame'
-import SoraGame from './games/SoraGame'
-import BikeGame from './games/BikeGame'
-import AnimalKart from './games/AnimalKart'
-import BlockKuzushi from './games/BlockKuzushi'
-import MahouHouki from './games/MahouHouki'
-import MahouMeiro from './games/MahouMeiro'
-import UsagiCarrot from './games/UsagiCarrot'
-import NekoChou from './games/NekoChou'
-import TokeiYomi from './games/TokeiYomi'
-import KatakanaAsobi from './games/KatakanaAsobi'
-import NurieOekaki from './games/NurieOekaki'
-import MahouNakama from './games/MahouNakama'
-import OtakaraHorihori from './games/OtakaraHorihori'
-import KatachiAwase from './games/KatachiAwase'
-import SoraKyoshitsu from './games/SoraKyoshitsu'
-import MuraGame from './games/MuraGame'
-import NeonDrive from './games/NeonDrive'
-import AstralFang from './games/AstralFang'
-import NijiiroOukoku from './games/NijiiroOukoku'
-import PrivacyPage from './pages/PrivacyPage'
-import TermsPage from './pages/TermsPage'
-import ParentsPage from './pages/ParentsPage'
 import { recordRecentGame } from './utils/recentGames'
 import { recordGamePlay } from './utils/playHistory'
 import { handleGameAnalyticsMessage, trackGameView, trackPageView } from './utils/analytics'
+
+const Shabondama = lazy(() => import('./games/Shabondama'))
+const KudamonoCatch = lazy(() => import('./games/KudamonoCatch'))
+const DoubutsuPuzzle = lazy(() => import('./games/DoubutsuPuzzle'))
+const KazuAsobi = lazy(() => import('./games/KazuAsobi'))
+const AnimalSoccer = lazy(() => import('./games/AnimalSoccer'))
+const SushiGame = lazy(() => import('./games/SushiGame'))
+const IchigoGame = lazy(() => import('./games/IchigoGame'))
+const DoubutsuKakurenbo = lazy(() => import('./games/DoubutsuKakurenbo'))
+const MojiAsobi = lazy(() => import('./games/MojiAsobi'))
+const TashizanGame = lazy(() => import('./games/TashizanGame'))
+const IroAwase = lazy(() => import('./games/IroAwase'))
+const MachiDukuri = lazy(() => import('./games/MachiDukuri'))
+const DoubutsuBlock = lazy(() => import('./games/DoubutsuBlock'))
+const DoubutsuRunner = lazy(() => import('./games/DoubutsuRunner'))
+const DoubutsuShoot = lazy(() => import('./games/DoubutsuShoot'))
+const DoubutsuSniper = lazy(() => import('./games/DoubutsuSniper'))
+const KokkiQuiz = lazy(() => import('./games/KokkiQuiz'))
+const JewelryMaster = lazy(() => import('./games/JewelryMaster'))
+const DressUp = lazy(() => import('./games/DressUp'))
+const OkashiCrossing = lazy(() => import('./games/OkashiCrossing'))
+const MoriGame = lazy(() => import('./games/MoriGame'))
+const DonguriGame = lazy(() => import('./games/DonguriGame'))
+const SoraGame = lazy(() => import('./games/SoraGame'))
+const BikeGame = lazy(() => import('./games/BikeGame'))
+const AnimalKart = lazy(() => import('./games/AnimalKart'))
+const BlockKuzushi = lazy(() => import('./games/BlockKuzushi'))
+const MahouHouki = lazy(() => import('./games/MahouHouki'))
+const MahouMeiro = lazy(() => import('./games/MahouMeiro'))
+const UsagiCarrot = lazy(() => import('./games/UsagiCarrot'))
+const NekoChou = lazy(() => import('./games/NekoChou'))
+const TokeiYomi = lazy(() => import('./games/TokeiYomi'))
+const KatakanaAsobi = lazy(() => import('./games/KatakanaAsobi'))
+const NurieOekaki = lazy(() => import('./games/NurieOekaki'))
+const MahouNakama = lazy(() => import('./games/MahouNakama'))
+const OtakaraHorihori = lazy(() => import('./games/OtakaraHorihori'))
+const KatachiAwase = lazy(() => import('./games/KatachiAwase'))
+const SoraKyoshitsu = lazy(() => import('./games/SoraKyoshitsu'))
+const MuraGame = lazy(() => import('./games/MuraGame'))
+const NeonDrive = lazy(() => import('./games/NeonDrive'))
+const AstralFang = lazy(() => import('./games/AstralFang'))
+const NijiiroOukoku = lazy(() => import('./games/NijiiroOukoku'))
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
+const TermsPage = lazy(() => import('./pages/TermsPage'))
+const ParentsPage = lazy(() => import('./pages/ParentsPage'))
+
+function RouteLoading() {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', padding: 24, color: '#fff', fontSize: 18, fontWeight: 800, textShadow: '0 2px 4px rgba(26, 105, 159, .35)' }}
+    >
+      よみこみ中…
+    </div>
+  )
+}
 
 function GameWithSEO({ route, children }) {
   const meta = GAME_META[route];
@@ -124,6 +137,7 @@ export default function App() {
   return (
     <>
       <RouteTracker />
+      <Suspense fallback={<RouteLoading />}>
       <Routes>
         <Route path="/" element={<TopPage />} />
         <Route path="/shabondama" element={<GameWithSEO route="/shabondama"><Shabondama /></GameWithSEO>} />
@@ -188,6 +202,7 @@ export default function App() {
         <Route path="/terms"   element={<TermsPage />} />
         <Route path="/parents" element={<ParentsPage />} />
       </Routes>
+      </Suspense>
     </>
   )
 }
