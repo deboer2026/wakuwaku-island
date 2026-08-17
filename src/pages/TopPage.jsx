@@ -287,31 +287,85 @@ const GAME_SVGS = {
   ),
   g_okashi: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0" y="0" width="100" height="85" fill="#ffe3f0"/>
-      <rect x="0" y="52" width="100" height="16" fill="#8a5fc0"/>
-      <rect x="0" y="52" width="100" height="2" fill="#ffe07a"/>
-      <rect x="0" y="66" width="100" height="2" fill="#ffe07a"/>
-      <rect x="18" y="56" width="10" height="2" rx="1" fill="#fff" opacity=".7"/>
-      <rect x="58" y="56" width="10" height="2" rx="1" fill="#fff" opacity=".7"/>
-      <rect x="0" y="30" width="100" height="14" fill="#6e4228"/>
-      <rect x="20" y="33" width="22" height="8" rx="4" fill="#e8b76f" stroke="#c9964f" strokeWidth="1"/>
-      <g transform="translate(70 58)">
-        <rect x="-11" y="-6" width="22" height="12" rx="5" fill="#59d98c"/>
-        <rect x="-8" y="-4" width="16" height="4" rx="2" fill="#fff" opacity=".55"/>
-        <circle cx="5" cy="1" r="1.6" fill="#5a3a2a"/><circle cx="9" cy="1" r="1.6" fill="#5a3a2a"/>
+      <defs>
+        <linearGradient id="okSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#9fdcf5"/><stop offset="0.62" stopColor="#ffe7c4"/><stop offset="1" stopColor="#ffd9a8"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="100" height="85" fill="url(#okSky)"/>
+
+      <path d="M22 33 L78 33 L82 38 L18 38 Z" fill="#f5d9a8"/>
+      <path d="M18 38 L82 38 L88 45 L12 45 Z" fill="#e0679f"/>
+      <path d="M12 45 L88 45 L95 53 L5 53 Z" fill="#e8c68f"/>
+      <path d="M5 53 L95 53 L100 63 L0 63 Z" fill="#6b4226"/>
+      <path d="M0 63 L100 63 L100 74 L0 74 Z" fill="#8a5a34" opacity=".35"/>
+      <path d="M0 63 L100 63 L100 85 L0 85 Z" fill="#f5d9a8"/>
+      <path d="M0 74 L100 74 L100 85 L0 85 Z" fill="#e8c68f"/>
+
+      <rect x="26" y="40" width="7" height="2" rx="1" fill="#ffe6f3" opacity=".9"/>
+      <rect x="46" y="40" width="7" height="2" rx="1" fill="#ffe6f3" opacity=".9"/>
+      <rect x="66" y="40" width="7" height="2" rx="1" fill="#ffe6f3" opacity=".9"/>
+
+      <ellipse cx="20" cy="57" rx="11" ry="4" fill="#e8b76f" stroke="#c9964f" strokeWidth="1"/>
+      <circle cx="17" cy="56" r="1.2" fill="#5b3a22"/><circle cx="23" cy="58" r="1.2" fill="#5b3a22"/>
+      <ellipse cx="72" cy="59" rx="12" ry="4.4" fill="#e8b76f" stroke="#c9964f" strokeWidth="1"/>
+      <circle cx="69" cy="58" r="1.2" fill="#5b3a22"/><circle cx="76" cy="60" r="1.2" fill="#5b3a22"/>
+
+      <g>
+        <rect x="20" y="39" width="15" height="5" rx="2" fill="#59b8f0" opacity=".92"/>
+        <rect x="23" y="36" width="8" height="4" rx="1.8" fill="#8ed2f7" opacity=".85"/>
+        <circle cx="23" cy="44.4" r="1.5" fill="#5b3a2a"/><circle cx="32" cy="44.4" r="1.5" fill="#5b3a2a"/>
       </g>
-      <circle cx="70" cy="21" r="6" fill="#ffcb70" stroke="#d98535" strokeWidth="1.2"/>
-      <circle cx="68" cy="20" r="1" fill="#6d3f2a"/><circle cx="72" cy="23" r="1" fill="#6d3f2a"/>
-      <rect x="7" y="7" width="24" height="10" rx="4" fill="#a64d89" opacity=".9"/><circle cx="14" cy="12" r="2" fill="#fff"/><rect x="19" y="10" width="8" height="3" rx="1.5" fill="#ffe07a"/>
-      <g transform="translate(38 68)">
-        <ellipse cx="-5" cy="-16" rx="2.6" ry="7.5" fill="#fff" transform="rotate(-9 -5 -16)"/>
-        <ellipse cx="5" cy="-16" rx="2.6" ry="7.5" fill="#fff" transform="rotate(9 5 -16)"/>
-        <ellipse cx="-5" cy="-16" rx="1.2" ry="4.5" fill="#ffc2d8" transform="rotate(-9 -5 -16)"/>
-        <ellipse cx="5" cy="-16" rx="1.2" ry="4.5" fill="#ffc2d8" transform="rotate(9 5 -16)"/>
-        <circle cx="0" cy="-2" r="8.5" fill="#fff"/>
-        <circle cx="-3" cy="-3" r="1.1" fill="#3a2a3a"/><circle cx="3" cy="-3" r="1.1" fill="#3a2a3a"/>
-        <circle cx="0" cy="0" r="1" fill="#ff8fb5"/>
-        <path d="M-4.5 -10 L-4.5 -13.5 L-2.2 -11 L0 -14 L2.2 -11 L4.5 -13.5 L4.5 -10 Z" fill="#ffd34d"/>
+      <g>
+        <rect x="58" y="40" width="16" height="5" rx="2" fill="#ff8ec0" opacity=".92"/>
+        <rect x="61" y="37" width="9" height="4" rx="1.8" fill="#ffb3d6" opacity=".85"/>
+        <circle cx="61.5" cy="45.4" r="1.5" fill="#5b3a2a"/><circle cx="71" cy="45.4" r="1.5" fill="#5b3a2a"/>
+      </g>
+
+      <g transform="translate(50 21)">
+        <path d="M-13 2 A13 8 0 0 1 13 2" fill="none" stroke="#ff9ecb" strokeWidth="2.6" strokeLinecap="round"/>
+        <rect x="-15" y="1" width="3.4" height="12" rx="1.6" fill="#fff"/>
+        <rect x="-15" y="4" width="3.4" height="3" fill="#ff5f8a"/>
+        <rect x="-15" y="9.5" width="3.4" height="3" fill="#ff5f8a"/>
+        <rect x="11.6" y="1" width="3.4" height="12" rx="1.6" fill="#fff"/>
+        <rect x="11.6" y="4" width="3.4" height="3" fill="#ff5f8a"/>
+        <rect x="11.6" y="9.5" width="3.4" height="3" fill="#ff5f8a"/>
+        <circle cx="0" cy="-5.4" r="2.6" fill="#ffd65b" stroke="#e0a512" strokeWidth=".8"/>
+      </g>
+
+      <g transform="translate(12 46)">
+        <rect x="-0.8" y="-6" width="1.6" height="8" rx=".8" fill="#fff6e2"/>
+        <circle cx="0" cy="-7.4" r="3.6" fill="#ff7fb8"/>
+        <path d="M0 -10.4 A3 3 0 0 1 2.1 -5.3 A1.5 1.5 0 0 1 -0.6 -6.6" fill="none" stroke="#fff" strokeWidth="1.1" strokeLinecap="round"/>
+      </g>
+      <g transform="translate(90 50)">
+        <rect x="-0.9" y="-7" width="1.8" height="9" rx=".9" fill="#fff6e2"/>
+        <circle cx="0" cy="-8.4" r="4" fill="#62d67a"/>
+        <path d="M0 -11.8 A3.4 3.4 0 0 1 2.4 -6 A1.7 1.7 0 0 1 -0.7 -7.4" fill="none" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/>
+      </g>
+
+      <g transform="translate(50 72)">
+        <ellipse cx="0" cy="11" rx="9" ry="2.4" fill="#a3745e" opacity=".28"/>
+        <ellipse cx="-4.6" cy="-13" rx="2.7" ry="8" fill="#fff" transform="rotate(-9 -4.6 -13)"/>
+        <ellipse cx="4.6" cy="-13" rx="2.7" ry="8" fill="#fff" transform="rotate(9 4.6 -13)"/>
+        <ellipse cx="-4.6" cy="-13" rx="1.2" ry="4.8" fill="#ffb3d1" transform="rotate(-9 -4.6 -13)"/>
+        <ellipse cx="4.6" cy="-13" rx="1.2" ry="4.8" fill="#ffb3d1" transform="rotate(9 4.6 -13)"/>
+        <ellipse cx="0" cy="2" rx="9.2" ry="8.6" fill="#fff4f8"/>
+        <ellipse cx="0" cy="3.6" rx="5.4" ry="5.6" fill="#fff"/>
+        <circle cx="0" cy="-5.2" r="6.6" fill="#fff4f8"/>
+        <circle cx="-2.5" cy="-6" r="1.4" fill="#3a2430"/><circle cx="2.5" cy="-6" r="1.4" fill="#3a2430"/>
+        <circle cx="-2" cy="-6.5" r=".5" fill="#fff"/><circle cx="3" cy="-6.5" r=".5" fill="#fff"/>
+        <ellipse cx="0" cy="-3.2" rx="1.5" ry="1.1" fill="#ffb3d1"/>
+        <ellipse cx="-5.4" cy="-4.2" rx="1.7" ry="1.2" fill="#ffb3d1" opacity=".6"/>
+        <ellipse cx="5.4" cy="-4.2" rx="1.7" ry="1.2" fill="#ffb3d1" opacity=".6"/>
+        <ellipse cx="-4.4" cy="9.4" rx="2.6" ry="1.7" fill="#ffb3d1"/>
+        <ellipse cx="4.4" cy="9.4" rx="2.6" ry="1.7" fill="#ffb3d1"/>
+      </g>
+
+      <g transform="translate(21 80)">
+        <rect x="-0.8" y="-5" width="1.6" height="7" rx=".8" fill="#fff6e2"/>
+        <circle cx="0" cy="-6.4" r="3.6" fill="#ffd65b"/>
+        <path d="M0 -9.4 A3 3 0 0 1 2.1 -4.3 A1.5 1.5 0 0 1 -0.6 -5.6" fill="none" stroke="#fff" strokeWidth="1.1" strokeLinecap="round"/>
       </g>
     </svg>
   ),
@@ -1409,12 +1463,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'挖挖小宝藏',        desc:'集齐宝藏，或把狐狸全埋掉，\n两种通关方式！' },
     ko:{ name:'보물 파기',          desc:'보물을 모두 모으거나 여우를 모두 묻거나\n클리어 방법은 두 가지!' },
     es:{ name:'Cava Tesoros',      desc:'Reúne las gemas o entierra los zorros:\n¡dos formas de ganar!' } },
-  { id:'g_okashi', route:'/okashi-crossing', icon:'🍭', num:16, color:'#ff9ecb', stars:4, isNew:true, category:'アクション',
-    ja:{ name:'ぴょんぴょん！おかしのくに', desc:'グミのくるまとチョコのかわ！\nどこまでもすすもう！' },
-    en:{ name:'Hop-Hop Sweets World', desc:'Cross gummy roads and\nchocolate rivers—go far!' },
-    zh:{ name:'蹦蹦跳跳甜点王国',     desc:'越过软糖车和巧克力河，\n看你能走多远！' },
-    ko:{ name:'깡충깡충 과자나라',    desc:'젤리 자동차와 초콜릿 강을\n건너 멀리 가보자!' },
-    es:{ name:'Saltitos por Dulcelandia', desc:'¡Cruza autos de gomita y\nríos de chocolate!' } },
+  { id:'g_okashi', route:'/okashi-crossing', icon:'🍭', num:16, color:'#ff9ecb', stars:5, isNew:true, category:'アクション',
+    ja:{ name:'ぴょんぴょん！おかしのくに', desc:'3Dのおかしのくにを 大ぼうけん！\nぶつかってもへいき、12ステージ！' },
+    en:{ name:'Hop-Hop Sweets World', desc:'A 3D candy-world adventure!\n12 stages—bumps send you back safely.' },
+    zh:{ name:'蹦蹦跳跳甜点王国',     desc:'3D甜点王国大冒险！\n12个关卡，撞到了也不要紧。' },
+    ko:{ name:'깡충깡충 과자나라',    desc:'3D 과자나라 대모험!\n부딪혀도 괜찮아, 12스테이지!' },
+    es:{ name:'Saltitos por Dulcelandia', desc:'¡Aventura 3D en Dulcelandia!\n12 niveles; los golpes te devuelven a salvo.' } },
   { id:'g_tokei', route:'/tokei-yomi', icon:'🕐', num:14, color:'#F2C25A', stars:3, isNew:true, category:'がくしゅう',
     ja:{ name:'とけいよみ',         desc:'あいぼうと いちにちを ぼうけん！\nとけいを よんで すすもう！' },
     en:{ name:'Clock Reading',      desc:'A day-long adventure!\nRead the clock to move on!' },

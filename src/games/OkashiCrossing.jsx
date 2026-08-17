@@ -50,8 +50,8 @@ export default function OkashiCrossing() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/okashi_crossing.html"
-          title="ぴょんぴょん！おかしのくに"
+          src="/games/okashi_crossing_v2.html"
+          title="ぴょんぴょん！おかしのくに 3D"
           allow="autoplay; fullscreen"
           allowFullScreen
           sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
