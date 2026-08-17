@@ -43,6 +43,7 @@ canvas{display:block;}
 #hud{position:relative;z-index:10;flex-shrink:0;display:none;align-items:center;gap:6px;padding:calc(env(safe-area-inset-top,0px) + 6px) 10px 5px;}
 #hud.show{display:flex;}
 #back-btn{background:rgba(0,0,0,.35);border:1.5px solid rgba(255,255,255,.3);border-radius:10px;padding:5px 11px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;}
+#bgm-btn{background:rgba(0,0,0,.35);border:1.5px solid rgba(255,255,255,.3);border-radius:10px;padding:4px 8px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;}
 .hud-box{background:rgba(0,0,0,.4);border:1.5px solid rgba(255,255,255,.22);border-radius:10px;padding:4px 10px;font-size:12px;font-weight:900;color:#fff;white-space:nowrap;}
 #hud-score{color:#ffe066;min-width:86px;text-align:center;}
 #hud-stage{color:#8be9fd;}
@@ -123,6 +124,7 @@ canvas{display:block;}
 
 <div id="hud">
 <button id="back-btn" data-ww-ui="back">← もどる</button>
+  <button id="bgm-btn" aria-label="BGM">🔊</button>
   <div class="hud-box" id="hud-score">0</div>
   <div class="hud-box" id="hud-stage">ステージ1</div>
   <div id="fever-wrap"><div id="fever-bar"></div><div id="fever-label">フィーバーゲージ</div></div>
@@ -158,6 +160,7 @@ canvas{display:block;}
 </div>
 </div>
 
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <script>
 'use strict';
 const SAFE_LS = (function () {
@@ -338,7 +341,7 @@ function shade(hex,amt){
 }
 
 /* ================= サウンド ================= */
-let AC=null,bgmTimer=null,bgmStep=0,muted=false;
+let AC=null,muted=false;
 function ac(){if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC;}
 function beep(f,dur,type,vol,when){
   if(muted)return;try{const a=ac(),o=a.createOscillator(),g=a.createGain();
@@ -354,17 +357,15 @@ function sClear(n){for(let i=0;i<3;i++)beep(500+n*80+i*140,0.12,'triangle',0.08,
 function sFever(){[523,659,784,1047].forEach((f,i)=>beep(f,0.16,'triangle',0.1,i*0.09));}
 function sStage(){[392,523,659,784].forEach((f,i)=>beep(f,0.18,'triangle',0.1,i*0.11));}
 function sOver(){[494,440,392,330].forEach((f,i)=>beep(f,0.24,'triangle',0.09,i*0.16));}
-const MELODY=[523,0,659,0,784,659,523,0, 587,0,698,0,880,698,587,0, 523,0,659,784,1047,0,784,659, 587,523,494,523,587,659,523,0];
+/* BGM: WakuwakuMP3BGM (action) — trial MP3 rollout for this game */
+let bgm=null;
+let bgmOn=(typeof WakuwakuMP3BGM!=='undefined'&&WakuwakuMP3BGM.loadState)?WakuwakuMP3BGM.loadState():true;
 function startBGM(){
-  stopBGM();
-  bgmTimer=setInterval(()=>{
-    const f=MELODY[bgmStep%MELODY.length];
-    if(f)beep(f,0.14,'triangle',feverOn?0.06:0.045);
-    if(bgmStep%2===0)beep(f?f/2:131,0.1,'sine',0.03);
-    bgmStep++;
-  },feverOn?130:180);
+  if(typeof WakuwakuMP3BGM==='undefined')return;
+  if(!bgm){try{bgm=new WakuwakuMP3BGM('action');}catch(e){bgm=null;}}
+  if(bgm){bgm.setEnabled(bgmOn);if(bgmOn){try{bgm.start();}catch(e){}}}
 }
-function stopBGM(){if(bgmTimer){clearInterval(bgmTimer);bgmTimer=null;}}
+function stopBGM(){if(bgm){try{bgm.stop();}catch(e){}}}
 
 /* ================= ゲームロジック ================= */
 function newGrid(){grid=Array.from({length:ROWS},()=>Array(COLS).fill(-1));}
@@ -491,7 +492,6 @@ function startFever(){
   sFever();
   document.getElementById('fever-flash').classList.add('on');
   document.getElementById('fever-label').textContent='🌟フィーバー! スコア2ばい!🌟';
-  startBGM();
   chainPop(0,0,'フィーバー!!');
 }
 function endFever(){
@@ -499,7 +499,6 @@ function endFever(){
   document.getElementById('fever-flash').classList.remove('on');
   document.getElementById('fever-bar').style.width='0%';
   document.getElementById('fever-label').textContent='フィーバーゲージ';
-  startBGM();
 }
 function chainPop(chain,pts,txt){
   const layer=document.getElementById('popup-layer');
@@ -747,6 +746,14 @@ function init(){
   document.getElementById('retry-btn').addEventListener('click',startGame);
   document.getElementById('home-btn').addEventListener('click',goBack);
   document.getElementById('back-btn').addEventListener('click',goBack);
+  const bgmBtn=document.getElementById('bgm-btn');
+  bgmBtn.textContent=bgmOn?'🔊':'🔇';
+  bgmBtn.addEventListener('click',()=>{
+    bgmOn=!bgmOn;
+    bgmBtn.textContent=bgmOn?'🔊':'🔇';
+    if(typeof WakuwakuMP3BGM!=='undefined'&&WakuwakuMP3BGM.saveState)WakuwakuMP3BGM.saveState(bgmOn);
+    if(bgm){try{bgm.setEnabled(bgmOn);if(bgmOn)bgm.start();else bgm.stop();}catch(e){}}
+  });
   document.getElementById('howto-btn').addEventListener('click',()=>document.getElementById('howto').classList.add('show'));
   document.getElementById('howto-close').addEventListener('click',()=>document.getElementById('howto').classList.remove('show'));
   setupInput();

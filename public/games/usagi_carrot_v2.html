@@ -166,6 +166,7 @@
   <div class="hint" id="hintBox">タップした ばしょへ ジャンプ！</div>
 </div>
 
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <script src="/games/safe_area.js"></script>
 <script>
 (function(){
@@ -203,8 +204,8 @@ function resize(){ W=window.innerWidth; H=window.innerHeight;
   ctx.setTransform(DPR,0,0,DPR,0,0); }
 window.addEventListener('resize',resize); resize();
 
-/* ---------- audio ---------- */
-var actx=null, soundOn=true, bgmTimer=null, bgmStep=0;
+/* ---------- audio (SE) ---------- */
+var actx=null, soundOn=(typeof WakuwakuMP3BGM!=='undefined'&&WakuwakuMP3BGM.loadState)?WakuwakuMP3BGM.loadState():true;
 function initAudio(){ if(actx) return;
   try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
 function tone(f,d,type,vol,when){ if(!actx||!soundOn) return;
@@ -218,13 +219,11 @@ function sfxGold(){ [880,1100,1320].forEach(function(f,i){ tone(f,.1,'square',.0
 function sfxMiss(){ tone(220,.18,'sawtooth',.07); }
 function sfxHit(){ tone(140,.25,'sawtooth',.11); }
 function sfxFever(){ [660,880,1100,1320,1760].forEach(function(f,i){ tone(f,.12,'square',.09,actx.currentTime+i*.07); }); }
-var BGM_NOTES=[523,659,784,659,523,659,880,784, 523,659,784,880,784,659,587,523];
-function startBGM(){ stopBGM(); if(!actx) return;
-  bgmTimer=setInterval(function(){ if(!soundOn) return;
-    tone(BGM_NOTES[bgmStep%BGM_NOTES.length],.14,'triangle',.05);
-    if(bgmStep%4===0) tone(BGM_NOTES[bgmStep%BGM_NOTES.length]/2,.2,'sine',.045);
-    bgmStep++; },200); }
-function stopBGM(){ if(bgmTimer){ clearInterval(bgmTimer); bgmTimer=null; } }
+/* ---------- BGM (WakuwakuMP3BGM — trial MP3 rollout for this game) ---------- */
+var bgm=null;
+function ensureBgm(){ if(typeof WakuwakuMP3BGM==='undefined')return; if(!bgm){ try{ bgm=new WakuwakuMP3BGM('cute-animals'); }catch(e){ bgm=null; } } }
+function startBGM(){ ensureBgm(); if(bgm){ bgm.setEnabled(soundOn); if(soundOn){ try{ bgm.start(); }catch(e){} } } }
+function stopBGM(){ if(bgm){ try{ bgm.stop(); }catch(e){} } }
 
 /* ---------- progress ---------- */
 var SAVE_KEY='usagi_carrot_v2_progress';
@@ -351,11 +350,15 @@ $('champMapBtn').addEventListener('click',toMap);
 $('backBtn').addEventListener('click',function(){
   if(state==='play'){ toMap(); return; }
   if(state==='map'){ state='title'; showLayer(titleLayer); return; }
+  stopBGM();
   try{ if(window.parent!==window){ window.parent.postMessage({type:'goBack'},'*'); return; } }catch(e){}
   history.back();
 });
+$('soundBtn').textContent=soundOn?'🔊':'🔇';
 $('soundBtn').addEventListener('click',function(){ soundOn=!soundOn;
-  $('soundBtn').textContent=soundOn?'🔊':'🔇'; });
+  $('soundBtn').textContent=soundOn?'🔊':'🔇';
+  if(typeof WakuwakuMP3BGM!=='undefined'&&WakuwakuMP3BGM.saveState) WakuwakuMP3BGM.saveState(soundOn);
+  if(bgm){ try{ bgm.setEnabled(soundOn); if(soundOn) bgm.start(); else bgm.stop(); }catch(e){} } });
 
 /* ---------- input ---------- */
 function onTap(x,y){ if(state!=='play') return; initAudio();

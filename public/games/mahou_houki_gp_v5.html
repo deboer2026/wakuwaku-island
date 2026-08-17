@@ -7,6 +7,7 @@
 <title>まほうほうきGP</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <script src="/games/safe_area.js"></script>
 <style>
   :root{ --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
@@ -96,8 +97,8 @@ try{
     ctx.setTransform(scale*dpr,0,0,scale*dpr,0,0);
   }
 
-  /* ============ AUDIO ============ */
-  let actx=null,master=null,bgmOn=true,bgmTimer=null,step=0;
+  /* ============ AUDIO (SE) ============ */
+  let actx=null,master=null;
   function initAudio(){ if(actx)return; try{ actx=new(window.AudioContext||window.webkitAudioContext)();
     master=actx.createGain(); master.gain.value=0.5; master.connect(actx.destination);}catch(e){} }
   function blip(f,d,t,v){ if(!actx)return; const o=actx.createOscillator(),g=actx.createGain();
@@ -114,19 +115,19 @@ try{
     win:()=>[523,659,784,1046].forEach((f,i)=>setTimeout(()=>blip(f,0.18,'triangle',0.25),i*120)),
     fanfare:()=>[523,659,784,1046,784,1046,1318].forEach((f,i)=>setTimeout(()=>blip(f,0.2,'triangle',0.24),i*130)),
     end:()=>{blip(330,0.2,'sawtooth',0.2);setTimeout(()=>blip(196,0.3,'sawtooth',0.2),140);} };
-  const MELS=[
-    {mel:[659,784,880,659,587,523,587,659], bass:[165,165,196,196,131,131,147,147]},
-    {mel:[587,698,784,880,784,698,587,523], bass:[147,147,175,175,131,131,117,117]},
-    {mel:[523,622,698,831,698,622,523,466], bass:[131,131,156,156,104,104,117,117]} ];
-  let melIdx=0;
-  function tick(){ if(!actx||!bgmOn)return; const m=MELS[melIdx];
-    blip(m.mel[step%8],0.26,'triangle',0.09); blip(m.bass[step%8],0.28,'sine',0.10); step++; }
-  function startBgm(){ if(!bgmTimer) bgmTimer=setInterval(tick,250); }
-  function stopBgm(){ if(bgmTimer){clearInterval(bgmTimer);bgmTimer=null;} }
+  /* ============ BGM (WakuwakuMP3BGM — trial MP3 rollout for this game) ============ */
+  let bgm=null;
+  let bgmOn=(typeof WakuwakuMP3BGM!=='undefined'&&WakuwakuMP3BGM.loadState)?WakuwakuMP3BGM.loadState():true;
+  function ensureBgm(){ if(typeof WakuwakuMP3BGM==='undefined')return; if(!bgm){ try{ bgm=new WakuwakuMP3BGM('adventure'); }catch(e){ bgm=null; } } }
+  function startBgm(){ ensureBgm(); if(bgm && bgmOn){ try{ bgm.setEnabled(true); bgm.start(); }catch(e){} } }
+  function stopBgm(){ if(bgm){ try{ bgm.stop(); }catch(e){} } }
   const bgmBtn=document.getElementById('bgmBtn');
+  bgmBtn.classList.toggle('off',!bgmOn); bgmBtn.textContent=bgmOn?'🔊':'🔇';
   bgmBtn.addEventListener('click',()=>{ bgmOn=!bgmOn; bgmBtn.classList.toggle('off',!bgmOn);
-    bgmBtn.textContent=bgmOn?'🔊':'🔇'; if(bgmOn){initAudio();startBgm();}else stopBgm(); });
-  document.getElementById('homeBtn').addEventListener('click',()=>{ try{window.parent.postMessage({type:'goHome'},'*');}catch(e){} });
+    bgmBtn.textContent=bgmOn?'🔊':'🔇';
+    if(typeof WakuwakuMP3BGM!=='undefined'&&WakuwakuMP3BGM.saveState) WakuwakuMP3BGM.saveState(bgmOn);
+    if(bgmOn){initAudio();startBgm();}else stopBgm(); });
+  document.getElementById('homeBtn').addEventListener('click',()=>{ stopBgm(); try{window.parent.postMessage({type:'goHome'},'*');}catch(e){} });
 
   /* safe-area の反映は共通スクリプト /games/safe_area.js が担う（--sat/--sab/--sal/--sar） */
 
@@ -185,7 +186,6 @@ try{
     const c=cfg[diff];
     camX=0;camZ=0;head=0;bank=0;boost=0;shake=0;hitFlash=0;
     buildCourse(); timeLeft=c.time; score=0; got=0;
-    melIdx=stageIdx%MELS.length;
     state='play'; initAudio(); if(bgmOn) startBgm();
   }
   function startGame(d){ diff=d; stageIdx=0; totalScore=0; stageStars=[0,0,0]; startStage(); }
