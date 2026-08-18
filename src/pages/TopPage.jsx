@@ -514,16 +514,58 @@ const GAME_SVGS = {
   ),
   g5: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100" height="85" rx="12" fill="#241645"/>
-      <circle cx="82" cy="14" r="9" fill="#3a2159"/>
-      <circle cx="14" cy="10" r="1.6" fill="#FFF6E8" opacity=".8"/><circle cx="27" cy="18" r="1.1" fill="#FFF6E8" opacity=".6"/><circle cx="60" cy="8" r="1.3" fill="#FFF6E8" opacity=".7"/>
-      <path d="M0 66 Q25 58 50 65 Q75 72 100 62 V85H0Z" fill="#2e2340"/>
-      <g stroke="#6b4a2f" strokeWidth="2"><path d="M20 30V58"/><path d="M35 30V58"/></g>
-      <path d="M16 30H39" stroke="#b94d45" strokeWidth="3"/><path d="M18.5 26H36.5" stroke="#b94d45" strokeWidth="2.5"/>
-      <g transform="translate(59 40)"><ellipse rx="8" ry="9.5" fill="#E8564F"/><rect x="-6" y="-4" width="12" height="2.6" fill="#FFE5A0"/><rect x="-6" y="4" width="12" height="2.6" fill="#FFE5A0"/><rect x="-3.6" y="-2.8" width="7.2" height="7.2" fill="#FFF6E8"/><text x="0" y="2.6" textAnchor="middle" fontSize="7" fill="#633D30" fontWeight="bold">3</text></g>
-      <g transform="translate(78 46)"><ellipse rx="6.5" ry="7.8" fill="#E8564F"/><rect x="-4.8" y="-3.2" width="9.6" height="2.1" fill="#FFE5A0"/><rect x="-4.8" y="3.2" width="9.6" height="2.1" fill="#FFE5A0"/><rect x="-3" y="-2.3" width="6" height="6" fill="#FFF6E8"/><text x="0" y="2.2" textAnchor="middle" fontSize="6" fill="#633D30" fontWeight="bold">5</text></g>
-      <g transform="translate(30 66)"><circle cy="-11" r="8" fill="#C78B5C"/><circle cx="-6.5" cy="-16.5" r="2.6" fill="#C78B5C"/><circle cx="6.5" cy="-16.5" r="2.6" fill="#C78B5C"/><rect x="-8" y="-3" width="16" height="15" rx="6" fill="#D95562"/><circle cx="-2.8" cy="-11.5" r="1" fill="#2E2A33"/><circle cx="2.8" cy="-11.5" r="1" fill="#2E2A33"/></g>
-      <path d="M50 26 L52.4 32.1 L58.5 34.5 L52.4 36.9 L50 43 L47.6 36.9 L41.5 34.5 L47.6 32.1 Z" fill="#FFD76A"/>
+      <defs>
+        <linearGradient id="k5sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#160D2A"/><stop offset="1" stopColor="#42265F"/>
+        </linearGradient>
+        <radialGradient id="k5glow">
+          <stop offset="0" stopColor="#FFD76A" stopOpacity=".7"/><stop offset="1" stopColor="#FFD76A" stopOpacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect width="100" height="85" rx="12" fill="url(#k5sky)"/>
+      <circle cx="13" cy="11" r="1.2" fill="#FFF6E8" opacity=".85"/><circle cx="34" cy="7" r=".9" fill="#FFF6E8" opacity=".6"/>
+      <circle cx="62" cy="10" r=".8" fill="#FFF6E8" opacity=".55"/><circle cx="88" cy="17" r="1.1" fill="#FFF6E8" opacity=".7"/>
+      <g stroke="#FF8FB8" strokeWidth="1.15" strokeLinecap="round" opacity=".9">
+        <path d="M25 20v-6.5M25 20v6.5M25 20h-6.5M25 20h6.5M25 20l-4.6-4.6M25 20l4.6 4.6M25 20l4.6-4.6M25 20l-4.6 4.6"/>
+      </g>
+      <circle cx="25" cy="20" r="1.9" fill="#FFF3B0"/>
+      <path d="M0 52 Q26 45 52 49 Q76 53 100 45 V85H0Z" fill="#2B1F44"/>
+      <circle cx="50" cy="44" r="15" fill="url(#k5glow)"/>
+      <g fill="#D1483F">
+        <rect x="42.4" y="34" width="2.3" height="15" rx=".8"/><rect x="55.3" y="34" width="2.3" height="15" rx=".8"/>
+        <rect x="39.6" y="33.2" width="20.8" height="1.9" rx=".8"/><rect x="43" y="37.6" width="14" height="1.5" rx=".6"/>
+      </g>
+      <rect x="38.4" y="31.4" width="23.2" height="1.7" rx=".8" fill="#2E1B2E"/>
+      <ellipse cx="50" cy="36.4" rx="2.1" ry="2.6" fill="#E8564F"/><rect x="47.9" y="35.7" width="4.2" height="1.1" fill="#FFF6E8"/>
+      <g fill="#6E6486">
+        <ellipse cx="51" cy="53" rx="4.4" ry="1.9"/><ellipse cx="53" cy="57.4" rx="5.6" ry="2.4"/>
+      </g>
+      <g fill="#FFE6B0">
+        <ellipse cx="48" cy="62" rx="7" ry="3"/><ellipse cx="40" cy="67.5" rx="8.6" ry="3.7"/>
+        <ellipse cx="29" cy="74" rx="10.4" ry="4.4"/><ellipse cx="15" cy="80.5" rx="12" ry="5"/>
+      </g>
+      <ellipse cx="40" cy="67.5" rx="5" ry="2" fill="#000" opacity=".28"/>
+      <g transform="translate(40 58)">
+        <ellipse cy="3.4" rx="5.7" ry="6.2" fill="#FFF1E6"/>
+        <ellipse cx="-1.9" cy="-6.8" rx="1.5" ry="3.9" fill="#FFF1E6"/><ellipse cx="1.9" cy="-6.8" rx="1.5" ry="3.9" fill="#FFF1E6"/>
+        <circle cy="-2.2" r="4.6" fill="#FFF1E6"/>
+        <ellipse cy="3.9" rx="5.7" ry="1.5" fill="#FF8FB8"/>
+        <circle cx="-1.7" cy="-2.6" r=".85" fill="#3A2A22"/><circle cx="1.7" cy="-2.6" r=".85" fill="#3A2A22"/>
+        <circle cx="-3.4" cy="-.9" r=".95" fill="#FFB9C8"/><circle cx="3.4" cy="-.9" r=".95" fill="#FFB9C8"/>
+      </g>
+      <g transform="translate(27 70)">
+        <ellipse cy="2.6" rx="4.4" ry="4.8" fill="#F7C46C"/>
+        <path d="M-3.4-6.4l1.5 3.2 -3-.3z" fill="#F7C46C"/><path d="M3.4-6.4l-1.5 3.2 3-.3z" fill="#F7C46C"/>
+        <circle cy="-2.1" r="3.6" fill="#F7C46C"/>
+        <circle cx="-1.3" cy="-2.4" r=".7" fill="#3A2A22"/><circle cx="1.3" cy="-2.4" r=".7" fill="#3A2A22"/>
+      </g>
+      <g stroke="#6B4A2F" strokeWidth="1.6"><path d="M84 62V44"/></g>
+      <circle cx="84" cy="42" r="7.5" fill="url(#k5glow)"/>
+      <ellipse cx="84" cy="42" rx="3.4" ry="4.2" fill="#E8564F"/>
+      <rect x="80.6" y="41.2" width="6.8" height="1.7" fill="#FFF6E8"/>
+      <circle cx="74" cy="24" r="12.5" fill="url(#k5glow)"/>
+      <circle cx="74" cy="24" r="9" fill="#FFD76A"/>
+      <text x="74" y="29.6" textAnchor="middle" fontSize="14" fontWeight="bold" fill="#7A3E1E">3</text>
     </svg>
   ),
   g6: (
@@ -1265,12 +1307,12 @@ const GAMES = [
     zh:{ name:'动物翻牌',             desc:'翻开卡片\n找出相同的动物！'                   },
     ko:{ name:'동물 퍼즐',             desc:'카드를 뒤집어\n같은 동물을 찾아요!'           },
     es:{ name:'Puzzle Animal',         desc:'¡Voltea cartas y busca\nanimales iguales!'    } },
-  { id:'g5', route:'/kazu-asobi',      icon:'🔢', num:5, color:'#F4D03F', stars:3, isNew:true, category:'かずあそび',
-    ja:{ name:'かずあそび',         desc:'よるの おまつりで\n6つの やたいを かぞえよう！'  },
-    en:{ name:'Number Fun',           desc:'Count your way through\n6 night-festival stalls!' },
-    zh:{ name:'数字游戏',             desc:'在夜市祭典中\n数一数6个摊位吧！'               },
-    ko:{ name:'숫자 놀이',             desc:'밤 축제에서\n6개 포장마차를 세어봐요!'         },
-    es:{ name:'Juego de Números',      desc:'¡Cuenta en 6 puestos\nde un festival nocturno!' } },
+  { id:'g5', route:'/kazu-asobi',      icon:'🏮', num:5, color:'#5B3A82', stars:3, isNew:true, category:'かずあそび',
+    ja:{ name:'かずあそび',         desc:'かぞえて ぴょん！\nおまつりへの みち'            },
+    en:{ name:'Number Fun',           desc:'Count and hop along\nthe festival road!'       },
+    zh:{ name:'数字游戏',             desc:'一边数一边跳！\n走向夜晚的祭典'                 },
+    ko:{ name:'숫자 놀이',             desc:'세면서 폴짝!\n축제로 가는 길'                  },
+    es:{ name:'Juego de Números',      desc:'¡Cuenta y salta por\nel camino del festival!'  } },
   { id:'g6', route:'/animal-soccer',   icon:'⚽', num:6, color:'#00BCD4', stars:5, isNew:false, category:'アクション',
     ja:{ name:'どうぶつサッカー',   desc:'3たい3+GKの\n3Dサッカー！'                    },
     en:{ name:'Animal Soccer',        desc:'3v3 + GK\n3D soccer!'                         },
