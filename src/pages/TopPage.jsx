@@ -1145,17 +1145,71 @@ const GAME_SVGS = {
   ),
   g_neko: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="nekoSky" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#8edfff"/><stop offset="1" stopColor="#fff2bd"/></linearGradient></defs>
-      <rect width="100" height="85" rx="12" fill="url(#nekoSky)"/>
-      <path d="M0 58 C19 48 31 56 47 53 C67 48 82 54 100 45 V85 H0Z" fill="#86ca70"/>
-      <path d="M0 70 C22 60 39 73 59 64 C76 57 88 62 100 58 V85 H0Z" fill="#59ab64"/>
-      <g fill="#fff7c9"><circle cx="17" cy="22" r="2"/><circle cx="37" cy="13" r="1.4"/><circle cx="83" cy="18" r="2.1"/></g>
-      <g transform="translate(76 22)"><ellipse cx="-4" cy="-3" rx="6" ry="7" fill="#ff83b1" stroke="#c8507c" strokeWidth="1"/><ellipse cx="4" cy="-3" rx="6" ry="7" fill="#ffd257" stroke="#ca962e" strokeWidth="1"/><ellipse cx="-3" cy="5" rx="4" ry="5" fill="#ffb7d0"/><ellipse cx="3" cy="5" rx="4" ry="5" fill="#ffec9d"/><rect x="-1" y="-7" width="2" height="14" rx="1" fill="#553b48"/></g>
-      <g transform="translate(55 34) scale(.72)"><ellipse cx="-4" cy="-3" rx="6" ry="7" fill="#9bc8ff" stroke="#527cc7" strokeWidth="1"/><ellipse cx="4" cy="-3" rx="6" ry="7" fill="#bda3ff" stroke="#765bc5" strokeWidth="1"/><ellipse cx="-3" cy="5" rx="4" ry="5" fill="#d7e7ff"/><ellipse cx="3" cy="5" rx="4" ry="5" fill="#e0d6ff"/><rect x="-1" y="-7" width="2" height="14" rx="1" fill="#553b48"/></g>
-      <g fill="#f9e4c8" stroke="#895c40" strokeWidth="1.2"><ellipse cx="30" cy="63" rx="15" ry="11"/><circle cx="34" cy="48" r="12"/><path d="M25 42 L21 30 L32 39Z"/><path d="M41 42 L47 30 L36 39Z"/></g>
-      <path d="M17 67q-11 1-8-11" fill="none" stroke="#895c40" strokeWidth="5" strokeLinecap="round"/>
-      <path d="M27 52h14" stroke="#945d3c" strokeWidth="2"/><circle cx="30" cy="48" r="2" fill="#342b32"/><circle cx="38" cy="48" r="2" fill="#342b32"/><path d="M32 54l3 2 3-2" fill="none" stroke="#d76d83" strokeWidth="1.4"/>
-      <g fill="#f6d347"><circle cx="9" cy="74" r="3"/><circle cx="13" cy="70" r="3"/><circle cx="17" cy="74" r="3"/><circle cx="91" cy="70" r="3"/><circle cx="95" cy="65" r="3"/></g>
+      <defs>
+        <linearGradient id="nekoSky2" x1="0" y1="0" x2="0" y2="1">
+          <stop stopColor="#a9e6ff"/><stop offset=".62" stopColor="#d9f4ff"/><stop offset="1" stopColor="#fff3c8"/>
+        </linearGradient>
+        <radialGradient id="nekoCalm" cx=".5" cy=".5" r=".5">
+          <stop offset=".55" stopColor="#fff0b4" stopOpacity="0"/>
+          <stop offset=".82" stopColor="#ffe89a" stopOpacity=".85"/>
+          <stop offset="1" stopColor="#ffe89a" stopOpacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect width="100" height="85" rx="12" fill="url(#nekoSky2)"/>
+      <g fill="#ffffff" opacity=".9"><ellipse cx="18" cy="15" rx="9" ry="4.4"/><ellipse cx="25" cy="16.6" rx="6" ry="3.4"/><ellipse cx="82" cy="12" rx="7.5" ry="3.8"/></g>
+      <path d="M0 50 C20 41 34 49 50 46 C70 41 84 47 100 39 V85 H0Z" fill="#8ed07a"/>
+      <path d="M0 62 C22 53 40 65 60 57 C77 50 89 55 100 51 V85 H0Z" fill="#69b96f"/>
+      <path d="M0 74 C24 68 44 77 64 71 C80 66 91 69 100 67 V85 H0Z" fill="#55a25c"/>
+      <ellipse cx="38" cy="70" rx="30" ry="15" fill="url(#nekoCalm)"/>
+      <ellipse cx="38" cy="70" rx="21" ry="10" fill="none" stroke="#fff6cf" strokeWidth="1.6" opacity=".95"/>
+      <ellipse cx="38" cy="70" rx="30" ry="14.6" fill="none" stroke="#ffe9a8" strokeWidth="1.3" opacity=".6"/>
+      <g transform="translate(70 26) rotate(-12)">
+        <ellipse cx="-5" cy="-3" rx="7" ry="7.6" fill="#ff8fb4"/>
+        <ellipse cx="5" cy="-3" rx="7" ry="7.6" fill="#ffb6d5"/>
+        <ellipse cx="-4" cy="5.4" rx="4.6" ry="5" fill="#fff0f6"/>
+        <ellipse cx="4" cy="5.4" rx="4.6" ry="5" fill="#fff0f6"/>
+        <rect x="-1.1" y="-8" width="2.2" height="15" rx="1.1" fill="#584a55"/>
+        <path d="M-1 -8 L-4.5 -13 M1 -8 L4.5 -13" stroke="#584a55" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+      </g>
+      <g transform="translate(56 40) rotate(9) scale(.66)">
+        <ellipse cx="-5" cy="-3" rx="7" ry="7.6" fill="#ffe469"/>
+        <ellipse cx="5" cy="-3" rx="7" ry="7.6" fill="#fff8cf"/>
+        <ellipse cx="-4" cy="5.4" rx="4.6" ry="5" fill="#fff8cf"/>
+        <ellipse cx="4" cy="5.4" rx="4.6" ry="5" fill="#fff8cf"/>
+        <rect x="-1.1" y="-8" width="2.2" height="15" rx="1.1" fill="#584a55"/>
+        <path d="M-1 -8 L-4.5 -13 M1 -8 L4.5 -13" stroke="#584a55" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+      </g>
+      <ellipse cx="38" cy="72" rx="15" ry="4" fill="#3f7a48" opacity=".28"/>
+      <path d="M50 68 q9 2 11 -6" fill="none" stroke="#d08c4a" strokeWidth="5" strokeLinecap="round"/>
+      <ellipse cx="36" cy="63" rx="14.5" ry="11" fill="#fbf0dc"/>
+      <path d="M23 60 a14.5 11 0 0 1 12 -8 l0 16 a14.5 11 0 0 1 -12 -8Z" fill="#d08c4a" opacity=".55"/>
+      <path d="M27 46 L23.5 34 L34 42Z" fill="#d08c4a"/>
+      <path d="M45 46 L48.5 34 L38 42Z" fill="#d08c4a"/>
+      <path d="M28 45 L26 38 L32 43Z" fill="#ff9ec0"/>
+      <path d="M44 45 L46 38 L40 43Z" fill="#ff9ec0"/>
+      <circle cx="36" cy="49" r="12.5" fill="#fbf0dc"/>
+      <path d="M23.5 48 a12.5 12.5 0 0 1 9 -11.7 l0 8Z" fill="#d08c4a" opacity=".5"/>
+      <ellipse cx="31" cy="48.5" rx="3.4" ry="4.2" fill="#ffffff"/>
+      <ellipse cx="41" cy="48.5" rx="3.4" ry="4.2" fill="#ffffff"/>
+      <circle cx="31" cy="49" r="2.5" fill="#4a8f5f"/>
+      <circle cx="41" cy="49" r="2.5" fill="#4a8f5f"/>
+      <circle cx="31" cy="49" r="1.1" fill="#2e2833"/>
+      <circle cx="41" cy="49" r="1.1" fill="#2e2833"/>
+      <circle cx="32" cy="47.8" r=".7" fill="#ffffff"/>
+      <circle cx="42" cy="47.8" r=".7" fill="#ffffff"/>
+      <path d="M36 54 l-2 1.6 h4 z" fill="#ff9ec0"/>
+      <path d="M36 56.4 q-2.4 2.4 -4.6 .3 M36 56.4 q2.4 2.4 4.6 .3" fill="none" stroke="#a08b93" strokeWidth="1.2" strokeLinecap="round"/>
+      <path d="M23 50 h-6 M23 54 h-6 M49 50 h6 M49 54 h6" stroke="#efe3d4" strokeWidth="1.1" strokeLinecap="round"/>
+      <g transform="translate(36 33)">
+        <ellipse cx="-3.4" cy="-1.6" rx="4.4" ry="4.8" fill="#8fd4ff"/>
+        <ellipse cx="3.4" cy="-1.6" rx="4.4" ry="4.8" fill="#cdeeff"/>
+        <ellipse cx="-2.7" cy="3.2" rx="3" ry="3.2" fill="#e4f6ff"/>
+        <ellipse cx="2.7" cy="3.2" rx="3" ry="3.2" fill="#e4f6ff"/>
+        <rect x="-.8" y="-5" width="1.6" height="9.6" rx=".8" fill="#584a55"/>
+      </g>
+      <g fill="#ffd76a"><circle cx="10" cy="76" r="2.6"/><circle cx="14" cy="72" r="2.6"/><circle cx="18" cy="76" r="2.6"/><circle cx="14" cy="76" r="1.8" fill="#ff9ec4"/></g>
+      <g fill="#ff9ec4"><circle cx="86" cy="72" r="2.4"/><circle cx="90" cy="68" r="2.4"/><circle cx="94" cy="72" r="2.4"/><circle cx="90" cy="72" r="1.6" fill="#fff3c4"/></g>
+      <g fill="#ffffff" opacity=".9"><circle cx="62" cy="58" r="1.5"/><circle cx="70" cy="50" r="1.1"/><circle cx="26" cy="24" r="1.3"/></g>
     </svg>
   ),
   g_tokei: (
@@ -1481,12 +1535,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'兔子接胡萝卜',       desc:'接住从天上\n掉落的胡萝卜！' },
     ko:{ name:'토끼와 당근',        desc:'위에서 떨어지는\n당근을 받아요!' },
     es:{ name:'Conejo y Zanahoria', desc:'¡Atrapa las zanahorias\nque caen del cielo!' } },
-  { id:'g_neko', route:'/neko-chou', icon:'🐱', num:13, color:'#62ad72', stars:5, isNew:true, category:'アクション',
-    ja:{ name:'ねことちょうちょ 〜ひみつの花園〜', desc:'そーっと ちかづいて\nちょうちょと なかよし！' },
-    en:{ name:'Cat & Butterflies: Secret Garden', desc:'Walk gently in a 3D garden\nand befriend butterflies!' },
-    zh:{ name:'猫咪与蝴蝶：秘密花园', desc:'在3D花园里轻轻靠近\n和蝴蝶交朋友！' },
-    ko:{ name:'고양이와 나비: 비밀의 정원', desc:'3D 정원에서 살며시 다가가\n나비와 친구가 되어요!' },
-    es:{ name:'Gato y Mariposas: Jardín Secreto', desc:'Acércate con cuidado\ny haz amistad con mariposas.' } },
+  { id:'g_neko', route:'/neko-chou', icon:'🐱', num:13, color:'#69b96f', stars:5, isNew:true, category:'アクション',
+    ja:{ name:'ねことちょうちょ 〜はなぞののひみつ〜', desc:'とまって まっていると\nちょうちょが あそびに くるよ！' },
+    en:{ name:'Cat & Butterflies: Garden Secret', desc:'Stay still and wait —\nthe butterflies come to you!' },
+    zh:{ name:'猫咪与蝴蝶：花园的秘密', desc:'静静地停下来等待\n蝴蝶就会飞过来！' },
+    ko:{ name:'고양이와 나비: 정원의 비밀', desc:'멈춰서 기다리면\n나비가 놀러 와요!' },
+    es:{ name:'Gato y Mariposas: Secreto del Jardín', desc:'Quédate quieto y espera:\n¡las mariposas vendrán a ti!' } },
   { id:'g_mahounakama', route:'/mahou-nakama', icon:'🪄', num:18, color:'#7fa8ff', stars:4, isNew:true, category:'アクション',
     ja:{ name:'まほうのなかまたい', desc:'ステッキでポン！モンスターを\nなかまにして すすもう！' },
     en:{ name:'Magic Friend Squad',  desc:'Tap monsters with your wand\nand make them your friends!' },
