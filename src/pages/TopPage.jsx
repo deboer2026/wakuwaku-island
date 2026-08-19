@@ -874,22 +874,53 @@ const GAME_SVGS = {
   ),
   s1: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="88" cy="10" r="2" fill="white" opacity=".4"/>
-      <rect x="20" y="50" width="60" height="12" rx="3" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1.5"/>
-      <rect x="22" y="52" width="20" height="4" rx="1" fill="#A5D6A7" opacity=".4"/>
-      <rect x="20" y="38" width="12" height="12" rx="3" fill="#42A5F5" stroke="#1565C0" strokeWidth="1.5"/>
-      <rect x="32" y="38" width="12" height="12" rx="3" fill="#42A5F5" stroke="#1565C0" strokeWidth="1.5"/>
-      <rect x="44" y="26" width="12" height="12" rx="3" fill="#42A5F5" stroke="#1565C0" strokeWidth="1.5"/>
-      <rect x="44" y="38" width="12" height="12" rx="3" fill="#42A5F5" stroke="#1565C0" strokeWidth="1.5"/>
-      <rect x="56" y="14" width="12" height="12" rx="3" fill="#FF5252" stroke="#B71C1C" strokeWidth="1.5"/>
-      <rect x="56" y="26" width="12" height="12" rx="3" fill="#FF5252" stroke="#B71C1C" strokeWidth="1.5"/>
-      <rect x="68" y="26" width="12" height="12" rx="3" fill="#FF5252" stroke="#B71C1C" strokeWidth="1.5"/>
-      <circle cx="26" cy="44" r="2" fill="white" stroke="#1565C0" strokeWidth=".8"/>
-      <circle cx="26.5" cy="44" r="1" fill="#1a1a2e"/>
-      <circle cx="38" cy="44" r="2" fill="white" stroke="#1565C0" strokeWidth=".8"/>
-      <circle cx="38.5" cy="44" r="1" fill="#1a1a2e"/>
-      <rect x="8" y="8" width="12" height="12" rx="3" fill="#FFD700" stroke="#F57F17" strokeWidth="1.5" opacity=".8"/>
-      <rect x="8" y="20" width="12" height="12" rx="3" fill="#FFD700" stroke="#F57F17" strokeWidth="1.5" opacity=".8"/>
+      <defs>
+        <linearGradient id="s1sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#9fe3ff"/><stop offset="1" stopColor="#e6f8d4"/>
+        </linearGradient>
+        <linearGradient id="s1rb" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#ff6ec7"/><stop offset=".5" stopColor="#ffd23f"/><stop offset="1" stopColor="#4ad9e8"/>
+        </linearGradient>
+      </defs>
+      <rect width="100" height="85" rx="12" fill="url(#s1sky)"/>
+      <circle cx="15" cy="12" r="7" fill="#ffe9a2"/>
+      <ellipse cx="80" cy="11" rx="10" ry="4.5" fill="#fff" opacity=".85"/>
+      <rect x="20" y="6" width="60" height="76" rx="6" fill="#7d5230"/>
+      <rect x="24" y="10" width="52" height="68" rx="3" fill="#4e3520"/>
+      <g stroke="#fff" strokeWidth=".7" opacity=".18">
+        <path d="M37 10V78M50 10V78M63 10V78"/>
+      </g>
+      <g stroke="#3d2f56" strokeWidth="1.3">
+        <rect x="43" y="14" width="14" height="14" rx="4" fill="#ef8f33"/>
+        <rect x="43" y="29" width="14" height="14" rx="4" fill="#f294bf"/>
+        <rect x="43" y="44" width="14" height="14" rx="4" fill="#86c854"/>
+      </g>
+      <polygon points="46,14 50,9 54,14" fill="#ef8f33" stroke="#3d2f56" strokeWidth="1.1"/>
+      <g stroke="#3d2f56" strokeWidth="1.3">
+        <rect x="27" y="63" width="14" height="14" rx="4" fill="#f5d63c"/>
+        <rect x="27" y="48" width="14" height="14" rx="4" fill="#86c854"/>
+        <rect x="59" y="63" width="14" height="14" rx="4" fill="#a9764a"/>
+        <rect x="43" y="63" width="14" height="14" rx="4" fill="#dedee0"/>
+      </g>
+      <g fill="#fff">
+        <circle cx="46.5" cy="20" r="2"/><circle cx="53.5" cy="20" r="2"/>
+        <circle cx="46.5" cy="35" r="2"/><circle cx="53.5" cy="35" r="2"/>
+        <circle cx="30.5" cy="69" r="2"/><circle cx="37.5" cy="69" r="2"/>
+        <circle cx="46.5" cy="69" r="2"/><circle cx="53.5" cy="69" r="2"/>
+      </g>
+      <g fill="#2b2440">
+        <circle cx="47" cy="20.3" r="1"/><circle cx="54" cy="20.3" r="1"/>
+        <circle cx="47" cy="35.3" r="1"/><circle cx="54" cy="35.3" r="1"/>
+        <circle cx="31" cy="69.3" r="1"/><circle cx="38" cy="69.3" r="1"/>
+        <circle cx="47" cy="69.3" r="1"/><circle cx="54" cy="69.3" r="1"/>
+      </g>
+      <circle cx="34" cy="55" r="6" fill="none" stroke="#ff3b3b" strokeWidth="2.6"/>
+      <circle cx="34" cy="55" r="2.6" fill="#ffd23f"/>
+      <circle cx="66" cy="55" r="6" fill="none" stroke="url(#s1rb)" strokeWidth="2.6"/>
+      <circle cx="66" cy="55" r="2.6" fill="#fff"/>
+      <path d="M50 60 L50 61" stroke="#fff" strokeWidth="1" opacity=".4"/>
+      <polygon points="8,78 12,69 16,78" fill="#3f8a2f"/>
+      <polygon points="86,79 90,70 94,79" fill="#3f8a2f"/>
     </svg>
   ),
   s2: (
@@ -1335,7 +1366,7 @@ const GAME_SVGS = {
 /* ════════════════════════════════════════════════════
    ① 更新日時（手動で更新する定数）
 ════════════════════════════════════════════════════ */
-const LAST_UPDATE_DATE = '2026-08-10';
+const LAST_UPDATE_DATE = '2026-08-19';
 
 function getDaysSinceUpdate() {
   return Math.floor((new Date() - new Date(LAST_UPDATE_DATE)) / 86400000);
@@ -1461,12 +1492,12 @@ const GAMES = [
    🔥チャレンジ タブ ゲームリスト
 ════════════════════════════════════════════════════ */
 const SCHOOL_GAMES = [
-  { id:'s1', route:'/animal-block', icon:'🧱', num:1, color:'#4a90ff', stars:5, isNew:false, category:'パズル',
-    ja:{ name:'どうぶつブロック', desc:'おなじどうぶつを\n3つならべてけそう！\nれんさでフィーバー！' },
-    en:{ name:'Animal Blocks',   desc:'Match 3 animals\nin a row to clear!\nChain for fever!' },
-    zh:{ name:'动物方块',         desc:'相同动物\n三连消除！\n连锁进入狂热！' },
-    ko:{ name:'동물 블록',         desc:'같은 동물을\n3개 모아 없애요!\n연쇄로 피버!' },
-    es:{ name:'Bloques Animal',   desc:'¡Junta 3 animales\niguales para borrar!\n¡Combos y fiebre!' } },
+  { id:'s1', route:'/animal-block', icon:'🧱', num:1, color:'#4a90ff', stars:5, isNew:true, category:'パズル',
+    ja:{ name:'どうぶつブロック', desc:'おちてくるどうぶつを\n3つならべてけそう！\nばくだんでだいれんさ！' },
+    en:{ name:'Animal Blocks',   desc:'Line up 3 falling\nanimals to clear!\nBombs make combos!' },
+    zh:{ name:'动物方块',         desc:'把掉落的动物\n三个排成一列消除！\n炸弹引发大连锁！' },
+    ko:{ name:'동물 블록',         desc:'떨어지는 동물을\n3개 맞춰 없애요!\n폭탄으로 대연쇄!' },
+    es:{ name:'Bloques Animal',   desc:'¡Alinea 3 animales\nque caen para borrar!\n¡Bombas y combos!' } },
   { id:'s2', route:'/runner',   icon:'🏃', num:2, color:'#43A047', stars:4, isNew:false, category:'レース',
     ja:{ name:'どうぶつランナー', desc:'タップでジャンプ！\n2かいジャンプもできるよ！\n障害物をよけて走れ！' },
     en:{ name:'Animal Runner',   desc:'Tap to jump!\nDouble jump available!\nAvoid obstacles!' },
@@ -1689,7 +1720,7 @@ const FEATURED_NEW_ROUTES = new Set([
   '/iro',
   '/shabondama',
   '/nijiiro-oukoku',
-  '/astral-fang',
+  '/animal-block',
   '/tashizan',
   '/neko-chou',
 ]);

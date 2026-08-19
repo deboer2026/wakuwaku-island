@@ -17,8 +17,8 @@ export default function DoubutsuBlock() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/doubutsu_block_v3.html"
-          title="どうぶつブロック"
+          src="/games/doubutsu_block_v4.html"
+          title="どうぶつブロック 3D"
           allow="autoplay; fullscreen"
           allowFullScreen
           sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
