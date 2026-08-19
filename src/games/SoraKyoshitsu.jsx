@@ -17,7 +17,7 @@ export default function SoraKyoshitsu() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/sora_kyoshitsu_v1.html"
+          src="/games/sora_kyoshitsu_v2.html"
           title="そらのきょうしつ"
           allow="autoplay; fullscreen"
           allowFullScreen

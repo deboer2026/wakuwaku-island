@@ -190,27 +190,43 @@ const GAME_SVGS = {
   ),
   g_kyoshitsu: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0" y="0" width="100" height="85" rx="12" fill="#bfe9ff"/>
-      <circle cx="16" cy="14" r="2" fill="#fff" opacity=".8"/>
-      <circle cx="86" cy="12" r="1.6" fill="#fff" opacity=".8"/>
-      <ellipse cx="24" cy="26" rx="10" ry="5" fill="#fff" opacity=".85"/>
-      <ellipse cx="78" cy="60" rx="12" ry="6" fill="#fff" opacity=".85"/>
-      <ellipse cx="72" cy="34" rx="7" ry="15" fill="none" stroke="#ffc93c" strokeWidth="5"/>
-      <g transform="translate(38 40)">
-        <path d="M-6 -2 Q-20 -12 -22 2 Q-14 4 -6 4 Z" fill="#fff" stroke="#a9c4e6" strokeWidth="1"/>
-        <path d="M6 -2 Q20 -12 22 2 Q14 4 6 4 Z" fill="#fff" stroke="#a9c4e6" strokeWidth="1"/>
-        <ellipse cx="0" cy="8" rx="11" ry="10" fill="#b9b3c9"/>
-        <ellipse cx="0" cy="10" rx="6" ry="6" fill="#e5e1f0"/>
-        <circle cx="0" cy="-4" r="10" fill="#b9b3c9"/>
-        <path d="M-9 -9 L-13 -18 L-4 -12 Z" fill="#b9b3c9"/>
-        <path d="M9 -9 L13 -18 L4 -12 Z" fill="#b9b3c9"/>
-        <path d="M-7 -9 L-9 -14 L-4 -11 Z" fill="#ff9ec4"/>
-        <path d="M7 -9 L9 -14 L4 -11 Z" fill="#ff9ec4"/>
-        <circle cx="-4" cy="-4" r="1.8" fill="#2a2440"/>
-        <circle cx="4" cy="-4" r="1.8" fill="#2a2440"/>
-        <path d="M-1.5 -1 L1.5 -1 L0 1.5 Z" fill="#ff7eb3"/>
+      <defs>
+        <linearGradient id="skyKy" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#7fcdf2"/>
+          <stop offset="1" stopColor="#d5f0ff"/>
+        </linearGradient>
+        <linearGradient id="grdKy" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#7cc86e"/>
+          <stop offset="1" stopColor="#5aa851"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="100" height="85" rx="12" fill="url(#skyKy)"/>
+      <path d="M0 52 H100 V73 A12 12 0 0 1 88 85 H12 A12 12 0 0 1 0 73 Z" fill="url(#grdKy)"/>
+      <path d="M0 52 L18 52 L9 40 Z" fill="#63b45a" opacity=".85"/>
+      <path d="M74 52 L96 52 L85 37 Z" fill="#63b45a" opacity=".85"/>
+      <path d="M22 52 l4 -9 l4 9 Z" fill="#3f8f47"/>
+      <path d="M68 52 l4.5 -10 l4.5 10 Z" fill="#3f8f47"/>
+      <ellipse cx="20" cy="20" rx="11" ry="5.5" fill="#fff" opacity=".9"/>
+      <ellipse cx="80" cy="15" rx="9" ry="4.5" fill="#fff" opacity=".9"/>
+      <ellipse cx="50" cy="34" rx="21" ry="20" fill="none" stroke="#e0a800" strokeWidth="7"/>
+      <ellipse cx="50" cy="34" rx="21" ry="20" fill="none" stroke="#ffd24d" strokeWidth="4.5"/>
+      <path d="M40 62 l14 -6 l-1 8 Z" fill="#ffe98a" opacity=".9"/>
+      <g transform="translate(50 55)">
+        <path d="M-7 -3 Q-24 -9 -27 2 Q-16 5 -7 3 Z" fill="#fff" stroke="#a9c4e6" strokeWidth="1"/>
+        <path d="M7 -3 Q24 -9 27 2 Q16 5 7 3 Z" fill="#fff" stroke="#a9c4e6" strokeWidth="1"/>
+        <ellipse cx="0" cy="3" rx="10.5" ry="10" fill="#bfb9d6"/>
+        <ellipse cx="0" cy="5" rx="6" ry="5.5" fill="#f1eefb"/>
+        <circle cx="0" cy="-7" r="8.5" fill="#bfb9d6"/>
+        <path d="M-8 -11 L-11 -19 L-3 -14 Z" fill="#bfb9d6"/>
+        <path d="M8 -11 L11 -19 L3 -14 Z" fill="#bfb9d6"/>
+        <path d="M-6.5 -11 L-8.5 -16 L-3.5 -13 Z" fill="#ff9ec4"/>
+        <path d="M6.5 -11 L8.5 -16 L3.5 -13 Z" fill="#ff9ec4"/>
+        <circle cx="-3.4" cy="-7" r="1.7" fill="#2a2440"/>
+        <circle cx="3.4" cy="-7" r="1.7" fill="#2a2440"/>
+        <path d="M-1.4 -4 L1.4 -4 L0 -2 Z" fill="#ff7eb3"/>
       </g>
-      <path d="M50 70 l3 6 l6 .8 l-4.5 4.2 l1.2 6 l-5.7 -3 l-5.7 3 l1.2 -6 l-4.5 -4.2 l6 -.8 Z" fill="#ffd24d" stroke="#e0a800" strokeWidth="1"/>
+      <path d="M84 60 l2.4 4.8 l5 .7 l-3.7 3.4 l1 5 l-4.7 -2.5 l-4.7 2.5 l1 -5 l-3.7 -3.4 l5 -.7 Z" fill="#ffd24d" stroke="#e0a800" strokeWidth="1"/>
+      <path d="M15 33 l1.8 3.6 l3.9 .5 l-2.9 2.6 l.8 3.9 l-3.6 -1.9 l-3.6 1.9 l.8 -3.9 l-2.9 -2.6 l3.9 -.5 Z" fill="#fff2a0" stroke="#e0a800" strokeWidth=".8"/>
     </svg>
   ),
   g_otakara: (
@@ -1547,12 +1563,12 @@ const SCHOOL_GAMES = [
     zh:{ name:'魔法伙伴小队',        desc:'用魔法棒轻轻一点，\n把怪物变成伙伴！' },
     ko:{ name:'마법 친구 부대',      desc:'마법 지팡이로 콩!\n몬스터를 친구로 만들자!' },
     es:{ name:'Escuadrón Mágico',    desc:'¡Toca monstruos con tu varita\ny hazlos tus amigos!' } },
-  { id:'g_kyoshitsu', route:'/sora-kyoshitsu', icon:'🎈', num:20, color:'#5ecbf7', stars:4, isNew:true, category:'アクション',
-    ja:{ name:'そらのきょうしつ',   desc:'リングをくぐって\nマットにちゃくりく！' },
-    en:{ name:'Sky Class',          desc:'Fly through rings and\nland on the mat!' },
-    zh:{ name:'天空教室',            desc:'穿过圆环，\n降落在垫子上！' },
-    ko:{ name:'하늘 교실',          desc:'링을 통과해서\n매트에 착륙하자!' },
-    es:{ name:'Clase del Cielo',     desc:'¡Cruza los aros\ny aterriza en la colchoneta!' } },
+  { id:'g_kyoshitsu', route:'/sora-kyoshitsu', icon:'🎈', num:20, color:'#5ecbf7', stars:5, isNew:true, category:'アクション',
+    ja:{ name:'そらのきょうしつ',   desc:'3Dのそらを ゆびひとつで！\n15ステージの フライトぼうけん' },
+    en:{ name:'Sky Class',          desc:'One-finger 3D flying!\n15 stages of sky adventure' },
+    zh:{ name:'天空教室',            desc:'一根手指畅游3D天空！\n15个关卡的飞行冒险' },
+    ko:{ name:'하늘 교실',          desc:'손가락 하나로 3D 하늘을!\n15스테이지 비행 모험' },
+    es:{ name:'Clase del Cielo',     desc:'¡Vuela en 3D con un dedo!\n15 niveles de aventura' } },
   { id:'g_otakara', route:'/otakara-horihori', icon:'⛏️', num:19, color:'#b06a3b', stars:4, isNew:true, category:'アクション',
     ja:{ name:'おたからほりほり', desc:'おたから ぜんぶ？ キツネ ぜんぶ？\nどちらでも クリアの 3Dアクション' },
     en:{ name:'Treasure Digger',   desc:'Collect every gem or bury every fox\ntwo ways to win!' },
