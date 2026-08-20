@@ -64,23 +64,36 @@ const MASCOT_LINES = {
 const GAME_SVGS = {
   g_astral: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0" y="0" width="100" height="85" rx="12" fill="#4a5abf"/>
-      <circle cx="16" cy="14" r="1.5" fill="#fff6c8" opacity=".9"/>
-      <circle cx="84" cy="12" r="1.3" fill="#fff6c8" opacity=".8"/>
-      <circle cx="70" cy="20" r="1" fill="#fff6c8" opacity=".7"/>
-      <circle cx="26" cy="24" r="1" fill="#fff6c8" opacity=".7"/>
-      <path d="M25 55 Q35 40 50 40 Q65 40 75 55" fill="none" stroke="#ff9ecb" strokeWidth="4" strokeLinecap="round" opacity=".85"/>
-      <path d="M30 55 Q38 44 50 44 Q62 44 70 55" fill="none" stroke="#fff2a8" strokeWidth="4" strokeLinecap="round" opacity=".85"/>
-      <path d="M35 55 Q41 48 50 48 Q59 48 65 55" fill="none" stroke="#9ff7c8" strokeWidth="4" strokeLinecap="round" opacity=".85"/>
-      <ellipse cx="60" cy="66" rx="18" ry="10" fill="#8fc6ff"/>
-      <path d="M42 66 L34 62 L38 68 L34 72 Z" fill="#8fc6ff"/>
-      <circle cx="70" cy="62" r="1.6" fill="#1c1a44"/>
-      <path d="M50 20 L52 26 L58 26 L53.2 29.6 L55 36 L50 32.2 L45 36 L46.8 29.6 L42 26 L48 26 Z" fill="#fff2a8"/>
-      <circle cx="20" cy="66" r="7" fill="#ffcf7a"/>
-      <circle cx="17" cy="64" r="1.6" fill="#3a2a10"/>
-      <circle cx="23" cy="64" r="1.6" fill="#3a2a10"/>
-      <path d="M15 60 L17 57 L19 60 Z" fill="#ffcf7a"/>
-      <path d="M21 60 L23 57 L25 60 Z" fill="#ffcf7a"/>
+      <rect x="0" y="0" width="100" height="85" rx="12" fill="#2b2350"/>
+      <circle cx="14" cy="12" r="1.4" fill="#fff6c8" opacity=".9"/>
+      <circle cx="88" cy="10" r="1.2" fill="#fff6c8" opacity=".8"/>
+      <circle cx="76" cy="18" r="1" fill="#fff6c8" opacity=".7"/>
+      <circle cx="10" cy="26" r="1" fill="#fff6c8" opacity=".6"/>
+      <circle cx="94" cy="24" r="1" fill="#fff6c8" opacity=".7"/>
+      <path d="M20 22 L21.6 26.6 L26 26.6 L22.6 29.6 L24 34 L20 31.2 L16 34 L17.4 29.6 L14 26.6 L18.4 26.6 Z" fill="#ffd35a"/>
+      <path d="M62 10 L63.2 13.4 L66.6 13.4 L64 15.6 L65 19 L62 16.8 L59 19 L60 15.6 L57.4 13.4 L60.8 13.4 Z" fill="#fff2a8"/>
+      <path d="M8 60 Q20 34 46 30 Q74 26 90 44" fill="none" stroke="#ff9ecb" strokeWidth="2.6" strokeLinecap="round" strokeDasharray="1 6" opacity=".8"/>
+      <ellipse cx="46" cy="60" rx="16" ry="9" fill="#8fc6ff"/>
+      <path d="M30 60 L21 55 L26 62 L21 68 Z" fill="#8fc6ff"/>
+      <circle cx="55" cy="57" r="1.5" fill="#1c1a44"/>
+      <circle cx="30" cy="67" r="6.4" fill="#ffcf7a"/>
+      <circle cx="27.4" cy="65.4" r="1.4" fill="#3a2a10"/>
+      <circle cx="32.6" cy="65.4" r="1.4" fill="#3a2a10"/>
+      <path d="M25 62 L26.6 59 L28.6 62 Z" fill="#ffcf7a"/>
+      <path d="M31.4 62 L33.4 59 L35 62 Z" fill="#ffcf7a"/>
+      <circle cx="52" cy="72" r="5.6" fill="#c7f0a8"/>
+      <circle cx="49.8" cy="70.6" r="1.2" fill="#3a4a20"/>
+      <circle cx="54.2" cy="70.6" r="1.2" fill="#3a4a20"/>
+      <ellipse cx="47.4" cy="72.6" rx="1.6" ry="1.1" fill="#f7b9c8"/>
+      <ellipse cx="56.6" cy="72.6" rx="1.6" ry="1.1" fill="#f7b9c8"/>
+      <circle cx="70" cy="70" r="5.4" fill="#e6c8ff"/>
+      <circle cx="67.8" cy="68.6" r="1.2" fill="#3a2a4a"/>
+      <circle cx="72.2" cy="68.6" r="1.2" fill="#3a2a4a"/>
+      <path d="M64.6 66 L65.8 63.4 L67.6 66.4Z" fill="#e6c8ff"/>
+      <path d="M72.4 66.4 L74.2 63.4 L75.4 66Z" fill="#e6c8ff"/>
+      <circle cx="86" cy="73" r="4.8" fill="#ffe4a8"/>
+      <circle cx="84.1" cy="71.8" r="1.1" fill="#4a3a10"/>
+      <circle cx="87.9" cy="71.8" r="1.1" fill="#4a3a10"/>
     </svg>
   ),
 
@@ -1598,11 +1611,11 @@ const SCHOOL_GAMES = [
     ko:{ name:'반짝반짝 드라이브', desc:'밤의 도시를 달리며\n별을 모아요!' },
     es:{ name:'Paseo de Neón',     desc:'¡Recorre la ciudad nocturna\ny recoge las estrellas!' } },
   { id:'g_astral', route:'/astral-fang', icon:'🌟', num:23, color:'#7cecff', stars:5, isNew:true, category:'アクション',
-    ja:{ name:'ほしぞらアニマルレスキュー', desc:'ほしをあつめて\nまいごのどうぶつをたすけよう！' },
-    en:{ name:'Starry Animal Rescue',       desc:'Collect the stars\nand rescue lost animals!' },
-    zh:{ name:'星空动物救援队',             desc:'收集星星，\n帮助迷路的小动物！' },
-    ko:{ name:'별빛 동물 구조대',           desc:'별을 모아\n길 잃은 동물을 도와요!' },
-    es:{ name:'Rescate Animal Estelar',     desc:'¡Recoge estrellas\ny ayuda a los animales!' } },
+    ja:{ name:'ほしぞらアニマルレスキュー', desc:'ゆびで そらを とんで\nどうぶつの ぎょうれつを つくろう！' },
+    en:{ name:'Starry Animal Rescue',       desc:'Glide with one finger\nand lead a parade of animals!' },
+    zh:{ name:'星空动物救援队',             desc:'用手指在夜空飞行，\n带上小动物大队伍！' },
+    ko:{ name:'별빛 동물 구조대',           desc:'손가락으로 밤하늘을 날아\n동물 행렬을 만들어요!' },
+    es:{ name:'Rescate Animal Estelar',     desc:'¡Vuela con un dedo\ny forma un desfile de animales!' } },
   { id:'g_block', route:'/block', icon:'🏰', num:10, color:'#ec407a', stars:3, isNew:true, category:'アクション',
     ja:{ name:'おしろブロックくずし', desc:'パドルでボールをはじいて\nブロックをこわそう！' },
     en:{ name:'Castle Breakout',   desc:'Bounce the ball and\nbreak all the blocks!' },
