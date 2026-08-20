@@ -419,31 +419,76 @@ const GAME_SVGS = {
   g_mahoumeiro: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="mmBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#8edcff"/><stop offset="1" stopColor="#dff8ff"/></linearGradient>
-        <linearGradient id="mmGate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#81d4fa"/><stop offset="1" stopColor="#2962ff"/></linearGradient>
-        <linearGradient id="mmGem" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#f8bbd0"/><stop offset="1" stopColor="#c2185b"/></linearGradient>
+        <linearGradient id="mmSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#3d2a72"/><stop offset="0.5" stopColor="#6b4fb8"/><stop offset="1" stopColor="#b79cff"/>
+        </linearGradient>
+        <radialGradient id="mmGlow" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#fff3b0" stopOpacity="0.95"/><stop offset="1" stopColor="#fff3b0" stopOpacity="0"/>
+        </radialGradient>
+        <linearGradient id="mmGate" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#9be0ff"/><stop offset="1" stopColor="#2979d6"/>
+        </linearGradient>
       </defs>
-      <rect width="100" height="85" fill="url(#mmBg)"/>
-      <circle cx="84" cy="12" r="7" fill="#fff59d" opacity="0.9"/>
-      <g fill="#65b85f">
-        <rect x="8" y="14" width="52" height="8" rx="2"/>
-        <rect x="8" y="14" width="8" height="34" rx="2"/>
-        <rect x="30" y="30" width="38" height="8" rx="2"/>
-        <rect x="84" y="26" width="8" height="38" rx="2"/>
-        <rect x="8" y="60" width="44" height="8" rx="2"/>
-        <rect x="62" y="46" width="8" height="22" rx="2"/>
-        <rect x="24" y="44" width="8" height="16" rx="2"/>
+
+      <rect width="100" height="85" fill="url(#mmSky)"/>
+      <g fill="#ffffff">
+        <circle cx="11" cy="8" r="1.6" opacity="0.9"/><circle cx="26" cy="4" r="1" opacity="0.65"/>
+        <circle cx="74" cy="7" r="1.3" opacity="0.85"/><circle cx="90" cy="14" r="1" opacity="0.6"/>
+        <circle cx="5" cy="22" r="1.1" opacity="0.6"/><circle cx="95" cy="30" r="1.2" opacity="0.7"/>
       </g>
-      <g fill="#9be37b" opacity="0.9">
-        <rect x="8" y="12" width="52" height="3" rx="1.5"/>
-        <rect x="30" y="28" width="38" height="3" rx="1.5"/>
-        <rect x="8" y="58" width="44" height="3" rx="1.5"/>
+
+      <polygon points="50.0,17.0 94.0,39.0 50.0,61.0 6.0,39.0" fill="#f2e8bc"/>
+      <polygon points="50.0,17.0 94.0,39.0 50.0,61.0 6.0,39.0" fill="none" stroke="#cdbc85" strokeWidth="1.2"/>
+
+      <polygon points="29.3,15.0 39.0,19.8 39.0,32.8 29.3,28.0" fill="#2f7d40"/>
+      <polygon points="39.0,19.8 48.7,15.0 48.7,28.0 39.0,32.8" fill="#3f9a4d"/>
+      <polygon points="39.0,10.2 48.7,15.0 39.0,19.8 29.3,15.0" fill="#5fbf62"/>
+      <ellipse cx="39.0" cy="13.5" rx="7" ry="4.4" fill="#79d46f"/>
+      <polygon points="40.3,20.5 50.0,25.3 50.0,38.3 40.3,33.5" fill="#2f7d40"/>
+      <polygon points="50.0,25.3 59.7,20.5 59.7,33.5 50.0,38.3" fill="#3f9a4d"/>
+      <polygon points="50.0,15.7 59.7,20.5 50.0,25.3 40.3,20.5" fill="#5fbf62"/>
+      <ellipse cx="50.0" cy="19.0" rx="7" ry="4.4" fill="#79d46f"/>
+      <polygon points="51.3,26.0 61.0,30.8 61.0,43.8 51.3,39.0" fill="#2f7d40"/>
+      <polygon points="61.0,30.8 70.7,26.0 70.7,39.0 61.0,43.8" fill="#3f9a4d"/>
+      <polygon points="61.0,21.2 70.7,26.0 61.0,30.8 51.3,26.0" fill="#5fbf62"/>
+      <ellipse cx="61.0" cy="24.5" rx="7" ry="4.4" fill="#79d46f"/>
+      <polygon points="7.3,26.0 17.0,30.8 17.0,43.8 7.3,39.0" fill="#2f7d40"/>
+      <polygon points="17.0,30.8 26.7,26.0 26.7,39.0 17.0,43.8" fill="#3f9a4d"/>
+      <polygon points="17.0,21.2 26.7,26.0 17.0,30.8 7.3,26.0" fill="#5fbf62"/>
+      <ellipse cx="17.0" cy="24.5" rx="7" ry="4.4" fill="#79d46f"/>
+      <polygon points="18.3,31.5 28.0,36.3 28.0,49.3 18.3,44.5" fill="#2f7d40"/>
+      <polygon points="28.0,36.3 37.7,31.5 37.7,44.5 28.0,49.3" fill="#3f9a4d"/>
+      <polygon points="28.0,26.7 37.7,31.5 28.0,36.3 18.3,31.5" fill="#5fbf62"/>
+      <ellipse cx="28.0" cy="30.0" rx="7" ry="4.4" fill="#79d46f"/>
+
+      <ellipse cx="72.0" cy="45.5" rx="8.5" ry="3.4" fill="#1a1040" opacity="0.22"/>
+      <rect x="64.0" y="27.5" width="3.4" height="18" rx="1.2" fill="#12508f"/>
+      <rect x="76.6" y="27.5" width="3.4" height="18" rx="1.2" fill="#12508f"/>
+      <rect x="64.0" y="25.0" width="16" height="3.4" rx="1.2" fill="#12508f"/>
+      <rect x="66.8" y="28.5" width="10.4" height="16" rx="1.5" fill="url(#mmGate)"/>
+      <path d="M72.0 33.5 l3.2 3.4 -3.2 3.4 -3.2 -3.4 z" fill="#ffffff" opacity="0.95"/>
+
+      <circle cx="50.0" cy="13.5" r="14" fill="url(#mmGlow)"/>
+      <ellipse cx="45.6" cy="11.5" rx="3.8" ry="5.4" fill="#ffffff" opacity="0.7"/>
+      <ellipse cx="54.4" cy="11.5" rx="3.8" ry="5.4" fill="#ffffff" opacity="0.7"/>
+      <circle cx="50.0" cy="13.5" r="4.8" fill="#fff6c8"/>
+
+      <g transform="translate(21 29) scale(0.92)">
+        <path d="M0 -7.5 L2.2 -2.2 L7.5 -2.2 L3.2 1.6 L4.8 7 L0 3.8 L-4.8 7 L-3.2 1.6 L-7.5 -2.2 L-2.2 -2.2 Z"
+              fill="#ffd54f" stroke="#f9a825" strokeWidth="1.2"/>
       </g>
-      <rect x="42" y="42" width="12" height="18" rx="3" fill="url(#mmGate)" opacity="0.9"/>
-      <path d="M45 57 V49 Q48 45 51 49 V57" fill="none" stroke="#fff" strokeWidth="1.5"/>
-      <rect x="16" y="68" width="10" height="10" rx="2" transform="rotate(45 21 73)" fill="url(#mmGem)"/>
-      <g transform="translate(76 72)"><circle r="7" fill="#f3c48b"/><path d="M-6 -4 L-9 -12 L-2 -7 M6 -4 L9 -12 L2 -7" fill="#f3c48b"/><circle cx="-2.5" cy="-1" r="1" fill="#2e2450"/><circle cx="2.5" cy="-1" r="1" fill="#2e2450"/><rect x="-7" y="5" width="14" height="6" rx="3" fill="#e97eb2"/></g>
-      <circle cx="90" cy="46" r="6" fill="#74d6cf" stroke="#3a9f9d" strokeWidth="1"/><circle cx="88" cy="45" r="1" fill="#26344d"/><circle cx="92" cy="45" r="1" fill="#26344d"/>
+
+      <g transform="translate(50.0 45.5)">
+        <ellipse cx="0" cy="10" rx="7.5" ry="2.6" fill="#1a1040" opacity="0.25"/>
+        <path d="M-5.8 -5.5 L-7.4 -12 L-1.6 -8 Z" fill="#e8a85e"/>
+        <path d="M5.8 -5.5 L7.4 -12 L1.6 -8 Z" fill="#e8a85e"/>
+        <ellipse cx="0" cy="3.6" rx="6.4" ry="5.8" fill="#f0b66f"/>
+        <circle cx="0" cy="-4" r="6.8" fill="#f6c684"/>
+        <circle cx="-2.6" cy="-4.8" r="1.3" fill="#4a3b32"/>
+        <circle cx="2.6" cy="-4.8" r="1.3" fill="#4a3b32"/>
+        <ellipse cx="0" cy="-1.2" rx="2.8" ry="1.9" fill="#ffffff" opacity="0.92"/>
+        <circle cx="0" cy="-1.9" r="1" fill="#e8887a"/>
+      </g>
     </svg>
   ),
   g_houki: (
@@ -1565,11 +1610,11 @@ const SCHOOL_GAMES = [
     ko:{ name:'성 벽돌깨기',        desc:'공을 튕겨서\n블록을 깨요!' },
     es:{ name:'Rompe Castillo',    desc:'¡Rebota la pelota\ny rompe los bloques!' } },
   { id:'g_mahoumeiro', route:'/mahou-meiro', icon:'🔮', num:17, color:'#7e57c2', stars:4, isNew:true, category:'パズル',
-    ja:{ name:'まほうのめいろ', desc:'かわいいどうぶつと進む\n3Dめいろぼうけん！' },
-    en:{ name:'Magic Maze',     desc:'Open gates with crystals\nand escape the 3D maze!' },
-    zh:{ name:'魔法迷宫',        desc:'用水晶打开魔法门\n逃出3D迷宫！' },
-    ko:{ name:'마법의 미로',     desc:'크리스탈로 문을 열고\n3D 미로를 탈출해요!' },
-    es:{ name:'Laberinto Mágico', desc:'¡Abre puertas con cristales\ny escapa del laberinto 3D!' } },
+    ja:{ name:'まほうのめいろ', desc:'3つのせかいをめぐって\nまいごのようせいをたすけよう！' },
+    en:{ name:'Magic Maze', desc:'Explore three worlds and\nrescue the lost fairies!' },
+    zh:{ name:'魔法迷宫', desc:'穿越三个世界\n拯救迷路的小精灵！' },
+    ko:{ name:'마법의 미로', desc:'세 개의 세계를 지나\n길 잃은 요정을 구해요!' },
+    es:{ name:'Laberinto Mágico', desc:'¡Recorre tres mundos y\nrescata a las hadas perdidas!' } },
   { id:'g_houki', route:'/houki', icon:'🧹', num:11, color:'#ab47bc', stars:3, isNew:true, category:'レース',
     ja:{ name:'まほうほうきGP', desc:'そらをとんでリングをくぐり\nタイムをのばそう！' },
     en:{ name:'Magic Broom GP',  desc:'Fly and pass through rings\nto extend your time!' },
