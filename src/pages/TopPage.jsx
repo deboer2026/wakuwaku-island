@@ -1,12 +1,12 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { startBGM, stopBGM, toggleBGM } from '../utils/audio';
 import { transitionTo } from '../utils/transition';
 import { getPlayCount } from '../utils/playCounter';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
-import { KisekaeCharacters, KisekaePanel } from '../components/Kisekae';
-import { DEFAULT_KISEKAE, normalizeKisekaeState, syncSpecialUnlocks } from '../components/kisekae/data';
+import { KisekaePanel } from '../components/Kisekae';
+import { normalizeKisekaeState, syncSpecialUnlocks } from '../components/kisekae/data';
 import LoginBonus from '../components/LoginBonus';
 import Shop from '../components/Shop';
 import { getCoins, checkLoginBonus, claimLoginBonus } from '../utils/coins';
@@ -15,6 +15,8 @@ import { getPlayHistory } from '../utils/playHistory';
 import { detectLang } from '../utils/i18n';
 import { trackEvent } from '../utils/analytics';
 import GAME_META from '../seo/gameMeta';
+import IslandHero from '../components/IslandHero';
+import GameGrid from '../components/GameGrid';
 import './TopPage.css';
 
 /* ── カテゴリ別グラデーション ──────────────────────────── */
@@ -31,32 +33,8 @@ const CARD_GRADIENTS = {
 };
 const DEFAULT_GRADIENT = 'linear-gradient(145deg, #7B8FA1, #3D4A5C)';
 
-const CATEGORIES = [
-  { key:'すべて',     icon:'🎮', label:{ja:'すべて',     en:'All',      zh:'全部',   ko:'전체',   es:'Todo'    } },
-  { key:'かずあそび', icon:'🔢', label:{ja:'かずあそび', en:'Numbers',  zh:'数字',   ko:'숫자',   es:'Números' } },
-  { key:'もじあそび', icon:'✏️', label:{ja:'もじあそび', en:'Letters',  zh:'文字',   ko:'글자',   es:'Letras'  } },
-  { key:'パズル',     icon:'🧩', label:{ja:'パズル',     en:'Puzzle',   zh:'拼图',   ko:'퍼즐',   es:'Puzzle'  } },
-  { key:'アクション', icon:'⚡', label:{ja:'アクション', en:'Action',   zh:'动作',   ko:'액션',   es:'Acción'  } },
-  { key:'レース',     icon:'🏁', label:{ja:'レース',     en:'Racing',   zh:'赛车',   ko:'레이싱', es:'Carreras'} },
-  { key:'クイズ',     icon:'❓', label:{ja:'クイズ',     en:'Quiz',     zh:'问答',   ko:'퀴즈',   es:'Quiz'    } },
-  { key:'そうぞう',   icon:'🎨', label:{ja:'そうぞう',   en:'Create',   zh:'创造',   ko:'창작',   es:'Crear'   } },
-  { key:'がくしゅう', icon:'📚', label:{ja:'がくしゅう', en:'Study',    zh:'学习',   ko:'학습',   es:'Estudio' } },
-  { key:'ぼうけん',   icon:'🌈', label:{ja:'ぼうけん',   en:'Adventure', zh:'冒险',   ko:'모험',   es:'Aventura'} },
-];
-
-/* ── マスコットのセリフ ──────────────────────────── */
-const MASCOT_GREETING = {
-  morning:   { ja:'おはよう！☀️',   en:'Good morning! ☀️',  zh:'早上好！☀️',  ko:'좋은 아침! ☀️',   es:'¡Buenos días! ☀️' },
-  afternoon: { ja:'こんにちは！🌈', en:'Hello! 🌈',          zh:'你好！🌈',     ko:'안녕! 🌈',         es:'¡Hola! 🌈' },
-  evening:   { ja:'こんばんは！🌙', en:'Good evening! 🌙',   zh:'晚上好！🌙',   ko:'좋은 저녁! 🌙',   es:'¡Buenas noches! 🌙' },
-};
-const MASCOT_LINES = {
-  ja: ['きょうは なにして あそぶ？','いっしょに あそぼう！','タップすると キラキラ✨','🎲ルーレットも おしてみて！','きみが くるのを まってたよ！'],
-  en: ['What shall we play today?','Let\'s play together!','Tap me for sparkles ✨','Try the 🎲 roulette!','I was waiting for you!'],
-  zh: ['今天玩什么呢？','一起来玩吧！','点我有闪光✨','试试🎲轮盘吧！','我在等你哦！'],
-  ko: ['오늘은 뭐 하고 놀까?','같이 놀자!','탭하면 반짝반짝✨','🎲룰렛도 눌러봐!','너를 기다렸어!'],
-  es: ['¿A qué jugamos hoy?','¡Juguemos juntos!','¡Tócame y brillo! ✨','¡Prueba la 🎲 ruleta!','¡Te estaba esperando!'],
-};
+/* 旧CATEGORIES/マスコット定義は新デザインで不要になったため削除(v2)。
+   カテゴリはSHELF_GROUPSから再構成する。 */
 
 /* ════════════════════════════════════════════════════
    ゲームSVGイラスト（SNES風）
@@ -1444,26 +1422,6 @@ const GAME_SVGS = {
 /* ════════════════════════════════════════════════════
    ① 更新日時（手動で更新する定数）
 ════════════════════════════════════════════════════ */
-const LAST_UPDATE_DATE = '2026-08-19';
-
-function getDaysSinceUpdate() {
-  return Math.floor((new Date() - new Date(LAST_UPDATE_DATE)) / 86400000);
-}
-
-/* ════════════════════════════════════════════════════
-   ② 季節バナー（月から自動判定）
-════════════════════════════════════════════════════ */
-function getSeason() {
-  const m = new Date().getMonth() + 1;
-  if (m >= 3 && m <= 5)  return { emoji:'🌸', color:'#ff8fab', glow:'rgba(255,143,171,0.5)', ja:'はるのゲームパーク！', en:'Spring Game Park!', zh:'春季游乐园！', ko:'봄 게임파크!', es:'¡Parque de Primavera!' };
-  if (m >= 6 && m <= 8)  return { emoji:'🌊', color:'#00d4ff', glow:'rgba(0,212,255,0.5)',   ja:'なつのゲームパーク！', en:'Summer Game Park!', zh:'夏季游乐园！', ko:'여름 게임파크!', es:'¡Parque de Verano!' };
-  if (m >= 9 && m <= 11) return { emoji:'🍂', color:'#e76f51', glow:'rgba(231,111,81,0.5)',  ja:'あきのゲームパーク！', en:'Autumn Game Park!', zh:'秋季游乐园！', ko:'가을 게임파크!', es:'¡Parque de Otoño!' };
-  return                         { emoji:'⛄', color:'#90e0ef', glow:'rgba(144,224,239,0.5)', ja:'ふゆのゲームパーク！', en:'Winter Game Park!', zh:'冬季游乐园！', ko:'겨울 게임파크!', es:'¡Parque de Invierno!' };
-}
-
-/* ════════════════════════════════════════════════════
-   ④ 今日のおすすめ（日付ハッシュ）
-════════════════════════════════════════════════════ */
 /* ════════════════════════════════════════════════════
    ゲームリスト（ja / en 両対応）
 ════════════════════════════════════════════════════ */
@@ -1751,14 +1709,23 @@ const SHELF_GROUPS = [
     label:{ja:'まなぶ',       en:'Learn',       zh:'学习',   ko:'배우기',     es:'Aprender' } },
 ];
 
-/* フィルターは棚定義から派生させ、分類ルールを一元化する。 */
+/* フィルターは棚定義から派生させ、分類ルールを一元化する(v2: 絵で分かる6カテゴリ)。 */
+const CATEGORY_LABELS = {
+  asobu:    {ja:'うごく',     en:'Move',   zh:'活动',   ko:'움직이기', es:'Moverse'},
+  nerau:    {ja:'ねらう',     en:'Aim',    zh:'瞄准',   ko:'조준하기', es:'Apuntar'},
+  race:     {ja:'はしる',     en:'Race',   zh:'竞速',   ko:'달리기',   es:'Correr'},
+  kangaeru: {ja:'かんがえる', en:'Think',  zh:'思考',   ko:'생각하기', es:'Pensar'},
+  tsukuru:  {ja:'つくる',     en:'Create', zh:'创造',   ko:'만들기',   es:'Crear'},
+  manabu:   {ja:'まなぶ',     en:'Learn',  zh:'学习',   ko:'배우기',   es:'Aprender'},
+};
 const CATEGORY_FILTERS = [
-  { key:'all', icon:'🎮', match:() => true,
+  { key:'all', match:() => true,
     label:{ja:'ぜんぶ', en:'All', zh:'全部', ko:'전체', es:'Todos'} },
-  ...SHELF_GROUPS,
-  { key:'adventure', icon:'🌈', match:g => g.category === 'ぼうけん',
-    label:{ja:'ぼうけん', en:'Adventure', zh:'冒险', ko:'모험', es:'Aventura'} },
+  ...SHELF_GROUPS.map(g => ({ key:g.key, match:g.match, label:CATEGORY_LABELS[g.key] })),
 ];
+/* 2段目: あたらしい/あそんだ/年齢。年齢の分類ロジックはAGE_FILTERSを再利用する。 */
+const NEW_FILTER   = { key:'new',    label:{ja:'あたらしい', en:'New',    zh:'新作',   ko:'새로운',   es:'Nuevo'},  match:g => g.isNew };
+const PLAYED_FILTER = (playHist) => ({ key:'played', label:{ja:'あそんだ', en:'Played', zh:'玩过',   ko:'플레이함', es:'Jugado'}, match:g => !!playHist[g.route] });
 
 /* Fisher-Yates。呼び出し側で「マウント時に1回だけ」呼ぶことで、以降の再レンダーでは
    同じ配列を再利用し、順番を固定する。 */
@@ -1770,17 +1737,6 @@ function shuffleOnce(arr) {
   }
   return a;
 }
-/* ジャンル棚専用: マウント時に決めたroute順(shelfOrderRef)でitemsを並べ替える。
-   フィルターで一部のゲームが除外されても、残ったゲーム同士の相対順はぶれない。 */
-function sortShelfItemsByOrder(items, order) {
-  const ranks = new Map((order || []).map((route, index) => [route, index]));
-  return items
-    .map((game, index) => ({ game, index }))
-    .sort((a, b) => (ranks.has(a.game.route) ? ranks.get(a.game.route) : Number.MAX_SAFE_INTEGER)
-      - (ranks.has(b.game.route) ? ranks.get(b.game.route) : Number.MAX_SAFE_INTEGER) || a.index - b.index)
-    .map(entry => entry.game);
-}
-
 /* ── 年齢別の入口。年齢が重複するゲームは、遊びやすさで一つの棚に振り分ける ── */
 const AGE_FILTERS = [
   { key:'all', label:{ja:'ぜんぶの年齢', en:'All ages', zh:'全部年龄', ko:'모든 연령', es:'Todas las edades'}, match:() => true },
@@ -1794,26 +1750,6 @@ const AGE_FILTERS = [
   } },
   { key:'9-plus', label:{ja:'9さい〜', en:'Ages 9+', zh:'9岁以上', ko:'9세 이상', es:'9+ años'}, match:g => g.hard },
 ];
-
-/* 最初に迷わないための固定6本。全39本の棚はこの下に残す。 */
-const BEGINNER_ROUTES = [
-  '/shabondama',
-  '/kudamono-catch',
-  '/animal-soccer',
-  '/astral-fang',
-  '/doubutsu-puzzle',
-  '/mura',
-];
-
-/* NEWを乱立させず、直近の代表作だけに絞る。 */
-const FEATURED_NEW_ROUTES = new Set([
-  '/iro',
-  '/shabondama',
-  '/nijiiro-oukoku',
-  '/animal-block',
-  '/tashizan',
-  '/neko-chou',
-]);
 
 const THUMB_ALIASES = {
   '/sora': 'sora',
@@ -1841,337 +1777,164 @@ function ageText(game, lang) {
   return `${meta.ageMin}〜${meta.ageMax}さい`;
 }
 
-/* ── 実ゲーム画面サムネイル(public/thumbs/<route>.webp)。
-      未配置・読込失敗時は非表示→既存SVG/アイコンにフォールバック ── */
-function HorizontalRail({ className, children, labels, railProps = {} }) {
-  const railRef = useRef(null);
-  const [edge, setEdge] = useState({ left:false, right:false });
-
-  useEffect(() => {
-    const rail = railRef.current;
-    if (!rail) return undefined;
-    const update = () => {
-      const max = Math.max(0, rail.scrollWidth - rail.clientWidth);
-      const next = { left: rail.scrollLeft > 2, right: rail.scrollLeft < max - 2 };
-      setEdge(current => current.left === next.left && current.right === next.right ? current : next);
-    };
-    update();
-    const frame = window.requestAnimationFrame(update);
-    const settleTimer = window.setTimeout(update, 100);
-    rail.addEventListener('scroll', update, { passive:true });
-    window.addEventListener('resize', update);
-    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
-    observer?.observe(rail);
-    return () => {
-      rail.removeEventListener('scroll', update);
-      window.removeEventListener('resize', update);
-      window.cancelAnimationFrame(frame);
-      window.clearTimeout(settleTimer);
-      observer?.disconnect();
-    };
-  }, [children]);
-
-  const move = (direction) => {
-    const rail = railRef.current;
-    if (!rail) return;
-    rail.scrollBy({ left: direction * Math.max(rail.clientWidth * 0.75, 180), behavior:'smooth' });
-  };
-
-  return (
-    <div className="tp-horizontal-rail">
-      <div ref={railRef} className={className} {...railProps}>{children}</div>
-      {edge.left && <span className="tp-rail-fade tp-rail-fade--left" aria-hidden="true" />}
-      {edge.right && <span className="tp-rail-fade tp-rail-fade--right" aria-hidden="true" />}
-      {edge.left && <button type="button" className="tp-rail-cue tp-rail-cue--left" aria-label={labels.left} onClick={() => move(-1)}>‹</button>}
-      {edge.right && <button type="button" className="tp-rail-cue tp-rail-cue--right" aria-label={labels.right} onClick={() => move(1)}>›</button>}
-    </div>
-  );
+function CloseIcon() {
+  return <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1 L11 11 M11 1 L1 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>;
 }
 
-/* ── 棚用コンパクトカード ── */
-function ShelfCard({ game, lang, onClick }) {
-  const t = game[lang] || game.ja;
+/* ── ルーレット/ずかん用の簡易アートスロット(サムネイル→SVG→アイコンの順にフォールバック) ── */
+function GameArt({ game }) {
   const thumb = thumbFor(game);
   return (
-    <button
-      className="tp-shelf-card"
-      style={{ background: CARD_GRADIENTS[game.category] || DEFAULT_GRADIENT }}
-      onClick={onClick}
-      aria-label={`${t.name}、${ageText(game, lang)}`}
-    >
-      {FEATURED_NEW_ROUTES.has(game.route) && <span className="tp-shelf-new">NEW</span>}
-      <div className="tp-shelf-art">
-        {GAME_SVGS[game.id] || <span className="tp-shelf-icon-fb">{game.icon}</span>}
-        {thumb && (
-          <img
-            className="tp-shelf-thumb"
-            src={thumb}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
-        )}
-        <span className="tp-thumb-badge tp-thumb-badge--sm" aria-hidden="true">{game.icon}</span>
-      </div>
-      <div className="tp-shelf-copy">
-        <div className="tp-shelf-name">{t.name}</div>
-        <div className="tp-shelf-age">{ageText(game, lang)}</div>
-      </div>
-    </button>
-  );
-}
-
-function BeginnerCard({ game, lang, onClick }) {
-  const t = game[lang] || game.ja;
-  const thumb = thumbFor(game);
-  return (
-    <button className="tp-beginner-card" onClick={onClick} aria-label={`${t.name}、${ageText(game, lang)}`}>
-      <div className="tp-beginner-art" style={{ background: CARD_GRADIENTS[game.category] || DEFAULT_GRADIENT }}>
-        {GAME_SVGS[game.id] || <span className="tp-card-icon-fb">{game.icon}</span>}
-        {thumb && (
-          <img
-            src={thumb}
-            alt=""
-            loading="eager"
-            decoding="async"
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
-        )}
-        <span className="tp-beginner-play" aria-hidden="true">▶</span>
-      </div>
-      <div className="tp-beginner-copy">
-        <span>{ageText(game, lang)}</span>
-        <strong>{t.name}</strong>
-      </div>
-    </button>
-  );
-}
-
-/* ════════════════════════════════════════════════════
-   雲データ（空に浮かぶ雲）
-════════════════════════════════════════════════════ */
-const CLOUDS = [
-  { id:0, top:'8%',  left:'5%',  size:52, dur:'7s',  delay:'0s'   },
-  { id:1, top:'5%',  left:'30%', size:64, dur:'9s',  delay:'1.5s' },
-  { id:2, top:'12%', left:'55%', size:46, dur:'6s',  delay:'3s'   },
-  { id:3, top:'4%',  left:'75%', size:58, dur:'8s',  delay:'0.8s' },
-  { id:4, top:'18%', left:'88%', size:42, dur:'7.5s',delay:'2s'   },
-  { id:5, top:'22%', left:'15%', size:36, dur:'6.5s',delay:'4s'   },
-];
-
-/* ════════════════════════════════════════════════════
-   ドリフト雲・魚データ
-════════════════════════════════════════════════════ */
-const DRIFT_CLOUDS = [
-  { id:'dc0', top:'6%',  size:48, dur:'24s', delay:'0s'   },
-  { id:'dc1', top:'14%', size:62, dur:'32s', delay:'-11s' },
-  { id:'dc2', top:'3%',  size:38, dur:'20s', delay:'-6s'  },
-];
-const FISH_LIST = [
-  { id:'f0', emoji:'🐠', dur:'15s', delay:'0s',   rtl:false },
-  { id:'f1', emoji:'🐟', dur:'20s', delay:'-8s',  rtl:true  },
-  { id:'f2', emoji:'🐬', dur:'17s', delay:'-4s',  rtl:false },
-];
-
-/* ════════════════════════════════════════════════════
-   ⑤ プレイカウンター
-════════════════════════════════════════════════════ */
-function PlayCounter({ target, lang }) {
-  const [display, setDisplay] = useState(0);
-  const rafRef = useRef(null);
-
-  useEffect(() => {
-    if (!target) return;
-    const duration = 1200;
-    const start = Date.now();
-    const tick = () => {
-      const p = Math.min((Date.now() - start) / duration, 1);
-      const e = 1 - Math.pow(1 - p, 3);
-      setDisplay(Math.round(e * target));
-      if (p < 1) rafRef.current = requestAnimationFrame(tick);
-    };
-    const tm = setTimeout(() => { rafRef.current = requestAnimationFrame(tick); }, 400);
-    return () => { clearTimeout(tm); cancelAnimationFrame(rafRef.current); };
-  }, [target]);
-
-  return (
-    <div className="tp-counter">
-      <span className="tp-counter-icon">🎮</span>
-      <div className="tp-counter-body">
-        <div className="tp-counter-label">
-          {lang === 'en' ? 'Times Played Together' :
-           lang === 'zh' ? '一起游玩的次数' :
-           lang === 'ko' ? '함께 플레이한 횟수' :
-           lang === 'es' ? 'Veces jugadas' :
-           'みんなであそんだかず'}
-        </div>
-        <div className="tp-counter-num">{display.toLocaleString()}</div>
-      </div>
-      <span className="tp-counter-unit">
-        {lang === 'en' ? 'times' : lang === 'zh' ? '次' : lang === 'ko' ? '번' : lang === 'es' ? 'veces' : 'かい'}
-      </span>
-    </div>
-  );
-}
-
-/* ════════════════════════════════════════════════════
-   ゲームカード（リッチ化）
-════════════════════════════════════════════════════ */
-function GameCard({ game, lang, isRecommended, onClick, animIndex }) {
-  const t = game[lang] || game.ja;
-  const gradient = CARD_GRADIENTS[game.category] || DEFAULT_GRADIENT;
-  const starsFilled = Math.round(game.stars);
-  const svg = GAME_SVGS[game.id] || null;
-
-  return (
-    <button
-      className={`tp-card${isRecommended ? ' tp-card--recommend' : ''}`}
-      style={{
-        '--card-gradient': gradient,
-        '--card-delay': `${(animIndex ?? 0) * 0.08}s`,
-      }}
-      onClick={onClick}
-    >
-      {isRecommended && (
-        <div className="tp-card-ribbon">
-          {{ja:'⭐ きょうのおすすめ！', en:"⭐ Today's Pick!", zh:'⭐ 今日推荐！', ko:'⭐ 오늘의 추천!', es:'⭐ ¡Recomendado!'}[lang] || '⭐ きょうのおすすめ！'}
-        </div>
+    <div className="tp-art">
+      {GAME_SVGS[game.id] || null}
+      {thumb && (
+        <img src={thumb} alt="" loading="lazy" decoding="async"
+          onError={(e) => { e.currentTarget.style.display = 'none'; }} />
       )}
-
-      <div className="tp-card-art">
-        {game.category && (
-          <span className="tp-card-cat">{game.category}</span>
-        )}
-        {game.isNew && (
-          <span className="tp-card-new">NEW</span>
-        )}
-        {svg || <span className="tp-card-icon-fb">{game.icon}</span>}
-        <span className="tp-thumb-badge" aria-hidden="true">{game.icon}</span>
-      </div>
-
-      <div className="tp-card-body">
-        <div className="tp-card-name">{t.name}</div>
-        <div className="tp-card-desc">
-          {t.desc.split('\n').map((line, i, arr) => (
-            <React.Fragment key={i}>
-              {line}
-              {i < arr.length - 1 && <br />}
-            </React.Fragment>
-          ))}
-        </div>
-        <div className="tp-card-stars">
-          {Array.from({length: 5}, (_, i) => (
-            <span key={i} className={i < starsFilled ? 'tp-star tp-star--filled' : 'tp-star'}>★</span>
-          ))}
-        </div>
-      </div>
-    </button>
+    </div>
   );
 }
+
+const LANG_LABELS = { ja: 'JA', en: 'EN', zh: '中文', ko: '한국어', es: 'ES' };
+const LANG_NAMES  = {
+  ja: { ja: '日本語', en: 'Japanese', zh: '日语', ko: '일본어', es: 'Japonés' },
+  en: { ja: '英語', en: 'English', zh: '英语', ko: '영어', es: 'Inglés' },
+  zh: { ja: '中国語', en: 'Chinese', zh: '中文', ko: '중국어', es: 'Chino' },
+  ko: { ja: '韓国語', en: 'Korean', zh: '韩语', ko: '한국어', es: 'Coreano' },
+  es: { ja: 'スペイン語', en: 'Spanish', zh: '西班牙语', ko: '스페인어', es: 'Español' },
+};
+const LANG_ORDER = ['ja', 'en', 'zh', 'ko', 'es'];
+
+/* ── おうちの人パネル: BGM / 言語 / 保護者向けリンクをここへ集約 ── */
+function UtilityPanel({ lang, isMuted, onToggleMute, onChangeLang, onClose, onNavigate }) {
+  return (
+    <div
+      className="tp-roulette-overlay"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onTouchEnd={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="tp-utility-box" role="dialog" aria-modal="true" aria-label={lang === 'en' ? 'For families' : 'おうちの人'}>
+        <div className="tp-roulette-title">{{ja:'おうちの人へ', en:'For families', zh:'给家长', ko:'보호자님께', es:'Para familias'}[lang] || 'おうちの人へ'}</div>
+
+        <div className="tp-utility-row">
+          <span>{{ja:'おんがく', en:'Music', zh:'音乐', ko:'음악', es:'Música'}[lang] || 'おんがく'}</span>
+          <button className="tp-utility-toggle" aria-pressed={!isMuted} onClick={onToggleMute}>
+            <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M4 7v6h3l5 4V3L7 7Z" fill="#5E7290" />
+              {!isMuted && <path d="M14 6 Q17 10 14 14" stroke="#5E7290" strokeWidth="1.8" fill="none" strokeLinecap="round" />}
+              {isMuted && <path d="M15 7 L19 13 M19 7 L15 13" stroke="#F2647F" strokeWidth="1.8" strokeLinecap="round" />}
+            </svg>
+            {isMuted ? ({ja:'オフ', en:'Off', zh:'关闭', ko:'꺼짐', es:'Apagado'}[lang] || 'オフ') : ({ja:'オン', en:'On', zh:'开启', ko:'켜짐', es:'Encendido'}[lang] || 'オン')}
+          </button>
+        </div>
+
+        <div className="tp-utility-row tp-utility-row--lang">
+          <span>{{ja:'げんご', en:'Language', zh:'语言', ko:'언어', es:'Idioma'}[lang] || 'げんご'}</span>
+          <div className="tp-utility-langs">
+            {LANG_ORDER.map(code => (
+              <button
+                key={code}
+                className={`tp-utility-lang${lang === code ? ' tp-utility-lang--on' : ''}`}
+                aria-pressed={lang === code}
+                aria-label={LANG_NAMES[code][lang] || LANG_NAMES[code].ja}
+                onClick={() => onChangeLang(code)}
+              >
+                {LANG_LABELS[code]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="tp-utility-links">
+          <button className="tp-footer-link" onClick={() => onNavigate('/parents')}>
+            {{ja:'保護者の方へ', en:'For parents', zh:'致家长', ko:'보호자 안내', es:'Para familias'}[lang] || '保護者の方へ'}
+          </button>
+          <button className="tp-footer-link" onClick={() => onNavigate('/privacy')}>
+            {{ja:'プライバシーポリシー', en:'Privacy Policy', zh:'隐私政策', ko:'개인정보 처리방침', es:'Privacidad'}[lang] || 'プライバシーポリシー'}
+          </button>
+          <button className="tp-footer-link" onClick={() => onNavigate('/terms')}>
+            {{ja:'利用規約', en:'Terms of Use', zh:'使用条款', ko:'이용약관', es:'Términos'}[lang] || '利用規約'}
+          </button>
+        </div>
+
+        <button className="tp-roulette-close" onClick={onClose}><CloseIcon /> {{ja:'とじる', en:'Close', zh:'关闭', ko:'닫기', es:'Cerrar'}[lang] || 'とじる'}</button>
+      </div>
+    </div>
+  );
+}
+
+/* SSR/リロード間で島棚の並びを保持する(SPA内でTopへ戻っても同じ並び、
+   フルリロードでのみ新しい並びになる)。SSR初期値は必ず元配列順。 */
+let _topGameOrderCache = null;
 
 /* ════════════════════════════════════════════════════
    TopPage 本体
 ════════════════════════════════════════════════════ */
 export default function TopPage() {
-  const navigate   = useNavigate();
-  const [lang,        setLang]        = useState(() => (typeof localStorage !== 'undefined' ? localStorage.getItem('wakuwaku_lang') : null) || 'ja');
-  const [isMuted,     setIsMuted]     = useState(() => typeof localStorage !== 'undefined' && localStorage.getItem('wakuwaku_bgm') === 'off');
-  const [_playCount,  setPlayCount]   = useState(0);
-  const [kisekaeState,setKisekaeState]= useState(() => {
-    try {
-      const saved = typeof localStorage !== 'undefined' && localStorage.getItem('kisekae_state');
-      return normalizeKisekaeState(saved ? JSON.parse(saved) : null);
-    } catch { return normalizeKisekaeState(null); }
-  });
+  const navigate = useNavigate();
 
-  /* Phase4: マウント時にあそび実績(ちがうゲームを遊んだ数)を再評価し、★★★を
-     sticky解放する。既存ユーザーも遡及解放。ここでは演出は出さず状態のみ同期する
-     (演出はきせかえPanelを開いた時にKisekaePanel側で行う)。 */
-  useEffect(() => {
-    // Browser-only post-hydration reconciliation preserves deterministic SSR.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setKisekaeState(prev => {
-      const { state: synced, newlyUnlocked } = syncSpecialUnlocks(prev);
-      if (newlyUnlocked.length === 0) return prev;
-      try { localStorage.setItem('kisekae_state', JSON.stringify(synced)); } catch { /* storage remains optional */ }
-      return synced;
-    });
-  }, []);
-  const [panelOpen,   setPanelOpen]   = useState(false);
-  const [panelChara,  setPanelChara]  = useState('princess');
-  const [shopOpen,    setShopOpen]    = useState(false);
-  const [coins,       setCoins]       = useState(() => typeof localStorage !== 'undefined' ? getCoins() : 0);
-  const [loginBonus,  setLoginBonus]  = useState(null);
-  const [recentRoutes,   _setRecentRoutes]  = useState(() => typeof localStorage !== 'undefined' ? getRecentGames() : []);
-  const [catKey,  setCatKey]  = useState('all');
-  const [ageKey,  setAgeKey]  = useState('all');
-
-  /* ジャンル棚だけ「表示ごとに」ランダム化する。マウント時に1回だけ並びを決め、
-     以降はフィルター切替・きせかえ開閉・BGM/言語切替があっても順番を固定する
-     （「最近あそんだ」「おすすめ」等の意味のあるリストはここでは対象外）。 */
-  const [shelfOrder] = useState(() => {
-    const orders = {};
-    SHELF_GROUPS.forEach(grp => {
-      orders[grp.key] = shuffleOnce(ALL_SHELF_GAMES.filter(grp.match).map(g => g.route));
-    });
-    return orders;
-  });
-
-  const season    = getSeason();
-  const daysSince = getDaysSinceUpdate();
-  const beginnerGames = BEGINNER_ROUTES
-    .map(route => ALL_SHELF_GAMES.find(game => game.route === route))
-    .filter(Boolean);
+  /* SSR安全のため、端末情報・localStorage依存の値は全て決定的な初期値にし、
+     実際の値はマウント後のuseEffectで読み込む。 */
+  const [lang,         setLang]        = useState('ja');
+  const [isMuted,      setIsMuted]     = useState(false);
+  const [_playCount,   setPlayCount]   = useState(0);
+  const [kisekaeState, setKisekaeState]= useState(() => normalizeKisekaeState(null));
+  const [panelOpen,    setPanelOpen]   = useState(false);
+  const [panelChara,   setPanelChara]  = useState('princess');
+  const [shopOpen,     setShopOpen]    = useState(false);
+  const [utilityOpen,  setUtilityOpen] = useState(false);
+  const [coins,        setCoins]       = useState(0);
+  const [loginBonus,   setLoginBonus]  = useState(null);
+  const [recentRoutes, setRecentRoutes]= useState([]);
+  const [playHist,     setPlayHist]    = useState({});
+  const [games,        setGames]       = useState(ALL_SHELF_GAMES);
 
   // 引っ張って更新(フルスクリーンPWA向け)
   const { pull, ready } = usePullToRefresh(() => window.location.reload());
 
-
-  // 最近遊んだゲームを可視化用データに変換
-  const recentGames = recentRoutes
-    .map(route => GAMES.find(g => g.route === route))
-    .filter(Boolean);
-
-  // きみにオススメ: よく遊ぶ分類の未プレイゲームを提案(マウント後に計算しSSR不一致を回避)
-  const [recoGames, setRecoGames] = useState([]);
+  /* マウント後にのみ端末のlocalStorageを読み込む(ハイドレーション不一致防止)。
+     並びは初回のみFisher-Yatesでシャッフルし、以降はモジュールスコープの
+     キャッシュを再利用する(SPA内で戻っても同じ並び、フルリロードで新しい並び)。 */
   useEffect(() => {
+    const savedLang = localStorage.getItem('wakuwaku_lang');
+    if (savedLang) {
+      setLang(savedLang);
+    } else {
+      const detected = detectLang();
+      localStorage.setItem('wakuwaku_lang', detected);
+      setLang(detected);
+    }
+
+    setIsMuted(localStorage.getItem('wakuwaku_bgm') === 'off');
+    setCoins(getCoins());
+    setRecentRoutes(getRecentGames());
+    setPlayHist(getPlayHistory());
+
     try {
-      const hist = getPlayHistory() || {};
-      const counts = CATEGORY_FILTERS.slice(1).map(c => [c, ALL_SHELF_GAMES.filter(g => c.match(g) && hist[g.route]).length]);
-      counts.sort((a, b) => b[1] - a[1]);
-      const fav = counts[0] && counts[0][1] > 0 ? counts[0][0] : null;
-      const pool = fav
-        ? ALL_SHELF_GAMES.filter(g => fav.match(g) && !hist[g.route])
-        : ALL_SHELF_GAMES.filter(g => g.isNew && !hist[g.route]);
-      // Recommendations depend on client-only play history.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setRecoGames(pool.slice(0, 4));
-    } catch { /* noop */ }
-  }, []);
+      const saved = localStorage.getItem('kisekae_state');
+      const loaded = normalizeKisekaeState(saved ? JSON.parse(saved) : null);
+      const { state: synced, newlyUnlocked } = syncSpecialUnlocks(loaded);
+      if (newlyUnlocked.length > 0) {
+        localStorage.setItem('kisekae_state', JSON.stringify(synced));
+      }
+      setKisekaeState(synced);
+    } catch { /* storage remains optional */ }
 
-  useEffect(() => {
+    if (!_topGameOrderCache) _topGameOrderCache = shuffleOnce(ALL_SHELF_GAMES);
+    setGames(_topGameOrderCache);
+
     if (localStorage.getItem('wakuwaku_bgm') !== 'off') startBGM();
-    // Startup-only browser side effect; it must not run during SSR.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPlayCount(getPlayCount() + 1312);
     const bonus = checkLoginBonus();
     if (bonus) setLoginBonus(bonus);
     return () => stopBGM();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 初回訪問時のみ、ブラウザ言語から自動で表示言語を決定する。
-  // 手動選択(wakuwaku_lang)がある場合は常にそちらを優先。
-  // マウント後に実行することでSSR/prerenderとのハイドレーション不一致を防ぐ。
-  useEffect(() => {
-    if (localStorage.getItem('wakuwaku_lang')) return;
-    const detected = detectLang();
-    localStorage.setItem('wakuwaku_lang', detected);
-    // Browser-only language detection intentionally runs after the prerendered
-    // first paint so SSR output stays deterministic.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLang(prev => prev === detected ? prev : detected);
-  }, []);
+  // 最近遊んだゲームの先頭 = 「つづきから」の対象
+  const resumeGame = recentRoutes.length
+    ? ALL_SHELF_GAMES.find(g => g.route === recentRoutes[0]) || null
+    : null;
 
   function handleMuteToggle() {
     toggleBGM();
@@ -2182,55 +1945,24 @@ export default function TopPage() {
     });
   }
 
-  function spawnParticles(x, y) {
-    const emojis = ['✨', '💖', '⭐', '🌟', '💫', '🎉'];
-    for (let i = 0; i < 6; i++) {
-      const el = document.createElement('span');
-      el.className = 'ww-particle';
-      el.textContent = emojis[i % emojis.length];
-      el.style.left = x + 'px';
-      el.style.top  = y + 'px';
-      const angle = (i / 6) * Math.PI * 2;
-      el.style.setProperty('--px', (Math.cos(angle) * 80) + 'px');
-      el.style.setProperty('--py', (Math.sin(angle) * 80 - 40) + 'px');
-      document.body.appendChild(el);
-      setTimeout(() => { if (el.parentNode) el.remove(); }, 800);
-    }
+  function handleLangChange(next) {
+    setLang(next);
+    localStorage.setItem('wakuwaku_lang', next);
   }
 
-  function openPanel(chara) {
-    setPanelChara(chara);
+  function openKisekaePanel(chara) {
+    setPanelChara(chara || 'princess');
     setPanelOpen(true);
   }
 
-  /* ── マスコット吹き出し ── */
-  const [mascotText,   setMascotText]   = useState('');
-  const [mascotBounce, setMascotBounce] = useState(false);
-  const mascotIdxRef = useRef(-1);
-
-  function pickMascotLine(l) {
-    const lines = MASCOT_LINES[l] || MASCOT_LINES.ja;
-    let i;
-    do { i = Math.floor(Math.random() * lines.length); } while (i === mascotIdxRef.current && lines.length > 1);
-    mascotIdxRef.current = i;
-    return lines[i];
+  function handlePlay(game, e) {
+    const x = e?.clientX, y = e?.clientY;
+    transitionTo(navigate, game.route, x, y, { name:(game[lang] || game.ja).name, category:game.category, sourceContext:'top_list' });
   }
 
-  useEffect(() => {
-    const h = new Date().getHours();
-    const slot = h < 11 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
-    // This effect synchronizes the localized greeting and its interval.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMascotText(MASCOT_GREETING[slot][lang] || MASCOT_GREETING[slot].ja);
-    const t = setInterval(() => setMascotText(pickMascotLine(lang)), 8000);
-    return () => clearInterval(t);
-  }, [lang]);
-
-  function handleMascotTap(e) {
-    spawnParticles(e.clientX, e.clientY);
-    setMascotText(pickMascotLine(lang));
-    setMascotBounce(true);
-    setTimeout(() => setMascotBounce(false), 600);
+  function scrollToGames() {
+    const el = document.getElementById('games');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   /* ── ゲームルーレット ── */
@@ -2267,7 +1999,6 @@ export default function TopPage() {
 
   /* ── スタンプずかん ── */
   const [zukanOpen, setZukanOpen] = useState(false);
-  const [playHist,  setPlayHist]  = useState({});
 
   function openZukan() {
     setPlayHist(getPlayHistory());
@@ -2285,22 +2016,12 @@ export default function TopPage() {
     localStorage.setItem('kisekae_state', JSON.stringify(next));
   }
 
-  const LANG_FLAGS = { ja:'🇯🇵', en:'🇺🇸', zh:'🇨🇳', ko:'🇰🇷', es:'🇪🇸' };
-  const LANG_ORDER = ['ja', 'en', 'zh', 'ko', 'es'];
-
-  function handleLangToggle() {
-    const idx  = LANG_ORDER.indexOf(lang);
-    const next = LANG_ORDER[(idx + 1) % LANG_ORDER.length];
-    setLang(next);
-    localStorage.setItem('wakuwaku_lang', next);
-  }
-
-  const _lastUpdateText =
-    lang === 'en' ? (daysSince === 0 ? 'Today!' : `${daysSince} days ago`) :
-    lang === 'zh' ? (daysSince === 0 ? '今天！' : `${daysSince}天前`) :
-    lang === 'ko' ? (daysSince === 0 ? '오늘!' : `${daysSince}일 전`) :
-    lang === 'es' ? (daysSince === 0 ? '¡Hoy!' : `hace ${daysSince} días`) :
-    (daysSince === 0 ? 'きょう！' : `${daysSince}にちまえ`);
+  const subFilters = [
+    { key:'all', label:{ja:'ぜんぶ', en:'All', zh:'全部', ko:'전체', es:'Todos'}, match:() => true },
+    NEW_FILTER,
+    PLAYED_FILTER(playHist),
+    ...AGE_FILTERS.slice(1),
+  ];
 
   return (
     <div className="tp-wrap" style={{ transform: pull ? `translateY(${pull}px)` : undefined, transition: pull ? 'none' : 'transform .25s ease' }}>
@@ -2316,438 +2037,90 @@ export default function TopPage() {
         <link rel="canonical" href="https://wakuwakuislands.com/" />
       </Helmet>
 
-      {/* ── 空の雲 ── */}
-      <div className="tp-clouds" aria-hidden="true">
-        {/* 既存：上下ボブ雲 */}
-        {CLOUDS.map(c => (
-          <div
-            key={c.id}
-            className="tp-cloud"
-            style={{
-              top: c.top,
-              left: c.left,
-              fontSize: c.size,
-              '--dur':   c.dur,
-              '--delay': c.delay,
-            }}
-          >
-            ☁️
-          </div>
-        ))}
-        {/* ☀️ 太陽 */}
-        <div className="tp-sun-wrap" aria-hidden="true">
-          <span className="tp-sun-body">☀️</span>
-        </div>
-        {/* ☁️ 流れる雲（左→右） */}
-        {DRIFT_CLOUDS.map(c => (
-          <div
-            key={c.id}
-            className="tp-cloud-drift"
-            style={{ top: c.top, fontSize: c.size, '--dur': c.dur, '--delay': c.delay }}
-          >
-            ☁️
-          </div>
-        ))}
-      </div>
+      <IslandHero
+        lang={lang}
+        coins={coins}
+        resumeGame={resumeGame}
+        kisekaeState={kisekaeState}
+        onOpenKisekaeChara={openKisekaePanel}
+        onCoinChipClick={() => setShopOpen(true)}
+        onDressUpClick={() => openKisekaePanel('princess')}
+        onFamilyClick={() => setUtilityOpen(true)}
+        onResumeClick={(e) => resumeGame && handlePlay(resumeGame, e)}
+        onCtaClick={scrollToGames}
+      />
 
-      {/* ── フローティングデコキャラ ── */}
-      <div className="tp-deco" aria-hidden="true">
-        <span style={{ left:'4%',  top:'28%', '--dur':'3.8s', '--rot':'-4deg', fontSize:28 }}>🌺</span>
-        <span style={{ right:'4%', top:'24%', '--dur':'3.5s', '--rot':'8deg',  fontSize:26 }}>🌟</span>
-        <span style={{ left:'3%',  top:'48%', '--dur':'4s',   '--rot':'-8deg', fontSize:24 }}>🦋</span>
-        <span style={{ right:'3%', top:'46%', '--dur':'3.3s', '--rot':'5deg',  fontSize:22 }}>🌈</span>
-        {/* 🐠 魚 */}
-        {FISH_LIST.map(f => (
-          <span
-            key={f.id}
-            className={f.rtl ? 'tp-fish-rtl' : 'tp-fish'}
-            style={{ fontSize: 26, '--dur': f.dur, '--delay': f.delay }}
-          >
-            {f.emoji}
-          </span>
-        ))}
-      </div>
+      <GameGrid
+        lang={lang}
+        games={games}
+        playHist={playHist}
+        categories={CATEGORY_FILTERS}
+        subFilters={subFilters}
+        thumbFor={thumbFor}
+        ageText={ageText}
+        cardGradients={CARD_GRADIENTS}
+        defaultGradient={DEFAULT_GRADIENT}
+        gameSvgs={GAME_SVGS}
+        onPlay={handlePlay}
+        onOpenRoulette={startRoulette}
+        onOpenZukan={openZukan}
+      />
 
-      {/* ── 右上ボタン群（コイン含む） ── */}
-      <div className="tp-top-btns">
-        <div className="tp-coin-badge">
-          🪙 <span className="tp-coin-num">{coins}</span>
-        </div>
-        <button className="tp-top-btn tp-shop-btn" onClick={() => setShopOpen(true)}
-          title={lang === 'en' ? 'Coin exchange' : 'コインでこうかん'}>
-          🪙 <span className="tp-shop-label">{{ja:'コインでこうかん', en:'Coin exchange', zh:'金币兑换', ko:'코인 교환', es:'Canjear monedas'}[lang] || 'コインでこうかん'}</span>
-        </button>
-        <button className="tp-top-btn" onClick={startRoulette}
-          title={{ja:'ゲームルーレット', en:'Game Roulette', zh:'游戏轮盘', ko:'게임 룰렛', es:'Ruleta'}[lang] || 'ゲームルーレット'}>
-          🎲
-        </button>
-        <button className="tp-top-btn" onClick={openZukan}
-          title={{ja:'スタンプずかん', en:'Stamp Book', zh:'印章图鉴', ko:'스탬프 도감', es:'Álbum'}[lang] || 'スタンプずかん'}>
-          📖
-        </button>
-        <button className="tp-top-btn ksk-top-btn" onClick={() => openPanel('princess')}
-          title={lang === 'en' ? 'Dress up' : 'きがえ'}>
-          👗
-        </button>
-        <button className="tp-top-btn" onClick={handleMuteToggle}
-          title={isMuted ? 'Unmute' : 'Mute'}>
-          {isMuted ? '🔇' : '🔊'}
-        </button>
-        <button className="tp-top-btn tp-lang-btn" onClick={handleLangToggle}
-          title="Language / 言語">
-          {LANG_FLAGS[lang]}<span className="tp-lang-code">{lang.toUpperCase()}</span>
-        </button>
-      </div>
-
-      {/* ── ヘッダー ── */}
-      <div className="tp-header" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="ksk-title-zone">
-          <div className="tp-mascot-bubble" key={mascotText} aria-live="polite">
-            {mascotText}
-          </div>
-          <div className="tp-title-wrap">
-            <h1 className="tp-title">
-              <span className="tp-title-1">
-                {{ja:'わくわく', en:'Waku Waku', zh:'哇酷哇酷', ko:'와쿠와쿠', es:'Waku Waku'}[lang] || 'わくわく'}
+      {/* ── おうちの方へ ── */}
+      <section className="tp-parents" aria-label={lang === 'ja' ? 'おうちの方へ' : 'For parents'}>
+        <div className="tp-parents-inner">
+          <h3>{{ja:'おうちの方へ', en:'For families', zh:'致家长', ko:'보호자님께', es:'Para familias'}[lang] || 'おうちの方へ'}</h3>
+          <div className="tp-parents-grid">
+            <div className="tp-parents-item">
+              <span className="tp-parents-ic" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.4" fill="none" stroke="#7B8BD4" strokeWidth="1.8" /><path d="M5 8 h6" stroke="#7B8BD4" strokeWidth="1.8" strokeLinecap="round" /></svg>
               </span>
-              <span className="tp-title-2">
-                {{ja:'アイランド', en:'Island', zh:'岛', ko:'아일랜드', es:'Island'}[lang] || 'アイランド'}
+              <span><b>{{ja:'ずっと無料', en:'Always free', zh:'完全免费', ko:'완전 무료', es:'Siempre gratis'}[lang] || 'ずっと無料'}</b><small>{{ja:'課金要素はありません', en:'No in-app payments', zh:'无付费项目', ko:'과금 요소 없음', es:'Sin compras'}[lang] || '課金要素はありません'}</small></span>
+            </div>
+            <div className="tp-parents-item">
+              <span className="tp-parents-ic" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 8.5 L6.5 12 L13 4.5" stroke="#7B8BD4" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </span>
-            </h1>
-          </div>
-
-          {/* ② 季節＋ゲーム数チップ（タイトル直下に統合） */}
-          <div className="tp-hero-chips">
-            <div
-              className="tp-season tp-season--chip"
-              style={{ '--season-color': season.color, '--season-glow': season.glow }}
-            >
-              {season.emoji} {season[lang] || season.ja}
+              <span><b>{{ja:'登録なし', en:'No sign-up', zh:'无需注册', ko:'가입 없음', es:'Sin registro'}[lang] || '登録なし'}</b><small>{{ja:'個人情報は取得しません', en:'No personal data collected', zh:'不收集个人信息', ko:'개인정보 수집 없음', es:'No recopilamos datos'}[lang] || '個人情報は取得しません'}</small></span>
             </div>
-            <div className="tp-count-chip">
-              🎮 {{
-                ja:`むりょうゲーム ${ALL_SHELF_GAMES.length}こ！`,
-                en:`${ALL_SHELF_GAMES.length} Free Games!`,
-                zh:`${ALL_SHELF_GAMES.length}个免费游戏！`,
-                ko:`무료 게임 ${ALL_SHELF_GAMES.length}개!`,
-                es:`¡${ALL_SHELF_GAMES.length} juegos gratis!`,
-              }[lang] || `むりょうゲーム ${ALL_SHELF_GAMES.length}こ！`}
+            <div className="tp-parents-item">
+              <span className="tp-parents-ic" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 2 v8 M4.5 7 L8 10.5 L11.5 7" stroke="#7B8BD4" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /><path d="M3 13 h10" stroke="#7B8BD4" strokeWidth="2" strokeLinecap="round" /></svg>
+              </span>
+              <span><b>{{ja:'インストール不要', en:'No install', zh:'无需安装', ko:'설치 불필요', es:'Sin instalación'}[lang] || 'インストール不要'}</b><small>{{ja:'ブラウザだけで動きます', en:'Runs in the browser', zh:'仅需浏览器', ko:'브라우저만으로 OK', es:'Solo navegador'}[lang] || 'ブラウザだけで動きます'}</small></span>
+            </div>
+            <div className="tp-parents-item">
+              <span className="tp-parents-ic" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 13 C3 9.5 2 7 3.4 5.2 A3.2 3.2 0 0 1 8 5.4 A3.2 3.2 0 0 1 12.6 5.2 C14 7 13 9.5 8 13 Z" fill="#7B8BD4" /></svg>
+              </span>
+              <span><b>{{ja:'こわい表現なし', en:'No scary content', zh:'无恐怖内容', ko:'무서운 표현 없음', es:'Sin contenido de miedo'}[lang] || 'こわい表現なし'}</b><small>{{ja:'ゲームオーバーもありません', en:'No game-overs', zh:'没有游戏结束', ko:'게임 오버도 없음', es:'Sin fin de partida'}[lang] || 'ゲームオーバーもありません'}</small></span>
             </div>
           </div>
 
-          <button
-            className="tp-cta"
-            onClick={() => {
-              const el = document.querySelector('.tp-game-section');
-              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }}
-          >
-            ▶ {{ja:'いますぐ あそぶ', en:'Play now', zh:'立即游玩', ko:'지금 플레이', es:'Jugar ahora'}[lang] || 'いますぐ あそぶ'}
-          </button>
-
-          {/* ── 島ステージ: しろ+やし+きせかえキャラ ── */}
-          <div className="tp-island-stage">
-            <svg className="tp-island-svg" viewBox="0 0 560 190" aria-hidden="true">
-              <defs>
-                <linearGradient id="tpSeaG" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#6FC8EF" /><stop offset="1" stopColor="#2F8DC4" />
-                </linearGradient>
-                <linearGradient id="tpSandG" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#FFE9B8" /><stop offset="1" stopColor="#F0C97E" />
-                </linearGradient>
-                <linearGradient id="tpGrassG" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#9BE87F" /><stop offset="1" stopColor="#4FBF63" />
-                </linearGradient>
-                <linearGradient id="tpTowerG" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stopColor="#FFFDF7" /><stop offset="1" stopColor="#EFE1FA" />
-                </linearGradient>
-                <linearGradient id="tpTowerRearG" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stopColor="#E9DCF6" /><stop offset="1" stopColor="#CFC0E8" />
-                </linearGradient>
-                <linearGradient id="tpRoofPinkG" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#FFAFCF" /><stop offset="1" stopColor="#E85D95" />
-                </linearGradient>
-                <linearGradient id="tpRoofBlueG" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#A9C6FF" /><stop offset="1" stopColor="#5B7FE0" />
-                </linearGradient>
-                <linearGradient id="tpGoldG2" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#FFE58A" /><stop offset="1" stopColor="#E6A700" />
-                </linearGradient>
-                <radialGradient id="tpWindowG">
-                  <stop offset="0" stopColor="#FFF6D8" /><stop offset="100%" stopColor="#FFC968" />
-                </radialGradient>
-                <linearGradient id="tpDoorG" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#C9A6EF" /><stop offset="1" stopColor="#8F6BEF" />
-                </linearGradient>
-              </defs>
-              <ellipse cx="280" cy="168" rx="262" ry="20" fill="url(#tpSeaG)" />
-              <ellipse cx="280" cy="158" rx="216" ry="27" fill="url(#tpSandG)" />
-              <ellipse cx="280" cy="149" rx="176" ry="21" fill="url(#tpGrassG)" />
-
-              {/* ── 小さくても豪華な王国の城（約78%スケール・奥行きあり） ── */}
-              <g aria-hidden="true">
-                {/* 奥の小塔（背後にちらっと見える。淡色で遠近感） */}
-                <g stroke="#7A6693" strokeWidth="1.6" opacity="0.88">
-                  <rect x="216" y="96" width="12" height="36" rx="3" fill="url(#tpTowerRearG)" />
-                  <polygon points="216,98 222,84 228,98" fill="url(#tpRoofBlueG)" />
-                  <rect x="332" y="96" width="12" height="36" rx="3" fill="url(#tpTowerRearG)" />
-                  <polygon points="332,98 338,84 344,98" fill="url(#tpRoofPinkG)" />
-                </g>
-
-                {/* 城壁の土台（左右） */}
-                <g stroke="#7A6693" strokeWidth="1.8">
-                  <rect x="232" y="118" width="96" height="16" rx="3" fill="url(#tpTowerG)" />
-                  <rect x="232" y="118" width="96" height="4" fill="url(#tpGoldG2)" stroke="none" />
-                </g>
-
-                {/* 左右のドラム塔 */}
-                <g stroke="#7A6693" strokeWidth="1.8">
-                  <rect x="233" y="88" width="20" height="46" rx="5" fill="url(#tpTowerG)" />
-                  <rect x="307" y="88" width="20" height="46" rx="5" fill="url(#tpTowerG)" />
-                  <polygon points="231,90 243,68 255,90" fill="url(#tpRoofBlueG)" />
-                  <polygon points="305,90 317,68 329,90" fill="url(#tpRoofPinkG)" />
-                  <circle cx="243" cy="104" r="4.2" fill="url(#tpWindowG)" stroke="#C98F00" strokeWidth="1" />
-                  <circle cx="317" cy="104" r="4.2" fill="url(#tpWindowG)" stroke="#C98F00" strokeWidth="1" />
-                </g>
-                {/* 側塔の旗竿・小旗 */}
-                <path d="M243 68 l0 -9 M243 59 l8 2.5 -8 3.5z" stroke="#7A6693" strokeWidth="1.6" fill="url(#tpGoldG2)" />
-                <path d="M317 68 l0 -9 M317 59 l8 2.5 -8 3.5z" stroke="#7A6693" strokeWidth="1.6" fill="url(#tpGoldG2)" />
-
-                {/* 中央本館 */}
-                <g stroke="#7A6693" strokeWidth="2">
-                  <rect x="252" y="76" width="56" height="58" rx="5" fill="url(#tpTowerG)" />
-                  <rect x="252" y="76" width="56" height="5" fill="url(#tpGoldG2)" stroke="none" />
-                  <polygon points="248,78 280,45 312,78" fill="url(#tpRoofPinkG)" />
-                  <path d="M280 45 L248 78 M280 45 L312 78" stroke="#FFDCEB" strokeWidth="1" opacity="0.7" />
-                </g>
-                <path d="M280 45 l0 -11 M280 34 l9 3 -9 4.4z" stroke="#7A6693" strokeWidth="1.8" fill="url(#tpGoldG2)" />
-
-                {/* 中央窓（明かり） */}
-                <circle cx="280" cy="92" r="7" fill="url(#tpWindowG)" stroke="#C98F00" strokeWidth="1.3" />
-                <circle cx="280" cy="92" r="2.6" fill="#FFFCF0" opacity="0.9" />
-
-                {/* 正面扉と階段 */}
-                <g stroke="#7A6693" strokeWidth="1.6">
-                  <rect x="271" y="112" width="18" height="22" rx="8" fill="url(#tpDoorG)" />
-                  <rect x="273" y="120" width="14" height="3" fill="url(#tpGoldG2)" stroke="none" />
-                  <rect x="266" y="134" width="28" height="4" rx="1.5" fill="#F6E6FF" />
-                  <rect x="262" y="138" width="36" height="4" rx="1.5" fill="#EFDCFA" />
-                </g>
-
-                {/* 紋章 */}
-                <circle cx="280" cy="70" r="4" fill="url(#tpGoldG2)" stroke="#7A6693" strokeWidth="1" />
-
-                {/* 城前の小さな装飾（花・光粒） */}
-                <g opacity="0.9">
-                  <circle cx="222" cy="142" r="2.2" fill="#FF9BC4" />
-                  <circle cx="338" cy="144" r="2.2" fill="#FFD37A" />
-                  <circle cx="252" cy="146" r="1.6" fill="#FFF6D8" />
-                  <circle cx="308" cy="147" r="1.6" fill="#FFF6D8" />
-                </g>
-              </g>
-
-              <g stroke="#3D3450" strokeWidth="3">
-                <path d="M448 152 q5 -30 -2 -46" fill="none" stroke="#9A6B3F" strokeWidth="7" />
-                <path d="M446 106 q-26 -16 -38 -2 M446 106 q3 -24 22 -21 M446 106 q26 -10 31 5" fill="#4FBF63" />
-              </g>
-            </svg>
-            <div className={`tp-hero-chars${mascotBounce ? ' tp-hero-chars--bounce' : ''}`} onClick={handleMascotTap}>
-              <KisekaeCharacters
-                kisekaeState={kisekaeState}
-                onOpen={openPanel}
-                lang={lang}
-              />
-            </div>
+          <div className="tp-footer-links">
+            <button className="tp-footer-link" onClick={() => navigate('/parents')}>
+              {{ja:'保護者の方へ', en:'For parents', zh:'致家长', ko:'보호자 안내', es:'Para familias'}[lang] || '保護者の方へ'}
+            </button>
+            <a className="tp-footer-link"
+              href="https://robobella.wakuwakuislands.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent('robobella_portal_click', { source_context:'footer', source_page:'/' })}>
+              {{ja:'RoboBellaを見る', en:'Visit RoboBella', zh:'前往 RoboBella', ko:'RoboBella 보기', es:'Visitar RoboBella'}[lang] || 'RoboBellaを見る'}
+            </a>
+            <button className="tp-footer-link" onClick={() => navigate('/privacy')}>
+              {{ja:'プライバシーポリシー', en:'Privacy Policy', zh:'隐私政策', ko:'개인정보 처리방침', es:'Privacidad'}[lang] || 'プライバシーポリシー'}
+            </button>
+            <button className="tp-footer-link" onClick={() => navigate('/terms')}>
+              {{ja:'利用規約', en:'Terms of Use', zh:'使用条款', ko:'이용약관', es:'Términos'}[lang] || '利用規約'}
+            </button>
           </div>
-
+          <div className="tp-footer-meta">
+            <span>© 2026 Wakuwaku Island</span>
+            <span>v{__APP_VERSION__}</span>
+          </div>
         </div>
-      </div>
-
-      {/* ── 保護者にも一目で伝わる安心表示 ── */}
-      <section className="tp-trust" aria-label={lang === 'ja' ? '安心して遊べるポイント' : 'Safe play information'}>
-        <div><span aria-hidden="true">¥0</span><p><strong>{{ja:'ずっと無料', en:'Always free', zh:'完全免费', ko:'완전 무료', es:'Siempre gratis'}[lang] || 'ずっと無料'}</strong><small>{{ja:'お金はかかりません', en:'No payments', zh:'无需付费', ko:'결제 없음', es:'Sin pagos'}[lang] || 'お金はかかりません'}</small></p></div>
-        <div><span aria-hidden="true">✓</span><p><strong>{{ja:'登録なし', en:'No sign-up', zh:'无需注册', ko:'가입 없음', es:'Sin registro'}[lang] || '登録なし'}</strong><small>{{ja:'すぐに遊べます', en:'Play right away', zh:'打开就能玩', ko:'바로 플레이', es:'Juega al instante'}[lang] || 'すぐに遊べます'}</small></p></div>
-        <div><span aria-hidden="true">↓</span><p><strong>{{ja:'インストール不要', en:'No install', zh:'无需安装', ko:'설치 불필요', es:'Sin instalación'}[lang] || 'インストール不要'}</strong><small>{{ja:'ブラウザだけでOK', en:'Browser only', zh:'浏览器即可', ko:'브라우저만으로 OK', es:'Solo navegador'}[lang] || 'ブラウザだけでOK'}</small></p></div>
-        <div><span aria-hidden="true">♡</span><p><strong>{{ja:'子ども向け', en:'Made for kids', zh:'儿童友好', ko:'어린이용', es:'Para niños'}[lang] || '子ども向け'}</strong><small>{{ja:'こわい表現なし', en:'No scary content', zh:'无恐怖内容', ko:'무서운 표현 없음', es:'Sin contenido aterrador'}[lang] || 'こわい表現なし'}</small></p></div>
       </section>
-
-      {/* ── ゲームセクション ── */}
-      <div className="tp-game-section">
-        {/* ── 最初に選びやすい代表6本 ── */}
-        <section className="tp-beginner">
-          <div className="tp-beginner-head">
-            <div>
-              <span>{{ja:'はじめてでも かんたん', en:'Easy first picks', zh:'第一次也很简单', ko:'처음에도 쉬워요', es:'Fáciles para empezar'}[lang] || 'はじめてでも かんたん'}</span>
-              <h2>{{ja:'まずは ここから！', en:'Start here!', zh:'从这里开始！', ko:'여기서 시작!', es:'¡Empieza aquí!'}[lang] || 'まずは ここから！'}</h2>
-            </div>
-            <p>{{ja:'人気の6本をえらびました。カードを押すと、すぐに遊べます。', en:'Six friendly favorites. Tap a card to play.', zh:'精选6款热门游戏，点击即可开始。', ko:'인기 게임 6개를 골랐어요. 카드를 눌러 바로 시작해요.', es:'Seis favoritos. Toca una tarjeta para jugar.'}[lang] || '人気の6本をえらびました。カードを押すと、すぐに遊べます。'}</p>
-          </div>
-          <div className="tp-beginner-grid">
-            {beginnerGames.map(game => (
-              <BeginnerCard
-                key={game.route}
-                game={game}
-                lang={lang}
-                onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY, { name:(game[lang] || game.ja).name, category:game.category, sourceContext:'top_featured' }); }}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* ── カテゴリ・年齢の絞り込み ── */}
-        <div className="tp-sticky-bar">
-          <div className="tp-filter-stack">
-            <HorizontalRail
-              className="tp-cat-chips"
-              railProps={{ role:'tablist', 'aria-label':'カテゴリ' }}
-              labels={{
-                left: ({ja:'ひだりのカテゴリをみる', en:'See categories to the left', zh:'查看左侧分类', ko:'왼쪽 카테고리 보기', es:'Ver categorías a la izquierda'}[lang] || 'ひだりのカテゴリをみる'),
-                right: ({ja:'みぎのカテゴリをみる', en:'See categories to the right', zh:'查看右侧分类', ko:'오른쪽 카테고리 보기', es:'Ver categorías a la derecha'}[lang] || 'みぎのカテゴリをみる'),
-              }}
-            >
-              {CATEGORY_FILTERS.map(c => (
-                <button
-                  key={c.key}
-                  role="tab"
-                  aria-selected={catKey === c.key}
-                  className={`tp-cat-chip${catKey === c.key ? ' tp-cat-chip--on' : ''}`}
-                  onClick={() => setCatKey(c.key)}
-                >
-                  <span aria-hidden="true">{c.icon} </span>{c.label[lang] || c.label.ja}
-                </button>
-              ))}
-            </HorizontalRail>
-            <div className="tp-age-filter" role="tablist" aria-label={lang === 'ja' ? '年齢で選ぶ' : 'Choose by age'}>
-              <strong>{{ja:'ねんれいで えらぶ', en:'Choose by age', zh:'按年龄选择', ko:'나이로 선택', es:'Elegir por edad'}[lang] || 'ねんれいで えらぶ'}</strong>
-              <div>
-                {AGE_FILTERS.map(age => (
-                  <button
-                    key={age.key}
-                    role="tab"
-                    aria-selected={ageKey === age.key}
-                    className={ageKey === age.key ? 'tp-age-chip tp-age-chip--on' : 'tp-age-chip'}
-                    onClick={() => setAgeKey(age.key)}
-                  >
-                    {age.label[lang] || age.label.ja}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── ジャンルグループ別ゲーム棚(6棚) ── */}
-        {SHELF_GROUPS.map(grp => {
-          const chip  = CATEGORY_FILTERS.find(c => c.key === catKey) || CATEGORY_FILTERS[0];
-          const age   = AGE_FILTERS.find(item => item.key === ageKey) || AGE_FILTERS[0];
-          const items = sortShelfItemsByOrder(
-            ALL_SHELF_GAMES.filter(grp.match).filter(chip.match).filter(age.match),
-            shelfOrder[grp.key]
-          );
-          if (items.length === 0) return null;
-          return (
-            <div className="tp-shelf" key={grp.key}>
-              <div className="tp-shelf-title">
-                {grp.icon} {grp.label[lang] || grp.label.ja}
-              </div>
-              <HorizontalRail
-                className="tp-shelf-scroll"
-                labels={{
-                  left: ({ja:'ひだりのゲームをみる', en:'See games to the left', zh:'查看左侧游戏', ko:'왼쪽 게임 보기', es:'Ver juegos a la izquierda'}[lang] || 'ひだりのゲームをみる'),
-                  right: ({ja:'みぎのゲームをみる', en:'See games to the right', zh:'查看右侧游戏', ko:'오른쪽 게임 보기', es:'Ver juegos a la derecha'}[lang] || 'みぎのゲームをみる'),
-                }}
-              >
-                {items.map(game => (
-                  <ShelfCard
-                    key={game.id}
-                    game={game}
-                    lang={lang}
-                    onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY, { name:(game[lang] || game.ja).name, category:game.category, sourceContext:'category' }); }}
-                  />
-                ))}
-              </HorizontalRail>
-            </div>
-          );
-        })}
-
-        {/* ── 最近遊んだゲーム（マップの下へ移動） ── */}
-        {recentGames.length > 0 && (
-          <div className="tp-recent">
-            <div className="tp-recent-title">
-              🕐 {{ja:'さいきんあそんだゲーム', en:'Recently Played', zh:'最近玩过', ko:'최근 플레이', es:'Reciente'}[lang] || 'さいきんあそんだゲーム'}
-            </div>
-            <HorizontalRail className="tp-recent-scroll" labels={{ left:({ja:'ひだりのゲームをみる',en:'See games to the left', zh:'查看左侧游戏', ko:'왼쪽 게임 보기', es:'Ver juegos a la izquierda'}[lang] || 'ひだりのゲームをみる'), right:({ja:'みぎのゲームをみる',en:'See games to the right', zh:'查看右侧游戏', ko:'오른쪽 게임 보기', es:'Ver juegos a la derecha'}[lang] || 'みぎのゲームをみる') }}>
-              {recentGames.map(g => (
-                <button
-                  key={g.route}
-                  className="tp-recent-card"
-                  onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY, { name:(g[lang] || g.ja).name, category:g.category, sourceContext:'recent' }); }}
-                >
-                  <span className="tp-recent-icon">{g.icon}</span>
-                  <span className="tp-recent-name">{(g[lang] || g.ja).name}</span>
-                </button>
-              ))}
-            </HorizontalRail>
-          </div>
-        )}
-
-        {/* ── きみにオススメ ── */}
-        {recoGames.length > 0 && (
-          <div className="tp-recent tp-reco">
-            <div className="tp-recent-title">
-              💡 {{ja:'きみに オススメ', en:'For You', zh:'为你推荐', ko:'추천 게임', es:'Para ti'}[lang] || 'きみに オススメ'}
-            </div>
-            <HorizontalRail className="tp-recent-scroll" labels={{ left:({ja:'ひだりのゲームをみる',en:'See games to the left', zh:'查看左侧游戏', ko:'왼쪽 게임 보기', es:'Ver juegos a la izquierda'}[lang] || 'ひだりのゲームをみる'), right:({ja:'みぎのゲームをみる',en:'See games to the right', zh:'查看右侧游戏', ko:'오른쪽 게임 보기', es:'Ver juegos a la derecha'}[lang] || 'みぎのゲームをみる') }}>
-              {recoGames.map(g => (
-                <button
-                  key={g.route}
-                  className="tp-recent-card"
-                  onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY, { name:(g[lang] || g.ja).name, category:g.category, sourceContext:'recommended' }); }}
-                >
-                  <span className="tp-recent-icon">{g.icon}</span>
-                  <span className="tp-recent-name">{(g[lang] || g.ja).name}</span>
-                </button>
-              ))}
-            </HorizontalRail>
-          </div>
-        )}
-      </div>
-
-      {/* ── フッターパレード ── */}
-      <div className="tp-parade">
-        {['🦁','🐨','🦊','🐸','🐧','🦝','🐥','🦋','🐝','🌸'].map((e, i) => (
-          <span key={i} style={{ '--dur': `${2 + i * 0.3}s`, animationDelay: `${i * 0.15}s` }}>
-            {e}
-          </span>
-        ))}
-      </div>
-      <div className="tp-footer">
-        <div>
-          {{ja:'🌟 あそびたいゲームをえらんでね 🌟', en:'🌟 Pick a game to play! 🌟', zh:'🌟 选择想玩的游戏 🌟', ko:'🌟 하고 싶은 게임을 골라요 🌟', es:'🌟 ¡Elige un juego para jugar! 🌟'}[lang] || '🌟 あそびたいゲームをえらんでね 🌟'}
-        </div>
-        <div className="tp-footer-links">
-          <button className="tp-footer-link" onClick={() => navigate('/parents')}>
-            {{ja:'👪 保護者の方へ', en:'👪 For Parents', zh:'👪 致家长', ko:'👪 보호자 안내', es:'👪 Para familias'}[lang] || '👪 保護者の方へ'}
-          </button>
-          <a className="tp-footer-link tp-footer-robobella"
-            href="https://robobella.wakuwakuislands.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => trackEvent('robobella_portal_click', { source_context:'footer', source_page:'/' })}>
-            {{ja:'🤖 RoboBellaを見る', en:'🤖 Visit RoboBella', zh:'🤖 前往 RoboBella', ko:'🤖 RoboBella 보기', es:'🤖 Visitar RoboBella'}[lang] || '🤖 RoboBellaを見る'}
-          </a>
-          <button className="tp-footer-link" onClick={() => navigate('/privacy')}>
-            {{ja:'🔒 プライバシーポリシー', en:'🔒 Privacy Policy', zh:'🔒 隐私政策', ko:'🔒 개인정보 처리방침', es:'🔒 Privacidad'}[lang] || '🔒 プライバシーポリシー'}
-          </button>
-          <button className="tp-footer-link" onClick={() => navigate('/terms')}>
-            {{ja:'📜 利用規約', en:'📜 Terms of Use', zh:'📜 使用条款', ko:'📜 이용약관', es:'📜 Términos'}[lang] || '📜 利用規約'}
-          </button>
-        </div>
-        <div style={{ marginTop: 6, fontSize: 11, color: 'rgba(0,0,0,0.28)', display:'flex', justifyContent:'center', gap:12 }}>
-          <span>© 2026 Wakuwaku Island</span>
-          <span style={{ color:'rgba(255,255,255,0.4)', fontSize:12 }}>v{__APP_VERSION__}</span>
-        </div>
-      </div>
 
       {/* ── ルーレットオーバーレイ ── */}
       {rouletteOpen && (() => {
@@ -2758,24 +2131,24 @@ export default function TopPage() {
             <div className="tp-roulette-box" onClick={(e) => e.stopPropagation()}>
               <div className="tp-roulette-title">
                 {rouletteSpin
-                  ? ({ja:'えらんでるよ…🎲', en:'Picking… 🎲', zh:'选择中…🎲', ko:'고르는 중…🎲', es:'Eligiendo… 🎲'}[lang] || 'えらんでるよ…🎲')
+                  ? ({ja:'えらんでるよ…', en:'Picking…', zh:'选择中…', ko:'고르는 중…', es:'Eligiendo…'}[lang] || 'えらんでるよ…')
                   : ({ja:'きょうは これ！', en:'Today\'s pick!', zh:'今天玩这个！', ko:'오늘은 이거!', es:'¡Hoy toca este!'}[lang] || 'きょうは これ！')}
               </div>
               <div className={`tp-roulette-card${rouletteSpin ? ' tp-roulette-card--spin' : ' tp-roulette-card--win'}`}
                    style={{ background: CARD_GRADIENTS[g.category] || DEFAULT_GRADIENT }}>
-                <div className="tp-roulette-art">{GAME_SVGS[g.id] || <span className="tp-roulette-icon">{g.icon}</span>}</div>
+                <div className="tp-roulette-art"><GameArt game={g} /></div>
                 <div className="tp-roulette-name">{(g[lang] || g.ja).name}</div>
               </div>
               {!rouletteSpin && (
                 <div className="tp-roulette-actions">
                   <button className="tp-roulette-play"
-                    onClick={(e) => { closeRoulette(); spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY, { name:(g[lang] || g.ja).name, category:g.category, sourceContext:'recommended' }); }}>
+                    onClick={(e) => { closeRoulette(); handlePlay(g, e); }}>
                     ▶ {{ja:'これであそぶ！', en:'Play this!', zh:'就玩这个！', ko:'이걸로 놀기!', es:'¡Jugar!'}[lang] || 'これであそぶ！'}
                   </button>
                   <button className="tp-roulette-retry" onClick={startRoulette}>
-                    🎲 {{ja:'もういっかい', en:'Again', zh:'再来一次', ko:'다시', es:'Otra vez'}[lang] || 'もういっかい'}
+                    {{ja:'もういっかい', en:'Again', zh:'再来一次', ko:'다시', es:'Otra vez'}[lang] || 'もういっかい'}
                   </button>
-                  <button className="tp-roulette-close" onClick={closeRoulette}>✕</button>
+                  <button className="tp-roulette-close" onClick={closeRoulette}><CloseIcon /></button>
                 </div>
               )}
             </div>
@@ -2792,12 +2165,12 @@ export default function TopPage() {
           <div className="tp-roulette-overlay" onClick={() => setZukanOpen(false)}>
             <div className="tp-zukan-box" onClick={(e) => e.stopPropagation()}>
               <div className="tp-roulette-title">
-                📖 {{ja:'スタンプずかん', en:'Stamp Book', zh:'印章图鉴', ko:'스탬프 도감', es:'Álbum de sellos'}[lang] || 'スタンプずかん'}
+                {{ja:'スタンプずかん', en:'Stamp Book', zh:'印章图鉴', ko:'스탬프 도감', es:'Álbum de sellos'}[lang] || 'スタンプずかん'}
               </div>
               <div className="tp-zukan-progress">
                 {complete
-                  ? ({ja:'🎉 コンプリート！すごい！', en:'🎉 Complete! Amazing!', zh:'🎉 全部集齐！太棒了！', ko:'🎉 컴플리트! 대단해!', es:'🎉 ¡Completo! ¡Increíble!'}[lang] || '🎉 コンプリート！すごい！')
-                  : `⭐ ${got} / ${all.length}`}
+                  ? ({ja:'コンプリート！すごい！', en:'Complete! Amazing!', zh:'全部集齐！太棒了！', ko:'컴플리트! 대단해!', es:'¡Completo! ¡Increíble!'}[lang] || 'コンプリート！すごい！')
+                  : `${got} / ${all.length}`}
               </div>
               <div className="tp-zukan-grid">
                 {all.map(g => {
@@ -2806,8 +2179,8 @@ export default function TopPage() {
                     <button key={g.route}
                       className={`tp-zukan-cell${played ? ' tp-zukan-cell--got' : ''}`}
                       style={played ? { background: CARD_GRADIENTS[g.category] || DEFAULT_GRADIENT } : undefined}
-                      onClick={(e) => { setZukanOpen(false); spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY); }}>
-                      <span className="tp-zukan-icon">{played ? g.icon : '❓'}</span>
+                      onClick={(e) => { setZukanOpen(false); handlePlay(g, e); }}>
+                      <span className="tp-zukan-art">{played ? <GameArt game={g} /> : '？'}</span>
                       <span className="tp-zukan-name">{played ? (g[lang] || g.ja).name : '？？？'}</span>
                     </button>
                   );
@@ -2816,11 +2189,23 @@ export default function TopPage() {
               <div className="tp-zukan-hint">
                 {{ja:'あそぶと スタンプが もらえるよ！', en:'Play games to collect stamps!', zh:'玩游戏就能收集印章！', ko:'게임하면 스탬프를 모을 수 있어!', es:'¡Juega para conseguir sellos!'}[lang] || 'あそぶと スタンプが もらえるよ！'}
               </div>
-              <button className="tp-roulette-close" onClick={() => setZukanOpen(false)}>✕ {{ja:'とじる', en:'Close', zh:'关闭', ko:'닫기', es:'Cerrar'}[lang] || 'とじる'}</button>
+              <button className="tp-roulette-close" onClick={() => setZukanOpen(false)}><CloseIcon /> {{ja:'とじる', en:'Close', zh:'关闭', ko:'닫기', es:'Cerrar'}[lang] || 'とじる'}</button>
             </div>
           </div>
         );
       })()}
+
+      {/* ── おうちの人パネル ── */}
+      {utilityOpen && (
+        <UtilityPanel
+          lang={lang}
+          isMuted={isMuted}
+          onToggleMute={handleMuteToggle}
+          onChangeLang={handleLangChange}
+          onClose={() => setUtilityOpen(false)}
+          onNavigate={(route) => { setUtilityOpen(false); navigate(route); }}
+        />
+      )}
 
       {/* ── 着せ替えパネル ── */}
       {panelOpen && <KisekaePanel

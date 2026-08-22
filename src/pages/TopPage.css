@@ -1,2743 +1,422 @@
 /* ============================================================
-   TopPage – Bright Sky Island Theme
+   TopPage v2 — わくわくアイランド（島ヒーロー + フラットゲーム一覧）
    ============================================================ */
 
 :root {
-  --sky1:       #5BC8F5;
-  --sky2:       #87CEEB;
-  --sky3:       #6ABF49;
-  --accent:     #FF6B35;
-  --accent2:    #FFD700;
-  --accent3:    #FF4E8B;
+  --sky-top:  #63C6F0; --sky-mid:  #A5E1F8; --sky-haze: #E4F6FD;
+  --sea-far:  #7FD3F0; --sea-mid:  #35A9DC; --sea-deep: #1A7FB8;
+  --gold: #FFC94A; --gold-deep: #E29B14;
+  --coral: #FF8FA3; --coral-deep: #F2647F;
+  --navy: #242E63; --ink: #2E3560;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
 }
 
-/* ── ラッパー ─────────────────────────────────────────── */
 .tp-wrap {
   position: relative;
   min-height: 100dvh;
-  height: auto;
-  background: linear-gradient(180deg,
-    #5BC8F5 0%,
-    #87CEEB 35%,
-    #C5EAF8 65%,
-    #A8D8A8 82%,
-    #6ABF49 100%
-  );
-  color: #2D1B00;
+  background: linear-gradient(180deg, var(--sea-deep) 0%, #0E6994 55%, #0A5273 100%);
+  color: var(--ink);
   font-family: 'M PLUS Rounded 1c', 'Nunito', 'Hiragino Maru Gothic Pro', sans-serif;
   overflow-x: clip;
-  overflow-y: visible;
-  /* 横だけをクリップし、縦方向はwindowスクロールに委ねる。 */
   -webkit-overflow-scrolling: touch;
-}
-
-/* ── 雲デコ ────────────────────────────────────────────── */
-.tp-clouds {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-}
-
-.tp-cloud {
-  position: absolute;
-  opacity: 0.88;
-  filter: drop-shadow(0 4px 10px rgba(255,255,255,0.6));
-  animation: tp-cloud-bob var(--dur, 6s) ease-in-out infinite;
-  animation-delay: var(--delay, 0s);
-}
-
-@keyframes tp-cloud-bob {
-  0%, 100% { transform: translateY(0) translateX(0); }
-  33%      { transform: translateY(-8px) translateX(6px); }
-  66%      { transform: translateY(-4px) translateX(-4px); }
-}
-
-/* ── デコキャラ ───────────────────────────────────────── */
-.tp-deco {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  overflow: hidden;
-}
-
-.tp-deco span {
-  position: absolute;
-  animation: tp-float-char var(--dur, 3s) ease-in-out infinite;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.18));
-  user-select: none;
-}
-
-@keyframes tp-float-char {
-  0%, 100% { transform: translateY(0)     rotate(var(--rot, 0deg)); }
-  50%      { transform: translateY(-14px) rotate(calc(var(--rot, 0deg) + 6deg)); }
-}
-
-/* ── 右上ボタン ───────────────────────────────────────── */
-.tp-top-btns {
-  position: fixed;
-  top: max(14px, env(safe-area-inset-top, 14px));
-  right: 14px;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.tp-top-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.9);
-  border: 2.5px solid rgba(0,0,0,0.15);
-  color: #333;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
-  box-shadow: 0 4px 0 rgba(0,0,0,0.18), 0 5px 10px rgba(0,0,0,0.1);
-}
-.tp-top-btn:hover  { transform: scale(1.1) translateY(-2px); box-shadow: 0 6px 0 rgba(0,0,0,0.18); }
-.tp-top-btn:active { transform: scale(0.95) translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,0.18); }
-
-/* ショップボタン強調 */
-.tp-shop-btn {
-  width: auto !important;
-  border-radius: 24px !important;
-  padding: 8px 18px !important;
-  font-size: 14px !important;
-  font-weight: 900 !important;
-  background: linear-gradient(145deg, #FFD54F, #FF8F00) !important;
-  border: 2px solid #fff !important;
-  color: #7a4500 !important;
-  box-shadow: 0 4px 12px rgba(255,143,0,.5), 0 0 20px rgba(255,200,0,.4) !important;
-  animation: shopPulse 2s ease-in-out infinite !important;
-  gap: 5px;
-}
-@keyframes shopPulse {
-  0%, 100% { transform: scale(1); }
-  50%       { transform: scale(1.06); }
-}
-
-/* 言語ボタン */
-.tp-lang-btn {
-  width: auto !important;
-  padding: 0 10px !important;
-  font-size: 12px !important;
-  font-weight: 800 !important;
-  border-radius: 20px !important;
-  gap: 3px;
-}
-.tp-lang-code {
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-}
-
-/* ── コインバッジ（右上ボタン群の先頭） ──────────────── */
-.tp-coin-badge {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(255,255,255,0.92);
-  border: 2.5px solid rgba(220,170,0,0.5);
-  border-radius: 20px;
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 700;
-  white-space: nowrap;
-  flex-shrink: 0;
-  box-shadow: 0 4px 0 rgba(180,130,0,0.25), 0 5px 10px rgba(0,0,0,0.1);
-}
-.tp-coin-num { font-weight: 900; font-size: 16px; color: #D4880A; }
-
-/* ── ヘッダー ─────────────────────────────────────────── */
-.tp-header {
-  position: relative;
-  z-index: 5;
-  padding: max(66px, calc(env(safe-area-inset-top, 0px) + 62px)) 20px 0;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
-/* GAME PARK バッジ */
-.tp-park-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: linear-gradient(135deg, #FF6B35, #FF4500);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 900;
-  padding: 5px 18px;
-  border-radius: 30px;
-  letter-spacing: 0.12em;
-  border: 2px solid rgba(255,255,255,0.3);
-  box-shadow: 0 4px 0 rgba(160,50,0,0.45), 0 6px 14px rgba(255,100,0,0.25);
-  animation: tp-badge-pulse 2.5s ease-in-out infinite;
-}
-
-@keyframes tp-badge-pulse {
-  0%, 100% { box-shadow: 0 4px 0 rgba(160,50,0,0.45), 0 6px 14px rgba(255,100,0,0.25); }
-  50%      { box-shadow: 0 4px 0 rgba(160,50,0,0.45), 0 6px 26px rgba(255,100,0,0.50); }
-}
-
-/* タイトル浮遊ラッパー */
-.tp-title-wrap {
-  animation: tp-title-float 4s ease-in-out infinite;
-}
-
-@keyframes tp-title-float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-10px); }
-}
-
-.tp-title {
-  margin: 0;
-  line-height: 0.92;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.tp-title-1 {
-  display: block;
-  font-size: clamp(46px, 13vw, 76px);
-  font-weight: 900;
-  background: linear-gradient(180deg, #FFF176 0%, #FFB300 50%, #E65100 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 3px 0 rgba(180,80,0,0.35));
-  letter-spacing: -0.02em;
-}
-
-.tp-title-2 {
-  display: block;
-  font-size: clamp(32px, 9vw, 54px);
-  font-weight: 900;
-  background: linear-gradient(180deg, #ffffff 0%, #A5D6A7 40%, #2E7D32 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 3px 0 rgba(0,80,20,0.3));
-  letter-spacing: -0.02em;
-}
-
-/* サブタイトル */
-.tp-subtitle {
-  background: rgba(255,255,255,0.80);
-  border: 2px solid rgba(255,255,255,0.95);
-  border-radius: 30px;
-  padding: 6px 22px;
-  font-size: 13px;
-  color: #556;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-/* ② 季節バナー */
-.tp-season {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255,255,255,0.82);
-  border: 2.5px solid var(--season-color, rgba(50,160,80,0.5));
-  border-radius: 30px;
-  padding: 8px 22px;
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--season-color, #2a7a3e);
-  box-shadow: 0 3px 0 rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06);
-  animation: tp-season-glow 3s ease-in-out infinite;
-}
-
-@keyframes tp-season-glow {
-  0%, 100% { box-shadow: 0 3px 0 rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.06); }
-  50%      { box-shadow: 0 3px 0 rgba(0,0,0,0.12), 0 4px 22px var(--season-glow, rgba(50,160,80,0.25)); }
-}
-
-/* ⑤ プレイカウンター */
-.tp-counter {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  background: rgba(255,255,255,0.82);
-  border: 2.5px solid rgba(80,180,100,0.4);
-  border-radius: 18px;
-  padding: 12px 26px;
-  margin-top: 4px;
-  box-shadow: 0 3px 0 rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06);
-}
-
-.tp-counter-icon { font-size: 26px; }
-
-.tp-counter-body { text-align: left; }
-
-.tp-counter-label {
-  font-size: 11px;
-  color: #778;
-  letter-spacing: 0.02em;
-}
-
-.tp-counter-num {
-  font-size: 30px;
-  font-weight: 900;
-  color: #1B7A3A;
-  line-height: 1;
-}
-
-.tp-counter-unit {
-  font-size: 13px;
-  color: #889;
-}
-
-
-/* ── ゲームセクション ──────────────────────────────────── */
-.tp-game-section {
-  position: relative;
-  z-index: 5;
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 24px 16px 32px;
-}
-
-.tp-section-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 18px;
-}
-
-.tp-section-header h2 {
-  font-size: 15px;
-  font-weight: 900;
-  color: #445;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-  margin: 0;
-  background: rgba(255,255,255,0.75);
-  padding: 5px 16px;
-  border-radius: 20px;
-  border: 2px solid rgba(255,255,255,0.95);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-}
-
-.tp-section-divider {
-  flex: 1;
-  height: 2px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.75), transparent);
-  border-radius: 1px;
-}
-
-/* ── グリッド ─────────────────────────────────────────── */
-.tp-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);  /* モバイル: 2列 */
-  gap: 14px;
-}
-
-/* タブレット: 3列 */
-@media (min-width: 600px) {
-  .tp-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-/* デスクトップ: 4列（余裕ある表示） */
-@media (min-width: 900px) {
-  .tp-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 18px;
-  }
-}
-
-/* ── ゲームカード（リッチ化） ─────────────────────────── */
-.tp-card {
-  position: relative;
-  background: var(--card-gradient, linear-gradient(145deg, #7B8FA1, #3D4A5C));
-  border: 2.5px solid rgba(255,255,255,0.22);
-  border-radius: 18px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.22);
-  text-align: left;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  color: white;
-  font-family: inherit;
-  animation: tp-card-in 0.4s ease both;
-}
-
-.tp-card:hover {
-  transform: translateY(-5px) scale(1.03);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.30);
-}
-
-.tp-card:active {
-  transform: translateY(3px) scale(0.97) !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.20) !important;
-  transition: transform 0.07s, box-shadow 0.07s;
-}
-
-@keyframes tp-card-in {
-  from { opacity: 0; transform: translateY(28px) scale(0.92); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* おすすめカード */
-.tp-card--recommend {
-  border-color: rgba(255,215,0,0.6);
-  animation: tp-card-in 0.4s ease both, tp-recommend-bounce 2.8s ease-in-out 0.6s infinite;
-}
-
-@keyframes tp-recommend-bounce {
-  0%, 100% { transform: translateY(0); box-shadow: 0 4px 18px rgba(0,0,0,0.22); }
-  50%      { transform: translateY(-6px); box-shadow: 0 12px 28px rgba(255,180,0,0.28); }
-}
-
-/* おすすめリボン */
-.tp-card-ribbon {
-  flex-shrink: 0;
-  height: 22px;
-  background: linear-gradient(135deg, #ffd700, #ff8c00);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  font-weight: 900;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid rgba(0,0,0,0.1);
-}
-
-/* アートエリア（SVG） */
-.tp-card-art {
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.tp-card-art svg {
-  width: 100%;
-  display: block;
-}
-
-/* SVGなし時のフォールバックアイコン */
-.tp-card-icon-fb {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 85px;
-  font-size: 52px;
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.28));
-}
-
-/* カテゴリバッジ（左上） */
-.tp-card-cat {
-  position: absolute;
-  top: 9px;
-  left: 9px;
-  z-index: 3;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 20px;
-  background: rgba(255,255,255,0.28);
-  color: white;
-  letter-spacing: 0.04em;
-  pointer-events: none;
-}
-
-/* NEWバッジ（右上） */
-.tp-card-new {
-  position: absolute;
-  top: 9px;
-  right: 9px;
-  z-index: 3;
-  font-size: 9px;
-  font-weight: 900;
-  padding: 3px 8px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #ff3b5c, #ff0044);
-  color: #fff;
-  letter-spacing: 0.04em;
-  border: 1.5px solid rgba(255,255,255,0.45);
-  box-shadow: 0 2px 0 rgba(160,0,0,0.28);
-  animation: tp-new-badge 1.6s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes tp-new-badge {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.1); }
-}
-
-/* カードテキスト（グラデーションオーバーレイ） */
-.tp-card-body {
-  padding: 12px 12px 13px;
-  background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 60%, transparent 100%);
-  flex: 1;
-}
-
-.tp-card-name {
-  font-size: 16px;
-  font-weight: 800;
-  color: white;
-  margin-bottom: 3px;
-  line-height: 1.3;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
-}
-
-.tp-card-desc {
-  font-size: 13px;
-  color: rgba(255,255,255,0.82);
-  line-height: 1.4;
-  margin: 3px 0 5px;
-}
-
-.tp-card-stars {
-  display: flex;
-  gap: 1px;
-}
-
-.tp-star {
-  font-size: 15px;
-  color: rgba(255,255,255,0.35);
-  line-height: 1;
-}
-
-.tp-star--filled {
-  color: #FFE066;
-  filter: drop-shadow(0 0 2px rgba(255,224,102,0.5));
-}
-
-/* ── フッターパレード ─────────────────────────────────── */
-.tp-parade {
-  position: relative;
-  z-index: 5;
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 24px 16px 12px;
-}
-
-.tp-parade span {
-  font-size: 28px;
-  cursor: default;
-  animation: tp-parade-float var(--dur, 2s) ease-in-out infinite;
-  transition: transform 0.15s;
-  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));
-  display: inline-block;
-}
-
-.tp-parade span:hover { transform: scale(1.45) translateY(-7px) !important; }
-
-@keyframes tp-parade-float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-7px); }
-}
-
-.tp-footer {
-  text-align: center;
-  font-size: 12px;
-  color: rgba(0,0,0,0.42);
-  padding-bottom: 28px;
-  letter-spacing: 0.06em;
-  position: relative;
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
-.tp-footer-links {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.tp-footer-link {
-  background: rgba(255,255,255,0.72);
-  border: 1.5px solid rgba(0,0,0,0.12);
-  color: #3a7a52;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: inherit;
-  padding: 5px 12px;
-  border-radius: 10px;
-  transition: background 0.15s, transform 0.1s, box-shadow 0.1s;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  box-shadow: 0 2px 0 rgba(0,0,0,0.1);
-}
-.tp-footer-link:hover {
-  background: rgba(255,255,255,0.95);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 0 rgba(0,0,0,0.1);
-}
-.tp-footer-robobella {
-  color: #5040a8;
-  border-color: rgba(80,64,168,.28);
-  text-decoration: none;
-}
-
-.tp-footer-sep {
-  color: rgba(0,0,0,0.18);
-  font-size: 14px;
-}
-
-/* ── スクロールバー非表示 ─────────────────────────────── */
-.tp-wrap::-webkit-scrollbar { width: 0; }
-
-/* ── 狭い画面調整 ──────────────────────────────────────── */
-@media (max-width: 380px) {
-  .tp-top-btn  { width: 36px; height: 36px; font-size: 15px; }
-  .tp-top-btns { gap: 5px; }
-  .tp-coin-badge { padding: 5px 10px; font-size: 12px; }
-  .tp-coin-num   { font-size: 14px; }
-}
-
-/* ── 年齢別タブ ─────────────────────────────────────── */
-.tp-tabs {
-  display: flex;
-  gap: 8px;
-  padding: 0 12px 8px;
-  justify-content: center;
-}
-.tp-tab {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 22px;
-  border-radius: 50px;
-  font-size: 15px;
-  font-weight: 800;
-  cursor: pointer;
-  font-family: inherit;
-  border: 2.5px solid rgba(0,0,0,0.12);
-  background: rgba(255,255,255,0.55);
-  color: #2d6a4f;
-  transition: background 0.18s, transform 0.12s, box-shadow 0.12s;
-  box-shadow: 0 3px 0 rgba(0,0,0,0.1);
-  -webkit-tap-highlight-color: transparent;
-}
-.tp-tab--active {
-  background: linear-gradient(135deg,#4DB8FF,#2a7fd4);
-  color: #fff;
-  border-color: rgba(77,184,255,0.4);
-  box-shadow: 0 4px 0 rgba(0,80,160,0.25), 0 0 16px rgba(77,184,255,0.3);
-  transform: translateY(-2px);
-}
-.tp-tab-new {
-  font-size: 10px;
-  font-weight: 900;
-  background: #FF4E8B;
-  color: #fff;
-  border-radius: 6px;
-  padding: 1px 5px;
-  letter-spacing: 0.5px;
-  animation: tp-tab-new-pulse 1.5s ease-in-out infinite;
-}
-@keyframes tp-tab-new-pulse {
-  0%,100% { opacity: 1; transform: scale(1); }
-  50%      { opacity: 0.75; transform: scale(1.1); }
-}
-
-/* ── タブパネル ─────────────────────────────────────── */
-.tp-tab-panel {
-  display: none;
-  animation: tp-slide-in 0.22s ease;
-}
-.tp-tab-panel--active {
-  display: block;
-}
-@keyframes tp-slide-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ══════════════════════════════════════════════════════════
-   ✨ HERO ANIMATIONS (追加)
-══════════════════════════════════════════════════════════ */
-
-/* ── ☀️ 太陽：浮遊 + 自転 ─────────────────────────────── */
-.tp-sun-wrap {
-  position: absolute;
-  top: 5%;
-  right: 6%;
-  pointer-events: none;
-  z-index: 1;
-  animation: tp-sun-float 5.5s ease-in-out infinite;
-  will-change: transform;
-}
-.tp-sun-body {
-  font-size: 60px;
-  display: block;
-  animation: tp-sun-spin 18s linear infinite;
-  will-change: transform;
-  filter: drop-shadow(0 0 18px rgba(255,220,0,0.7));
-}
-@keyframes tp-sun-float {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-14px); }
-}
-@keyframes tp-sun-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-/* ── ☁️ 流れる雲（左→右 ドリフト）─────────────────────── */
-.tp-cloud-drift {
-  position: absolute;
-  pointer-events: none;
-  opacity: 0.82;
-  filter: drop-shadow(0 6px 12px rgba(255,255,255,0.5));
-  will-change: transform;
-  animation: tp-cloud-drift-anim var(--dur, 22s) linear var(--delay, 0s) infinite;
-}
-@keyframes tp-cloud-drift-anim {
-  0%   { transform: translateX(-220px); }
-  100% { transform: translateX(calc(100vw + 220px)); }
-}
-
-/* ── 🐠 魚：左→右 + 右→左 ───────────────────────────── */
-.tp-fish {
-  position: absolute;
-  bottom: 10%;
-  pointer-events: none;
-  z-index: 1;
-  will-change: transform;
-  animation: tp-fish-swim var(--dur, 14s) linear var(--delay, 0s) infinite;
-}
-.tp-fish-rtl {
-  position: absolute;
-  bottom: 14%;
-  pointer-events: none;
-  z-index: 1;
-  will-change: transform;
-  animation: tp-fish-swim-rtl var(--dur, 18s) linear var(--delay, 0s) infinite;
-}
-@keyframes tp-fish-swim {
-  0%   { transform: translateX(-80px); }
-  100% { transform: translateX(calc(100vw + 80px)); }
-}
-@keyframes tp-fish-swim-rtl {
-  0%   { transform: translateX(calc(100vw + 80px)) scaleX(-1); }
-  100% { transform: translateX(-80px) scaleX(-1); }
-}
-
-/* ── 🏷️ タイトル：左右ゆらゆら ───────────────────────── */
-.tp-title-wrap {
-  animation: tp-title-wobble 5s ease-in-out infinite !important;
-}
-@keyframes tp-title-wobble {
-  0%, 100% { transform: rotate(-1deg); }
-  50%       { transform: rotate(1deg); }
-}
-
-/* ── 🎮 ゲームカード：バウンス入場 ──────────────────── */
-.tp-card {
-  animation: tp-card-in-bounce 0.55s cubic-bezier(0.34,1.56,0.64,1) var(--card-delay, 0s) both !important;
-}
-@keyframes tp-card-in-bounce {
-  0%   { opacity: 0; transform: translateY(36px) scale(0.88) rotate(-3deg); }
-  60%  { opacity: 1; }
-  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
-}
-
-.tp-card--recommend {
-  animation:
-    tp-card-in-bounce 0.55s cubic-bezier(0.34,1.56,0.64,1) var(--card-delay, 0s) both,
-    tp-recommend-bounce 2s ease-in-out calc(var(--card-delay, 0s) + 0.55s) infinite !important;
-}
-
-/* ── キャラクター：タップスパークル ─────────────────── */
-.tp-char-sparkle-wrap {
-  display: contents;
-}
-
-/* ══════════════════════════════════════════════════════
-   ✨ 新機能スタイル
-══════════════════════════════════════════════════════ */
-
-
-/* ── カテゴリフィルターバー ─────────────────────────── */
-.tp-cat-filter {
-  display: flex;
-  gap: 6px;
-  padding: 6px 12px 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-.tp-cat-filter::-webkit-scrollbar { display: none; }
-
-.tp-cat-btn {
-  flex-shrink: 0;
-  padding: 6px 14px;
-  border-radius: 50px;
-  font-size: 12px;
-  font-weight: 800;
-  font-family: inherit;
-  border: 2px solid rgba(255,255,255,0.35);
-  background: rgba(255,255,255,0.22);
-  color: #2D1B00;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.15s;
-  white-space: nowrap;
-  -webkit-tap-highlight-color: transparent;
-}
-.tp-cat-btn:active {
-  transform: scale(0.95);
-}
-.tp-cat-btn--active {
-  background: linear-gradient(135deg, #FF6B35, #FFD700);
-  border-color: rgba(255,215,0,0.6);
-  color: #fff;
-  box-shadow: 0 3px 10px rgba(255,107,53,0.4);
-  text-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-
-/* ── 最近遊んだゲームセクション ────────────────────── */
-.tp-recent {
-  padding: 6px 12px 4px;
-}
-.tp-recent-title {
-  font-size: 12px;
-  font-weight: 800;
-  color: rgba(45,27,0,0.75);
-  margin-bottom: 8px;
-  letter-spacing: 0.03em;
-}
-.tp-recent-scroll {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  padding-bottom: 6px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-.tp-recent-scroll::-webkit-scrollbar { display: none; }
-
-.tp-recent-card {
-  flex-shrink: 0;
-  width: 72px;
-  background: rgba(255,255,255,0.82);
-  border-radius: 16px;
-  padding: 10px 6px 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  border: 2.5px solid rgba(255,255,255,0.6);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.1), 0 4px 0 rgba(0,0,0,0.08);
-  transition: transform 0.12s, box-shadow 0.12s;
-  font-family: inherit;
-  -webkit-tap-highlight-color: transparent;
-}
-.tp-recent-card:hover,
-.tp-recent-card:active {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.16), 0 4px 0 rgba(0,0,0,0.08);
-}
-.tp-recent-icon {
-  font-size: 28px;
-  line-height: 1;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
-}
-.tp-recent-name {
-  font-size: 9px;
-  font-weight: 800;
-  color: #333;
-  text-align: center;
-  line-height: 1.3;
-  word-break: keep-all;
-  max-width: 64px;
-}
-
-/* ══════════════════════════════════════════════════════════
-   ✨ v1.1.2 REDESIGN ADDITIONS
-══════════════════════════════════════════════════════════ */
-
-/* ── ② ヒーロー余白圧縮 ─────────────────────────────── */
-.tp-header {
-  gap: 6px;
-  padding-top: max(56px, calc(env(safe-area-inset-top, 0px) + 52px));
-  padding-bottom: 4px;
-}
-
-.tp-park-badge {
-  font-size: 10px;
-  padding: 4px 14px;
-  margin-bottom: 0;
-}
-
-.tp-game-section {
-  padding-top: 8px;
-}
-
-@media (max-width: 600px) {
-  .tp-header {
-    gap: 4px;
-    padding-top: max(50px, calc(env(safe-area-inset-top, 0px) + 46px));
-  }
-  .tp-title-1 {
-    font-size: clamp(36px, 11vw, 58px) !important;
-  }
-  .tp-title-2 {
-    font-size: clamp(24px, 7.5vw, 42px) !important;
-  }
-  .tp-subtitle {
-    font-size: 11px;
-    padding: 4px 14px;
-  }
-  .tp-game-section {
-    padding: 6px 12px 24px;
-  }
-  .tp-section-header {
-    margin-bottom: 8px;
-  }
-}
-
-@media (min-width: 601px) {
-  .tp-header { gap: 8px; }
-}
-
-/* ── ② 季節バナー + カウンター 横並び ────────────────── */
-.tp-hero-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  width: 100%;
-  max-width: 520px;
-}
-
-.tp-hero-row .tp-season {
-  margin: 0;
-  font-size: 13px;
-  padding: 7px 16px;
-  flex-shrink: 0;
-}
-
-.tp-hero-row .tp-counter {
-  margin-top: 0;
-  padding: 8px 18px;
-  flex-shrink: 0;
-}
-
-.tp-hero-row .tp-counter-num {
-  font-size: 24px;
-  background: linear-gradient(180deg, #FFD700 0%, #FF8F00 55%, #E65100 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: counterBounce 0.45s cubic-bezier(0.34,1.56,0.64,1) 1.7s both;
-}
-
-@keyframes counterBounce {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.18); }
-  100% { transform: scale(1); }
-}
-
-.tp-hero-row .tp-counter-label {
-  font-size: 10px;
-}
-
-@media (max-width: 600px) {
-  .tp-hero-row {
-    gap: 6px;
-  }
-  .tp-hero-row .tp-season {
-    font-size: 12px;
-    padding: 5px 12px;
-  }
-  .tp-hero-row .tp-counter {
-    padding: 6px 14px;
-  }
-  .tp-hero-row .tp-counter-num {
-    font-size: 20px;
-  }
-}
-
-/* ── ③ カテゴリバー sticky ───────────────────────────── */
-.tp-cat-filter {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 8px 12px 10px;
-  margin-left: -16px;
-  margin-right: -16px;
-  padding-left: 16px;
-  padding-right: 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.6);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-}
-
-.tp-cat-btn--active {
-  background: linear-gradient(135deg, #FF6B35, #FFD700) !important;
-  border-color: rgba(255,215,0,0.6) !important;
-  color: #fff !important;
-  box-shadow: 0 3px 10px rgba(255,107,53,0.4) !important;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.2) !important;
-  transform: scale(1.1);
-  animation: catBtnPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-
-@keyframes catBtnPop {
-  0%   { transform: scale(0.88); }
-  100% { transform: scale(1.1); }
-}
-
-/* ── ④ カードタップ光沢スイープ ────────────────────── */
-.tp-card {
-  overflow: hidden;
-}
-
-.tp-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    115deg,
-    transparent 25%,
-    rgba(255,255,255,0.22) 50%,
-    transparent 75%
-  );
-  transform: translateX(-100%) skewX(-15deg);
-  pointer-events: none;
-}
-
-.tp-card:hover::after {
-  animation: cardGloss 0.55s ease forwards;
-}
-
-@keyframes cardGloss {
-  0%   { transform: translateX(-100%) skewX(-15deg); }
-  100% { transform: translateX(200%) skewX(-15deg); }
-}
-
-.tp-card:hover {
-  transform: translateY(-5px) scale(1.04) !important;
-  box-shadow: 0 14px 36px rgba(0,0,0,0.28) !important;
-}
-
-.tp-card:active {
-  transform: translateY(2px) scale(0.97) !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.20) !important;
-}
-
-/* ── ④ 星グロウ ──────────────────────────────────────── */
-.tp-star--filled {
-  color: #FFE066;
-  filter: drop-shadow(0 0 3px rgba(255,220,80,0.85));
-}
-
-/* ── ⑤ キャラ idle アニメ ────────────────────────────── */
-.tp-hero-chars {
-  display: contents;
-}
-
-/* KisekaeCharacters が出力するルート要素の直接兄弟を対象 */
-.ksk-title-zone .tp-hero-chars > * {
-  animation: kskIdleL 3.5s ease-in-out infinite;
-}
-
-@keyframes kskIdleL {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-10px); }
-}
-
-/* ── ⑦ 最近遊んだカード拡大 ────────────────────────── */
-.tp-recent-card {
-  width: 84px;
-}
-.tp-recent-icon {
-  font-size: 34px;
-}
-.tp-recent-name {
-  font-size: 10px;
-  max-width: 76px;
-}
-
-/* ── ⑨ 季節バナー強化 ───────────────────────────────── */
-.tp-season {
-  background: linear-gradient(
-    135deg,
-    rgba(255,255,255,0.85) 0%,
-    rgba(255,255,255,0.72) 100%
-  );
-  position: relative;
-  overflow: hidden;
-}
-
-.tp-season::before {
-  content: '✦';
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 10px;
-  opacity: 0;
-  animation: seasonSparkle 2.5s ease-in-out infinite;
-}
-
-@keyframes seasonSparkle {
-  0%, 100% { opacity: 0; transform: translateY(-50%) scale(0.5); }
-  50%       { opacity: 0.7; transform: translateY(-60%) scale(1.2); }
-}
-
-/* ── トップ整理P3：押したくなる演出（モバイルでも効く・CSSのみ） ── */
-.tp-card-art {
-  animation: tp-art-bob 3.6s ease-in-out var(--card-delay, 0s) infinite;
-}
-@keyframes tp-art-bob {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-3px); }
-}
-/* 周期的にツヤが流れる（ホバー無しのスマホ向け）。:hover時は従来のcardGlossが優先 */
-.tp-card::after {
-  animation: tp-card-shine 5.5s ease-in-out var(--card-delay, 0s) infinite;
-}
-@keyframes tp-card-shine {
-  0%, 72%   { transform: translateX(-100%) skewX(-15deg); }
-  88%, 100% { transform: translateX(200%) skewX(-15deg); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .tp-card-art, .tp-card::after { animation: none !important; }
-}
-
-/* ── カードのアート高さを統一（SVG/絵文字フォールバックでサイズ差が出ないように） ── */
-.tp-card-art { aspect-ratio: 100 / 85; display: flex; align-items: center; justify-content: center; }
-.tp-card-icon-fb { font-size: clamp(44px, 9vw, 68px); line-height: 1; }
-
-/* ── トップ整理P4a：散らかる装飾を整理（中央のコンテンツを引き立てる） ── */
-.tp-deco,
-.tp-sun-wrap { display: none !important; }
-
-/* ── トップ：GAME PARKバッジとタイトルの被り解消 ── */
-.tp-park-badge { margin-bottom: 14px !important; }
-
-/* ════════════════════════════════════
-   マスコット吹き出し
-════════════════════════════════════ */
-.tp-mascot-bubble {
-  position: relative;
-  display: inline-block;
-  max-width: 260px;
-  margin: 0 auto 6px;
-  padding: 7px 14px;
-  background: #fff;
-  border: 3px solid #ffb3c8;
-  border-radius: 18px;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  font-weight: 800;
-  font-size: 13px;
-  color: #d14a76;
-  box-shadow: 0 3px 0 rgba(209,74,118,.18);
-  animation: tp-bubble-in .35s cubic-bezier(.34,1.56,.64,1);
-  z-index: 2;
-}
-.tp-mascot-bubble::after {
-  content: '';
-  position: absolute;
-  bottom: -9px;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 7px solid transparent;
-  border-top-color: #ffb3c8;
-  border-bottom: 0;
-}
-@keyframes tp-bubble-in {
-  0%   { transform: scale(.6); opacity: 0; }
-  100% { transform: scale(1);  opacity: 1; }
-}
-.tp-hero-chars--bounce {
-  animation: tp-chars-bounce .55s cubic-bezier(.34,1.56,.64,1);
-}
-@keyframes tp-chars-bounce {
-  0%   { transform: translateY(0)    scale(1); }
-  30%  { transform: translateY(-14px) scale(1.06); }
-  55%  { transform: translateY(0)    scale(.97); }
-  75%  { transform: translateY(-5px) scale(1.02); }
-  100% { transform: translateY(0)    scale(1); }
-}
-
-/* ════════════════════════════════════
-   ゲームルーレット
-════════════════════════════════════ */
-.tp-roulette-btn {
-  display: block;
-  margin: 10px auto 14px;
-  padding: 12px 22px;
-  border: none;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #ff8ab0, #ff5d8f);
-  color: #fff;
-  font-family: 'DotGothic16', 'M PLUS Rounded 1c', sans-serif;
-  font-size: 15px;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 4px 0 #d13a6c, 0 8px 16px rgba(255,93,143,.35);
-  animation: tp-roulette-pulse 2.2s ease-in-out infinite;
-  transition: transform .12s;
-}
-.tp-roulette-btn:active {
-  transform: translateY(3px);
-  box-shadow: 0 1px 0 #d13a6c;
-}
-@keyframes tp-roulette-pulse {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.04); }
-}
-.tp-roulette-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(30, 10, 40, .55);
-  backdrop-filter: blur(3px);
-  animation: tp-bubble-in .25s ease-out;
-}
-.tp-roulette-box {
-  width: min(86vw, 340px);
-  padding: 20px 18px 18px;
-  background: linear-gradient(160deg, #fff7fb, #ffe9f2);
-  border: 4px solid #ffb3c8;
-  border-radius: 26px;
-  text-align: center;
-  box-shadow: 0 12px 40px rgba(0,0,0,.3);
-}
-.tp-roulette-title {
-  font-family: 'DotGothic16', sans-serif;
-  font-size: 17px;
-  font-weight: 800;
-  color: #d14a76;
-  margin-bottom: 12px;
-}
-.tp-roulette-card {
-  width: 200px;
-  margin: 0 auto;
-  border-radius: 20px;
-  padding: 12px 12px 14px;
-  border: 3px solid rgba(255,255,255,.7);
-  box-shadow: 0 6px 18px rgba(0,0,0,.22);
-}
-.tp-roulette-card--spin { animation: tp-roulette-shake .12s linear infinite; }
-.tp-roulette-card--win  { animation: tp-roulette-win .5s cubic-bezier(.34,1.56,.64,1); }
-@keyframes tp-roulette-shake {
-  0%   { transform: rotate(-2deg) scale(.98); }
-  50%  { transform: rotate(2deg)  scale(1.02); }
-  100% { transform: rotate(-2deg) scale(.98); }
-}
-@keyframes tp-roulette-win {
-  0%   { transform: scale(.85); }
-  60%  { transform: scale(1.1); }
-  100% { transform: scale(1); }
-}
-.tp-roulette-art { width: 100%; border-radius: 12px; overflow: hidden; background: rgba(255,255,255,.15); }
-.tp-roulette-art svg { display: block; width: 100%; height: auto; }
-.tp-roulette-icon { font-size: 56px; line-height: 85px; display: block; }
-.tp-roulette-name {
-  margin-top: 8px;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  font-weight: 800;
-  font-size: 15px;
-  color: #fff;
-  text-shadow: 0 2px 3px rgba(0,0,0,.35);
-}
-.tp-roulette-actions {
-  margin-top: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: center;
-}
-.tp-roulette-play {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #5bd68a, #2eab5e);
-  color: #fff;
-  font-family: 'DotGothic16', sans-serif;
-  font-size: 16px;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 4px 0 #1f7d43;
-}
-.tp-roulette-play:active { transform: translateY(3px); box-shadow: 0 1px 0 #1f7d43; }
-.tp-roulette-retry {
-  padding: 8px 18px;
-  border: 2px solid #ffb3c8;
-  border-radius: 999px;
-  background: #fff;
-  color: #d14a76;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  font-weight: 800;
-  font-size: 13px;
-  cursor: pointer;
-}
-.tp-roulette-close {
-  margin-top: 2px;
-  border: none;
-  background: none;
-  color: #c98aa3;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tp-mascot-bubble,
-  .tp-hero-chars--bounce,
-  .tp-roulette-btn,
-  .tp-roulette-card--spin,
-  .tp-roulette-card--win { animation: none; }
-}
-
-/* ══════════════════════════════════════════════════════════
-   ✨ v1.3 COMPACT LAYOUT + CARD FX + STAMP ZUKAN
-══════════════════════════════════════════════════════════ */
-
-/* ── ① ヒーローさらに圧縮(ゲームを早く見せる) ── */
-.tp-header {
-  padding-top: max(46px, calc(env(safe-area-inset-top, 0px) + 42px));
-}
-.tp-title-1 { font-size: clamp(36px, 10vw, 60px); }
-.tp-title-2 { font-size: clamp(26px, 7.5vw, 44px); }
-.tp-header .ksk-title-zone { padding-bottom: 20px; }
-.tp-subtitle { padding: 4px 16px; font-size: 12.5px; }
-.tp-mascot-bubble { font-size: 12px; padding: 6px 12px; margin-bottom: 4px; }
-.tp-hero-row { margin-top: 2px; }
-
-/* ── ② グリッド密度アップ ── */
-.tp-grid { gap: 10px; }
-.tp-card-body { padding: 9px 10px 10px; }
-.tp-card-desc { font-size: 11.5px; line-height: 1.3; }
-
-/* ── ③ カードタップ演出(モバイル) ── */
-.tp-card {
-  transition: transform .12s cubic-bezier(.34,1.56,.64,1), filter .12s;
-}
-.tp-card:active {
-  transform: scale(.94) rotate(-1deg) !important;
-  filter: brightness(1.12) saturate(1.15);
-}
-.tp-card:active::after {
-  animation: cardGloss 0.5s ease forwards;
-}
-.tp-recent-card { transition: transform .12s cubic-bezier(.34,1.56,.64,1); }
-.tp-recent-card:active { transform: scale(.92); }
-
-/* ── ④ アクションボタン行 ── */
-.tp-action-row {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  align-items: stretch;
-  margin: 10px auto 14px;
-  flex-wrap: wrap;
-}
-.tp-action-row .tp-roulette-btn { margin: 0; flex: 1 1 auto; max-width: 220px; font-size: 13.5px; padding: 11px 14px; }
-.tp-zukan-btn {
-  flex: 1 1 auto;
-  max-width: 200px;
-  padding: 11px 14px;
-  border: none;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #8f7bff, #6a4fe0);
-  color: #fff;
-  font-family: 'DotGothic16', 'M PLUS Rounded 1c', sans-serif;
-  font-size: 13.5px;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 4px 0 #4c37ad, 0 8px 16px rgba(106,79,224,.3);
-  transition: transform .12s;
-}
-.tp-zukan-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #4c37ad; }
-
-/* ── ⑤ スタンプずかん ── */
-.tp-zukan-box {
-  width: min(92vw, 400px);
-  max-height: 82vh;
-  overflow-y: auto;
-  padding: 18px 14px 14px;
-  background: linear-gradient(160deg, #fdf9ff, #efe8ff);
-  border: 4px solid #b9a5ff;
-  border-radius: 26px;
-  text-align: center;
-  box-shadow: 0 12px 40px rgba(0,0,0,.3);
-}
-.tp-zukan-box .tp-roulette-title { color: #6a4fe0; }
-.tp-zukan-progress {
-  font-family: 'DotGothic16', sans-serif;
-  font-size: 15px;
-  font-weight: 800;
-  color: #8a6fe8;
-  margin-bottom: 12px;
-}
-.tp-zukan-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-.tp-zukan-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 8px 2px 6px;
-  border: 2px dashed #cbbcf5;
-  border-radius: 14px;
-  background: #f3eefc;
-  cursor: pointer;
-  transition: transform .12s;
-}
-.tp-zukan-cell:active { transform: scale(.9); }
-.tp-zukan-cell--got {
-  border: 2px solid rgba(255,255,255,.75);
-  box-shadow: 0 3px 8px rgba(0,0,0,.18);
-  animation: tp-roulette-win .4s cubic-bezier(.34,1.56,.64,1);
-}
-.tp-zukan-icon { font-size: 26px; line-height: 1; }
-.tp-zukan-cell:not(.tp-zukan-cell--got) .tp-zukan-icon { opacity: .45; }
-.tp-zukan-name {
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  font-weight: 800;
-  font-size: 8.5px;
-  line-height: 1.15;
-  color: #9a8bc4;
-  word-break: keep-all;
-  overflow-wrap: anywhere;
-}
-.tp-zukan-cell--got .tp-zukan-name { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
-.tp-zukan-hint {
-  margin: 12px 0 6px;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  font-weight: 700;
-  font-size: 12px;
-  color: #8a6fe8;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tp-card:active, .tp-zukan-cell--got { animation: none; }
-}
-
-/* ══════════════════════════════════════════════════════════
-   ✨ v1.4 VISUAL HIERARCHY — 押せる/押せないを明確に
-══════════════════════════════════════════════════════════ */
-
-/* ── ① タブをセグメントコントロール化(1つの枠で切替とわかる形) ── */
-.tp-tabs {
-  gap: 0;
-  padding: 4px;
-  margin: 0 auto 4px;
-  width: fit-content;
-  background: rgba(255,255,255,.75);
-  border: 2px solid rgba(0,0,0,.08);
-  border-radius: 999px;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,.08);
-}
-.tp-tab {
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  padding: 9px 20px;
-  transform: none;
-  color: #7a8aa0;
-}
-.tp-tab--active {
-  background: linear-gradient(135deg,#4DB8FF,#2a7fd4);
-  color: #fff;
-  border: none;
-  transform: none;
-  box-shadow: 0 2px 6px rgba(42,127,212,.4);
-}
-
-/* ── ② 飾りはフラットに(影・立体感を消して「押せない」と示す) ── */
-.tp-season {
-  background: rgba(255,255,255,.5);
-  border-width: 1.5px;
-  box-shadow: none;
-  padding: 6px 18px;
-  font-size: 13px;
-}
-.tp-mascot-bubble {
-  box-shadow: none;
-  border-width: 2px;
-}
-
-/* ── ③ ボタンだけ立体感を強調 ── */
-.tp-action-row { margin-top: 12px; }
-.tp-action-row .tp-roulette-btn,
-.tp-zukan-btn { font-size: 14px; }
-
-/* ══════════════════════════════════════════════════════════
-   ✨ v1.5 CATEGORY SHELVES — カテゴリ別横スクロール棚
-══════════════════════════════════════════════════════════ */
-.tp-shelf { margin: 4px 0 14px; }
-.tp-shelf-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 14px 8px;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  font-weight: 800;
-  font-size: 15px;
-  color: #2d4a63;
-  text-align: left;
-}
-.tp-shelf-scroll {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 2px 14px 10px;
-  scroll-snap-type: x proximity;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  /* 横スクロールコンテナがマウスホイール(縦)を奪ってページ縦スクロールを
-     止めてしまう問題を防ぐ。横方向の連鎖のみ断ち、縦は親(ページ)に流す。 */
-  overscroll-behavior-x: contain;
   overscroll-behavior-y: auto;
-  /* Android WebViewでの横スクロール時の描画崩れ対策 */
-  transform: translateZ(0);
 }
-.tp-shelf-scroll::-webkit-scrollbar { display: none; }
-
-/* 横棚の続きがあることを示す共通ナビゲーション。PCでは棚を折り返すため非表示。 */
-.tp-horizontal-rail { position: relative; min-width: 0; }
-.tp-rail-fade {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 58px;
-  z-index: 3;
-  pointer-events: none;
-}
-.tp-rail-fade--left { left: 0; background: linear-gradient(90deg, rgba(255,250,240,.96), rgba(255,250,240,0)); }
-.tp-rail-fade--right { right: 0; background: linear-gradient(270deg, rgba(255,250,240,.96), rgba(255,250,240,0)); }
-.tp-rail-cue {
-  position: absolute;
-  top: 50%;
-  z-index: 4;
-  width: 48px;
-  height: 48px;
-  margin-top: -24px;
-  border: 1px solid rgba(36,48,74,.2);
-  border-radius: 50%;
-  background: linear-gradient(180deg, #fffdf7, #f4ead7);
-  box-shadow: 0 3px 10px rgba(36,48,74,.18);
-  color: #24304a;
-  font-size: 34px;
-  line-height: 40px;
-  font-family: inherit;
-  cursor: pointer;
-}
-.tp-rail-cue--left { left: 4px; }
-.tp-rail-cue--right { right: 4px; }
-.tp-rail-cue:active { transform: scale(.93); }
-.tp-shelf-card {
-  position: relative;
-  flex: 0 0 auto;
-  width: 128px;
-  scroll-snap-align: start;
-  border: 3px solid rgba(255,255,255,.65);
-  border-radius: 18px;
-  padding: 8px 8px 9px;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,.16);
-  transition: transform .12s cubic-bezier(.34,1.56,.64,1), filter .12s;
-  overflow: hidden;
-}
-.tp-shelf-card:active {
-  transform: scale(.93) rotate(-1deg);
-  filter: brightness(1.12) saturate(1.15);
-}
-.tp-shelf-art {
-  border-radius: 12px;
-  overflow: hidden;
-  background: rgba(255,255,255,.12);
-}
-.tp-shelf-art svg { display: block; width: 100%; height: auto; }
-.tp-shelf-icon-fb { font-size: 44px; line-height: 96px; display: block; }
-.tp-shelf-name {
-  margin-top: 6px;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  font-weight: 800;
-  font-size: 12px;
-  line-height: 1.25;
-  color: #fff;
-  text-shadow: 0 2px 3px rgba(0,0,0,.35);
-  min-height: 2.5em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.tp-shelf-new {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  z-index: 2;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: #ff4d6d;
-  color: #fff;
-  font-size: 9px;
-  font-weight: 800;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  box-shadow: 0 2px 4px rgba(0,0,0,.25);
-}
-
-/* 棚導入に伴い旧グリッドは非表示状態のためエントランスアニメの負荷なし */
-@media (min-width: 700px) {
-  .tp-shelf-card { width: 148px; }
-}
-
-/* ══════════════════════════════════════════════════════════
-   ✨ 引っ張って更新(pull-to-refresh)
-══════════════════════════════════════════════════════════ */
-.tp-wrap { overscroll-behavior-y: auto; }
 @media (hover: none) and (pointer: coarse) {
   .tp-wrap { overscroll-behavior-y: contain; }
 }
+.tp-wrap *, .tp-wrap *::before, .tp-wrap *::after { box-sizing: border-box; }
+
+/* ── 引っ張って更新 ── */
 .tp-ptr {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 60;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  transition: opacity .15s ease;
+  position: absolute; left: 50%; transform: translateX(-50%); z-index: 60;
+  width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+  pointer-events: none; transition: opacity .15s ease;
 }
 .tp-ptr-spin {
-  width: 38px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgba(255,255,255,.9);
-  border: 2px solid #ffb3c8;
-  box-shadow: 0 3px 8px rgba(163,71,103,.22);
-  font-size: 20px;
-  font-weight: 800;
-  color: #d14a76;
-  line-height: 1;
+  width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: rgba(255,255,255,.9); border: 2px solid #ffb3c8;
+  box-shadow: 0 3px 8px rgba(163,71,103,.22); font-size: 20px; font-weight: 800; color: #d14a76; line-height: 1;
 }
 .tp-ptr-spin--ready {
-  background: linear-gradient(135deg,#ff8ab0,#ff5d8f);
-  border-color: #fff;
-  color: #fff;
+  background: linear-gradient(135deg,#ff8ab0,#ff5d8f); border-color: #fff; color: #fff;
   animation: tp-ptr-pop .3s cubic-bezier(.34,1.56,.64,1);
 }
-@keyframes tp-ptr-pop {
-  0% { transform: scale(.8) rotate(0deg); }
-  100% { transform: scale(1) rotate(0deg); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .tp-ptr-spin--ready { animation: none; }
-}
+@keyframes tp-ptr-pop { 0% { transform: scale(.8); } 100% { transform: scale(1); } }
 
-/* ══════════════════════════════════════════════════════════
-   ✨ v1.8 上部被りの根本解決
-   ボタン群を最上部の帯にfixed固定し、その帯の実高さぶん
-   ヘッダー全体を下げてキャラ・タイトルと衝突させない
-══════════════════════════════════════════════════════════ */
-:root {
-  --tp-topbar-h: 60px; /* ボタン44px + 余白 */
-}
-.tp-top-btns {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  padding: max(10px, env(safe-area-inset-top, 10px)) 12px 8px;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: nowrap;
-  background: linear-gradient(180deg, rgba(123,200,245,0.96) 55%, rgba(123,200,245,0));
-  z-index: 200;
-  box-sizing: border-box;
-  /* 帯の透明フェード部分がタップ/スクロールを奪わないよう、
-     コンテナ自体はイベント透過。実ボタンだけ受け取る */
-  pointer-events: none;
-}
-.tp-top-btns > * { pointer-events: auto; }
-/* コインは左端に寄せて他ボタンと分離 */
-.tp-top-btns .tp-coin-badge { margin-right: auto; padding: 5px 9px; font-size: 12px; }
-/* ショップを少しコンパクトに(5個が横に収まるよう) */
-.tp-top-btns .tp-shop-btn { padding: 7px 12px !important; font-size: 12.5px !important; }
-.tp-top-btns .tp-top-btn { width: 40px; height: 40px; font-size: 16px; }
-.tp-top-btns .tp-lang-btn { width: auto; padding: 0 8px; }
-
-/* タブレット等の広幅では帯を右側だけの幅に絞り、下コンテンツを塞がない */
-@media (min-width: 700px) {
-  .tp-top-btns {
-    background: none;
-    padding-top: max(14px, env(safe-area-inset-top, 14px));
-  }
-  .tp-top-btns .tp-coin-badge { margin-right: 6px; }
-  .tp-header {
-    padding-top: calc(var(--tp-topbar-h) + env(safe-area-inset-top, 0px) + 10px) !important;
-  }
-}
-
-/* ヘッダーを帯の下から開始させる(キャラの頭が帯に潜り込まない) */
-.tp-header {
-  padding-top: calc(var(--tp-topbar-h) + env(safe-area-inset-top, 0px) + 30px) !important;
-}
-/* きせかえv2: 睫毛・宝石・髪の束感が見えるサイズへ拡大(Kisekae.cssの基準値を踏襲) */
-.ksk-svg { width: 92px; height: 146px; }
-
-/* ══════════════════════════════════════════════════════════
-   ✨ v1.7 ③ ゲームカードの統一感
-   ジャンル色フレームは維持、名前を白プレートに統一して
-   全カードのリズムを揃える
-══════════════════════════════════════════════════════════ */
-.tp-shelf-card {
-  padding: 6px 6px 6px;
-  border: 2.5px solid rgba(255,255,255,.7);
-  box-shadow: 0 4px 10px rgba(0,0,0,.18);
-  /* 一部Android GPUでのコンポジット崩れ(白ノイズ帯)を防ぐ */
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  transform: translateZ(0);
-}
-.tp-shelf-art {
-  aspect-ratio: 100 / 85;
-  border-radius: 12px 12px 6px 6px;
-  border: 2px solid rgba(255,255,255,.8);
-  box-shadow: 0 2px 5px rgba(0,0,0,.12);
-}
-.tp-shelf-name {
-  margin-top: 5px;
-  min-height: 2.4em;
-  padding: 3px 4px;
-  border-radius: 6px 6px 12px 12px;
-  background: rgba(255,255,255,.94);
-  color: #33475c;
-  text-shadow: none;
-  font-size: 11.5px;
-}
-.tp-shelf-new {
-  top: 10px;
-  right: 10px;
-}
-
-/* ════════════════════════════════════════════════════
-   しまマップ⇔いちらん 切替タブ
-════════════════════════════════════════════════════ */
-.tp-view-toggle {
-  display: flex;
-  gap: 6px;
-  background: rgba(255,255,255,0.45);
-  border-radius: 999px;
-  padding: 5px;
-  margin: 4px auto 14px;
-  max-width: 340px;
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.1);
-}
-.tp-view-tab {
-  flex: 1;
-  border: none;
-  background: transparent;
-  border-radius: 999px;
-  padding: 9px 4px;
-  font-family: 'DotGothic16', 'M PLUS Rounded 1c', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  color: #6a5b45;
-  cursor: pointer;
-  transition: transform .12s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-.tp-view-tab--on {
-  background: #fffdf5;
-  color: #e0559d;
-  box-shadow: 0 3px 0 rgba(0,0,0,0.15);
-}
-.tp-view-tab:active { transform: scale(0.96); }
-
-/* ══════════════════════════════════════════════════════════
-   ✨ v2.0 COMPACT HERO + STICKY NAV
-   （1画面目でしまマップの建物が見える構成へ圧縮）
-══════════════════════════════════════════════════════════ */
-
-/* ── ① ヒーロー大幅圧縮 ── */
-.tp-header {
-  padding-top: max(64px, calc(env(safe-area-inset-top, 0px) + 60px));
-  padding-bottom: 0;
-  gap: 2px;
-}
-.tp-title-wrap { animation: none !important; }
-.tp-title {
-  flex-direction: row;
-  align-items: baseline;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-.tp-title-1 { font-size: clamp(26px, 8vw, 42px) !important; }
-.tp-title-2 { font-size: clamp(26px, 8vw, 42px) !important; }
-.tp-header .ksk-title-zone { padding-bottom: 30px; }
-
-/* ヒーローの主役はキャラクター本体。パネル基準値(92x146/116x184)よりさらに
-   約1.3倍大きく見せ、髪型・王冠・衣装のシルエット差がひと目でわかるようにする。 */
-.tp-header .ksk-svg { width: 92px; height: 147px; }
-.tp-header .ksk-pet { width: 30px; height: 30px; }
-@media (min-width: 480px) {
-  .tp-header .ksk-svg { width: 122px; height: 195px; }
-  .tp-header .ksk-pet { width: 38px; height: 38px; }
-}
-
-/* 吹き出しはコンパクトに */
-.tp-mascot-bubble {
-  font-size: 11px;
-  padding: 4px 10px;
-  margin-bottom: 2px;
-  max-width: 210px;
-}
-
-/* 季節チップ（タイトル直下・非ボタン装飾） */
-.tp-season--chip {
-  margin: 2px auto 0;
-  padding: 3px 12px !important;
-  font-size: 11.5px !important;
-  border-width: 1.5px !important;
-  animation: none !important;
-  background: rgba(255,255,255,0.55) !important;
-  box-shadow: none !important;
-}
-
-.tp-game-section { padding-top: 6px; }
-
-/* ── ② sticky統合バー（タブ＋エリアジャンプ） ── */
-.tp-sticky-bar {
-  position: sticky;
-  top: calc(env(safe-area-inset-top, 0px) + 6px);
-  z-index: 40;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 0 0 12px;
-  padding: 7px 8px;
-  background: rgba(228,244,255,0.88);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-radius: 22px;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
-}
-.tp-sticky-bar .tp-view-toggle {
-  margin: 0 auto;
-  padding: 4px;
-  max-width: 300px;
-  width: 100%;
-  background: rgba(255,255,255,0.5);
-  box-shadow: inset 0 2px 5px rgba(0,0,0,0.08);
-}
-.tp-sticky-bar .tp-view-tab {
-  padding: 7px 4px;
-  font-size: 13px;
-}
-.tp-sticky-jump {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  padding: 1px 2px 3px;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.tp-sticky-jump::-webkit-scrollbar { display: none; }
-.tp-sticky-jump .im-jump-btn {
-  font-size: 12px;
-  padding: 4px 11px;
-  border-width: 2.5px;
-}
-
-/* ── ③ 右上ボタン群：モバイルではショップをアイコン化 ── */
-@media (max-width: 560px) {
-  .tp-top-btns { gap: 5px; }
-  .tp-top-btn { width: 40px; height: 40px; font-size: 16px; }
-  .tp-shop-label { display: none; }
-  .tp-shop-btn {
-    width: 40px !important;
-    padding: 0 !important;
-    border-radius: 50% !important;
-    gap: 0;
-  }
-}
-
-/* ── ④ 最近遊んだ（マップ下配置に合わせ軽量化） ── */
-.tp-recent { margin-top: 16px; }
-
-/* ══════════════════════════════════════════════════════════
-   ✨ v2.1 HERO FIX — 余白カット・キャラ被り解消・ゲーム感UP
-══════════════════════════════════════════════════════════ */
-
-/* ── ① 空白カット：既存の +30px !important を上書き ── */
-.tp-header {
-  padding-top: calc(var(--tp-topbar-h, 60px) + env(safe-area-inset-top, 0px) + 4px) !important;
-}
-@media (max-width: 560px) {
-  /* v2.0でボタンを40pxに縮小済み → 帯の高さも詰める */
-  .tp-header {
-    padding-top: calc(52px + env(safe-area-inset-top, 0px) + 4px) !important;
-  }
-}
-
-/* ── ② キャラ被り解消：タイトルにキャラ分の左右余白を確保 ── */
-.tp-header .tp-title-wrap {
-  padding: 0 58px;
-  box-sizing: border-box;
-  width: 100%;
-}
-.tp-title-1,
-.tp-title-2 {
-  font-size: clamp(21px, 6.2vw, 36px) !important;
-}
-/* タブレット以上でも被らないだけの余白 */
-@media (min-width: 480px) {
-  .tp-header .tp-title-wrap { padding: 0 100px; }
-}
-
-/* 吹き出し・チップ類の縦間隔を最小化 */
-.tp-header .ksk-title-zone { padding-bottom: 2px; }
-.tp-mascot-bubble { margin-bottom: 3px; }
-
-/* ── ③ チップ行：季節＋ゲーム数 ── */
-.tp-hero-chips {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 3px;
-}
-.tp-hero-chips .tp-season--chip { margin: 0; }
-
-.tp-count-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: linear-gradient(135deg, #FF6FA5, #FF4081);
-  border: 2px solid #fff;
-  border-radius: 30px;
-  padding: 3px 13px;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  font-size: 12px;
-  font-weight: 900;
-  color: #fff;
-  box-shadow: 0 3px 0 rgba(180,30,80,0.35), 0 3px 10px rgba(255,64,129,0.35);
-  animation: tp-count-pop 2.6s ease-in-out infinite;
-  white-space: nowrap;
-}
-@keyframes tp-count-pop {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.05); }
-}
-
-/* ── ④ START旗をゲームっぽく跳ねさせる ── */
-.im-start {
-  animation: im-start-hop 1.4s ease-in-out infinite;
-}
-@keyframes im-start-hop {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50%      { transform: translateX(-50%) translateY(-6px); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tp-count-chip, .im-start { animation: none; }
-}
-
-/* ══════════════════════════════════════════════════════════
-   ✨ v2.2 HERO 微調整 — さらに上へ詰め、タイトル下に呼吸を
-══════════════════════════════════════════════════════════ */
-
-/* ボタン帯の実位置（top: max(14px, safe) + ボタン高）を基準に密着 */
-.tp-header {
-  padding-top: calc(max(14px, env(safe-area-inset-top, 14px)) + 42px) !important;
-}
-@media (max-width: 560px) {
-  /* モバイルはボタン40px。キャラ拡大分の縦スペースを確保するため上詰めを強める */
-  .tp-header {
-    padding-top: calc(max(14px, env(safe-area-inset-top, 14px)) + 36px) !important;
-  }
-}
-
-/* タイトルとチップ行の間にわずかな空間 */
-.tp-hero-chips { margin-top: 9px; }
-.tp-header .ksk-title-zone { padding-bottom: 5px; }
-
-/* ════════════════════════════════════════════════════
-   v6 トップ刷新: モダンリッチ化オーバーライド
-   (プロトタイプ top_redesign_proto_v6 準拠。既存クラスを末尾で上書き)
-════════════════════════════════════════════════════ */
-
-/* ── ロゴ: シャイン付きグラデーション ── */
-.tp-wrap .tp-title-1,
-.tp-wrap .tp-title-2 {
+/* ============================================================
+   ヒーロー
+   ============================================================ */
+.hero {
   position: relative;
-  background: linear-gradient(180deg, #FFE870 0%, #FFC93C 34%, #FF9D3C 62%, #FF7BA9 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter:
-    drop-shadow(0 2px 0 #FFF)
-    drop-shadow(0 5px 0 #D66A8E)
-    drop-shadow(0 12px 14px rgba(61, 52, 80, 0.35));
+  min-height: max(100svh, 640px);
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 42%, var(--sky-haze) 66%);
 }
-.tp-wrap .tp-title {
-  position: relative;
-}
-.tp-wrap .tp-title::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.55) 46%, transparent 60%);
-  background-size: 640px 100%;
-  background-repeat: no-repeat;
-  mix-blend-mode: screen;
-  animation: tp-logo-shine 4.5s ease-in-out infinite;
-}
-@keyframes tp-logo-shine {
-  0%, 60% { background-position: -320px 0; }
-  100%    { background-position: 320px 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .tp-wrap .tp-title::after { animation: none; }
-}
+.layer { position: absolute; left: 0; right: 0; will-change: transform; pointer-events: none; }
 
-/* ── ヒーローチップ: 光沢ピル ── */
-.tp-wrap .tp-hero-chips .tp-season--chip,
-.tp-wrap .tp-hero-chips .tp-count-chip {
-  background: linear-gradient(180deg, #FFFFFF, #EAF6FF);
-  color: #2E6C96;
-  border: none;
-  box-shadow: 0 4px 10px rgba(46, 108, 150, 0.25), inset 0 1px 0 #FFF;
-}
-
-/* ── CTAボタン ── */
-.tp-cta {
-  display: inline-block;
-  margin-top: 14px;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  font-weight: 900;
-  font-size: clamp(15px, 4vw, 19px);
-  color: #FFF;
-  padding: 13px 40px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #7ADF8F, #3CC46E 55%, #2FA85C);
-  box-shadow: 0 6px 0 #1F7E43, 0 12px 22px rgba(31, 126, 67, 0.4), inset 0 2px 0 #C9FFD8;
-  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.25);
-  transition: transform 0.12s, box-shadow 0.12s;
-}
-.tp-cta:hover,
-.tp-cta:active {
-  transform: translateY(2px);
-  box-shadow: 0 4px 0 #1F7E43, 0 8px 16px rgba(31, 126, 67, 0.4), inset 0 2px 0 #C9FFD8;
-}
-
-/* ── カテゴリチップ(いちらん表示時) ── */
-.tp-cat-chips {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 6px 2px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-.tp-cat-chips::-webkit-scrollbar { display: none; }
-.tp-cat-chip {
-  flex: none;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  font-weight: 900;
-  font-size: 12.5px;
-  padding: 8px 16px;
-  border-radius: 999px;
-  color: #6B6390;
-  background: linear-gradient(180deg, #FFFFFF, #EEF1FA);
-  box-shadow: 0 3px 8px rgba(61, 52, 80, 0.14), inset 0 1px 0 #FFF;
-  transition: transform 0.1s;
-}
-.tp-cat-chip:hover { transform: translateY(-1px); }
-.tp-cat-chip--on {
-  color: #FFF;
-  background: linear-gradient(180deg, #B49BF8, #8F6BEF);
-  box-shadow: 0 3px 0 #6C4BC4, 0 6px 14px rgba(143, 107, 239, 0.4), inset 0 1px 0 #E4D9FF;
-}
-
-/* ── ゲームカード: サムネイル+光沢 ── */
-.tp-wrap .tp-card {
-  border: none;
-  border-radius: 22px;
-  box-shadow: 0 10px 26px rgba(61, 52, 80, 0.16), inset 0 1px 0 rgba(255,255,255,0.6);
-}
-.tp-wrap .tp-card:hover {
-  box-shadow: 0 18px 36px rgba(61, 52, 80, 0.24);
-}
-.tp-card-art { position: relative; }
-.tp-card-thumb {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 1;
-}
-.tp-card-art::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 2;
-  background: linear-gradient(160deg, rgba(255,255,255,0.35) 0%, transparent 34%);
-  box-shadow: inset 0 0 0 3px rgba(255,255,255,0.8), inset 0 -30px 24px -20px rgba(61, 52, 80, 0.28);
-}
-.tp-card-art .tp-card-cat,
-.tp-card-art .tp-card-new { z-index: 3; }
-.tp-thumb-badge {
-  position: absolute;
-  left: 9px;
-  bottom: 8px;
-  z-index: 3;
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
-  background: linear-gradient(180deg, #FFFFFF, #F1F4FF);
-  box-shadow: 0 4px 10px rgba(61, 52, 80, 0.28), inset 0 1px 0 #FFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-}
-.tp-thumb-badge--sm {
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  font-size: 17px;
-  left: 6px;
-  bottom: 6px;
-}
-
-/* ── 棚カード: サムネイル ── */
-.tp-shelf-art { position: relative; }
-.tp-shelf-thumb {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 1;
-  border-radius: inherit;
-}
-
-/* ── オススメ行 ── */
-.tp-reco .tp-recent-title { color: inherit; }
-
-/* ── ルーレット箱: 光沢モダン ── */
-.tp-wrap .tp-roulette-box {
-  border-radius: 26px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 #FFF;
-}
-
-/* ── ヒーローチップとキャラの重なり回避 ──
-   キャラ(.ksk-chara-wrap)は左右端にabsolute配置(幅60px/480px以上で80px)。
-   チップ行に左右分の余白を確保し、狭い画面ではチップが中央縦積みになる */
-.tp-wrap .tp-hero-chips {
-  padding-left: clamp(70px, 19vw, 112px);
-  padding-right: clamp(70px, 19vw, 112px);
-}
-
-/* ════════════════════════════════════════════════════
-   v6 外観完全適用: 背景トーン・光線・島ステージ・きがえボタン
-════════════════════════════════════════════════════ */
-
-/* ── 背景をプロト準拠のグラデーションに ── */
-.tp-wrap {
-  background: linear-gradient(180deg,
-    #4FB4F0 0%,
-    #8ED4FF 34%,
-    #DFF3FF 55%,
-    #FFF2D6 74%,
-    #FFFDF6 100%) !important;
-}
-
-/* ── ヒーロー背後の回転光線 ── */
-.ksk-title-zone::before {
-  content: "";
-  position: absolute;
-  top: -320px;
-  left: 50%;
-  width: 900px;
-  height: 900px;
-  max-width: 100vw;          /* ビューポート外へ横に溢れさせない */
-  transform: translateX(-50%);
-  z-index: -1;
-  pointer-events: none;
+/* 太陽/月 */
+.l-sun { top: 2%; height: 34%; }
+.hero-sun-wrap { position: absolute; left: 4%; top: 0; width: 170px; height: 170px; }
+.hero-sun-rays { position: absolute; inset: 0; animation: hero-spin 120s linear infinite; }
+.hero-sun-core {
+  position: absolute; left: 50%; top: 50%; width: 62px; height: 62px; margin: -31px 0 0 -31px;
   border-radius: 50%;
-  background: conic-gradient(from 0deg,
-    rgba(255,255,255,0.13) 0 10deg,  transparent 10deg 24deg,
-    rgba(255,255,255,0.13) 24deg 34deg, transparent 34deg 48deg,
-    rgba(255,255,255,0.13) 48deg 58deg, transparent 58deg 72deg,
-    rgba(255,255,255,0.13) 72deg 82deg, transparent 82deg 96deg,
-    rgba(255,255,255,0.13) 96deg 106deg, transparent 106deg 360deg);
-  animation: tp-rays-spin 60s linear infinite;
+  background: radial-gradient(circle at 38% 34%, #FFFDF2 0%, #FFEFA8 54%, #FFD86B 100%);
+  box-shadow: 0 0 40px 18px rgba(255,232,150,.5);
+  animation: hero-pulse 6s ease-in-out infinite;
 }
-@keyframes tp-rays-spin {
-  to { transform: translateX(-50%) rotate(360deg); }
+@keyframes hero-spin { to { transform: rotate(360deg); } }
+@keyframes hero-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+.tod-night .hero-sun-core {
+  background: radial-gradient(circle at 36% 32%, #FFFFFF 0%, #F2F5FF 52%, #D8DFF6 100%);
+  box-shadow: 0 0 34px 14px rgba(220,232,255,.42);
 }
-@media (prefers-reduced-motion: reduce) {
-  .ksk-title-zone::before { animation: none; }
+.tod-night .hero-sun-rays { opacity: .28; }
+
+/* 星 */
+.hero-stars { opacity: 0; transition: opacity .6s ease; }
+.hero-stars--on { opacity: 1; }
+.hero-star { animation: hero-twinkle 3.4s ease-in-out infinite; }
+@keyframes hero-twinkle { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+
+/* 雲・鳥 */
+.hero-cloud { position: absolute; }
+.hero-cloud--far { left: 0; top: 2px; animation: hero-drift 74s linear infinite; }
+.hero-cloud--near { left: 0; top: 0; animation: hero-drift 58s linear infinite -22s; opacity: .7; }
+@keyframes hero-drift { from { transform: translateX(-30vw); } to { transform: translateX(130vw); } }
+.l-cloud-far { top: 5%; height: 22%; }
+.l-cloud-near { top: 44%; height: 22%; z-index: 20; }
+.hero-bird { position: absolute; left: 0; top: 44px; animation: hero-fly 30s linear infinite; }
+@keyframes hero-fly {
+  0% { transform: translate(-18vw,0); } 50% { transform: translate(52vw,-14px); } 100% { transform: translate(124vw,4px); }
+}
+.hero-bird-wing { animation: hero-flap 1.2s ease-in-out infinite; transform-origin: center; }
+@keyframes hero-flap { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(.4); } }
+
+/* 季節パーティクル */
+.l-particles { top: 0; bottom: 0; height: 100%; z-index: 25; overflow: hidden; }
+.hero-pt { position: absolute; top: -6%; will-change: transform; animation: hero-fall linear infinite; }
+.hero-pt--up { top: auto; bottom: -6%; animation-name: hero-rise; }
+@keyframes hero-fall {
+  0% { transform: translate3d(0,-8vh,0) rotate(0deg); }
+  100% { transform: translate3d(var(--dx,14px),108vh,0) rotate(var(--rot,320deg)); }
+}
+@keyframes hero-rise {
+  0% { transform: translate3d(0,8vh,0) scale(.7); opacity: 0; }
+  16% { opacity: .9; }
+  100% { transform: translate3d(var(--dx,18px),-96vh,0) scale(1); opacity: 0; }
 }
 
-/* ── 島ステージ ── */
-.tp-island-stage {
-  position: relative;
-  width: min(560px, 96%);
-  margin: 10px auto 0;
-  animation: tp-island-bob 4s ease-in-out infinite;
+/* 海 */
+.l-sea { bottom: 0; top: auto; height: 42%; background: linear-gradient(180deg, var(--sea-far) 0%, var(--sea-mid) 34%, var(--sea-deep) 100%); }
+.hero-sea-haze {
+  position: absolute; top: -34px; left: 0; right: 0; height: 64px;
+  background: linear-gradient(180deg, rgba(228,246,253,0) 0%, rgba(228,246,253,.85) 46%, rgba(127,211,240,.9) 100%);
 }
-@media (prefers-reduced-motion: reduce) {
-  .tp-island-stage { animation: none; }
-}
-@keyframes tp-island-bob {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
-}
-.tp-island-svg {
-  display: block;
-  width: 100%;
-  height: auto;
-}
+.hero-wave-band { position: absolute; left: -8%; width: 116%; animation: hero-sway 10s ease-in-out infinite; }
+.hero-wave-band:nth-of-type(1) { animation-duration: 12s; }
+.hero-wave-band:nth-of-type(2) { animation-duration: 9s; animation-direction: reverse; opacity: .8; }
+.hero-wave-band:nth-of-type(3) { animation-duration: 14s; opacity: .6; }
+.hero-wave-band:nth-of-type(4) { animation-duration: 11s; opacity: .45; }
+@keyframes hero-sway { 0%, 100% { transform: translateX(-2.6%); } 50% { transform: translateX(2.6%); } }
 
-/* キャラを島の上(しろの左右)へ。アンカーは .tp-island-stage */
-.tp-island-stage .ksk-chara-wrap--left {
-  left: auto;
-  right: calc(50% + min(84px, 17vw));
-  bottom: 8%;
-}
-.tp-island-stage .ksk-chara-wrap--right {
-  right: auto;
-  left: calc(50% + min(84px, 17vw));
-  bottom: 8%;
-}
+/* 島 */
+.l-island { bottom: 19%; top: auto; height: auto; display: flex; justify-content: center; }
+.hero-island-stage { position: relative; width: min(600px, 132%); }
+.hero-island-svg { display: block; width: 100%; height: auto; pointer-events: none; }
 
-/* キャラ移設に伴い、旧・重なり回避の余白(735ced4)は不要になったため戻す */
-.tp-wrap .tp-hero-chips {
-  padding-left: 3px;
-  padding-right: 3px;
+/* ヘッダー */
+.hero-topbar {
+  position: absolute; z-index: 40; top: calc(var(--safe-t) + 10px); left: 12px; right: 12px;
+  display: flex; align-items: center; gap: 8px;
 }
-/* タイトル横のキャラ用余白も不要 */
-.tp-header .ksk-title-zone { padding-bottom: 6px; }
+.hero-coin-chip {
+  display: flex; align-items: center; gap: 6px; padding: 7px 14px 7px 8px;
+  background: rgba(255,255,255,.94); border: none; border-radius: 999px;
+  box-shadow: 0 3px 0 rgba(36,46,99,.16), 0 6px 16px rgba(36,46,99,.14); cursor: pointer;
+  font-family: inherit; transition: transform .13s ease;
+}
+.hero-coin-chip:active { transform: translateY(3px); box-shadow: 0 0 0 rgba(36,46,99,.16); }
+.hero-coin-chip b { font-size: 19px; font-weight: 900; color: var(--gold-deep); }
+.hero-topbar-spacer { flex: 1; }
+.hero-icon-btn {
+  width: 44px; height: 44px; display: grid; place-items: center;
+  background: rgba(255,255,255,.94); border: none; border-radius: 15px;
+  box-shadow: 0 3px 0 rgba(36,46,99,.16), 0 6px 16px rgba(36,46,99,.14);
+  cursor: pointer; transition: transform .13s ease;
+}
+.hero-icon-btn:active { transform: translateY(3px); box-shadow: 0 0 0 rgba(36,46,99,.16); }
+.hero-coin-chip:focus-visible, .hero-icon-btn:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
 
-/* ── 拡大後のキャラがCTAへ重ならないよう、CTA〜しまステージ間の
-   縦スペースをキャラ拡大分だけ確保する ── */
-.tp-cta { margin-top: 8px; }
-.tp-island-stage { margin-top: 91px; }
+/* つづきから */
+.hero-resume {
+  position: absolute; z-index: 39; top: calc(var(--safe-t) + 64px); right: 12px;
+  display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px;
+  background: rgba(255,255,255,.93); border: none; border-radius: 999px;
+  box-shadow: 0 3px 0 rgba(36,46,99,.14), 0 7px 16px rgba(36,46,99,.14);
+  cursor: pointer; font-family: inherit; animation: hero-pop .5s cubic-bezier(.2,1.5,.4,1) .55s both;
+  max-width: min(72vw, 280px);
+}
+.hero-resume:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
+.hero-resume-thumb { width: 32px; height: 32px; border-radius: 11px; flex: none; background: linear-gradient(145deg,#CFEEFF,#8ED2F7); display: grid; place-items: center; }
+.hero-resume-txt { text-align: left; line-height: 1.2; min-width: 0; }
+.hero-resume-txt small { display: block; font-size: 9px; font-weight: 800; color: #8A93BD; letter-spacing: .1em; }
+.hero-resume-txt b { font-size: 12.5px; font-weight: 900; color: var(--ink); display: block; max-width: 38vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@keyframes hero-pop { from { opacity: 0; transform: scale(.72) translateY(6px); } to { opacity: 1; transform: none; } }
 
-/* ── ホイール/タップがヒーロー装飾に吸われないよう保証 ──
-   .tp-header(z-index:5)内の装飾疑似要素が、下のゲーム一覧より前面に
-   来てもイベントを透過するようにする。対話要素だけ pointer-events を戻す。 */
-.tp-header::before,
-.tp-header::after,
-.ksk-title-zone::before,
-.ksk-title-zone::after,
-.tp-mascot-bubble::before,
-.tp-mascot-bubble::after,
-.tp-season::before,
-.tp-season::after {
-  pointer-events: none !important;
+/* コピー・ロゴ */
+.hero-copy { position: relative; z-index: 30; padding-top: calc(var(--safe-t) + 130px); text-align: center; }
+.hero-welcome {
+  display: inline-block; position: relative; max-width: 80%; padding: 7px 18px 8px;
+  background: #fff; border-radius: 999px; font-size: 13px; font-weight: 800; color: var(--coral-deep);
+  box-shadow: 0 3px 0 rgba(242,100,127,.2); animation: hero-pop .5s cubic-bezier(.2,1.5,.4,1) .1s both;
 }
-.tp-island-stage,
-.tp-island-svg {
-  pointer-events: none;   /* 島の絵は装飾。キャラ(.ksk-chara-wrap)だけ操作可 */
+.hero-welcome::after {
+  content: ""; position: absolute; left: 50%; bottom: -8px; width: 15px; height: 9px; margin-left: -7.5px;
+  background: #fff; clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
-.tp-island-stage .ksk-chara-wrap {
-  pointer-events: auto;
-}
+.hero-logo-wrap { margin-top: 10px; padding: 0 14px; animation: hero-pop .6s cubic-bezier(.2,1.5,.4,1) .24s both; }
+.hero-logo-svg { display: block; width: min(420px, 100%); margin: 0 auto; height: auto; }
+.hero-logo-svg text { font-family: 'M PLUS Rounded 1c', sans-serif; font-weight: 900; }
 
-/* ── PC(マウス操作)では棚を横スクロールせず折り返して全表示 ──
-   横スクロール棚はタッチ/トラックパッド前提で、マウスしか無いPCでは
-   右側のカードに到達できないため。ホバー可能=マウス環境のみ適用し、
-   タッチ端末の横スクロールUXはそのまま維持する。 */
-@media (min-width: 900px) and (hover: hover) and (pointer: fine) {
-  .tp-shelf-scroll {
-    flex-wrap: wrap;
-    overflow-x: visible;
-    overflow-y: visible;
-    scroll-snap-type: none;
-    row-gap: 14px;
-  }
-  .tp-rail-cue,
-  .tp-rail-fade { display: none; }
-}
-
-/* ══════════════════════════════════════════════════════════
-   RoboBella family UI v1
-   母体サイトと色・カード・余白感を共有しつつ、子ども向けに
-   タップ領域と読みやすさを大きくしたトップページ最終オーバーライド。
-══════════════════════════════════════════════════════════ */
-.tp-wrap {
-  --wi-blue: #4f72df;
-  --wi-yellow: #f4d35e;
-  --wi-red: #e66b54;
-  --wi-green: #55b98a;
-  --wi-ink: #24304a;
-  --wi-paper: #fffaf0;
-  --wi-line: #e8ddca;
-  color: var(--wi-ink);
-  background: linear-gradient(180deg, #79d8f2 0 24%, #dff4f8 38%, var(--wi-paper) 58% 100%) !important;
-}
-
-.tp-header {
-  width: min(1180px, 100%);
-  margin-inline: auto;
-}
-
-.tp-top-btns {
-  border-bottom: 1px solid rgba(36, 48, 74, .08);
-  background: linear-gradient(180deg, rgba(255,250,240,.96) 65%, rgba(255,250,240,.78)) !important;
-  box-shadow: 0 5px 18px rgba(36,48,74,.08);
-}
-.tp-top-btns .tp-top-btn,
-.tp-top-btns .tp-coin-badge {
-  border-color: rgba(36,48,74,.16);
-  box-shadow: 0 3px 0 rgba(36,48,74,.14);
-}
-.tp-top-btns .tp-shop-btn {
-  background: var(--wi-yellow) !important;
-  color: var(--wi-ink) !important;
-  box-shadow: 0 3px 0 #c8aa38 !important;
-  animation: none !important;
-}
-
-.tp-wrap .tp-title-1,
-.tp-wrap .tp-title-2 {
-  background: linear-gradient(180deg, #fff4a8 0%, var(--wi-yellow) 46%, var(--wi-red) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  filter: drop-shadow(0 2px 0 #fff) drop-shadow(0 5px 0 rgba(36,48,74,.22));
-}
-.tp-wrap .tp-title::after { display: none; }
-/* ── いますぐ あそぶ：王国世界観のリッチなグラデーション。
-   従来の濃紺の板から、ゲームUIらしい厚み・金の縁取りを持つボタンへ ── */
-.tp-cta {
+/* CTA */
+.hero-cta-zone { position: absolute; z-index: 35; left: 0; right: 0; bottom: calc(var(--safe-b) + 58px); display: flex; justify-content: center; padding: 0 20px; }
+.hero-cta {
+  position: relative; display: flex; align-items: center; gap: 10px; padding: 16px 40px 18px;
+  background: linear-gradient(180deg,#FFB3C0 0%,var(--coral) 46%,var(--coral-deep) 100%);
+  border: 3px solid #fff; border-radius: 999px; font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-size: 21px; font-weight: 900; color: #fff; letter-spacing: .06em;
+  text-shadow: 0 2px 0 rgba(180,56,82,.45);
+  box-shadow: 0 6px 0 var(--coral-deep), 0 14px 26px rgba(20,80,120,.3);
+  cursor: pointer; animation: hero-bob 2.8s ease-in-out infinite;
   min-height: 44px;
-  min-width: 200px;
-  padding: 10px 32px;
-  background: linear-gradient(180deg, #5A6FC4 0%, #4B3F88 100%);
-  border: 1.5px solid #FFE58A;
-  box-shadow:
-    0 4px 0 #33296B,
-    0 9px 16px rgba(36, 30, 74, 0.3),
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.45),
-    inset 0 -3px 6px rgba(0, 0, 0, 0.18);
-  animation: none !important;
 }
-.tp-cta:hover,
-.tp-cta:active {
-  background: linear-gradient(180deg, #6A7FDA 0%, #584A9C 100%);
-  transform: translateY(2px);
-  box-shadow:
-    0 2px 0 #33296B,
-    0 5px 10px rgba(36, 30, 74, 0.28),
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.45),
-    inset 0 -3px 6px rgba(0, 0, 0, 0.18);
+.hero-cta:active { transform: translateY(6px); box-shadow: 0 0 0 var(--coral-deep); animation: none; }
+.hero-cta:focus-visible { outline: 4px solid #fff; outline-offset: 4px; }
+@keyframes hero-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+.hero-cta-shine { position: absolute; top: 5px; left: 20px; right: 20px; height: 11px; border-radius: 999px; background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,0)); }
+
+.hero-scroll-hint {
+  position: absolute; z-index: 35; left: 0; right: 0; bottom: calc(var(--safe-b) + 16px);
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  font-size: 11px; font-weight: 800; color: #fff; text-shadow: 0 1px 3px rgba(12,70,110,.55);
+  animation: hero-hint 2.2s ease-in-out infinite;
+}
+@keyframes hero-hint { 0%, 100% { transform: translateY(0); opacity: .85; } 50% { transform: translateY(5px); opacity: 1; } }
+
+/* キャラクター配置(城の左右)。Kisekaeが出力する .ksk-chara-wrap を上書きして
+   ステージ中央(お城)基準の位置へアンカーする。 */
+.hero-charas { position: relative; height: 0; }
+.hero-island-stage .ksk-chara-wrap { pointer-events: auto; }
+.hero-island-stage .ksk-chara-wrap--left { left: auto; right: calc(50% + min(96px, 19vw)); bottom: 30%; }
+.hero-island-stage .ksk-chara-wrap--right { right: auto; left: calc(50% + min(96px, 19vw)); bottom: 30%; }
+
+@media (min-width: 640px) {
+  .hero-island-stage .ksk-chara-wrap--left { right: calc(50% + min(150px, 15vw)); }
+  .hero-island-stage .ksk-chara-wrap--right { left: calc(50% + min(150px, 15vw)); }
 }
 
-/* 安心表示 */
-.tp-trust {
-  position: relative;
-  z-index: 10;
-  width: min(1080px, calc(100% - 32px));
-  margin: -4px auto 54px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  overflow: hidden;
-  border: 1px solid var(--wi-line);
-  border-radius: 24px;
-  background: rgba(255,255,255,.96);
-  box-shadow: 0 15px 38px rgba(68,55,31,.12);
+/* 島ステージは幅が約454pxを超えると常に600×400pxいっぱいまで拡大する。
+   このサイズの島は縦方向に大きな面積を必要とするため、幅に余裕のある画面
+   (通常のPC/タブレットの横長比率・横向きスマホ)ではheroを伸ばさず、
+   コピー領域の余白と島の縮尺だけを詰めてlogo/island/CTAの重なりを避ける。
+   heroの高さ自体(min-height)は変更しない＝1画面比率は画面サイズなりのまま。 */
+@media (min-width: 460px) {
+  .hero-copy { padding-top: calc(var(--safe-t) + 40px); }
+  .hero-logo-wrap { margin-top: 2px; }
+  .hero-island-stage { width: min(320px, 76%); }
+  .hero-cta-zone { bottom: calc(var(--safe-b) + 20px); }
+  .hero-scroll-hint { display: none; }
 }
-.tp-trust > div {
-  min-height: 84px;
-  padding: 18px 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-right: 1px solid #eee5d6;
+/* 高さそのものが乏しい画面(横向きスマホ等)は、上の縮尺だけでは足りないため
+   さらに要素を詰める。それでも不足する場合のみ、最後の手段として
+   高さ方向にわずかな最低保証(min-height)を足す。幅ではなく高さだけで判定する。 */
+@media (max-height: 500px) {
+  .hero-copy { padding-top: calc(var(--safe-t) + 40px); }
+  .hero-welcome { padding: 5px 14px 6px; font-size: 11px; }
+  .hero-logo-svg { width: min(260px, 100%); }
+  .hero-island-stage { width: min(260px, 78%); }
+  .hero-cta-zone { bottom: calc(var(--safe-b) + 8px); }
+  .hero-cta { padding: 10px 24px 11px; font-size: 15px; }
+  .hero-topbar { top: calc(var(--safe-t) + 6px); }
+  .hero-resume { top: calc(var(--safe-t) + 46px); }
 }
-.tp-trust > div:last-child { border-right: 0; }
-.tp-trust > div > span {
-  flex: 0 0 42px;
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  border-radius: 14px;
-  background: #eef1ff;
-  color: var(--wi-blue);
-  font-size: 15px;
-  font-weight: 900;
+@media (max-height: 420px) {
+  .hero { min-height: 560px; }
 }
-.tp-trust p { margin: 0; display: flex; flex-direction: column; text-align: left; }
-.tp-trust strong { font-size: 13px; line-height: 1.4; }
-.tp-trust small { margin-top: 3px; color: #747789; font-size: 10px; line-height: 1.35; }
-
-.tp-game-section {
-  max-width: 1180px;
-  padding: 0 20px 72px;
-}
-
-/* はじめての6本 */
-.tp-beginner {
-  margin-bottom: 34px;
-  padding: 30px;
-  border: 1px solid var(--wi-line);
-  border-radius: 28px;
-  background: rgba(255,255,255,.82);
-  box-shadow: 0 10px 30px rgba(68,55,31,.08);
-}
-.tp-beginner-head {
-  margin-bottom: 22px;
-  display: grid;
-  grid-template-columns: 1fr 1.1fr;
-  align-items: end;
-  gap: 30px;
-  text-align: left;
-}
-.tp-beginner-head span {
-  display: inline-block;
-  margin-bottom: 5px;
-  color: var(--wi-red);
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: .08em;
-}
-.tp-beginner-head h2 { margin: 0; font-size: clamp(26px, 4vw, 38px); letter-spacing: -.04em; }
-.tp-beginner-head p { margin: 0; color: #676b79; font-size: 12px; line-height: 1.8; }
-.tp-beginner-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-.tp-beginner-card {
-  min-width: 0;
-  padding: 0;
-  overflow: hidden;
-  border: 1px solid var(--wi-line);
-  border-radius: 20px;
-  background: #fff;
-  color: var(--wi-ink);
-  box-shadow: 0 6px 0 #e8decc;
-  text-align: left;
-  transition: transform .16s ease, box-shadow .16s ease;
-}
-.tp-beginner-card:hover { transform: translateY(-4px); box-shadow: 0 10px 0 #e1d5c0; }
-.tp-beginner-card:active { transform: translateY(2px) scale(.98); box-shadow: 0 3px 0 #e1d5c0; }
-.tp-beginner-art {
-  position: relative;
-  aspect-ratio: 16 / 10;
-  overflow: hidden;
-}
-.tp-beginner-art > svg { width: 100%; height: 100%; object-fit: cover; }
-.tp-beginner-art > img {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.tp-beginner-art::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  background: linear-gradient(155deg, rgba(255,255,255,.28), transparent 38%, rgba(36,48,74,.16));
-  pointer-events: none;
-}
-.tp-beginner-play {
-  position: absolute;
-  right: 12px;
-  bottom: 10px;
-  z-index: 4;
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  border-radius: 14px;
-  background: var(--wi-ink);
-  color: #fff;
-  font-size: 14px;
-  box-shadow: 0 4px 10px rgba(36,48,74,.28);
-}
-.tp-beginner-copy { padding: 13px 15px 15px; display: flex; flex-direction: column; }
-.tp-beginner-copy span { color: var(--wi-blue); font-size: 9px; font-weight: 900; }
-.tp-beginner-copy strong { margin-top: 4px; font-size: 14px; line-height: 1.4; }
-
-/* 絞り込み */
-.tp-sticky-bar {
-  top: calc(env(safe-area-inset-top, 0px) + 64px);
-  margin-bottom: 24px;
-  padding: 10px;
-  border: 1px solid rgba(36,48,74,.1);
-  border-radius: 22px;
-  background: rgba(255,250,240,.94);
-  box-shadow: 0 8px 22px rgba(36,48,74,.1);
-}
-.tp-filter-stack { display: grid; gap: 8px; }
-.tp-cat-chips { justify-content: center; }
-.tp-cat-chip { min-height: 44px; }
-.tp-cat-chip--on { background: var(--wi-blue); box-shadow: 0 3px 0 #344fa8; }
-.tp-age-filter {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding-top: 7px;
-  border-top: 1px solid var(--wi-line);
-}
-.tp-age-filter > strong { flex: none; font-size: 11px; }
-.tp-age-filter > div { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; }
-.tp-age-filter > div::-webkit-scrollbar { display: none; }
-.tp-age-chip {
-  min-height: 44px;
-  flex: none;
-  padding: 0 14px;
-  border: 2px solid #ded5c4;
-  border-radius: 999px;
-  background: #fff;
-  color: var(--wi-ink);
-  font-size: 11px;
-  font-weight: 900;
-}
-.tp-age-chip--on { border-color: var(--wi-green); background: var(--wi-green); color: #fff; }
-
-/* 全39本のカード */
-.tp-shelf { margin: 0 0 30px; }
-.tp-shelf-title {
-  padding: 0 6px 12px;
-  color: var(--wi-ink);
-  font-size: 18px;
-}
-.tp-shelf-scroll { gap: 14px; padding: 2px 6px 12px; }
-.tp-shelf-card {
-  width: 176px;
-  padding: 6px;
-  border: 1px solid var(--wi-line);
-  border-radius: 20px;
-  background: #fff !important;
-  box-shadow: 0 7px 0 #e8decc;
-}
-.tp-shelf-card:hover { transform: translateY(-4px); box-shadow: 0 11px 0 #e1d5c0; }
-.tp-shelf-card:active { transform: translateY(2px) scale(.98); box-shadow: 0 3px 0 #e1d5c0; }
-.tp-shelf-art {
-  aspect-ratio: 4 / 3;
-  border: 0;
-  border-radius: 15px;
-  background: #eef1ff;
-  box-shadow: none;
-}
-.tp-shelf-art svg { width: 100%; height: 100%; object-fit: cover; }
-.tp-shelf-copy { padding: 9px 7px 8px; text-align: left; }
-.tp-shelf-name {
-  min-height: 2.7em;
-  margin: 0;
-  padding: 0;
-  justify-content: flex-start;
-  border-radius: 0;
-  background: transparent;
-  color: var(--wi-ink);
-  font-size: 12px;
-  line-height: 1.35;
-  text-shadow: none;
-}
-.tp-shelf-age { margin-top: 5px; color: var(--wi-blue); font-size: 9px; font-weight: 900; }
-.tp-shelf-new { top: 11px; right: 11px; z-index: 5; background: var(--wi-red); }
-.tp-thumb-badge--sm { left: 11px; bottom: 10px; z-index: 4; }
-
-.tp-recent,
-.tp-reco {
-  padding: 20px;
-  border: 1px solid var(--wi-line);
-  border-radius: 22px;
-  background: rgba(255,255,255,.72);
-}
-
-.tp-parade { background: var(--wi-paper); }
-.tp-footer {
-  padding: 36px 20px calc(36px + env(safe-area-inset-bottom, 0px));
-  background: var(--wi-ink);
-  color: #fff;
-}
-.tp-footer-link { color: #fff; background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.22); }
-.tp-footer-robobella { color: #f5dcff; border-color: rgba(245,220,255,.48); }
-.tp-footer-sep { color: rgba(255,255,255,.28); }
-
-.tp-wrap button:focus-visible {
-  outline: 4px solid rgba(79,114,223,.35);
-  outline-offset: 3px;
-}
-
-@media (min-width: 700px) {
-  .tp-shelf-card { width: 196px; }
-}
-
-@media (max-width: 760px) {
-  .tp-trust { grid-template-columns: 1fr 1fr; }
-  .tp-trust > div:nth-child(2) { border-right: 0; }
-  .tp-trust > div:nth-child(-n+2) { border-bottom: 1px solid #eee5d6; }
-  .tp-beginner-head { grid-template-columns: 1fr; gap: 8px; }
-  .tp-beginner-grid { grid-template-columns: repeat(2, 1fr); }
-  .tp-cat-chips { justify-content: flex-start; }
-}
-
-@media (max-width: 560px) {
-  .tp-top-btns { padding-inline: 8px; }
-  .tp-top-btns .tp-coin-badge { padding: 4px 7px; }
-  .tp-top-btns .tp-top-btn { width: 38px; height: 38px; }
-  .tp-top-btns .tp-shop-btn { width: 38px !important; }
-  .tp-top-btns .tp-lang-btn { padding-inline: 7px !important; }
-  .tp-trust { width: calc(100% - 24px); margin-bottom: 42px; }
-  .tp-trust > div { min-height: 74px; padding: 13px 12px; gap: 9px; }
-  .tp-trust > div > span { flex-basis: 36px; width: 36px; height: 36px; border-radius: 12px; font-size: 13px; }
-  .tp-trust strong { font-size: 11px; }
-  .tp-trust small { font-size: 8px; }
-  .tp-game-section { padding-inline: 12px; }
-  .tp-beginner { padding: 20px 12px 24px; border-radius: 22px; }
-  .tp-beginner-grid { gap: 10px; }
-  .tp-beginner-card { border-radius: 16px; }
-  .tp-beginner-copy { padding: 10px 11px 12px; }
-  .tp-beginner-copy strong { font-size: 12px; }
-  .tp-beginner-play { width: 36px; height: 36px; border-radius: 12px; }
-  .tp-sticky-bar { top: calc(env(safe-area-inset-top, 0px) + 58px); margin-bottom: 20px; padding: 8px; }
-  .tp-filter-stack { gap: 6px; }
-  .tp-cat-chips { padding-block: 4px; gap: 6px; }
-  .tp-cat-chip { padding-inline: 13px; }
-  .tp-age-filter { align-items: flex-start; flex-direction: column; gap: 6px; padding-top: 6px; }
-  .tp-age-filter > div { width: 100%; }
-  .tp-age-chip { min-height: 44px; padding-inline: 12px; }
-  .tp-shelf-title { padding-left: 4px; font-size: 16px; }
-  /* ジャンル棚: 縦2段×横スクロール。grid-auto-flowが列優先(A/B→C/D→…)で
-     並ぶため、shuffle済み配列の並び替えは不要。奇数件でも最終列の下段が
-     空くだけで末尾カードは必ず到達可能。 */
-  .tp-shelf-scroll {
-    display: grid;
-    grid-template-rows: repeat(2, auto);
-    grid-auto-flow: column;
-    grid-auto-columns: 160px;
-    column-gap: 8px;
-    row-gap: 8px;
-    padding-inline: 4px;
-  }
-  .tp-shelf-card { width: 160px; padding: 6px; }
-  .tp-shelf-art { border-radius: 11px 11px 5px 5px; }
-  .tp-shelf-icon-fb { line-height: 128px; }
-  .tp-shelf-copy { padding: 6px 5px 6px; }
-  .tp-shelf-name { font-size: 11.5px; min-height: 2.3em; }
-  .tp-shelf-age { font-size: 8.5px; margin-top: 3px; }
-  .tp-shelf-new { font-size: 8px; padding: 1.5px 5px; top: 7px; right: 7px; }
-  .tp-thumb-badge--sm { transform: scale(.9); left: 7px; bottom: 6px; }
-}
-
-/* 430px前後: 同じ160px幅カードのまま2段×横スクロールで1行2.3〜2.6枚程度見える。
-   390px級では1行2.2〜2.4枚程度。専用ブレークポイントは不要。 */
 
 @media (prefers-reduced-motion: reduce) {
-  .tp-beginner-card,
-  .tp-shelf-card { transition: none; }
-}
-
-/* ══════════════════════════════════════════════════════════
-   PCヒーロー最終調整 (min-width: 1000px)
-   広い画面幅を活かし、王国の舞台(キャラ・城・島)を主役サイズへ拡大する。
-   390px/430px級のスマホ設定はここでは一切変更しない。
-══════════════════════════════════════════════════════════ */
-@media (min-width: 1000px) {
-  /* ── タイトル・サブコピーを一段大きく ── */
-  .tp-title-1,
-  .tp-title-2 {
-    font-size: clamp(36px, 3.4vw, 46px) !important;
-  }
-  .tp-hero-chips .tp-season--chip,
-  .tp-count-chip {
-    font-size: 13.5px !important;
-    padding: 4px 15px !important;
-  }
-
-  /* ── CTA: スマホの45px高は維持しつつ、幅・文字・paddingのみ約110% ── */
-  .tp-cta {
-    font-size: 21px;
-    padding: 11px 35px;
-    margin-top: 12px;
-  }
-
-  /* ── 島ステージ(城+浜辺)を約1.25倍まで自然に拡大 ── */
-  .tp-island-stage {
-    width: clamp(650px, 55vw, 760px);
-    margin-top: 119px;
-  }
-
-  /* ── 主役: プリンス/プリンセスをPCサイズへ。細部(宝石・髪・衣装)が
-     はっきり見える解像度を活かす ── */
-  .tp-header .ksk-svg {
-    width: clamp(150px, 13.5vw, 184px);
-    height: clamp(240px, 21.6vw, 294px);
-  }
-  .tp-header .ksk-pet {
-    width: clamp(40px, 3.5vw, 47px);
-    height: clamp(40px, 3.5vw, 47px);
-  }
-
-  /* ── 左右の間隔も拡大: 中央の狭い範囲に固まらず、舞台全体へ展開 ── */
-  .tp-island-stage .ksk-chara-wrap--left {
-    right: calc(50% + min(160px, 13vw));
-  }
-  .tp-island-stage .ksk-chara-wrap--right {
-    left: calc(50% + min(160px, 13vw));
-  }
-
-  /* ── きがえプレートも約1.15倍。キャラに対しては小さめのプレートのまま ── */
-  .ksk-chara-badge {
-    font-size: 12px;
-    padding: 5px 23px;
+  .hero-sun-rays, .hero-sun-core, .hero-star, .hero-cloud--far, .hero-cloud--near, .hero-bird-wing,
+  .hero-wave-band, .hero-pt, .hero-welcome, .hero-logo-wrap, .hero-resume, .hero-cta, .hero-scroll-hint,
+  .hero-island-stage .ksk-chara-wrap {
+    animation: none !important;
   }
 }
+
+/* ============================================================
+   ゲーム一覧（フラット）
+   ============================================================ */
+.game-list { position: relative; padding: 30px 12px 12px; background: linear-gradient(180deg, var(--sea-deep) 0%, #0E6994 55%, #0A5273 100%); }
+.game-list-head { text-align: center; margin-bottom: 16px; }
+.game-list-head h2 { font-weight: 900; font-size: 25px; color: #fff; letter-spacing: .04em; text-shadow: 0 3px 0 rgba(6,48,74,.45); }
+.game-list-head p { margin-top: 5px; font-size: 12px; font-weight: 700; color: #A7E2FA; }
+
+.cats {
+  display: flex; gap: 8px; max-width: 640px; margin: 0 auto 9px; padding: 2px 2px 6px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.cats::-webkit-scrollbar { display: none; }
+.cat {
+  flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  width: 68px; min-height: 44px; padding: 9px 4px 8px; border: none; border-radius: 19px;
+  background: rgba(255,255,255,.93); color: #5E7290; font-family: inherit; font-size: 11px; font-weight: 900;
+  line-height: 1.1; box-shadow: 0 3px 0 rgba(5,50,74,.3); cursor: pointer; transition: transform .12s ease;
+}
+.cat .ci { width: 34px; height: 34px; border-radius: 12px; display: grid; place-items: center; background: rgba(94,114,144,.08); }
+.cat[aria-pressed="true"] { background: var(--gold); color: #5A3B00; box-shadow: 0 3px 0 #C98510; transform: translateY(-2px); }
+.cat[aria-pressed="true"] .ci { background: rgba(255,255,255,.72); }
+.cat:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+.filters {
+  display: flex; gap: 7px; justify-content: flex-start; max-width: 640px; margin: 0 auto 12px; padding: 2px 2px 6px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.filters::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none; display: flex; align-items: center; gap: 5px; min-height: 40px;
+  padding: 7px 14px 8px; border: none; border-radius: 999px; background: rgba(255,255,255,.92); color: #5E7290;
+  font-family: inherit; font-size: 12.5px; font-weight: 900; box-shadow: 0 3px 0 rgba(5,50,74,.3); cursor: pointer;
+}
+.chip[aria-pressed="true"] { background: var(--gold); color: #5A3B00; box-shadow: 0 3px 0 #C98510; }
+.chip:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+/* おたのしみ(ルーレット/ずかん) */
+.fun-row { display: flex; align-items: center; gap: 8px; justify-content: center; max-width: 640px; margin: 0 auto 18px; flex-wrap: wrap; }
+.fun-row-label { font-size: 11px; font-weight: 800; color: #A7E2FA; letter-spacing: .08em; }
+.fun-btn {
+  display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 16px;
+  border: none; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff;
+  font-family: inherit; font-size: 12.5px; font-weight: 800; cursor: pointer;
+  border: 1.5px solid rgba(255,255,255,.35);
+}
+.fun-btn:hover { background: rgba(255,255,255,.24); }
+.fun-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+/* カード */
+.game-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 640px; margin: 0 auto; }
+@media (min-width: 620px) { .game-grid { grid-template-columns: repeat(3, 1fr); max-width: 760px; } }
+@media (min-width: 960px) { .game-grid { grid-template-columns: repeat(4, 1fr); max-width: 1040px; } }
+@media (max-width: 619px) and (orientation: landscape) { .game-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.game-card {
+  position: relative; display: block; padding: 0; overflow: hidden; border: none; border-radius: 22px;
+  background: #fff; text-align: left; cursor: pointer; text-decoration: none; color: inherit;
+  box-shadow: 0 5px 0 rgba(5,50,74,.34), 0 10px 20px rgba(5,50,74,.2);
+  transition: transform .14s ease, box-shadow .14s ease;
+}
+.game-card:active { transform: translateY(5px); box-shadow: 0 0 0 rgba(5,50,74,.34), 0 6px 14px rgba(5,50,74,.18); }
+.game-card:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+
+.game-thumb { position: relative; aspect-ratio: 4 / 3; overflow: hidden; }
+.game-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.game-thumb-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.game-thumb-fallback svg { display: block; }
+.game-thumb-ph { width: 100%; height: 100%; display: grid; place-items: center; }
+.play-fab { position: absolute; right: 8px; bottom: 8px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.96); display: grid; place-items: center; box-shadow: 0 3px 8px rgba(10,40,70,.3); }
+.badge-new { position: absolute; left: 8px; top: 8px; padding: 3px 9px 4px; border-radius: 999px; background: var(--coral-deep); color: #fff; font-size: 10px; font-weight: 900; box-shadow: 0 2px 0 rgba(160,50,72,.45); }
+.badge-played { position: absolute; left: 8px; top: 8px; padding: 3px 9px 4px; border-radius: 999px; background: rgba(255,255,255,.95); color: #5E7290; font-size: 10px; font-weight: 900; box-shadow: 0 2px 0 rgba(10,40,70,.2); }
+.game-body { padding: 10px 11px 12px; }
+.game-body b { display: block; font-size: 13px; font-weight: 900; line-height: 1.32; color: var(--ink); }
+.game-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 7px; }
+.age { font-size: 10px; font-weight: 800; color: #8A93BD; }
+.empty { grid-column: 1 / -1; padding: 36px 10px; text-align: center; font-size: 13px; font-weight: 800; color: #BEE6FA; }
+
+/* ルーレット/ずかんのアート枠 */
+.tp-art { width: 100%; height: 100%; position: relative; }
+.tp-art svg { display: block; width: 100%; height: 100%; }
+.tp-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+/* ============================================================
+   おうちの方へ
+   ============================================================ */
+.tp-parents { padding: 26px 18px calc(var(--safe-b) + 34px); background: #F4F7FC; }
+.tp-parents-inner { max-width: 560px; margin: 0 auto; }
+.tp-parents h3 { font-size: 13px; font-weight: 900; color: #8A93BD; letter-spacing: .1em; text-align: center; margin-bottom: 14px; }
+.tp-parents-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #E2E8F4; border-radius: 16px; overflow: hidden; margin-bottom: 18px; }
+.tp-parents-item { background: #fff; padding: 13px 12px; display: flex; gap: 9px; align-items: flex-start; }
+.tp-parents-ic { width: 26px; height: 26px; flex: none; border-radius: 9px; display: grid; place-items: center; background: #EEF2FB; }
+.tp-parents-item b { display: block; font-size: 12.5px; font-weight: 900; }
+.tp-parents-item small { display: block; font-size: 10.5px; color: #8A93BD; font-weight: 700; margin-top: 1px; }
+
+.tp-footer-links { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; }
+.tp-footer-link {
+  background: rgba(255,255,255,0.72); border: 1.5px solid rgba(0,0,0,0.12); color: #3a7a52;
+  font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; padding: 6px 12px; min-height: 32px;
+  border-radius: 10px; transition: background .15s, transform .1s, box-shadow .1s; letter-spacing: .02em;
+  white-space: nowrap; box-shadow: 0 2px 0 rgba(0,0,0,0.1); text-decoration: none; display: inline-block;
+}
+.tp-footer-link:hover { background: rgba(255,255,255,0.95); transform: translateY(-2px); box-shadow: 0 4px 0 rgba(0,0,0,0.1); }
+.tp-footer-link:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
+.tp-footer-meta { margin-top: 12px; font-size: 11px; color: rgba(0,0,0,0.32); display: flex; justify-content: center; gap: 12px; }
+
+/* ============================================================
+   おうちの人パネル / ルーレット / ずかん（共通モーダル基盤）
+   ============================================================ */
+.tp-roulette-overlay {
+  position: fixed; inset: 0; z-index: 1200; display: flex; align-items: center; justify-content: center;
+  background: rgba(30,10,40,.55); backdrop-filter: blur(3px); animation: tp-bubble-in .25s ease-out; padding: 16px;
+}
+@keyframes tp-bubble-in { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
+
+.tp-roulette-box {
+  width: min(86vw, 340px); padding: 20px 18px 18px; background: linear-gradient(160deg, #fff7fb, #ffe9f2);
+  border: 4px solid #ffb3c8; border-radius: 26px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.3);
+}
+.tp-roulette-title { font-family: 'M PLUS Rounded 1c', sans-serif; font-size: 17px; font-weight: 900; color: #d14a76; margin-bottom: 12px; }
+.tp-roulette-card { width: 200px; aspect-ratio: 4/3; margin: 0 auto; border-radius: 20px; padding: 10px; border: 3px solid rgba(255,255,255,.7); box-shadow: 0 6px 18px rgba(0,0,0,.22); display: flex; flex-direction: column; }
+.tp-roulette-card--spin { animation: tp-roulette-shake .12s linear infinite; }
+.tp-roulette-card--win { animation: tp-roulette-win .5s cubic-bezier(.34,1.56,.64,1); }
+@keyframes tp-roulette-shake { 0% { transform: rotate(-2deg) scale(.98); } 50% { transform: rotate(2deg) scale(1.02); } 100% { transform: rotate(-2deg) scale(.98); } }
+@keyframes tp-roulette-win { 0% { transform: scale(.85); } 60% { transform: scale(1.1); } 100% { transform: scale(1); } }
+.tp-roulette-art { flex: 1; border-radius: 12px; overflow: hidden; background: rgba(255,255,255,.15); }
+.tp-roulette-name { margin-top: 8px; font-family: 'M PLUS Rounded 1c', sans-serif; font-weight: 800; font-size: 15px; color: #fff; text-shadow: 0 2px 3px rgba(0,0,0,.35); }
+.tp-roulette-actions { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.tp-roulette-play { width: 100%; min-height: 44px; padding: 12px; border: none; border-radius: 14px; background: linear-gradient(135deg,#5bd68a,#2eab5e); color: #fff; font-family: inherit; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 0 #1f7d43; }
+.tp-roulette-play:active { transform: translateY(3px); box-shadow: 0 1px 0 #1f7d43; }
+.tp-roulette-retry { min-height: 40px; padding: 8px 18px; border: 2px solid #ffb3c8; border-radius: 999px; background: #fff; color: #d14a76; font-family: inherit; font-weight: 800; font-size: 13px; cursor: pointer; }
+.tp-roulette-close { margin-top: 2px; min-height: 32px; border: none; background: none; color: #c98aa3; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.tp-roulette-play:focus-visible, .tp-roulette-retry:focus-visible, .tp-roulette-close:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
+
+.tp-zukan-box { width: min(92vw, 420px); max-height: 82vh; overflow-y: auto; padding: 18px 14px 14px; background: linear-gradient(160deg, #fdf9ff, #efe8ff); border: 4px solid #b9a5ff; border-radius: 26px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.3); }
+.tp-zukan-box .tp-roulette-title { color: #6a4fe0; }
+.tp-zukan-progress { font-family: 'M PLUS Rounded 1c', sans-serif; font-size: 15px; font-weight: 800; color: #8a6fe8; margin-bottom: 12px; }
+.tp-zukan-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.tp-zukan-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 2px 6px; min-height: 44px; border: 2px dashed #cbbcf5; border-radius: 14px; background: #f3eefc; cursor: pointer; transition: transform .12s; }
+.tp-zukan-cell:active { transform: scale(.9); }
+.tp-zukan-cell--got { border: 2px solid rgba(255,255,255,.75); box-shadow: 0 3px 8px rgba(0,0,0,.18); animation: tp-roulette-win .4s cubic-bezier(.34,1.56,.64,1); }
+.tp-zukan-art { width: 32px; height: 24px; display: block; opacity: .9; }
+.tp-zukan-cell:not(.tp-zukan-cell--got) .tp-zukan-art { opacity: .35; font-size: 20px; }
+.tp-zukan-name { font-family: inherit; font-weight: 800; font-size: 8.5px; line-height: 1.15; color: #9a8bc4; word-break: keep-all; overflow-wrap: anywhere; }
+.tp-zukan-cell--got .tp-zukan-name { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+.tp-zukan-hint { margin: 12px 0 6px; font-family: inherit; font-weight: 700; font-size: 12px; color: #8a6fe8; }
+.tp-zukan-cell:focus-visible { outline: 3px solid #6a4fe0; outline-offset: 2px; }
+
+/* おうちの人パネル */
+.tp-utility-box { width: min(90vw, 360px); padding: 20px 18px 18px; background: #fff; border: 4px solid #cfe0f5; border-radius: 26px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.3); }
+.tp-utility-box .tp-roulette-title { color: var(--navy); }
+.tp-utility-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 4px; border-top: 1px solid #EEF2FB; font-size: 13px; font-weight: 800; color: var(--ink); }
+.tp-utility-row--lang { flex-direction: column; align-items: stretch; gap: 8px; }
+.tp-utility-toggle { display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 6px 14px; border: 1.5px solid #cfe0f5; border-radius: 999px; background: #F4F7FC; color: var(--ink); font-family: inherit; font-weight: 800; font-size: 12.5px; cursor: pointer; }
+.tp-utility-toggle[aria-pressed="true"] { background: #E5F6EA; border-color: #8fd6a4; }
+.tp-utility-langs { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.tp-utility-lang { min-width: 44px; min-height: 36px; padding: 6px 10px; border: 1.5px solid #cfe0f5; border-radius: 12px; background: #F4F7FC; color: var(--ink); font-family: inherit; font-weight: 800; font-size: 12px; cursor: pointer; }
+.tp-utility-lang--on { background: var(--gold); border-color: var(--gold-deep); color: #5A3B00; }
+.tp-utility-links { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.tp-utility-toggle:focus-visible, .tp-utility-lang:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-roulette-card--spin, .tp-roulette-card--win, .tp-zukan-cell--got, .tp-ptr-spin--ready { animation: none; }
+}
+
+.tp-wrap button:focus-visible, .tp-wrap a:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
