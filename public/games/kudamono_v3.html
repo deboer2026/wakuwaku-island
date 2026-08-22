@@ -303,7 +303,7 @@ body.sky-endless{background:linear-gradient(180deg,#79CBF2 0%,#CDEFDD 66%,#FFF3D
   <div id="nowebgl">😢 この ブラウザでは 3Dが うごきません。<br>べつの ブラウザで あそんでね。</div>
 </div>
 
-<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <script src="/games/safe_area.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -383,11 +383,11 @@ let _bgm=null;
 let _bgmThemeName=null;
 function initBGM(){
   if(_bgm)return;
-  if(typeof WakuwakuBGM!=='undefined'){
+  if(typeof WakuwakuMP3BGM!=='undefined'){
     try{
-      _bgm=new WakuwakuBGM('fruity');
-      _bgmThemeName='fruity';
-      const on=(typeof WakuwakuBGM.loadState==='function')?WakuwakuBGM.loadState():SAVE.settings.sound;
+      _bgm=new WakuwakuMP3BGM('cute-animals');
+      _bgmThemeName='cute-animals';
+      const on=(typeof WakuwakuMP3BGM.loadState==='function')?WakuwakuMP3BGM.loadState():SAVE.settings.sound;
       _bgm.setEnabled(on); if(on)_bgm.start();
       SAVE.settings.sound=on; persist();
     }catch(e){_bgm=null;_bgmThemeName=null;}
@@ -398,18 +398,19 @@ fillTitleStats();
 function toggleBGM(){
   if(!_bgm){initBGM(); if(!_bgm){SAVE.settings.sound=!SAVE.settings.sound;persist();syncBgmIcon();return;} }
   let on=true;
-  try{ on=_bgm.toggle(); if(typeof WakuwakuBGM!=='undefined'&&typeof WakuwakuBGM.saveState==='function')WakuwakuBGM.saveState(on); }catch(e){}
+  try{ on=_bgm.toggle(); if(typeof WakuwakuMP3BGM!=='undefined'&&typeof WakuwakuMP3BGM.saveState==='function')WakuwakuMP3BGM.saveState(on); }catch(e){}
   SAVE.settings.sound=on; persist(); syncBgmIcon();
 fillTitleStats();
 }
-/* 共有wakuwaku_bgm.jsにsetTheme()が無いため、旧インスタンスを止めて同じON/OFF状態で作り直す */
-function bgmTheme(t){
-  if(typeof WakuwakuBGM==='undefined')return;
+/* くだものキャッチは全ステージで cute-animals を使用する。 */
+function bgmTheme(){
+  const t='cute-animals';
+  if(typeof WakuwakuMP3BGM==='undefined')return;
   if(_bgm&&_bgmThemeName===t)return; // 同じテーマなら作り直さない
   const wasOn=_bgm?(typeof _bgm.enabled==='boolean'?_bgm.enabled:SAVE.settings.sound):SAVE.settings.sound;
   try{ if(_bgm&&typeof _bgm.stop==='function')_bgm.stop(); }catch(e){}
   try{
-    _bgm=new WakuwakuBGM(t);
+    _bgm=new WakuwakuMP3BGM(t);
     _bgmThemeName=t;
     _bgm.setEnabled(wasOn);
     if(wasOn)_bgm.start();
@@ -1239,7 +1240,7 @@ function startStage(n){
   setStageDeco(st.n);
   setupBoss(!!st.boss);
   elStageName.textContent=st.n+'. '+st.name;
-  bgmTheme(st.boss?'action':'fruity');
+  bgmTheme();
   beginRun();
 }
 function startEndless(){
@@ -1250,7 +1251,7 @@ function startEndless(){
   setStageDeco(0);
   setupBoss(false);
   elStageName.textContent='♾️ エンドレス';
-  bgmTheme('fruity');
+  bgmTheme();
   beginRun();
 }
 function setupBoss(on){

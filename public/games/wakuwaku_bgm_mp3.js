@@ -7,6 +7,12 @@
     adventure: '/audio/bgm/adventure.mp3',
     'cute-animals': '/audio/bgm/cute-animals.mp3',
     action: '/audio/bgm/action.mp3',
+    'happy-island': '/audio/bgm/happy-island.mp3',
+    magical: '/audio/bgm/magical.mp3',
+    nature: '/audio/bgm/nature.mp3',
+    learning: '/audio/bgm/learning.mp3',
+    puzzle: '/audio/bgm/puzzle.mp3',
+    racing: '/audio/bgm/racing.mp3',
   };
 
   var BGM_VOLUME = 0.20;
