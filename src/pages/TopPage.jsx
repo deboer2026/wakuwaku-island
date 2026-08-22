@@ -1419,6 +1419,9 @@ const GAME_SVGS = {
       <path d="M78 62l3.5 7.2 8 1.1-5.8 5.6 1.4 7.9-6.8-3.6-6.8 3.6 1.4-7.9-5.8-5.6 8-1.1z" fill="#FF8FC6" stroke="#DB6BA3" strokeWidth="1.6"/>
     </svg>
   ),
+  g_ofuro: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="76" rx="42" ry="8" fill="#BFEAF5" opacity=".55"/><path d="M10 44h80v14a20 20 0 0 1-20 20H30A20 20 0 0 1 10 58z" fill="#F6FBFE" stroke="#9FC7D8" strokeWidth="2"/><rect x="8" y="40" width="84" height="8" rx="4" fill="#BFEAF5" stroke="#8FBFD2" strokeWidth="1.5"/><ellipse cx="50" cy="34" rx="20" ry="18" fill="#F3D9A8" stroke="#D9B478" strokeWidth="2"/><ellipse cx="34" cy="20" rx="7" ry="9" fill="#D9B478"/><ellipse cx="66" cy="20" rx="7" ry="9" fill="#D9B478"/><ellipse cx="50" cy="38" rx="8" ry="6" fill="#FFF3DE"/><ellipse cx="50" cy="35" rx="3" ry="2.4" fill="#5A4636"/><path d="M40 28q4-4 8 0M54 28q4-4 8 0" stroke="#3A2C22" strokeWidth="2.6" fill="none" strokeLinecap="round"/><circle cx="20" cy="24" r="7" fill="#fff" opacity=".92"/><circle cx="80" cy="16" r="5.5" fill="#fff" opacity=".9"/></svg>
+  ),
 };
 
 /* ════════════════════════════════════════════════════
@@ -1526,6 +1529,12 @@ const GAMES = [
     zh:{ name:'啵咕啵咕岛', desc:'收集水果和动物朋友，\n打造自己的3D小岛！' },
     ko:{ name:'포코포코 아일랜드', desc:'과일과 동물 친구와 함께\n나만의 3D 섬을 만들어요!' },
     es:{ name:'Isla Pokopoko', desc:'¡Crea tu isla 3D con\nfrutas y amigos animales!' } },
+  { id:'g_ofuro', route:'/ofuro', icon:'🛁', num:27, color:'#7FD8F5', stars:5, isNew:true, category:'そうぞう',
+    ja:{ name:'あわあわおふろやさん', desc:'あわあわで ゴシゴシ！\nどうぶつを ピカピカに' },
+    en:{ name:'Bubbly Bath House', desc:'Scrub with fluffy suds\nand make animals sparkle!' },
+    zh:{ name:'泡泡澡堂', desc:'用泡泡搓一搓，\n把动物洗得亮晶晶！' },
+    ko:{ name:'거품 목욕탕', desc:'거품으로 문질문질!\n동물을 반짝반짝하게' },
+    es:{ name:'Baño de Burbujas', desc:'¡Frota con espuma\ny deja a los animales brillantes!' } },
   { id:'g14', route:'/machi',          icon:'🏙️', num:14, color:'#00897B', stars:5, isNew:true, category:'そうぞう',
     ja:{ name:'わくわくまちづくり', desc:'3Dの しまを あるいて\nどうぶつと まちを つくろう！' },
     en:{ name:'Dream Island Town',   desc:'Explore a 3D island and\nbuild a town with animals!' },

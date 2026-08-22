@@ -49,6 +49,7 @@ const NeonDrive = lazy(() => import('./games/NeonDrive'))
 const AstralFang = lazy(() => import('./games/AstralFang'))
 const NijiiroOukoku = lazy(() => import('./games/NijiiroOukoku'))
 const PokopokoIsland = lazy(() => import('./games/PokopokoIsland'))
+const AwaawaOfuro = lazy(() => import('./games/AwaawaOfuro'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const TermsPage = lazy(() => import('./pages/TermsPage'))
 const ParentsPage = lazy(() => import('./pages/ParentsPage'))
@@ -103,6 +104,7 @@ const GAME_ROUTES = new Set([
   '/astral-fang', '/astral',
   '/nijiiro-oukoku', '/nijiiro',
   '/pokopoko-island',
+  '/ofuro', '/awaawa-ofuro',
   // 短縮URLエイリアスも記録
   '/kudamono', '/puzzle', '/kazu', '/soccer',
 ]);
@@ -201,6 +203,8 @@ export default function App() {
         <Route path="/nijiiro-oukoku" element={<GameWithSEO route="/nijiiro-oukoku"><NijiiroOukoku /></GameWithSEO>} />
         <Route path="/nijiiro"        element={<GameWithSEO route="/nijiiro-oukoku"><NijiiroOukoku /></GameWithSEO>} />
         <Route path="/pokopoko-island" element={<GameWithSEO route="/pokopoko-island"><PokopokoIsland /></GameWithSEO>} />
+        <Route path="/ofuro" element={<GameWithSEO route="/ofuro"><AwaawaOfuro /></GameWithSEO>} />
+        <Route path="/awaawa-ofuro" element={<GameWithSEO route="/ofuro"><AwaawaOfuro /></GameWithSEO>} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms"   element={<TermsPage />} />
         <Route path="/parents" element={<ParentsPage />} />
