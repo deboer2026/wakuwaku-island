@@ -152,7 +152,7 @@
 </div>
 <div id="load">よみこみちゅう…</div>
 <div id="err"></div>
-<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <script src="/games/safe_area.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -1098,25 +1098,26 @@ function sfx(k){
 }
 /* BGM */
 let _bgm=null;
+const MP3_THEME_MAP={happy:'happy-island',cute:'cute-animals',magical:'magical',sky:'adventure',forest:'nature',ocean:'ocean-food',sweets:'cute-animals',action:'action',fruity:'nature',building:'puzzle',quiz:'learning',adventure:'adventure',puzzle:'puzzle',racing:'racing'};
 function initBgm(){
-  if(_bgm||typeof WakuwakuBGM==="undefined") return;
+  if(_bgm||typeof WakuwakuMP3BGM==="undefined") return;
   try{
-    _bgm=new WakuwakuBGM("forest");
-    const on=WakuwakuBGM.loadState(); _bgm.setEnabled(on); if(on) _bgm.start();
+    _bgm=new WakuwakuMP3BGM("nature");
+    const on=WakuwakuMP3BGM.loadState(); _bgm.setEnabled(on); if(on) _bgm.start();
     syncBgmBtn();
   }catch(e){}
 }
 function syncBgmBtn(){
   const b=document.getElementById("bgmBtn");
   let on=true;
-  try{ on = (typeof WakuwakuBGM!=="undefined") ? WakuwakuBGM.loadState() : true; }catch(e){}
+  try{ on = (typeof WakuwakuMP3BGM!=="undefined") ? WakuwakuMP3BGM.loadState() : true; }catch(e){}
   b.textContent = on?"🔊":"🔇";
 }
 function setBgmTheme(th){
-  if(!_bgm||typeof WakuwakuBGM==="undefined") return;
+  if(!_bgm||typeof WakuwakuMP3BGM==="undefined") return;
   try{
-    const on=WakuwakuBGM.loadState();
-    _bgm.stop(); _bgm=new WakuwakuBGM(th); _bgm.setEnabled(on); if(on)_bgm.start();
+    const on=WakuwakuMP3BGM.loadState(); th=MP3_THEME_MAP[th]||th;
+    _bgm.setTheme(th); _bgm.setEnabled(on); if(on)_bgm.start();
   }catch(e){}
 }
 
@@ -1755,7 +1756,7 @@ document.getElementById("bookBtn").addEventListener("click",()=>{
 document.getElementById("bgmBtn").addEventListener("click",()=>{
   ensureAudio();
   if(!_bgm) initBgm();
-  if(_bgm){ const on=_bgm.toggle(); if(typeof WakuwakuBGM!=="undefined") WakuwakuBGM.saveState(on); }
+  if(_bgm){ const on=_bgm.toggle(); if(typeof WakuwakuMP3BGM!=="undefined") WakuwakuMP3BGM.saveState(on); }
   syncBgmBtn();
 });
 document.getElementById("backBtn").addEventListener("click",()=>{

@@ -335,7 +335,7 @@ html,body{
 
 <div id="fallback"><p>このブラウザでは 3Dが つかえません。<br>べつの ブラウザで あそんでみてね。</p></div>
 
-<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <script src="/games/safe_area.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -1417,12 +1417,13 @@ function drawSticker(cvs,idx){
    BGM
    ======================================================================= */
 var bgm=null, bgmTheme='';
+var MP3_THEME_MAP={happy:'happy-island',cute:'cute-animals',magical:'magical',sky:'adventure',forest:'nature',ocean:'ocean-food',sweets:'cute-animals',action:'action',fruity:'nature',building:'puzzle',quiz:'learning',adventure:'adventure',puzzle:'puzzle',racing:'racing'};
 function initBGM(theme){
-  if(typeof WakuwakuBGM==='undefined') return;
+  if(typeof WakuwakuMP3BGM==='undefined') return;
+  theme=MP3_THEME_MAP[theme]||theme;
   try{
     if(bgm && bgmTheme===theme){ if(bgm.enabled) bgm.start(); return; }
-    if(bgm){ try{ bgm.stop(); }catch(e){} }
-    bgm=new WakuwakuBGM(theme); bgmTheme=theme;
+    if(bgm)bgm.setTheme(theme);else bgm=new WakuwakuMP3BGM(theme); bgmTheme=theme;
     if(bgm.enabled) bgm.start();
   }catch(e){ bgm=null; }
 }
@@ -1432,8 +1433,8 @@ function bgmToggle(){
     var on=!bgm.enabled;
     bgm.setEnabled(on);
     if(on) bgm.start(); else bgm.stop();
-    if(typeof WakuwakuBGM!=='undefined' && typeof WakuwakuBGM.saveState==='function'){
-      WakuwakuBGM.saveState(on);
+    if(typeof WakuwakuMP3BGM!=='undefined' && typeof WakuwakuMP3BGM.saveState==='function'){
+      WakuwakuMP3BGM.saveState(on);
     }
   }catch(e){}
   updateBgmLabel();

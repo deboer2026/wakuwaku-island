@@ -460,7 +460,7 @@ body{background:linear-gradient(180deg,#8FD3F4 0%,#C9E7F7 55%,#FDE9D0 100%);}
   </div>
 </div>
 
-<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <script src="/games/safe_area.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -642,6 +642,7 @@ function stageUnlocked(modeId,i){return i===0||SAVE.stars[modeId][i-1]>0;}
 
 /* ========================= 4. audio ========================= */
 let _ac=null,_bgm=null;
+const MP3_THEME_MAP={happy:'happy-island',cute:'cute-animals',magical:'magical',sky:'adventure',forest:'nature',ocean:'ocean-food',sweets:'cute-animals',action:'action',fruity:'nature',building:'puzzle',quiz:'learning',adventure:'adventure',puzzle:'puzzle',racing:'racing'};
 function ac(){
   if(!_ac){try{_ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}
   if(_ac&&_ac.state==='suspended'){try{_ac.resume();}catch(e){}}
@@ -668,24 +669,24 @@ const sfxNew  =()=>[784,988,1175,1568].forEach((f,i)=>beep(f,i*0.07,0.34,0.13,'s
 const sfxClear=()=>[523,659,784,1047,1319,1568].forEach((f,i)=>beep(f,i*0.1,0.42,0.14,'triangle'));
 
 function initBGM(theme){
-  if(typeof WakuwakuBGM==='undefined')return;
+  if(typeof WakuwakuMP3BGM==='undefined')return;
+  theme=MP3_THEME_MAP[theme||'happy']||theme||'happy';
   try{
-    if(_bgm){_bgm.stop();_bgm=null;}
-    _bgm=new WakuwakuBGM(theme||'happy');
-    const on=WakuwakuBGM.loadState();
+    if(_bgm)_bgm.setTheme(theme);else _bgm=new WakuwakuMP3BGM(theme);
+    const on=WakuwakuMP3BGM.loadState();
     _bgm.setEnabled(on);if(on)_bgm.start();
   }catch(e){_bgm=null;}
   syncBgmBtn();
 }
 function toggleBGM(){
-  if(typeof WakuwakuBGM==='undefined')return;
-  if(!_bgm){initBGM('happy');if(_bgm){_bgm.setEnabled(true);_bgm.start();WakuwakuBGM.saveState(true);}syncBgmBtn();return;}
-  let on=false;try{on=_bgm.toggle();WakuwakuBGM.saveState(on);}catch(e){}
+  if(typeof WakuwakuMP3BGM==='undefined')return;
+  if(!_bgm){initBGM('happy');if(_bgm){_bgm.setEnabled(true);_bgm.start();WakuwakuMP3BGM.saveState(true);}syncBgmBtn();return;}
+  let on=false;try{on=_bgm.toggle();WakuwakuMP3BGM.saveState(on);}catch(e){}
   syncBgmBtn();
 }
 function syncBgmBtn(){
   const el=$('hud-bgm');if(!el)return;
-  let on=false;try{on=_bgm?_bgm.enabled:(typeof WakuwakuBGM!=='undefined'&&WakuwakuBGM.loadState());}catch(e){}
+  let on=false;try{on=_bgm?_bgm.enabled:(typeof WakuwakuMP3BGM!=='undefined'&&WakuwakuMP3BGM.loadState());}catch(e){}
   el.textContent=on?'♪':'🔇';el.style.opacity=on?'1':'.6';
 }
 
@@ -2028,8 +2029,8 @@ function bindUI(){
       return;
     }
     if(clock)clock.getDelta();
-    if(_bgm&&typeof WakuwakuBGM!=='undefined'){
-      try{if(WakuwakuBGM.loadState())_bgm.start();}catch(e){}
+    if(_bgm&&typeof WakuwakuMP3BGM!=='undefined'){
+      try{if(WakuwakuMP3BGM.loadState())_bgm.start();}catch(e){}
     }
   });
 }

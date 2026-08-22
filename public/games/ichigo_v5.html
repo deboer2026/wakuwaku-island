@@ -289,7 +289,7 @@ body.sky-magic{background:linear-gradient(180deg,#4A2C6B 0%,#8B4E9E 52%,#F0A3D2 
   <button class="btn sm ghost" id="nogl-back">🏝 トップへ もどる</button>
 </div>
 
-<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <script src="/games/safe_area.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -386,34 +386,36 @@ function syncCoinUI(){
 
 /* ================= BGM / SFX ================= */
 var _bgm=null,_bgmTheme='fruity';
+var MP3_THEME_MAP={happy:'happy-island',cute:'cute-animals',magical:'magical',sky:'adventure',forest:'nature',ocean:'ocean-food',sweets:'cute-animals',action:'action',fruity:'nature',building:'puzzle',quiz:'learning',adventure:'adventure',puzzle:'puzzle',racing:'racing'};
 function initBGM(theme){
-  if(typeof WakuwakuBGM==='undefined'){syncBgmBtn();return;}
-  if(_bgm&&theme&&theme!==_bgmTheme){try{_bgm.stop();}catch(e){}_bgm=null;}
+  if(typeof WakuwakuMP3BGM==='undefined'){syncBgmBtn();return;}
+  theme=MP3_THEME_MAP[theme||_bgmTheme]||theme||_bgmTheme;
+  if(_bgm&&theme!==_bgmTheme){try{_bgm.setTheme(theme);}catch(e){}}
   if(!_bgm){
-    _bgmTheme=theme||_bgmTheme;
+    _bgmTheme=theme;
     try{
-      _bgm=new WakuwakuBGM(_bgmTheme);
-      var on=WakuwakuBGM.loadState();_bgm.setEnabled(on);if(on)_bgm.start();
+      _bgm=new WakuwakuMP3BGM(_bgmTheme);
+      var on=WakuwakuMP3BGM.loadState();_bgm.setEnabled(on);if(on)_bgm.start();
     }catch(e){_bgm=null;}
-  }
+  } else {_bgmTheme=theme;}
   syncBgmBtn();
 }
 function toggleBGM(){
   if(!_bgm){
     initBGM(_bgmTheme);
     if(_bgm&&!_bgm.enabled){_bgm.setEnabled(true);_bgm.start();}
-    if(_bgm&&typeof WakuwakuBGM!=='undefined'&&WakuwakuBGM.saveState)WakuwakuBGM.saveState(_bgm.enabled);
+    if(_bgm&&typeof WakuwakuMP3BGM!=='undefined'&&WakuwakuMP3BGM.saveState)WakuwakuMP3BGM.saveState(_bgm.enabled);
     syncBgmBtn();
     return;
   }
   var on=_bgm.toggle();
-  if(typeof WakuwakuBGM!=='undefined'&&WakuwakuBGM.saveState)WakuwakuBGM.saveState(on);
+  if(typeof WakuwakuMP3BGM!=='undefined'&&WakuwakuMP3BGM.saveState)WakuwakuMP3BGM.saveState(on);
   syncBgmBtn();
 }
 var BGM_BTN_IDS=['ui-bgm-btn','title-bgm-btn','map-bgm-btn'];
 function syncBgmBtn(){
   /* _bgm未生成(初回操作まえ)でも、保存ずみの設定値で アイコンを あわせておく */
-  var enabled=_bgm?_bgm.enabled:(typeof WakuwakuBGM!=='undefined'&&typeof WakuwakuBGM.loadState==='function'?WakuwakuBGM.loadState():true);
+  var enabled=_bgm?_bgm.enabled:(typeof WakuwakuMP3BGM!=='undefined'&&typeof WakuwakuMP3BGM.loadState==='function'?WakuwakuMP3BGM.loadState():true);
   var icon=enabled?'🔊':'🔇';
   for(var i=0;i<BGM_BTN_IDS.length;i++){
     var el=document.getElementById(BGM_BTN_IDS[i]);if(el)el.textContent=icon;

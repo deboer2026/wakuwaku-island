@@ -301,7 +301,7 @@ body.sky-galaxy{background:linear-gradient(180deg,#150F3A 0%,#3B2A78 50%,#7B5BC0
   </div>
 </div>
 
-<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <script src="/games/safe_area.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -1054,6 +1054,7 @@ function sfxClear(){var n=[523,659,784,1046];for(var i=0;i<n.length;i++)beep(n[i
 
 /* ================= bgm ================= */
 var bgm=null;
+var MP3_THEME_MAP={happy:'happy-island',cute:'cute-animals',magical:'magical',sky:'adventure',forest:'nature',ocean:'ocean-food',sweets:'cute-animals',action:'action',fruity:'nature',building:'puzzle',quiz:'learning',adventure:'adventure',puzzle:'puzzle',racing:'racing'};
 /* AudioContextは さいしょの ユーザー操作の あとでしか かいしできない(iOS対応) */
 var audioUnlocked=false;
 function unlockAudio(){
@@ -1064,10 +1065,10 @@ function unlockAudio(){
   }
 }
 function initBgm(theme){
-  if(typeof WakuwakuBGM==='undefined')return;
+  if(typeof WakuwakuMP3BGM==='undefined')return;
+  theme=MP3_THEME_MAP[theme]||theme;
   try{
-    if(bgm){bgm.stop();bgm=null;}
-    bgm=new WakuwakuBGM(theme);
+    if(bgm)bgm.setTheme(theme);else bgm=new WakuwakuMP3BGM(theme);
     if(audioUnlocked&&bgm.enabled)bgm.start();
     updateBgmBtn();
   }catch(e){bgm=null;}
@@ -1574,8 +1575,8 @@ $('btn-bgm').addEventListener('click',function(){
   if(!bgm)return;
   try{
     var on=bgm.toggle();
-    if(typeof WakuwakuBGM!=='undefined'&&typeof WakuwakuBGM.saveState==='function'){
-      WakuwakuBGM.saveState(on);
+    if(typeof WakuwakuMP3BGM!=='undefined'&&typeof WakuwakuMP3BGM.saveState==='function'){
+      WakuwakuMP3BGM.saveState(on);
     }
   }catch(e){}
   updateBgmBtn();

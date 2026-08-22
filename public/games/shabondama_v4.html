@@ -222,7 +222,7 @@ body.sky-magic{background:linear-gradient(180deg,#3A2A6E 0%,#7A52B0 52%,#C6A6FF 
   <div id="fallback"><p>このブラウザでは 3Dしゃぼんだまが うごきません。<br>べつのブラウザで あそんでね。</p></div>
 </div>
 
-<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <script src="/games/safe_area.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -305,20 +305,21 @@ function isUnlocked(i){ if(i===0)return true; return !!PROG.stages[i-1].cleared;
 
 /* ================= BGM ================= */
 let _bgm=null,_bgmTheme='';
+const MP3_THEME_MAP={happy:'happy-island',cute:'cute-animals',magical:'magical',sky:'adventure',forest:'nature',ocean:'ocean-food',sweets:'cute-animals',action:'action',fruity:'nature',building:'puzzle',quiz:'learning',adventure:'adventure',puzzle:'puzzle',racing:'racing'};
 function initBGM(theme){
-  if(typeof WakuwakuBGM==='undefined')return;
+  if(typeof WakuwakuMP3BGM==='undefined')return;
+  theme=MP3_THEME_MAP[theme]||theme;
   try{
     if(_bgm&&_bgmTheme===theme){ if(_bgm.enabled)_bgm.start(); syncBgm(); return; }
-    if(_bgm)_bgm.stop();
-    _bgm=new WakuwakuBGM(theme);_bgmTheme=theme;
-    const on=WakuwakuBGM.loadState();_bgm.setEnabled(on);if(on)_bgm.start();
+    if(_bgm)_bgm.setTheme(theme); else _bgm=new WakuwakuMP3BGM(theme);
+    _bgmTheme=theme;const on=WakuwakuMP3BGM.loadState();_bgm.setEnabled(on);if(on)_bgm.start();
   }catch(e){}
   syncBgm();
 }
 function toggleBGM(){
   if(!_bgm){initBGM('happy');return;}
   const on=_bgm.toggle();
-  if(typeof WakuwakuBGM!=='undefined')WakuwakuBGM.saveState(on);
+  if(typeof WakuwakuMP3BGM!=='undefined')WakuwakuMP3BGM.saveState(on);
   syncBgm();
 }
 function syncBgm(){

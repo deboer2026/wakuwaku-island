@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>どんぐりだいさくせん｜わくわくアイランド</title>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <script src="/games/safe_area.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
@@ -1143,20 +1143,21 @@ function sfx(k){
   }
 }
 let _bgm=null, _bgmTheme="";
+const MP3_THEME_MAP={happy:'happy-island',cute:'cute-animals',magical:'magical',sky:'adventure',forest:'nature',ocean:'ocean-food',sweets:'cute-animals',action:'action',fruity:'nature',building:'puzzle',quiz:'learning',adventure:'adventure',puzzle:'puzzle',racing:'racing'};
 function initBgm(theme){
-  if(typeof WakuwakuBGM==="undefined") return;
+  if(typeof WakuwakuMP3BGM==="undefined") return;
+  theme=MP3_THEME_MAP[theme||"forest"]||theme||"forest";
   try{
-    const on=WakuwakuBGM.loadState();
+    const on=WakuwakuMP3BGM.loadState();
     if(_bgm && _bgmTheme===theme){ _bgm.setEnabled(on); if(on)_bgm.start(); return; }
-    if(_bgm) _bgm.stop();
-    _bgm=new WakuwakuBGM(theme||"forest"); _bgmTheme=theme||"forest";
+    if(_bgm) _bgm.setTheme(theme); else _bgm=new WakuwakuMP3BGM(theme); _bgmTheme=theme;
     _bgm.setEnabled(on); if(on) _bgm.start();
   }catch(e){}
   syncBgmBtn();
 }
 function syncBgmBtn(){
   let on=true;
-  try{ on=(typeof WakuwakuBGM!=="undefined")?WakuwakuBGM.loadState():true; }catch(e){}
+  try{ on=(typeof WakuwakuMP3BGM!=="undefined")?WakuwakuMP3BGM.loadState():true; }catch(e){}
   document.getElementById("bgmBtn").textContent=on?"🔊":"🔇";
 }
 
@@ -1840,7 +1841,7 @@ document.getElementById("bookBtn").onclick=showBook;
 document.getElementById("bgmBtn").onclick=()=>{
   ensureAudio();
   if(!_bgm) initBgm("forest");
-  if(_bgm){ const on=_bgm.toggle(); if(typeof WakuwakuBGM!=="undefined") WakuwakuBGM.saveState(on); }
+  if(_bgm){ const on=_bgm.toggle(); if(typeof WakuwakuMP3BGM!=="undefined") WakuwakuMP3BGM.saveState(on); }
   syncBgmBtn();
 };
 document.getElementById("homeBtn").onclick=()=>{

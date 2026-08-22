@@ -233,7 +233,6 @@
 
   <div id="rotate"><div class="ph">📱</div><div>よこむきにして<br>あそんでね</div></div>
 
-  <script src="/games/wakuwaku_bgm.js"></script>
   <script src="/games/wakuwaku_bgm_mp3.js"></script>
   <script src="/games/safe_area.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -1552,14 +1551,13 @@ var bgmOn = true;
 (function(){
   try{
     if(typeof WakuwakuMP3BGM !== "undefined" && WakuwakuMP3BGM.loadState) bgmOn = WakuwakuMP3BGM.loadState();
-    else if(typeof WakuwakuBGM !== "undefined" && WakuwakuBGM.loadState) bgmOn = WakuwakuBGM.loadState();
   }catch(e){}
 })();
-var MP3_THEMES = { "adventure":1, "cute-animals":1, "action":1 };
-function synthTheme(theme){ return theme === "cute-animals" ? "cute" : (theme === "action" ? "action" : "adventure"); }
+var MP3_THEME_MAP={happy:'happy-island',cute:'cute-animals',magical:'magical',sky:'adventure',forest:'nature',ocean:'ocean-food',sweets:'cute-animals',action:'action',fruity:'nature',building:'puzzle',quiz:'learning',adventure:'adventure',puzzle:'puzzle',racing:'racing','cute-animals':'cute-animals'};
 function playBGM(theme){
   try{
-    if(typeof WakuwakuMP3BGM !== "undefined" && MP3_THEMES[theme]){
+    theme=MP3_THEME_MAP[theme]||theme;
+    if(typeof WakuwakuMP3BGM !== "undefined"){
       if(!bgmInst || !bgmIsMP3){
         if(bgmInst) bgmInst.stop();
         bgmInst = new WakuwakuMP3BGM(theme);
@@ -1569,14 +1567,6 @@ function playBGM(theme){
         if(typeof bgmInst.setTheme === "function") bgmInst.setTheme(theme);
         else { bgmInst.stop(); bgmInst = new WakuwakuMP3BGM(theme); }
         bgmTheme = theme;
-      }
-    } else if(typeof WakuwakuBGM !== "undefined"){
-      var nextSynth = synthTheme(theme);
-      if(!bgmInst || bgmIsMP3 || bgmTheme !== nextSynth){
-        if(bgmInst) bgmInst.stop();
-        bgmInst = new WakuwakuBGM(nextSynth);
-        bgmIsMP3 = false;
-        bgmTheme = nextSynth;
       }
     } else return;
     if(typeof bgmInst.setEnabled === "function") bgmInst.setEnabled(bgmOn);
@@ -1594,7 +1584,6 @@ function toggleBGM(){
   }catch(e){}
   try{
     if(bgmIsMP3 && typeof WakuwakuMP3BGM!=="undefined" && WakuwakuMP3BGM.saveState) WakuwakuMP3BGM.saveState(bgmOn);
-    else if(typeof WakuwakuBGM!=="undefined" && WakuwakuBGM.saveState) WakuwakuBGM.saveState(bgmOn);
   }catch(e){}
   syncBgm();
 }
