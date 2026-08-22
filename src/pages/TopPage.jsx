@@ -418,15 +418,32 @@ const GAME_SVGS = {
   ),
   g_block: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="bNight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#5a3a8a"/><stop offset="1" stopColor="#2a1a48"/></linearGradient></defs>
-      <rect width="100" height="85" fill="url(#bNight)"/>
-      <circle cx="14" cy="13" r="1.2" fill="#fff"/><circle cx="86" cy="9" r="1.2" fill="#fff"/><circle cx="70" cy="20" r="1" fill="#fff"/>
-      <rect x="12" y="9" width="22" height="6" rx="2" fill="#ff5d70"/><rect x="38" y="9" width="22" height="6" rx="2" fill="#ffb23a"/><rect x="64" y="9" width="22" height="6" rx="2" fill="#7bd06a"/>
-      <rect x="12" y="17" width="22" height="6" rx="2" fill="#4bb8ff"/><rect x="38" y="17" width="22" height="6" rx="2" fill="#b06bff"/><rect x="64" y="17" width="22" height="6" rx="2" fill="#ff8a3a"/>
-      <path d="M50 38 l2 4.2 4.6 .4 -3.5 3 1 4.4 -4.1 -2.4 -4.1 2.4 1 -4.4 -3.5 -3 4.6 -.4 Z" fill="#ffe14d"/>
-      <rect x="22" y="66" width="56" height="14" fill="#1f1238"/>
-      <rect x="26" y="61" width="6" height="6" fill="#1f1238"/><rect x="47" y="61" width="6" height="6" fill="#1f1238"/><rect x="68" y="61" width="6" height="6" fill="#1f1238"/>
-      <rect x="40" y="71" width="20" height="5" rx="2.5" fill="#19c6c6"/>
+      <defs>
+        <linearGradient id="bHall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FFD3E8"/><stop offset="1" stopColor="#FFF3DE"/></linearGradient>
+        <radialGradient id="bGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stopColor="#FFF6C8" stopOpacity="0.95"/><stop offset="1" stopColor="#FFF6C8" stopOpacity="0"/></radialGradient>
+        <linearGradient id="bCol" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#EFDCC8"/><stop offset="1" stopColor="#D8B9C9"/></linearGradient>
+      </defs>
+      <rect width="100" height="85" fill="url(#bHall)"/>
+      <rect x="0" y="0" width="12" height="85" fill="url(#bCol)"/><rect x="88" y="0" width="12" height="85" fill="url(#bCol)"/>
+      <rect x="2" y="6" width="8" height="34" rx="2" fill="#F2839F" opacity="0.55"/><rect x="90" y="6" width="8" height="34" rx="2" fill="#F2839F" opacity="0.55"/>
+      <circle cx="6" cy="18" r="4.4" fill="none" stroke="#F2839F" strokeWidth="1.1" opacity="0.7"/><circle cx="94" cy="18" r="4.4" fill="none" stroke="#F2839F" strokeWidth="1.1" opacity="0.7"/>
+      <rect x="0" y="0" width="100" height="7" fill="#EFDCC8"/>
+      <rect x="14" y="9" width="20" height="6" rx="2" fill="#F5AEC8"/><rect x="14" y="9" width="20" height="6" rx="2" fill="#fff" opacity="0.25"/>
+      <rect x="40" y="9" width="20" height="6" rx="2" fill="#F98BB4"/><rect x="40" y="9" width="20" height="6" rx="2" fill="#fff" opacity="0.25"/>
+      <rect x="66" y="9" width="20" height="6" rx="2" fill="#F2D2A2"/><rect x="66" y="9" width="20" height="6" rx="2" fill="#fff" opacity="0.25"/>
+      <rect x="14" y="17" width="20" height="6" rx="2" fill="#F98BB4"/><rect x="40" y="17" width="20" height="6" rx="2" fill="#F2D2A2"/><rect x="66" y="17" width="20" height="6" rx="2" fill="#F5AEC8"/>
+      <circle cx="50" cy="40" r="9" fill="url(#bGlow)"/>
+      <circle cx="50" cy="40" r="3.4" fill="#FFF6C8" stroke="#F2A93B" strokeWidth="0.6"/>
+      <path d="M74 48 l1.8 3.7 4 .4 -3 2.6 .9 3.9 -3.7 -2.1 -3.7 2.1 .9 -3.9 -3 -2.6 4 -.4 Z" fill="#BA68C8"/>
+      <rect x="22" y="65" width="56" height="6.5" rx="3.2" fill="#F06292"/>
+      <g transform="translate(50 79)">
+        <ellipse cx="0" cy="0" rx="9" ry="6.5" fill="#FFB74D"/>
+        <ellipse cx="0" cy="1.6" rx="5.6" ry="4" fill="#F3D2A4"/>
+        <path d="M-7.4 -4.2 L-5 -8.4 L-2.6 -3.4Z" fill="#FFB74D"/>
+        <path d="M7.4 -4.2 L5 -8.4 L2.6 -3.4Z" fill="#FFB74D"/>
+        <circle cx="-3.1" cy="-1" r="1.15" fill="#2B1E3F"/><circle cx="3.1" cy="-1" r="1.15" fill="#2B1E3F"/>
+        <path d="M-1 1.6 Q0 2.6 1 1.6" stroke="#8a5a3a" strokeWidth="0.5" fill="none"/>
+      </g>
     </svg>
   ),
   g_mahoumeiro: (
@@ -1632,11 +1649,11 @@ const SCHOOL_GAMES = [
     ko:{ name:'별빛 동물 구조대',           desc:'손가락으로 밤하늘을 날아\n동물 행렬을 만들어요!' },
     es:{ name:'Rescate Animal Estelar',     desc:'¡Vuela con un dedo\ny forma un desfile de animales!' } },
   { id:'g_block', route:'/block', icon:'🏰', num:10, color:'#ec407a', stars:3, isNew:true, category:'アクション',
-    ja:{ name:'おしろブロックくずし', desc:'パドルでボールをはじいて\nブロックをこわそう！' },
-    en:{ name:'Castle Breakout',   desc:'Bounce the ball and\nbreak all the blocks!' },
-    zh:{ name:'城堡打砖块',         desc:'弹球击碎\n所有砖块！' },
-    ko:{ name:'성 벽돌깨기',        desc:'공을 튕겨서\n블록을 깨요!' },
-    es:{ name:'Rompe Castillo',    desc:'¡Rebota la pelota\ny rompe los bloques!' } },
+    ja:{ name:'おしろブロックくずし', desc:'３Dのおしろで ボールをはじいて\nボスをたおそう！' },
+    en:{ name:'Castle Breakout',   desc:'Bounce the ball in 3D castles\nand beat the bosses!' },
+    zh:{ name:'城堡打砖块',         desc:'在3D城堡中弹球\n打败头目！' },
+    ko:{ name:'성 벽돌깨기',        desc:'3D 성에서 공을 튕겨\n보스를 물리쳐요!' },
+    es:{ name:'Rompe Castillo',    desc:'¡Rebota la pelota en castillos 3D\ny vence a los jefes!' } },
   { id:'g_mahoumeiro', route:'/mahou-meiro', icon:'🔮', num:17, color:'#7e57c2', stars:4, isNew:true, category:'パズル',
     ja:{ name:'まほうのめいろ', desc:'3つのせかいをめぐって\nまいごのようせいをたすけよう！' },
     en:{ name:'Magic Maze', desc:'Explore three worlds and\nrescue the lost fairies!' },
