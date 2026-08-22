@@ -344,7 +344,7 @@ canvas#scene{display:block;position:absolute;inset:0;width:100%;height:100%;z-in
 
 </div><!-- /#wrap -->
 <script src="/games/safe_area.js"></script>
-<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <script>
 "use strict";
 /* ==================================================================
@@ -1117,19 +1117,21 @@ resizeScene();
 /* ---------- BGM ---------- */
 let bgm = null, bgmTheme = "";
 const BGM_ON_KEY = "wakuwaku_bgm";
+function mp3Theme(theme){ return ({happy:'happy-island',cute:'cute-animals',ocean:'ocean-food'})[theme] || theme; }
 function setBGM(theme){
-  if (typeof WakuwakuBGM === "undefined") return;
+  if (typeof WakuwakuMP3BGM === "undefined") return;
+  theme = mp3Theme(theme);
   if (bgmTheme === theme && bgm) { if (bgm.enabled) bgm.start(); return; }
-  try { if (bgm) bgm.stop(); } catch(e){}
-  try { bgm = new WakuwakuBGM(theme); bgmTheme = theme; bgm.start(); } catch(e){ bgm = null; }
+  try { if (bgm) { bgm.setTheme(theme); bgmTheme = theme; if (bgm.enabled) bgm.start(); return; } } catch(e){}
+  try { bgm = new WakuwakuMP3BGM(theme); bgmTheme = theme; bgm.start(); } catch(e){ bgm = null; }
 }
 function toggleBGM(){
   if (!bgm) { setBGM(bgmTheme || "cute"); return true; }
-  try { bgm.toggle(); WakuwakuBGM.saveState(bgm.enabled); } catch(e){}
+  try { bgm.toggle(); WakuwakuMP3BGM.saveState(bgm.enabled); } catch(e){}
   return bgm.enabled;
 }
 function bgmIcon(){
-  const on = bgm ? bgm.enabled : (typeof WakuwakuBGM !== "undefined" ? WakuwakuBGM.loadState() : true);
+  const on = bgm ? bgm.enabled : (typeof WakuwakuMP3BGM !== "undefined" ? WakuwakuMP3BGM.loadState() : true);
   ["t-bgm","m-bgm","b-bgm"].forEach(id=>{
     const el = document.getElementById(id); if(!el) return;
     el.textContent = id === "t-bgm" ? (on ? "🔊 おんがく" : "🔇 おんがく") : (on ? "🔊" : "🔇");
@@ -1138,7 +1140,7 @@ function bgmIcon(){
 let SE_AC = null;
 function seEnabled(){
   if (bgm) return !!bgm.enabled;
-  try { return typeof WakuwakuBGM === "undefined" || WakuwakuBGM.loadState() !== false; }
+  try { return typeof WakuwakuMP3BGM === "undefined" || WakuwakuMP3BGM.loadState() !== false; }
   catch(e) { return true; }
 }
 function ensureSEAudio(){ try{ if(!SE_AC) SE_AC=new (window.AudioContext||window.webkitAudioContext)(); if(SE_AC.state==='suspended') SE_AC.resume(); return SE_AC; }catch(e){ SE_AC=null; return null; } }

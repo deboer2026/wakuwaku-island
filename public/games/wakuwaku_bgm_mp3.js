@@ -13,6 +13,7 @@
     learning: '/audio/bgm/learning.mp3',
     puzzle: '/audio/bgm/puzzle.mp3',
     racing: '/audio/bgm/racing.mp3',
+    'racing-fast': '/audio/bgm/racing-fast.mp3',
     'ocean-food': '/audio/bgm/ocean-food.mp3',
   };
 

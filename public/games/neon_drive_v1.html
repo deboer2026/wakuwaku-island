@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <script src="/games/wakuwaku_ui.js"></script>
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>NEON EXPRESSWAY — きらきらナイトドライブ</title>
@@ -413,7 +414,7 @@ let speedLines;
 //  サウンド
 // ============================================================
 let audioCtx = null, muted = false;
-let engineOsc = null, engineGain = null, musicTimer = null;
+let engineOsc = null, engineGain = null, musicTimer = null, bgm = null;
 
 function initAudio() {
   if (audioCtx) return;
@@ -443,24 +444,10 @@ function tone(freq, dur, type, vol, delay=0) {
 }
 
 function startMusic() {
-  if (musicTimer) return;
-  const bass = [110, 87.3, 130.8, 98];
-  const arps = [
-    [220, 261.6, 329.6, 440],
-    [174.6, 220, 261.6, 349.2],
-    [261.6, 329.6, 392, 523.3],
-    [196, 246.9, 293.7, 392]
-  ];
-  let bar = 0, step = 0;
-  const BPM = 118, stepDur = 60/BPM/2;
-  musicTimer = setInterval(() => {
-    if (muted || !audioCtx) { step=(step+1)%8; if(step===0) bar=(bar+1)%4; return; }
-    if (step % 2 === 0) tone(bass[bar], stepDur*1.8, 'triangle', 0.09);
-    tone(arps[bar][step % 4], stepDur*0.9, 'square', 0.028);
-    tone(7000 + Math.random()*2000, 0.03, 'square', 0.012);
-    step = (step+1) % 8;
-    if (step === 0) bar = (bar+1) % 4;
-  }, stepDur*1000);
+  if (bgm || typeof WakuwakuMP3BGM === 'undefined') return;
+  bgm = new WakuwakuMP3BGM('racing-fast');
+  bgm.setEnabled(WakuwakuMP3BGM.loadState());
+  if (bgm.enabled) bgm.start();
 }
 
 function sfxNearMiss() { tone(880, 0.12, 'sine', 0.15); tone(1320, 0.18, 'sine', 0.1, 0.05); }
@@ -486,9 +473,10 @@ function sfxCrash() {
 }
 
 document.getElementById('muteBtn').addEventListener('click', function(){
-  muted = !muted;
-  this.textContent = muted ? '✕' : '♪';
-  if (engineGain) engineGain.gain.value = 0;
+  initAudio();
+  if (!bgm) return;
+  const on = bgm.toggle();
+  this.textContent = on ? '♪' : '✕';
 });
 
 // ============================================================

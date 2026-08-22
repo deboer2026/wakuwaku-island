@@ -314,7 +314,7 @@ body.sc-yoru{background:linear-gradient(180deg,#3C3470 0%,#5A4B92 55%,#7E63A8 10
 
 <div id="fallback"><p>このブラウザでは 3Dが つかえません。<br>べつの ブラウザで あそんでみてね。</p></div>
 
-<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <script src="/games/safe_area.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -508,16 +508,16 @@ function zukanTotal(){ return CUSTOMERS.filter(c=>isZukan(c.id)).length; }
 
 /* ================= BGM ================= */
 let _bgm=null,_bgmTheme='';
-let _audioUnlocked=false,_pendingTheme='japanese';
+let _audioUnlocked=false,_pendingTheme='ocean-food';
+function mp3Theme(theme){ return ({japanese:'ocean-food',cute:'cute-animals',happy:'happy-island'})[theme]||theme; }
 function initBGM(theme){
-  _pendingTheme=theme||_pendingTheme;
+  _pendingTheme=mp3Theme(theme||_pendingTheme);
   if(!_audioUnlocked){ syncBgm(); return; }
-  if(typeof WakuwakuBGM==='undefined')return;
+  if(typeof WakuwakuMP3BGM==='undefined')return;
   try{
-    if(_bgm&&_bgmTheme===theme){ if(_bgm.enabled)_bgm.start(); syncBgm(); return; }
-    if(_bgm)_bgm.stop();
-    _bgm=new WakuwakuBGM(theme); _bgmTheme=theme;
-    const on=WakuwakuBGM.loadState(); _bgm.setEnabled(on); if(on)_bgm.start();
+    if(_bgm){ if(_bgmTheme!==_pendingTheme){ _bgm.setTheme(_pendingTheme); _bgmTheme=_pendingTheme; } if(_bgm.enabled)_bgm.start(); syncBgm(); return; }
+    _bgm=new WakuwakuMP3BGM(_pendingTheme); _bgmTheme=_pendingTheme;
+    const on=WakuwakuMP3BGM.loadState(); _bgm.setEnabled(on); if(on)_bgm.start();
   }catch(e){}
   syncBgm();
 }
@@ -531,7 +531,7 @@ function toggleBGM(){
   unlockAudio();
   if(!_bgm){ initBGM(_pendingTheme); return; }
   const on=_bgm.toggle();
-  if(typeof WakuwakuBGM!=='undefined')WakuwakuBGM.saveState(on);
+  if(typeof WakuwakuMP3BGM!=='undefined')WakuwakuMP3BGM.saveState(on);
   syncBgm();
 }
 function syncBgm(){ const b=document.getElementById('ui-bgm-btn'); if(b)b.textContent=(_bgm&&_bgm.enabled)?'🔊':'🔇'; }
@@ -2290,7 +2290,7 @@ function goTitle(){
   document.getElementById('t-hi').textContent='ハイスコア  '+getHS();
   refreshCoins();
   showOv('ov-title');
-  initBGM('japanese');
+  initBGM('ocean-food');
 }
 
 /* =======================================================================

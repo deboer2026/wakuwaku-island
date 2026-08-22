@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>ぴょんぴょん！おかしのくに 3D</title>
-<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <script src="/games/safe_area.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -248,13 +248,13 @@ var WORLDS = [
     id: 1, name: 'クッキーへいげん', desc: 'グミのくるまに きをつけて！', sky: 'sky-cookie',
     bg: 'linear-gradient(135deg,#ffe6bd,#ffd39a)', card: '#ffcf8f',
     ground: 0xf2d6a2, groundAlt: 0xdcb87c, road: 0xc2497e, roadLine: 0xffe6f3,
-    rail: 0x8f8a99, fog: 0xf5d9b0, deco: 'lolli', bgm: 'happy'
+    rail: 0x8f8a99, fog: 0xf5d9b0, deco: 'lolli', bgm: 'happy-island'
   },
   {
     id: 2, name: 'チョコレートかわ', desc: 'クッキーの いかだに のって わたろう', sky: 'sky-choco',
     bg: 'linear-gradient(135deg,#d9b3f0,#ffc2e0)', card: '#dcb0ee',
     ground: 0xe8c48c, groundAlt: 0xd2aa70, road: 0x93386a, roadLine: 0xffe0f0,
-    river: 0x5a3620, riverTop: 0x764a2c, rail: 0x8f8a99, fog: 0xf0c8de, deco: 'donut', bgm: 'cute'
+    river: 0x5a3620, riverTop: 0x764a2c, rail: 0x8f8a99, fog: 0xf0c8de, deco: 'donut', bgm: 'cute-animals'
   },
   {
     id: 3, name: 'アイスやま', desc: 'キャンディれっしゃが とおるよ！', sky: 'sky-ice',
@@ -320,8 +320,8 @@ function loadSave() {
 function persist() { try { SAFE_LS.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* 保存できない環境 */ } }
 var save = loadSave();
 /* 共通BGM設定を常に正とし、旧v2保存値との競合を避ける。 */
-if (typeof WakuwakuBGM !== 'undefined' && WakuwakuBGM.loadState) {
-  try { save.sound = !!WakuwakuBGM.loadState(); } catch (e) { /* ストレージ不可時はv2保存値を使う */ }
+if (typeof WakuwakuMP3BGM !== 'undefined' && WakuwakuMP3BGM.loadState) {
+  try { save.sound = !!WakuwakuMP3BGM.loadState(); } catch (e) { /* ストレージ不可時はv2保存値を使う */ }
 }
 
 function charaById(id) { for (var i = 0; i < CHARAS.length; i++) if (CHARAS[i].id === id) return CHARAS[i]; return null; }
@@ -370,11 +370,12 @@ function sfxUnlock() { [660, 880, 1100, 1320].forEach(function (f, i) { beep(f, 
 
 var bgm = null, bgmTheme = null, audioActivated = false, pageHidden = false;
 function initBGM(theme) {
-  if (typeof WakuwakuBGM === 'undefined') return;
+  if (typeof WakuwakuMP3BGM === 'undefined') return;
   try {
-    if (bgm && bgm.stop) bgm.stop();
-    bgm = new WakuwakuBGM(theme || 'happy');
-    bgmTheme = theme || 'happy';
+    theme = theme || 'happy-island';
+    if (bgm) { if (bgmTheme !== theme) bgm.setTheme(theme); bgmTheme = theme; bgm.setEnabled(save.sound); if (audioActivated && !pageHidden && save.sound) bgm.start(); return; }
+    bgm = new WakuwakuMP3BGM(theme);
+    bgmTheme = theme;
     bgm.setEnabled(save.sound);
     if (audioActivated && !pageHidden && save.sound) bgm.start();
   } catch (e) { bgm = null; }
@@ -384,7 +385,7 @@ function activateAudio() {
   audioActivated = true;
   ac();
   if (save.sound && !pageHidden) {
-    if (!bgm) initBGM(bgmTheme || 'happy');
+    if (!bgm) initBGM(bgmTheme || 'happy-island');
     else { try { bgm.start(); } catch (e) { /* 再生不可環境は無視 */ } }
   }
 }
@@ -392,7 +393,7 @@ function syncSoundBtn() { var b = document.getElementById('bgm-btn'); if (b) b.t
 function toggleSound() {
   activateAudio(); save.sound = !save.sound; persist(); syncSoundBtn();
   if (bgm) { try { bgm.setEnabled(save.sound); if (save.sound) bgm.start(); else if (bgm.stop) bgm.stop(); } catch (e) { /* noop */ } }
-  if (typeof WakuwakuBGM !== 'undefined' && WakuwakuBGM.saveState) { try { WakuwakuBGM.saveState(save.sound); } catch (e) { /* noop */ } }
+  if (typeof WakuwakuMP3BGM !== 'undefined' && WakuwakuMP3BGM.saveState) { try { WakuwakuMP3BGM.saveState(save.sound); } catch (e) { /* noop */ } }
   if (save.sound) sfxTap();
 }
 
@@ -1127,7 +1128,7 @@ function startEndless() {
   G_.candyRows = {}; G_.candyTotal = 0; G_.candyGot = 0;
   G_.mistakes = 0; G_.maxRow = 0; G_.running = true;
   applyTheme(WORLDS[0]);
-  initBGM('happy');
+  initBGM('happy-island');
   buildRun();
 }
 
@@ -1724,7 +1725,7 @@ function showTitle() {
   document.getElementById('t-endless').disabled = !allCleared();
   document.getElementById('t-endless').textContent = allCleared() ? 'どこまでも' : 'どこまでも 🔒';
   showScreen('scr-title');
-  initBGM('happy');
+  initBGM('happy-island');
   resize();
 }
 
