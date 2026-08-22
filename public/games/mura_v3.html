@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>どうぶつのむら｜わくわくアイランド</title>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <script src="/games/safe_area.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
@@ -675,20 +675,23 @@ const sfx = {
   buy(){ ensureAudio(); beep(780,.1,"triangle",.1); beep(1040,.14,"triangle",.1,.09); },
   no(){ ensureAudio(); beep(220,.16,"sawtooth",.06); },
 };
-let _bgm = null;
-const VILLAGE_BGM_THEME = "happy";
+let _bgm = null, _bgmTheme = null;
+const BGM_THEME_MAP = { happy:"happy-island", forest:"nature", adventure:"adventure", ocean:"ocean-food" };
+const VILLAGE_BGM_THEME = "happy-island";
+function toBgmTheme(theme){ return BGM_THEME_MAP[theme] || theme; }
 function initBgm(){
   if(_bgm) return;
-  if(typeof WakuwakuBGM !== "undefined"){
-    _bgm = new WakuwakuBGM(VILLAGE_BGM_THEME);
-    const on = WakuwakuBGM.loadState(); _bgm.setEnabled(on); if(on) _bgm.start();
+  if(typeof WakuwakuMP3BGM !== "undefined"){
+    _bgmTheme = VILLAGE_BGM_THEME;
+    _bgm = new WakuwakuMP3BGM(_bgmTheme);
+    const on = WakuwakuMP3BGM.loadState(); _bgm.setEnabled(on); if(on) _bgm.start();
   } else {
     _bgm = { enabled:false, toggle(){return false;}, start(){}, stop(){}, setEnabled(){} };
   }
   syncBgm();
 }
 function syncBgm(){ document.getElementById("bgmBtn").textContent = (_bgm && _bgm.enabled) ? "🎵" : "🔇"; }
-document.getElementById("bgmBtn").addEventListener("click", ()=>{ if(!_bgm) initBgm(); const on=_bgm.toggle(); if(typeof WakuwakuBGM!=="undefined") WakuwakuBGM.saveState(on); syncBgm(); });
+document.getElementById("bgmBtn").addEventListener("click", ()=>{ if(!_bgm) initBgm(); const on=_bgm.toggle(); if(typeof WakuwakuMP3BGM!=="undefined") WakuwakuMP3BGM.saveState(on); syncBgm(); });
 document.getElementById("backBtn").addEventListener("click", ()=>{
   if(window.parent !== window){ try{ window.parent.postMessage({type:"goBack"}, "*"); }catch(e){} }
   else { history.back(); }
@@ -2969,9 +2972,10 @@ function addExplorationXp(n){
   renderStatus();
 }
 function setBgmTheme(theme){
-  if(!_bgm || typeof WakuwakuBGM === "undefined") return;
-  const enabled = _bgm.enabled;
-  try{ _bgm.stop(); _bgm = new WakuwakuBGM(theme); _bgm.setEnabled(enabled); if(enabled) _bgm.start(); }catch(e){}
+  if(!_bgm || typeof WakuwakuMP3BGM === "undefined") return;
+  const nextTheme = toBgmTheme(theme);
+  if(_bgmTheme === nextTheme) return;
+  try{ _bgm.setTheme(nextTheme); _bgmTheme = nextTheme; }catch(e){}
 }
 function nodeReady(node){ const at=S.exploration.nodes[node.id]||0; return !at || (node.respawn && Date.now()-at>=node.respawn); }
 function buildRegion(name){
