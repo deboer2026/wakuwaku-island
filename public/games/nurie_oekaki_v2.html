@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <title>ぬりえ・おえかき｜わくわくアイランド</title>
-<script src="/games/wakuwaku_bgm.js"></script>
+<script src="/games/wakuwaku_bgm_mp3.js"></script>
 <script src="/games/safe_area.js"></script>
 <style>
 :root{
@@ -144,13 +144,14 @@ function normalRecord(v){if(!v||typeof v!=='object')return null;const mode=['cha
 function normalizeSave(raw){const src=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};const works=Array.isArray(src.works)?src.works.map(normalRecord).filter(Boolean).slice(0,TUNE.maxGallery):[];return{schemaVersion:2,works,bgm:src.bgm!==false,seen:src.seen===true}}
 let progress=normalizeSave(SAFE_LS.getJSON(SAVE_KEY,{}));let gallery=progress.works;function saveProgress(){progress.works=gallery;progress.bgm=audioOn;SAFE_LS.setJSON(SAVE_KEY,normalizeSave(progress));}
 
-let audioCtx=null,audioOn=progress.bgm!==false,bgmTimer=null,bgmStep=0;
-let sharedBgm=null;try{if(window.WakuwakuBGM)sharedBgm=new window.WakuwakuBGM('cute')}catch(_){}
-function ensureAudio(){if(!audioOn)return;try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();if(!bgmTimer)startBgm()}catch(_){}}
+let audioCtx=null,audioOn=progress.bgm!==false;
+let sharedBgm=null,bgmStarted=false;
+function initBgm(){if(sharedBgm||!window.WakuwakuMP3BGM)return;try{sharedBgm=new window.WakuwakuMP3BGM('cute-animals');sharedBgm.setEnabled(audioOn)}catch(_){}}
+function ensureAudio(){if(!audioOn)return;try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();startBgm()}catch(_){}}
 function tone(freq=520,dur=.06,type='sine',vol=.035,delay=0){if(!audioOn)return;ensureAudio();if(!audioCtx)return;const o=audioCtx.createOscillator(),g=audioCtx.createGain(),t=audioCtx.currentTime+delay;o.type=type;o.frequency.setValueAtTime(freq,t);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+dur+.03)}
 function good(){tone(660,.07,'triangle',.03);tone(880,.09,'triangle',.028,.05)}function magicSound(){[0,1,2,3,4].forEach(i=>tone(430+i*120,.13,'triangle',.035,i*.08))}
-function startBgm(){if(!audioOn)return;try{if(sharedBgm){sharedBgm.play();return}}catch(_){}if(bgmTimer)return;const notes=[392,494,587,523,440,523,659,587];bgmTimer=setInterval(()=>{if(document.hidden||!audioOn)return;tone(notes[bgmStep++%notes.length],.16,'sine',.011)},420)}
-function stopBgm(){try{if(sharedBgm)sharedBgm.stop()}catch(_){}clearInterval(bgmTimer);bgmTimer=null}
+function startBgm(){if(!audioOn||bgmStarted)return;initBgm();try{if(sharedBgm){sharedBgm.setEnabled(true);sharedBgm.start();bgmStarted=true}}catch(_){}}
+function stopBgm(){try{if(sharedBgm)sharedBgm.stop()}catch(_){}bgmStarted=false}
 function updateMusicButtons(){$('musicBtn').textContent=audioOn?'おと ON':'おと OFF';$('titleMusic').textContent=audioOn?'おと':'むおん'}function toggleMusic(){audioOn=!audioOn;updateMusicButtons();saveProgress();if(audioOn){ensureAudio();startBgm()}else stopBgm()}updateMusicButtons();$('musicBtn').onclick=toggleMusic;$('titleMusic').onclick=toggleMusic;
 addEventListener('pointerdown',ensureAudio,{once:true});
 
