@@ -1759,7 +1759,6 @@ const THUMB_ALIASES = {
 const NO_THUMB_ROUTES = new Set([
   '/neon-drive',
   '/moji',
-  '/katakana-asobi',
 ]);
 
 function thumbFor(game) {
