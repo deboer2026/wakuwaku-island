@@ -2005,10 +2005,11 @@ export default function TopPage() {
     setZukanOpen(true);
   }
 
+  // 保存(claim)はここで即実行する。モーダル自身は「ありがとう!」を見せてから
+  // 自ら onDismiss を呼ぶので、ここではcoins stateの更新だけ行い閉じない。
   function handleLoginBonusClaim() {
-    claimLoginBonus();
-    setCoins(getCoins());
-    setLoginBonus(null);
+    const result = claimLoginBonus();
+    if (result) setCoins(result.coins);
   }
 
   function handleKisekaeChange(next) {
@@ -2229,8 +2230,12 @@ export default function TopPage() {
       {loginBonus && (
         <LoginBonus
           bonus={loginBonus.bonus}
-          streak={loginBonus.streak}
+          stampPos={loginBonus.stampPos}
+          completedBefore={loginBonus.completedBefore}
+          isBigGift={loginBonus.isBigGift}
+          coinsBefore={coins}
           onClaim={handleLoginBonusClaim}
+          onDismiss={() => setLoginBonus(null)}
           lang={lang}
         />
       )}
