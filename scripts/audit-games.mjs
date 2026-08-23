@@ -14,6 +14,7 @@ const warnings = [];
 const seenIssues = new Set();
 let currentHtmlContext = null;
 let previousReport = null;
+const wrappersWithHomeChip = new Set();
 
 async function read(relativePath) {
   return readFile(rel(...relativePath.split('/')), 'utf8');
@@ -269,10 +270,16 @@ function enclosingBraceBlocks(masked, targetIndex) {
   return blocks;
 }
 
+function windowIifeAliases(maskedBlock) {
+  return [...maskedBlock.matchAll(/\(function\s*\(\s*([A-Za-z_$][\w$]*)\s*\)[\s\S]*?\}\)\s*\(\s*window\s*\)/g)].map((match) => match[1]);
+}
+
 function navPostMessageIndices(source, masked, open, close, typePattern = /goBack|goHome/) {
   const indices = [];
   const block = masked.slice(open, close + 1);
-  for (const match of block.matchAll(/\b(?:window\.)?parent\.postMessage\s*\(/g)) {
+  const aliases = windowIifeAliases(masked).map((name) => name.replace(/[$]/g, '\\$&')).join('|');
+  const parent = aliases ? `(?:window|${aliases})` : 'window';
+  for (const match of block.matchAll(new RegExp(`\\b${parent}\\.parent\\.postMessage\\s*\\(`, 'g'))) {
     const callStart = open + match.index;
     const parenOpen = masked.indexOf('(', callStart);
     const parenClose = matchingDelimiter(masked, parenOpen, '(', ')');
@@ -284,8 +291,10 @@ function navPostMessageIndices(source, masked, open, close, typePattern = /goBac
   return indices;
 }
 
-function hasIframeParentCheck(maskedBlock) {
-  return /\bwindow\.parent\s*!={1,2}\s*window\b/.test(maskedBlock)
+function hasIframeParentCheck(maskedBlock, context = maskedBlock) {
+  const aliases = windowIifeAliases(context).map((name) => name.replace(/[$]/g, '\\$&')).join('|');
+  const parent = aliases ? `(?:window|${aliases})` : 'window';
+  return new RegExp(`\\b${parent}\\.parent\\s*!={1,2}\\s*${parent}\\b`).test(maskedBlock)
     || /\bwindow\.self\s*!={1,2}\s*window\.top\b/.test(maskedBlock)
     || /\bwindow\.top\s*!={1,2}\s*window\.self\b/.test(maskedBlock);
 }
@@ -318,7 +327,7 @@ function isGuardedStandaloneHistoryBack(source, masked, historyIndex) {
   for (const { open, close } of enclosingBraceBlocks(masked, historyIndex)) {
     const block = masked.slice(open, close + 1);
     const historyCalls = [...block.matchAll(/\bhistory\.back\s*\(/g)];
-    if (historyCalls.length !== 1 || !hasIframeParentCheck(block)) continue;
+    if (historyCalls.length !== 1 || !hasIframeParentCheck(block, masked)) continue;
     const postMessages = navPostMessageIndices(source, masked, open, close, /^goBack$/);
     if (!postMessages.length || !handlerIsBound(source, masked, open, close)) continue;
     for (const postIndex of postMessages) {
@@ -337,7 +346,7 @@ function isGuardedStandaloneLocationAssign(source, masked, locationIndex) {
   for (const { open, close } of enclosingBraceBlocks(masked, locationIndex)) {
     const block = masked.slice(open, close + 1);
     const locationCalls = [...block.matchAll(/location(?:\.href)?\s*=\s*['"]\/?['"]/g)];
-    if (locationCalls.length !== 1 || !hasIframeParentCheck(block)) continue;
+    if (locationCalls.length !== 1 || !hasIframeParentCheck(block, masked)) continue;
     const postMessages = navPostMessageIndices(source, masked, open, close, /^(?:goBack|goHome)$/);
     if (!postMessages.length || !handlerIsBound(source, masked, open, close)) continue;
     for (const postIndex of postMessages) {
@@ -417,7 +426,8 @@ async function inspectHtml(file, text) {
   // どちらも useGameNav（親側 message ハンドラ）が正式に受理する型なので、
   // 一方だけの実装でも親通信フォールバックとして有効とみなす。
   const hasGoBack = /postMessage\s*\(\s*\{[\s\S]{0,160}?type\s*:\s*['"](?:goBack|goHome)['"]/.test(text);
-  if (!hasGoBack) {
+  const wrapperHasHomeChip = currentHtmlContext?.wrapper && wrappersWithHomeChip.has(currentHtmlContext.wrapper);
+  if (!hasGoBack && !wrapperHasHomeChip) {
     issue('warning', 'NAV', file, '親ページへ goBack/goHome メッセージを送る実装を確認できません');
   }
   const executableJavaScript = maskExecutableJavaScript(text);
@@ -454,14 +464,16 @@ async function inspectHtml(file, text) {
 
   const rotateHint = /\/games\/rotate_hint\.js/.test(text);
   const parentOrientation = /addEventListener\s*\(\s*['"]message['"][\s\S]{0,1200}?orientation/.test(text);
-  if (/orientationchange/.test(text) && !rotateHint && !parentOrientation) {
+  const blockingRotateOverlay = /(?:#|\.)[\w-]*(?:rotate|orientation)[\w-]*\s*\{[^}]*position\s*:\s*fixed[^}]*inset\s*:\s*0[^}]*z-index\s*:\s*\d{3,}[^}]*pointer-events\s*:\s*auto/is.test(text)
+    && /(?:style\.display|classList|\.hidden|visibility)[\s\S]{0,300}(?:rotate|orientation)|(?:rotate|orientation)[\s\S]{0,300}(?:style\.display|classList|\.hidden|visibility)/i.test(text);
+  if (blockingRotateOverlay && /orientationchange|screen\.orientation/.test(text) && !rotateHint && !parentOrientation && !/addEventListener\s*\(\s*['"]resize['"]/.test(text)) {
     issue('warning', 'ORIENTATION', file, 'orientationchange だけに依存している可能性があります');
   }
   for (const match of text.matchAll(/screen\.orientation\.lock\s*\(/g)) {
     issue('warning', 'ORIENTATION', file, 'iframe 内で screen.orientation.lock() を前提としています', { text, index: match.index });
   }
   const fixedLandscape = /(?:min-width|min-height|aspect-ratio)[^;\n]*(?:landscape|16\s*\/\s*9)/i.test(text);
-  if (fixedLandscape && !rotateHint && !parentOrientation) issue('warning', 'ORIENTATION', file, '固定向き前提の可能性がありますが向き案内を確認できません');
+  if (blockingRotateOverlay && fixedLandscape && !rotateHint && !parentOrientation) issue('warning', 'ORIENTATION', file, '固定向き前提の可能性がありますが向き案内を確認できません');
 
   const basicChecks = [
     [/<!doctype\s+html/i, '<!DOCTYPE html> がありません'],
@@ -612,6 +624,7 @@ for (const appImport of app.imports) {
 for (const name of wrapperNames) {
   const file = `src/games/${name}`;
   const text = await read(file);
+  if (/<HomeChip\b/.test(text)) wrappersWithHomeChip.add(file);
   const iframe = text.match(/<iframe\b[\s\S]*?>/i);
   const iframeSrcMatch = iframe?.[0].match(/\bsrc\s*=\s*['"]([^'"]+)['"]/i);
   const gameContentMatch = text.match(/<GameContent\b[^>]*\broute\s*=\s*['"]([^'"]+)['"]/i);
