@@ -270,8 +270,22 @@ function enclosingBraceBlocks(masked, targetIndex) {
   return blocks;
 }
 
+// (function(global){ ... })(window) のようなIIFEで window が別名にエイリアス
+// されているケースを検出する。非貪欲な文字列マッチではなく、実際のブレース
+// 対応（matchingDelimiter）で関数本体の終端を特定してから `)(window)` で
+// 閉じているかを確認するため、本体内に別の `})(window)` に見える断片が
+// あっても誤って早期終了しない。
 function windowIifeAliases(maskedBlock) {
-  return [...maskedBlock.matchAll(/\(function\s*\(\s*([A-Za-z_$][\w$]*)\s*\)[\s\S]*?\}\)\s*\(\s*window\s*\)/g)].map((match) => match[1]);
+  const aliases = new Set();
+  for (const match of maskedBlock.matchAll(/\(\s*function\s*\(\s*([A-Za-z_$][\w$]*)\s*\)\s*\{/g)) {
+    const bodyOpen = maskedBlock.indexOf('{', match.index);
+    if (bodyOpen < 0) continue;
+    const bodyClose = matchingDelimiter(maskedBlock, bodyOpen);
+    if (bodyClose < 0) continue;
+    const afterBody = maskedBlock.slice(bodyClose + 1, bodyClose + 40);
+    if (/^\s*\)\s*\(\s*window\s*\)/.test(afterBody)) aliases.add(match[1]);
+  }
+  return [...aliases];
 }
 
 function navPostMessageIndices(source, masked, open, close, typePattern = /goBack|goHome/) {
@@ -375,6 +389,101 @@ async function importedModuleUsesHook(source, importerFile, hookName) {
   return false;
 }
 
+// <style> ブロックの中身だけを対象にする。<script> 側のオブジェクトリテラルや
+// 関数本体（`foo{`のような閉じ括弧を伴わない断片）をCSSセレクタと誤認しないため。
+function extractStyleBlockText(text) {
+  const chunks = [];
+  for (const match of text.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi)) chunks.push(match[1]);
+  return chunks.join('\n');
+}
+
+// 向き判定によって「操作を塞ぎうる全画面UI」を出し入れしているゲームだけを
+// ORIENTATION 警告の対象にするための下準備。全画面を覆い、かつクリックを
+// 奪いうる（pointer-events:none ではない）position:fixed/absolute のCSS
+// ルールを持つセレクタを集める。selector名（rotate/orientation等の単語を
+// 含むか）やz-indexの桁数には依存しない。単なる中央寄せモーダルや装飾用の
+// フルスクリーン要素まで拾わないよう、天地左右すべてを覆う指定
+// （inset:0、または top/left+right/width+bottom/height の組み合わせ）を要求する。
+function findBlockingOverlaySelectors(styleText) {
+  const selectors = new Set();
+  for (const match of styleText.matchAll(/([#.][\w-]+(?:\s*,\s*[#.][\w-]+)*)\s*\{([^{}]*)\}/g)) {
+    const [, selectorList, body] = match;
+    if (!/position\s*:\s*(?:fixed|absolute)/.test(body)) continue;
+    const fullCoverage = /\binset\s*:\s*0\b/.test(body)
+      || (/\btop\s*:\s*0\b/.test(body) && /\bleft\s*:\s*0\b/.test(body)
+        && (/\bright\s*:\s*0\b/.test(body) || /\bwidth\s*:\s*100%/.test(body))
+        && (/\bbottom\s*:\s*0\b/.test(body) || /\bheight\s*:\s*100%/.test(body)));
+    if (!fullCoverage) continue;
+    // pointer-events は未指定なら仕様上のデフォルトが auto（＝クリックを奪う）
+    // なので、明示的に none と書かれている場合だけ除外する。
+    if (/pointer-events\s*:\s*none/.test(body)) continue;
+    for (const selector of selectorList.split(',')) {
+      const name = selector.trim().replace(/^[#.]/, '');
+      if (name) selectors.add(name);
+    }
+  }
+  return selectors;
+}
+
+// 全画面オーバーレイの名前(id/class)を直接持たないトグルにも対応するため、
+// `body.portrait #rotate{display:flex}` のような複合セレクタから、実際に
+// JS側で操作される「状態クラス名」(この例では portrait) も収集する。
+// name を含むセレクタ片に登場する id/class トークンをすべて候補とする。
+function collectOverlayToggleTokens(styleText, name) {
+  const tokens = new Set([name]);
+  const escaped = name.replace(/[$]/g, '\\$&');
+  const ownNameRe = new RegExp(`[#.]${escaped}\\b`);
+  for (const match of styleText.matchAll(/([^{}]+)\{/g)) {
+    const selectorGroup = match[1];
+    if (!ownNameRe.test(selectorGroup)) continue;
+    for (const part of selectorGroup.split(',')) {
+      if (!ownNameRe.test(part)) continue;
+      for (const cls of part.matchAll(/\.([\w-]+)/g)) tokens.add(cls[1]);
+      for (const id of part.matchAll(/#([\w-]+)/g)) tokens.add(id[1]);
+    }
+  }
+  return tokens;
+}
+
+// トークン（id/class名）の表示切り替えが、向き判定の「結果そのもの」で
+// 駆動されているかをデータフローで確認する。単に同じ関数内に
+// window.innerWidth/innerHeight があるだけ（renderer.setSize() 等の
+// 無関係な処理と偶然near接しているだけ）では一致しない。以下の2パターンのみ
+// 「向きで出し入れされている」とみなす：
+//   A) var flag = <幅/高さ比較を含む式>; ...classList.toggle('token', flag) など、
+//      比較結果を格納した変数がそのままトグルへ渡されている。
+//   B) classList.toggle('token', innerHeight>innerWidth) のように、
+//      比較式がトグル呼び出しの引数として直接書かれている。
+function tokenHasOrientationToggle(text, token) {
+  const t = token.replace(/[$]/g, '\\$&');
+  const orientationExpr = '(?:innerWidth|innerHeight|matchMedia\\(\\s*[\'"]\\(orientation)';
+  const mutationTarget = `(?:getElementById\\(\\s*['"]${t}['"]\\s*\\)|querySelector\\(\\s*['"][#.]${t}\\b[^)]*\\))`;
+
+  const inlineClassList = new RegExp(`classList\\.(?:add|remove|toggle)\\(\\s*['"]${t}['"]\\s*,\\s*[^)]*?${orientationExpr}[^)]*\\)`);
+  const inlineDisplay = new RegExp(`${mutationTarget}[\\s\\S]{0,60}?\\.(?:style\\.display|hidden|style\\.visibility)\\s*=\\s*[^;]*?${orientationExpr}[^;]*;`);
+  if (inlineClassList.test(text) || inlineDisplay.test(text)) return true;
+
+  const varAssignRe = new RegExp(`\\b(?:var|let|const)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*[^;{}]*?${orientationExpr}[^;{}]*;`, 'g');
+  let match;
+  while ((match = varAssignRe.exec(text))) {
+    const varName = match[1].replace(/[$]/g, '\\$&');
+    const after = text.slice(match.index + match[0].length, Math.min(text.length, match.index + match[0].length + 300));
+    const usedInToggle = new RegExp(`classList\\.(?:add|remove|toggle)\\(\\s*['"]${t}['"]\\s*,\\s*${varName}\\b`);
+    const usedInDisplay = new RegExp(`${mutationTarget}[\\s\\S]{0,60}?\\.(?:style\\.display|hidden|style\\.visibility)\\s*=[\\s\\S]{0,40}?\\b${varName}\\b`);
+    if (usedInToggle.test(after) || usedInDisplay.test(after)) return true;
+  }
+  return false;
+}
+
+function hasOrientationDrivenVisibilityToggle(text, styleText, blockingOverlaySelectors) {
+  for (const name of blockingOverlaySelectors) {
+    for (const token of collectOverlayToggleTokens(styleText, name)) {
+      if (tokenHasOrientationToggle(text, token)) return true;
+    }
+  }
+  return false;
+}
+
 async function inspectHtml(file, text) {
   const route = currentHtmlContext?.route ?? null;
   for (const match of text.matchAll(/\b(?:[A-Za-z_$][\w$]*\.)?(?:fillText|strokeText)\s*\(\s*(['"`])([\s\S]*?)\1/g)) {
@@ -464,8 +573,10 @@ async function inspectHtml(file, text) {
 
   const rotateHint = /\/games\/rotate_hint\.js/.test(text);
   const parentOrientation = /addEventListener\s*\(\s*['"]message['"][\s\S]{0,1200}?orientation/.test(text);
-  const blockingRotateOverlay = /(?:#|\.)[\w-]*(?:rotate|orientation)[\w-]*\s*\{[^}]*position\s*:\s*fixed[^}]*inset\s*:\s*0[^}]*z-index\s*:\s*\d{3,}[^}]*pointer-events\s*:\s*auto/is.test(text)
-    && /(?:style\.display|classList|\.hidden|visibility)[\s\S]{0,300}(?:rotate|orientation)|(?:rotate|orientation)[\s\S]{0,300}(?:style\.display|classList|\.hidden|visibility)/i.test(text);
+  const styleBlockText = extractStyleBlockText(text);
+  const blockingOverlaySelectors = findBlockingOverlaySelectors(styleBlockText);
+  const blockingRotateOverlay = blockingOverlaySelectors.size > 0
+    && hasOrientationDrivenVisibilityToggle(text, styleBlockText, blockingOverlaySelectors);
   if (blockingRotateOverlay && /orientationchange|screen\.orientation/.test(text) && !rotateHint && !parentOrientation && !/addEventListener\s*\(\s*['"]resize['"]/.test(text)) {
     issue('warning', 'ORIENTATION', file, 'orientationchange だけに依存している可能性があります');
   }
