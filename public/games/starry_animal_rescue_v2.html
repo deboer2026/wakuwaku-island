@@ -1794,7 +1794,17 @@ function boot(){
   bindInput(); wire(); refreshTitle(); syncBgm();
   window.addEventListener("resize", onResize);
   window.addEventListener("orientationchange", function(){ setTimeout(onResize, 240); });
+  if(window.screen && window.screen.orientation && window.screen.orientation.addEventListener){
+    try{ window.screen.orientation.addEventListener("change", function(){ setTimeout(onResize, 100); }); }catch(e){}
+  }
+  window.addEventListener("message", function(ev){
+    if(ev && ev.data && ev.data.type === "orientation") onResize();
+  });
   onResize();
+  // iframeサイズがloadタイミングで確定しきっていない場合の保険として複数回チェックする
+  setTimeout(onResize, 100);
+  setTimeout(onResize, 400);
+  setTimeout(onResize, 1000);
   showScreen("scrTitle");
   tick();
 }
