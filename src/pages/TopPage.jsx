@@ -1414,6 +1414,40 @@ const GAME_SVGS = {
       <path d="M78 62l3.5 7.2 8 1.1-5.8 5.6 1.4 7.9-6.8-3.6-6.8 3.6 1.4-7.9-5.8-5.6 8-1.1z" fill="#FF8FC6" stroke="#DB6BA3" strokeWidth="1.6"/>
     </svg>
   ),
+  g_pokopoko: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="skyPoko" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#7fd8f5"/>
+          <stop offset="1" stopColor="#d8f4ff"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="100" height="85" rx="12" fill="url(#skyPoko)"/>
+      <circle cx="82" cy="16" r="9" fill="#ffd24d"/>
+      <ellipse cx="18" cy="14" rx="10" ry="4.5" fill="#fff" opacity=".85"/>
+      <ellipse cx="50" cy="72" rx="46" ry="14" fill="#4fb3e0"/>
+      <path d="M6 62 Q50 42 94 62 L94 78 A16 16 0 0 1 78 94 H22 A16 16 0 0 1 6 78 Z" fill="#8fd66b"/>
+      <path d="M6 62 Q50 42 94 62 L94 68 Q50 50 6 68 Z" fill="#f3e0a8"/>
+      <g transform="translate(30 46)">
+        <rect x="-2.5" y="0" width="5" height="22" rx="2" fill="#a9713f"/>
+        <path d="M0 0 Q-14 -6 -18 -16 Q-6 -14 0 -2 Z" fill="#5a9e3d"/>
+        <path d="M0 0 Q14 -6 18 -16 Q6 -14 0 -2 Z" fill="#6fb54e"/>
+        <path d="M0 0 Q-4 -14 0 -22 Q4 -14 0 0 Z" fill="#82c661"/>
+      </g>
+      <g transform="translate(68 58)">
+        <circle r="7" fill="#ff8a3c"/>
+        <path d="M0 -7 Q2 -11 5 -10" stroke="#5a9e3d" strokeWidth="1.6" fill="none" strokeLinecap="round"/>
+      </g>
+      <g transform="translate(52 67)">
+        <path d="M-6 -6 L-8 -13 L-2 -8 Z" fill="#ffcf6b"/>
+        <path d="M6 -6 L8 -13 L2 -8 Z" fill="#ffcf6b"/>
+        <circle cx="0" cy="-1" r="7" fill="#fff6e0" stroke="#e0b96b" strokeWidth="1.5"/>
+        <circle cx="-2.5" cy="-2" r="1.2" fill="#2a2440"/>
+        <circle cx="2.5" cy="-2" r="1.2" fill="#2a2440"/>
+        <path d="M-1.5 1.5 Q0 3 1.5 1.5" stroke="#2a2440" strokeWidth="1" fill="none" strokeLinecap="round"/>
+      </g>
+    </svg>
+  ),
   g_ofuro: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="76" rx="42" ry="8" fill="#BFEAF5" opacity=".55"/><path d="M10 44h80v14a20 20 0 0 1-20 20H30A20 20 0 0 1 10 58z" fill="#F6FBFE" stroke="#9FC7D8" strokeWidth="2"/><rect x="8" y="40" width="84" height="8" rx="4" fill="#BFEAF5" stroke="#8FBFD2" strokeWidth="1.5"/><ellipse cx="50" cy="34" rx="20" ry="18" fill="#F3D9A8" stroke="#D9B478" strokeWidth="2"/><ellipse cx="34" cy="20" rx="7" ry="9" fill="#D9B478"/><ellipse cx="66" cy="20" rx="7" ry="9" fill="#D9B478"/><ellipse cx="50" cy="38" rx="8" ry="6" fill="#FFF3DE"/><ellipse cx="50" cy="35" rx="3" ry="2.4" fill="#5A4636"/><path d="M40 28q4-4 8 0M54 28q4-4 8 0" stroke="#3A2C22" strokeWidth="2.6" fill="none" strokeLinecap="round"/><circle cx="20" cy="24" r="7" fill="#fff" opacity=".92"/><circle cx="80" cy="16" r="5.5" fill="#fff" opacity=".9"/></svg>
   ),
