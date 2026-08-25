@@ -33,4 +33,17 @@ export default defineConfig([
       sourceType: 'commonjs',
     },
   },
+  // SSR/hydration client-state restoration intentionally occurs after mount.
+  // Keep this override scoped to these components until their initialization
+  // boundary is redesigned and regression-tested separately.
+  {
+    files: [
+      'src/components/IslandHero.jsx',
+      'src/components/LoginBonus.jsx',
+      'src/pages/TopPage.jsx',
+    ],
+    rules: {
+      'react-hooks/set-state-in-effect': 'off',
+    },
+  },
 ])

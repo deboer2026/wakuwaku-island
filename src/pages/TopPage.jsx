@@ -1961,7 +1961,6 @@ export default function TopPage() {
     const bonus = checkLoginBonus();
     if (bonus) setLoginBonus(bonus);
     return () => stopBGM();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 最近遊んだゲームの先頭 = 「つづきから」の対象
