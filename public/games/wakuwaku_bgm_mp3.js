@@ -25,10 +25,10 @@
     try {
       var v = localStorage.getItem(STORAGE_KEY);
       return v !== 'off';
-    } catch (e) { return true; }
+    } catch { return true; }
   }
   function saveState(on) {
-    try { localStorage.setItem(STORAGE_KEY, on ? 'on' : 'off'); } catch (e) { /* storage unavailable */ }
+    try { localStorage.setItem(STORAGE_KEY, on ? 'on' : 'off'); } catch { /* storage unavailable */ }
   }
 
   /* ---- shared lifecycle: ONE set of document/window listeners for all instances ---- */
@@ -116,7 +116,7 @@
   WakuwakuMP3BGM.prototype._tryPlay = function (el, onSuccess) {
     var self = this;
     var p;
-    try { p = el.play(); } catch (e) { p = null; }
+    try { p = el.play(); } catch { p = null; }
     if (p && typeof p.catch === 'function') {
       p.then(function () { onSuccess && onSuccess(); }).catch(function () { self._attachRetry(); });
     } else {
