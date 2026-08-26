@@ -2114,7 +2114,7 @@ export default function TopPage() {
               <span className="tp-parents-ic" aria-hidden="true">
                 <svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 8.5 L6.5 12 L13 4.5" stroke="#7B8BD4" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </span>
-              <span><b>{{ja:'登録なし', en:'No sign-up', zh:'无需注册', ko:'가입 없음', es:'Sin registro'}[lang] || '登録なし'}</b><small>{{ja:'個人情報は取得しません', en:'No personal data collected', zh:'不收集个人信息', ko:'개인정보 수집 없음', es:'No recopilamos datos'}[lang] || '個人情報は取得しません'}</small></span>
+              <span><b>{{ja:'登録なし', en:'No sign-up', zh:'无需注册', ko:'가입 없음', es:'Sin registro'}[lang] || '登録なし'}</b><small>{{ja:'氏名・連絡先の入力なし', en:'No name or contact details required', zh:'无需提供姓名或联系方式', ko:'이름·연락처 입력 없음', es:'No pedimos nombre ni datos de contacto'}[lang] || '氏名・連絡先の入力なし'}</small></span>
             </div>
             <div className="tp-parents-item">
               <span className="tp-parents-ic" aria-hidden="true">

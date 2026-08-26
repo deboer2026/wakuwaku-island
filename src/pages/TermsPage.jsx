@@ -31,7 +31,7 @@ export default function TermsPage() {
           {en ? 'Terms of Use' : '利用規約'}
         </h1>
         <p className="legal-date">
-          {en ? 'Last updated: 2026-08-10' : '最終更新日：2026年8月10日'}
+          {en ? 'Last updated: 2026-08-26' : '最終更新日：2026年8月26日'}
         </p>
 
         {/* 1 */}
@@ -97,14 +97,14 @@ export default function TermsPage() {
             {en ? (
               <>
                 <li>Game scores and progress saved in localStorage may be lost if browser data is cleared</li>
-                <li>The site operator is not responsible for any damages resulting from use of this site</li>
+                <li>To the extent permitted by applicable law, the operator’s liability arising from use of this site may be excluded or limited. Nothing in these Terms excludes liability that cannot lawfully be excluded.</li>
                 <li>Content and features may be changed or discontinued without notice</li>
                 <li>We do not guarantee uninterrupted availability of the site</li>
               </>
             ) : (
               <>
                 <li>localStorageに保存されたゲームデータはブラウザのデータ削除により消去される場合があります</li>
-                <li>当サイトの利用により生じた損害について、運営者は一切の責任を負いません</li>
+                <li>当サイトの利用に関連して生じた損害について、運営者の責任は、法令上免責または制限が認められる範囲で免責または制限されます。法令上免責できない責任については、適用される法令に従います。</li>
                 <li>コンテンツや機能は予告なく変更・終了する場合があります</li>
                 <li>サイトの継続的な利用可能性を保証するものではありません</li>
               </>
