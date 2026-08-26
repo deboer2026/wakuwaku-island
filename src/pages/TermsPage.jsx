@@ -132,18 +132,6 @@ export default function TermsPage() {
           </p>
         </div>
 
-        {/* Contact */}
-        <div className="legal-contact">
-          <h2 style={{ justifyContent: 'center', marginBottom: 8 }}>
-            ✉️ {en ? 'Contact' : 'お問い合わせ'}
-          </h2>
-          <p>
-            {en
-              ? 'A public contact channel is being prepared. When available, it will be published on this page and the For Parents page.'
-              : '公開用のお問い合わせ窓口は現在整備中です。開設後、このページと「保護者の方へ」に掲載します。'}
-          </p>
-        </div>
-
         <p className="legal-footnote">
           © 2026 Wakuwaku Island. All rights reserved.
         </p>
