@@ -31,7 +31,7 @@ export default function PrivacyPage() {
           {en ? 'Privacy Policy' : 'プライバシーポリシー'}
         </h1>
         <p className="legal-date">
-          {en ? 'Last updated: 2026-08-10' : '最終更新日：2026年8月10日'}
+          {en ? 'Last updated: 2026-08-26' : '最終更新日：2026年8月26日'}
         </p>
 
         {/* 1 */}
@@ -46,11 +46,11 @@ export default function PrivacyPage() {
 
         {/* 2 */}
         <div className="legal-section">
-          <h2>📵 {en ? 'No Personal Information Collected' : '個人情報の非収集'}</h2>
+          <h2>📵 {en ? 'Information we do not ask you to provide' : '利用者から直接取得しない情報'}</h2>
           <p>
             {en
-              ? 'This site does NOT collect any of the following:'
-              : '当サイトでは、以下の個人情報は一切収集しません：'}
+              ? 'This site has no feature for visitors to enter or register the following information:'
+              : '当サイトには、利用者が以下の情報を入力・登録する機能はありません：'}
           </p>
           <ul>
             {en ? (
@@ -58,14 +58,12 @@ export default function PrivacyPage() {
                 <li>Name, address, phone number, or email address</li>
                 <li>Account registration information</li>
                 <li>Payment or financial information</li>
-                <li>Information that could identify specific individuals</li>
               </>
             ) : (
               <>
                 <li>氏名・住所・電話番号・メールアドレス等の個人情報</li>
                 <li>アカウント登録情報</li>
                 <li>支払い・金融情報</li>
-                <li>特定の個人を識別できる情報</li>
               </>
             )}
           </ul>
@@ -84,21 +82,21 @@ export default function PrivacyPage() {
               <>
                 <li>Display language setting</li>
                 <li>Mute setting (sound on / off)</li>
-                <li>High scores for each game</li>
-                <li>Coin count and login bonus streak</li>
+                <li>Scores, stars, and game progress</li>
+                <li>Coin count and login bonus information</li>
                 <li>Costume (Kisekae) selection for characters</li>
                 <li>Unlocked shop items</li>
-                <li>Recent play history and display preferences</li>
+                <li>Recent play history and other settings</li>
               </>
             ) : (
               <>
                 <li>表示言語の設定</li>
                 <li>ミュート設定（音あり / 音なし）</li>
-                <li>各ゲームのハイスコア</li>
-                <li>コイン枚数・ログインボーナスの連続日数</li>
+                <li>スコア・星・ゲーム進行</li>
+                <li>コイン枚数・ログインボーナス情報</li>
                 <li>キャラクターの着せ替え設定</li>
                 <li>ショップで解放したアイテム</li>
-                <li>最近遊んだゲーム・表示設定</li>
+                <li>最近遊んだゲーム・各種設定</li>
               </>
             )}
           </ul>
@@ -107,6 +105,11 @@ export default function PrivacyPage() {
               ? 'You can delete this data at any time by clearing your browser\'s site data.'
               : 'これらのデータはブラウザのサイトデータを削除することで、いつでも消去できます。'}
           </p>
+          <p style={{ marginTop: 10 }}>
+            {en
+              ? 'Some games may also send game ID or name, stage, result, stars, score, and engagement time to Google Analytics as usage metrics for site improvement. These events are not implemented to include names, email addresses, or other contact details.'
+              : '一部のゲームでは、game ID・ゲーム名・ステージ・結果・星・スコア・利用時間などの利用指標を、サイト改善のためGoogle Analyticsへ分析イベントとして送信する場合があります。これらのイベントに氏名・メールアドレス等を付加する実装はありません。'}
+          </p>
         </div>
 
         {/* 4 */}
@@ -114,8 +117,18 @@ export default function PrivacyPage() {
           <h2>📊 {en ? 'Google Analytics' : 'Google Analyticsについて'}</h2>
           <p>
             {en
-              ? 'This site uses Google Analytics to understand usage such as page views, popular games, device/browser information, approximate location, access time, and referral source. Google may process these data using cookies and similar technologies. We do not use the analytics data to directly identify individual visitors.'
-              : '当サイトでは、ページビュー、人気ゲーム、端末・ブラウザ情報、おおよその地域、アクセス日時、参照元などを把握し改善するため、Google Analyticsを使用しています。GoogleはCookie等を利用してこれらの情報を処理する場合があります。当サイトでは、アクセス解析情報を個人を直接特定する目的で利用しません。'}
+              ? 'This site uses Google Analytics to understand site usage and improve the site. Google may process cookie-like identifiers, page paths, page and game usage metrics, basic browser/device information, country-level approximate location, and access or referral information. Detailed location and device-data collection are disabled in this site’s Google Analytics settings.'
+              : '当サイトでは、サイト利用状況の把握と改善のためGoogle Analyticsを使用しています。Cookie等の識別子、ページパス、ページ・ゲームの利用指標、基本的なブラウザ・端末情報、国等の大まかな地域情報、アクセス・参照情報が扱われる場合があります。当サイトのGoogle Analytics設定では、詳細な地域・端末データ収集は無効にしています。'}
+          </p>
+          <p style={{ marginTop: 8 }}>
+            {en
+              ? 'Analytics data on this site is not used for ads personalization, Google Signals, remarketing, advertising-service links such as Google Ads, or audience export to ads. User-provided data collection is disabled, and this site does not use User-ID.'
+              : 'Google Analyticsのデータを、当サイトでは広告パーソナライズ、Google Signals、リマーケティング、Google Ads等の広告サービス連携、広告向けオーディエンスのエクスポートには使用していません。ユーザー提供データの収集は無効であり、当サイトではUser-IDを使用していません。'}
+          </p>
+          <p style={{ marginTop: 8 }}>
+            {en
+              ? 'The retention setting for user-level and event-level Google Analytics data is 2 months, with reset on new activity turned off. This setting does not mean that every aggregated Analytics report is deleted after 2 months.'
+              : 'Google Analyticsのユーザー単位・イベント単位データの保持設定は2か月で、新しいアクティビティ時のリセットは無効です。この設定は、すべての集計済みAnalyticsレポートが2か月後に削除されることを意味するものではありません。'}
           </p>
           <p style={{ marginTop: 8 }}>
             {en
