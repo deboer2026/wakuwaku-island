@@ -17,7 +17,7 @@ export default function NeonDrive() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/neon_drive_v1.html"
+          src="/games/neon_drive_v2.html"
           title="きらきらドライブ"
           allow="autoplay; fullscreen"
           allowFullScreen

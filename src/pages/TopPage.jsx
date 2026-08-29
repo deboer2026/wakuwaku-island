@@ -114,35 +114,84 @@ const GAME_SVGS = {
 
   g_neon: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0" y="0" width="100" height="85" rx="12" fill="#1a1040"/>
-      <circle cx="20" cy="14" r="1.6" fill="#fff" opacity=".9"/>
-      <circle cx="78" cy="11" r="1.4" fill="#fff" opacity=".8"/>
-      <circle cx="88" cy="20" r="1.2" fill="#fff" opacity=".7"/>
-      <rect x="12" y="20" width="6" height="20" rx="1" fill="#2b1e5c"/>
-      <rect x="12" y="22" width="6" height="4" fill="#ffd24d" opacity=".9"/>
-      <rect x="12" y="30" width="6" height="4" fill="#7df9ff" opacity=".85"/>
-      <rect x="80" y="16" width="7" height="26" rx="1" fill="#2b1e5c"/>
-      <rect x="80" y="20" width="7" height="4" fill="#ff2fb0" opacity=".9"/>
-      <rect x="80" y="30" width="7" height="4" fill="#ffd24d" opacity=".85"/>
-      <path d="M38 40 L62 40 L82 85 L18 85 Z" fill="#241a44"/>
-      <path d="M38 40 L62 40 L82 85 L18 85 Z" fill="none" stroke="#0e0a24" strokeWidth="1"/>
-      <path d="M38 40 L18 85" stroke="#ff2fb0" strokeWidth="2.5"/>
-      <path d="M62 40 L82 85" stroke="#00e5ff" strokeWidth="2.5"/>
-      <rect x="48.4" y="45" width="3" height="7" fill="#bfe8ff" opacity=".85"/>
-      <rect x="47.4" y="58" width="4" height="9" fill="#bfe8ff" opacity=".85"/>
-      <rect x="46" y="72" width="6" height="11" fill="#bfe8ff" opacity=".85"/>
-      <g transform="translate(50 64)">
-        <rect x="-13" y="-4" width="26" height="9" rx="3" fill="#10c8e8"/>
-        <rect x="-8" y="-10" width="16" height="7" rx="3" fill="#2ad2f0"/>
-        <rect x="-13" y="4" width="26" height="2.4" rx="1.2" fill="#00ffff"/>
-        <path d="M-9 -10 L-6 -15 L-3 -11 Z" fill="#10c8e8"/>
-        <path d="M9 -10 L6 -15 L3 -11 Z" fill="#10c8e8"/>
-        <path d="M-8.5 -11 L-6.5 -14 L-4.5 -11.5 Z" fill="#ffb0d8"/>
-        <path d="M8.5 -11 L6.5 -14 L4.5 -11.5 Z" fill="#ffb0d8"/>
-        <rect x="-11" y="-6" width="3" height="2.4" rx="1" fill="#fff2cc"/>
-        <rect x="8" y="-6" width="3" height="2.4" rx="1" fill="#fff2cc"/>
+      <defs>
+      <linearGradient id="nd_sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stopColor="#150b38"/>
+      <stop offset="0.55" stopColor="#3a1f6e"/>
+      <stop offset="1" stopColor="#7a3f8e"/>
+      </linearGradient>
+      <linearGradient id="nd_road" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stopColor="#241a44"/>
+      <stop offset="1" stopColor="#3b2a5e"/>
+      </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="100" height="85" rx="12" fill="url(#nd_sky)"/>
+      <circle cx="16" cy="12" r="1.5" fill="#fff" opacity=".9"/>
+      <circle cx="30" cy="7" r="1.1" fill="#fff" opacity=".75"/>
+      <circle cx="72" cy="9" r="1.3" fill="#fff" opacity=".85"/>
+      <circle cx="86" cy="17" r="1" fill="#fff" opacity=".7"/>
+      <circle cx="58" cy="13" r="1" fill="#fff" opacity=".6"/>
+      <circle cx="79" cy="15" r="7" fill="#fff2c6" opacity=".25"/>
+      <circle cx="79" cy="15" r="4.6" fill="#fff4d0"/>
+      <g opacity=".95">
+      <path d="M22 46 a28 28 0 0 1 56 0" fill="none" stroke="#ff6b6b" strokeWidth="2.1"/>
+      <path d="M25 46 a25 25 0 0 1 50 0" fill="none" stroke="#ffd166" strokeWidth="2.1"/>
+      <path d="M28 46 a22 22 0 0 1 44 0" fill="none" stroke="#7dff8a" strokeWidth="2.1"/>
+      <path d="M31 46 a19 19 0 0 1 38 0" fill="none" stroke="#5ecdff" strokeWidth="2.1"/>
+      <path d="M34 46 a16 16 0 0 1 32 0" fill="none" stroke="#c77dff" strokeWidth="2.1"/>
       </g>
-      <path d="M30 20 l1.6 3.2 l3.4 .4 l-2.5 2.3 l.7 3.4 l-3.2 -1.7 l-3.2 1.7 l.7 -3.4 l-2.5 -2.3 l3.4 -.4 Z" fill="#ffe14d" stroke="#e0a800" strokeWidth="1"/>
+      <rect x="4" y="24" width="9" height="24" rx="1.5" fill="#0e0b1e"/>
+      <rect x="5.6" y="27" width="2.4" height="2.4" fill="#ffd98a"/>
+      <rect x="9.4" y="27" width="2.4" height="2.4" fill="#7df9ff"/>
+      <rect x="5.6" y="32" width="2.4" height="2.4" fill="#7df9ff"/>
+      <rect x="9.4" y="37" width="2.4" height="2.4" fill="#ffd98a"/>
+      <rect x="5" y="20" width="7" height="3" rx="1" fill="#ff2fb0"/>
+      <rect x="15" y="32" width="7" height="16" rx="1.5" fill="#0e0b1e"/>
+      <rect x="16.4" y="35" width="2.2" height="2.2" fill="#ffd98a"/>
+      <rect x="19" y="40" width="2.2" height="2.2" fill="#7df9ff"/>
+      <rect x="87" y="27" width="9" height="21" rx="1.5" fill="#0e0b1e"/>
+      <rect x="88.6" y="30" width="2.4" height="2.4" fill="#7df9ff"/>
+      <rect x="92.4" y="30" width="2.4" height="2.4" fill="#ffd98a"/>
+      <rect x="88.6" y="35" width="2.4" height="2.4" fill="#ffd98a"/>
+      <rect x="88" y="23" width="7" height="3" rx="1" fill="#ffe14d"/>
+      <rect x="78" y="34" width="7" height="14" rx="1.5" fill="#0e0b1e"/>
+      <rect x="79.4" y="37" width="2.2" height="2.2" fill="#7df9ff"/>
+      <path d="M38 46 L62 46 L88 85 L12 85 Z" fill="url(#nd_road)"/>
+      <path d="M38 46 L12 85" stroke="#ff2fb0" strokeWidth="2.6" strokeLinecap="round"/>
+      <path d="M62 46 L88 85" stroke="#00e5ff" strokeWidth="2.6" strokeLinecap="round"/>
+      <g stroke="#dff2ff" strokeWidth="1.6" opacity=".55" strokeLinecap="round">
+      <path d="M50 48 L50 52"/><path d="M50 57 L50 63"/><path d="M50 69 L50 78"/>
+      </g>
+      <g fill="#ffe14d">
+      <path d="M31 57 l1.1 2.3 2.5 .3 -1.9 1.7 .5 2.5 -2.2 -1.3 -2.2 1.3 .5 -2.5 -1.9 -1.7 2.5 -.3z"/>
+      <path d="M69 54 l.9 1.9 2.1 .3 -1.6 1.4 .4 2.1 -1.8 -1.1 -1.8 1.1 .4 -2.1 -1.6 -1.4 2.1 -.3z"/>
+      <path d="M62 71 l.8 1.6 1.8 .2 -1.3 1.2 .3 1.8 -1.6 -.9 -1.6 .9 .3 -1.8 -1.3 -1.2 1.8 -.2z"/>
+      </g>
+      <g transform="translate(50 71)">
+      <ellipse cx="0" cy="9" rx="13" ry="3.2" fill="#00e5ff" opacity=".22"/>
+      <path d="M-11 5 q0 -6 3 -7 l16 0 q3 1 3 7 z" fill="#f6b6d4"/>
+      <rect x="-11.5" y="4.6" width="23" height="2.6" rx="1.3" fill="#ff5ea8"/>
+      <path d="M-6.6 -2 q1.4 -3.4 6.6 -3.4 q5.2 0 6.6 3.4 z" fill="#4a6f92"/>
+      <path d="M-8 -2 l16 0 q2.6 .6 3 3 l-22 0 q.4 -2.4 3 -3z" fill="#f9cbe0"/>
+      <ellipse cx="-6.5" cy="-9" rx="2" ry="5.2" fill="#f6b6d4"/>
+      <ellipse cx="6.5" cy="-9" rx="2" ry="5.2" fill="#f6b6d4"/>
+      <ellipse cx="-6.5" cy="-8.6" rx=".9" ry="3.4" fill="#ffdcea"/>
+      <ellipse cx="6.5" cy="-8.6" rx=".9" ry="3.4" fill="#ffdcea"/>
+      <rect x="-9.5" y="-1.2" width="3.6" height="1.8" rx=".9" fill="#fff6d8"/>
+      <rect x="5.9" y="-1.2" width="3.6" height="1.8" rx=".9" fill="#fff6d8"/>
+      <circle cx="-8.4" cy="6.4" r="2.4" fill="#14121c"/>
+      <circle cx="8.4" cy="6.4" r="2.4" fill="#14121c"/>
+      <circle cx="-8.4" cy="6.4" r="1" fill="#d8e6f2"/>
+      <circle cx="8.4" cy="6.4" r="1" fill="#d8e6f2"/>
+      </g>
+      <g transform="translate(30 77)">
+      <circle cx="0" cy="0" r="4.6" fill="#8fd8f0"/>
+      <circle cx="-1.6" cy="-1" r="1" fill="#26343f"/>
+      <circle cx="1.6" cy="-1" r="1" fill="#26343f"/>
+      <path d="M-1.2 1.4 h2.4 l-1.2 1.4z" fill="#ffb347"/>
+      <path d="M-4.4 -3.4 l-1 -3.4 l3.2 2.2z" fill="#8fd8f0"/>
+      <path d="M4.4 -3.4 l1 -3.4 l-3.2 2.2z" fill="#8fd8f0"/>
+      </g>
     </svg>
   ),
   g_mura: (
@@ -1629,11 +1678,11 @@ const SCHOOL_GAMES = [
     ko:{ name:'애니멀 카트 GP',   desc:'6명 중 캐릭터를 골라\n별로 특수 기술을 쓰는 3D 레이스!' },
     es:{ name:'Kart de Animales GP', desc:'¡Elige 1 de 6 pilotos!\nJunta estrellas y usa habilidades en 3D!' } },
   { id:'g_neon', route:'/neon-drive', icon:'🚗', num:22, color:'#00d5ff', stars:5, isNew:true, category:'レース',
-    ja:{ name:'きらきらドライブ',  desc:'よるのまちをドライブ！\nほしをあつめてはしろう！' },
-    en:{ name:'Neon Drive',        desc:'Cruise the night city\nand collect the stars!' },
-    zh:{ name:'霓虹夜间兜风',       desc:'在夜晚的城市里兜风，\n收集星星吧！' },
-    ko:{ name:'반짝반짝 드라이브', desc:'밤의 도시를 달리며\n별을 모아요!' },
-    es:{ name:'Paseo de Neón',     desc:'¡Recorre la ciudad nocturna\ny recoge las estrellas!' } },
+    ja:{ name:'きらきらドライブ',  desc:'6つのコースをたびしよう！\nけしきはまいかいかわるよ' },
+    en:{ name:'Neon Drive',        desc:'Journey across 6 courses.\nThe scenery changes every time!' },
+    zh:{ name:'霓虹夜间兜风',       desc:'畅游6条路线，\n每次风景都不一样！' },
+    ko:{ name:'반짝반짝 드라이브', desc:'6개 코스를 여행해요.\n풍경이 매번 달라져요!' },
+    es:{ name:'Paseo de Neón',     desc:'¡Viaja por 6 rutas!\n¡El paisaje cambia cada vez!' } },
   { id:'g_astral', route:'/astral-fang', icon:'🌟', num:23, color:'#7cecff', stars:5, isNew:true, category:'アクション',
     ja:{ name:'ほしぞらアニマルレスキュー', desc:'ゆびで そらを とんで\nどうぶつの ぎょうれつを つくろう！' },
     en:{ name:'Starry Animal Rescue',       desc:'Glide with one finger\nand lead a parade of animals!' },
@@ -1791,7 +1840,6 @@ const THUMB_ALIASES = {
   '/sniper': 'sniper',
 };
 const NO_THUMB_ROUTES = new Set([
-  '/neon-drive',
   '/moji',
 ]);
 
