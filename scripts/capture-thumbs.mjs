@@ -82,7 +82,7 @@ const MAP = [
   ['/sora', 'sora_v3.html'],
   ['/sora-kyoshitsu', 'sora_kyoshitsu_v1.html'],
   ['/sushi', 'sushi_v3.html'],
-  ['/tashizan', 'tashizan_v2.html'],
+  ['/tashizan', 'sansu_v4.html'],
   ['/tokei-yomi', 'tokei_yomi_v1.html'],
   ['/usagi', 'usagi_carrot_v2.html'],
   ['/usagi-carrot', 'usagi_carrot_v2.html'],
