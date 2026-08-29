@@ -30,6 +30,10 @@
   function saveState(on) {
     try { localStorage.setItem(STORAGE_KEY, on ? 'on' : 'off'); } catch { /* storage unavailable */ }
   }
+  function _clampVol(v) {
+    if (!isFinite(v)) return 0;
+    return v < 0 ? 0 : v > 1 ? 1 : v;
+  }
 
   /* ---- shared lifecycle: ONE set of document/window listeners for all instances ---- */
   var _instances = [];
@@ -169,9 +173,9 @@
     var startTime = performance.now();
     var durationMs = CROSSFADE_SECONDS * 1000;
     function step(now) {
-      var t = Math.min(1, (now - startTime) / durationMs);
-      from.volume = BGM_VOLUME * (1 - t);
-      to.volume = BGM_VOLUME * t;
+      var t = Math.max(0, Math.min(1, (now - startTime) / durationMs));
+      from.volume = _clampVol(BGM_VOLUME * (1 - t));
+      to.volume = _clampVol(BGM_VOLUME * t);
       if (t < 1) {
         self._fadeRaf = requestAnimationFrame(step);
       } else {
@@ -244,8 +248,8 @@
     var startTime = performance.now();
     var fadeMs = (CROSSFADE_SECONDS * 1000) / 2;
     function fadeOut(now) {
-      var t = Math.min(1, (now - startTime) / fadeMs);
-      active.volume = startVol * (1 - t);
+      var t = Math.max(0, Math.min(1, (now - startTime) / fadeMs));
+      active.volume = _clampVol(startVol * (1 - t));
       if (t < 1) {
         self._fadeRaf = requestAnimationFrame(fadeOut);
       } else {
