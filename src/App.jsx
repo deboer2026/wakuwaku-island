@@ -92,7 +92,7 @@ function GameWithSEO({ route, children }) {
 const GAME_ROUTES = new Set([
   '/shabondama', '/kudamono-catch', '/doubutsu-puzzle',
   '/kazu-asobi', '/animal-soccer', '/sushi',
-  '/ichigo', '/kakurenbo', '/moji', '/tashizan', '/iro', '/machi',
+  '/ichigo', '/kakurenbo', '/moji', '/tashizan', '/sansu', '/iro', '/machi',
   '/kokki', '/jewelry-master', '/animal-block', '/runner', '/shooting',
   '/sniper', '/dressup', '/okashi-crossing',
   '/moji-asobi', '/iro-awase', '/flag-quiz', '/shoot',
@@ -156,6 +156,7 @@ export default function App() {
         <Route path="/kakurenbo" element={<GameWithSEO route="/kakurenbo"><DoubutsuKakurenbo /></GameWithSEO>} />
         <Route path="/moji" element={<GameWithSEO route="/moji"><MojiAsobi /></GameWithSEO>} />
         <Route path="/tashizan" element={<GameWithSEO route="/tashizan"><TashizanGame /></GameWithSEO>} />
+        <Route path="/sansu" element={<GameWithSEO route="/tashizan"><TashizanGame /></GameWithSEO>} />
         <Route path="/iro" element={<GameWithSEO route="/iro"><IroAwase /></GameWithSEO>} />
         <Route path="/machi" element={<GameWithSEO route="/machi"><MachiDukuri /></GameWithSEO>} />
         <Route path="/katachi" element={<GameWithSEO route="/katachi"><KatachiAwase /></GameWithSEO>} />

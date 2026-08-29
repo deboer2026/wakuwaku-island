@@ -17,8 +17,8 @@ export default function TashizanGame() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/tashizan_v3.html"
-          title="たしざんトレイン3D"
+          src="/games/sansu_v4.html"
+          title="さんすうトレイン3D"
           allow="autoplay; fullscreen"
           allowFullScreen
           sandbox="allow-scripts allow-same-origin allow-popups"
