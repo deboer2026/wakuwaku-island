@@ -56,6 +56,7 @@ const MAP = [
   ['/kazu', 'kazu_asobi_v3.html'],
   ['/kazu-asobi', 'kazu_asobi_v3.html'],
   ['/kokki', 'flag_quiz_v2.html'],
+  ['/kotsu-safety', 'kotsu_safety_v5.html'],
   ['/kudamono', 'kudamono_v2.html'],
   ['/kudamono-catch', 'kudamono_v2.html'],
   ['/kyoshitsu', 'sora_kyoshitsu_v1.html'],

@@ -1500,6 +1500,43 @@ const GAME_SVGS = {
   g_ofuro: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="76" rx="42" ry="8" fill="#BFEAF5" opacity=".55"/><path d="M10 44h80v14a20 20 0 0 1-20 20H30A20 20 0 0 1 10 58z" fill="#F6FBFE" stroke="#9FC7D8" strokeWidth="2"/><rect x="8" y="40" width="84" height="8" rx="4" fill="#BFEAF5" stroke="#8FBFD2" strokeWidth="1.5"/><ellipse cx="50" cy="34" rx="20" ry="18" fill="#F3D9A8" stroke="#D9B478" strokeWidth="2"/><ellipse cx="34" cy="20" rx="7" ry="9" fill="#D9B478"/><ellipse cx="66" cy="20" rx="7" ry="9" fill="#D9B478"/><ellipse cx="50" cy="38" rx="8" ry="6" fill="#FFF3DE"/><ellipse cx="50" cy="35" rx="3" ry="2.4" fill="#5A4636"/><path d="M40 28q4-4 8 0M54 28q4-4 8 0" stroke="#3A2C22" strokeWidth="2.6" fill="none" strokeLinecap="round"/><circle cx="20" cy="24" r="7" fill="#fff" opacity=".92"/><circle cx="80" cy="16" r="5.5" fill="#fff" opacity=".9"/></svg>
   ),
+  g_kotsu: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="85" rx="12" fill="#7FD1F5"/>
+      <circle cx="82" cy="14" r="9" fill="#FFE27A"/>
+      <ellipse cx="18" cy="18" rx="13" ry="7" fill="#fff" opacity=".9"/>
+      <ellipse cx="30" cy="14" rx="9" ry="5.4" fill="#fff" opacity=".85"/>
+      <rect x="0" y="46" width="100" height="24" fill="#5B6270"/>
+      <rect x="0" y="70" width="100" height="15" fill="#8FC47A"/>
+      <rect x="10" y="50" width="9" height="16" fill="#F4F1E6"/>
+      <rect x="27" y="50" width="9" height="16" fill="#F4F1E6"/>
+      <rect x="44" y="50" width="9" height="16" fill="#F4F1E6"/>
+      <rect x="61" y="50" width="9" height="16" fill="#F4F1E6"/>
+      <rect x="78" y="50" width="9" height="16" fill="#F4F1E6"/>
+      <g transform="translate(14 26)">
+        <rect x="-3" y="10" width="6" height="20" rx="2" fill="#8A93A3"/>
+        <rect x="-9" y="0" width="18" height="24" rx="5" fill="#3C4453"/>
+        <circle cx="0" cy="6" r="5" fill="#E4423E"/>
+        <circle cx="0" cy="16" r="5" fill="#4CAF63"/>
+      </g>
+      <g transform="translate(70 54)">
+        <rect x="-16" y="-4" width="34" height="13" rx="6" fill="#F26B4B"/>
+        <rect x="-11" y="-11" width="20" height="9" rx="4" fill="#F8DDE0"/>
+        <circle cx="-8" cy="10" r="5.2" fill="#3C4453"/>
+        <circle cx="12" cy="10" r="5.2" fill="#3C4453"/>
+      </g>
+      <g transform="translate(24 58)">
+        <ellipse cx="0" cy="14" rx="10" ry="3" fill="#3a4a20" opacity=".2"/>
+        <rect x="-6" y="-2" width="12" height="14" rx="4" fill="#4AA3E0"/>
+        <circle cx="0" cy="-10" r="8.4" fill="#F4A95C"/>
+        <circle cx="-3.4" cy="-11" r="1.3" fill="#3a2a10"/>
+        <circle cx="3.4" cy="-11" r="1.3" fill="#3a2a10"/>
+        <path d="M-3 -6.5q3 2.6 6 0" stroke="#a8565a" strokeWidth="1.4" fill="none" strokeLinecap="round"/>
+        <ellipse cx="-6.6" cy="-8" rx="2.2" ry="1.6" fill="#ffb6c1"/>
+        <ellipse cx="6.6" cy="-8" rx="2.2" ry="1.6" fill="#ffb6c1"/>
+      </g>
+    </svg>
+  ),
 };
 
 /* ════════════════════════════════════════════════════
@@ -1593,6 +1630,12 @@ const GAMES = [
     zh:{ name:'泡泡澡堂', desc:'用泡泡搓一搓，\n把动物洗得亮晶晶！' },
     ko:{ name:'거품 목욕탕', desc:'거품으로 문질문질!\n동물을 반짝반짝하게' },
     es:{ name:'Baño de Burbujas', desc:'¡Frota con espuma\ny deja a los animales brillantes!' } },
+  { id:'g_kotsu', route:'/kotsu-safety', icon:'🚦', num:28, color:'#F26B4B', stars:5, isNew:true, category:'がくしゅう',
+    ja:{ name:'とまって みて わたろう', desc:'とまる・みる・まつを れんしゅう！\nしんごうを まもって わたろう' },
+    en:{ name:'Stop, Look & Cross', desc:'Practice stop, look, wait!\nCross safely at the signal' },
+    zh:{ name:'停下 看看 再过马路', desc:'练习停下、观察、等待！\n遵守信号灯安全过马路' },
+    ko:{ name:'멈추고 보고 건너요', desc:'멈추고 보고 기다리기 연습!\n신호를 지키며 건너요' },
+    es:{ name:'Para, mira y cruza', desc:'¡Practica parar, mirar y esperar!\nCruza con seguridad en el semáforo' } },
   { id:'g14', route:'/machi',          icon:'🏙️', num:14, color:'#00897B', stars:5, isNew:true, category:'そうぞう',
     ja:{ name:'わくわくまちづくり', desc:'3Dの しまを あるいて\nどうぶつと まちを つくろう！' },
     en:{ name:'Dream Island Town',   desc:'Explore a 3D island and\nbuild a town with animals!' },
