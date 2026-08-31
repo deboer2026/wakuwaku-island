@@ -51,6 +51,7 @@ const NijiiroOukoku = lazy(() => import('./games/NijiiroOukoku'))
 const PokopokoIsland = lazy(() => import('./games/PokopokoIsland'))
 const AwaawaOfuro = lazy(() => import('./games/AwaawaOfuro'))
 const KotsuSafety = lazy(() => import('./games/KotsuSafety'))
+const BallPool = lazy(() => import('./games/BallPool'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const TermsPage = lazy(() => import('./pages/TermsPage'))
 const ParentsPage = lazy(() => import('./pages/ParentsPage'))
@@ -92,7 +93,7 @@ function GameWithSEO({ route, children }) {
 const GAME_ROUTES = new Set([
   '/shabondama', '/kudamono-catch', '/doubutsu-puzzle',
   '/kazu-asobi', '/animal-soccer', '/sushi',
-  '/ichigo', '/kakurenbo', '/moji', '/tashizan', '/iro', '/machi',
+  '/ichigo', '/kakurenbo', '/moji', '/tashizan', '/sansu', '/iro', '/machi',
   '/kokki', '/jewelry-master', '/animal-block', '/runner', '/shooting',
   '/sniper', '/dressup', '/okashi-crossing',
   '/moji-asobi', '/iro-awase', '/flag-quiz', '/shoot',
@@ -107,6 +108,7 @@ const GAME_ROUTES = new Set([
   '/pokopoko-island',
   '/ofuro', '/awaawa-ofuro',
   '/kotsu-safety',
+  '/ball-pool',
   // 短縮URLエイリアスも記録
   '/kudamono', '/puzzle', '/kazu', '/soccer',
 ]);
@@ -156,6 +158,7 @@ export default function App() {
         <Route path="/kakurenbo" element={<GameWithSEO route="/kakurenbo"><DoubutsuKakurenbo /></GameWithSEO>} />
         <Route path="/moji" element={<GameWithSEO route="/moji"><MojiAsobi /></GameWithSEO>} />
         <Route path="/tashizan" element={<GameWithSEO route="/tashizan"><TashizanGame /></GameWithSEO>} />
+        <Route path="/sansu" element={<GameWithSEO route="/tashizan"><TashizanGame /></GameWithSEO>} />
         <Route path="/iro" element={<GameWithSEO route="/iro"><IroAwase /></GameWithSEO>} />
         <Route path="/machi" element={<GameWithSEO route="/machi"><MachiDukuri /></GameWithSEO>} />
         <Route path="/katachi" element={<GameWithSEO route="/katachi"><KatachiAwase /></GameWithSEO>} />
@@ -208,6 +211,7 @@ export default function App() {
         <Route path="/ofuro" element={<GameWithSEO route="/ofuro"><AwaawaOfuro /></GameWithSEO>} />
         <Route path="/awaawa-ofuro" element={<GameWithSEO route="/ofuro"><AwaawaOfuro /></GameWithSEO>} />
         <Route path="/kotsu-safety" element={<GameWithSEO route="/kotsu-safety"><KotsuSafety /></GameWithSEO>} />
+        <Route path="/ball-pool" element={<GameWithSEO route="/ball-pool"><BallPool /></GameWithSEO>} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms"   element={<TermsPage />} />
         <Route path="/parents" element={<ParentsPage />} />

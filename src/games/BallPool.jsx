@@ -5,7 +5,7 @@ import { useGameNav } from '../hooks/useGameNav';
 import GameContent from '../seo/GameContent';
 import HomeChip from '../components/HomeChip';
 
-export default function TashizanGame() {
+export default function BallPool() {
   const navigate = useNavigate();
   const iframeRef = useRef(null);
   useGameNav(navigate);
@@ -17,14 +17,14 @@ export default function TashizanGame() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/sansu_v4.html"
-          title="さんすうトレイン3D"
+          src="/games/ball_pool_v1.html"
+          title="わくわくボールプール"
           allow="autoplay; fullscreen"
           allowFullScreen
           sandbox="allow-scripts allow-same-origin allow-popups"
         />
       </div>
-      <GameContent route="/tashizan" />
+      <GameContent route="/ball-pool" />
     </div>
   );
 }
