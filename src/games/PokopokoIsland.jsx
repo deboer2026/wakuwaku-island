@@ -10,5 +10,5 @@ export default function PokopokoIsland() {
   const iframeRef = useRef(null);
   useGameNav(navigate);
   useIframeBridge(iframeRef);
-  return <div className="game-page"><div className="game-frame"><HomeChip /><iframe ref={iframeRef} src="/games/pokopoko_island_v1.html" title="ポコポコアイランド" allow="autoplay; fullscreen" allowFullScreen sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock" /></div><GameContent route="/pokopoko-island" /></div>;
+  return <div className="game-page"><div className="game-frame"><HomeChip /><iframe ref={iframeRef} src="/games/pokopoko_island_v2.html" title="ポコポコアイランド" allow="autoplay; fullscreen" allowFullScreen sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock" /></div><GameContent route="/pokopoko-island" /></div>;
 }
