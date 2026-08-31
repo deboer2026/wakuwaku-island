@@ -1537,6 +1537,39 @@ const GAME_SVGS = {
       </g>
     </svg>
   ),
+
+  g_ballpool: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="85" rx="12" fill="#4fc3f7"/>
+      <ellipse cx="50" cy="66" rx="46" ry="16" fill="#ff6fa5"/>
+      <circle cx="18" cy="58" r="6" fill="#ffd23f"/>
+      <circle cx="30" cy="66" r="6.5" fill="#9ee34f"/>
+      <circle cx="44" cy="56" r="6" fill="#8a6bff"/>
+      <circle cx="58" cy="66" r="6.5" fill="#ff6fa5"/>
+      <circle cx="72" cy="58" r="6" fill="#ffd23f"/>
+      <circle cx="84" cy="66" r="6.5" fill="#4fc3f7"/>
+      <circle cx="12" cy="70" r="5.5" fill="#9ee34f"/>
+      <circle cx="92" cy="72" r="5.5" fill="#8a6bff"/>
+      <g transform="translate(38 40)">
+        <circle cx="0" cy="0" r="11" fill="#bfefff" opacity=".55"/>
+        <circle cx="0" cy="4" r="5.6" fill="#ffe08a"/>
+        <path d="M-4 4.4q4 3 8 0" stroke="#3a3450" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+        <circle cx="-2.4" cy="1.6" r="1" fill="#2b2340"/>
+        <circle cx="2.4" cy="1.6" r="1" fill="#2b2340"/>
+        <ellipse cx="-4.4" cy="-2.4" rx="2.2" ry="2.8" fill="#d9a23c"/>
+        <ellipse cx="4.4" cy="-2.4" rx="2.2" ry="2.8" fill="#d9a23c"/>
+      </g>
+      <g transform="translate(66 46)">
+        <ellipse cx="0" cy="13" rx="9" ry="3" fill="#3a4a20" opacity=".2"/>
+        <circle cx="0" cy="0" r="9" fill="#ffb36b"/>
+        <ellipse cx="-3" cy="-9.4" rx="2.6" ry="3.2" fill="#8a5a2b"/>
+        <ellipse cx="3" cy="-9.4" rx="2.6" ry="3.2" fill="#8a5a2b"/>
+        <circle cx="-2.6" cy="-1.4" r="1.2" fill="#2b2340"/>
+        <circle cx="2.6" cy="-1.4" r="1.2" fill="#2b2340"/>
+        <path d="M-3 3q3 2.4 6 0" stroke="#2b2340" strokeWidth="1.3" fill="none" strokeLinecap="round"/>
+      </g>
+    </svg>
+  ),
 };
 
 /* ════════════════════════════════════════════════════
@@ -1636,6 +1669,12 @@ const GAMES = [
     zh:{ name:'停下 看看 再过马路', desc:'练习停下、观察、等待！\n遵守信号灯安全过马路' },
     ko:{ name:'멈추고 보고 건너요', desc:'멈추고 보고 기다리기 연습!\n신호를 지키며 건너요' },
     es:{ name:'Para, mira y cruza', desc:'¡Practica parar, mirar y esperar!\nCruza con seguridad en el semáforo' } },
+  { id:'g_ballpool', route:'/ball-pool', icon:'●', num:29, color:'#ff6fa5', stars:4, isNew:true, category:'アクション',
+    ja:{ name:'わくわくボールプール', desc:'ボールを なげて\nどうぶつを たすけよう！' },
+    en:{ name:'Wakuwaku Ball Pool', desc:'Throw balls and\nrescue the animals!' },
+    zh:{ name:'快乐球池', desc:'投出彩球，\n救出小动物！' },
+    ko:{ name:'두근두근 볼풀', desc:'공을 던져\n동물을 구해요!' },
+    es:{ name:'Piscina de Bolas', desc:'¡Lanza bolas y\nrescata animales!' } },
   { id:'g14', route:'/machi',          icon:'🏙️', num:14, color:'#00897B', stars:5, isNew:true, category:'そうぞう',
     ja:{ name:'わくわくまちづくり', desc:'3Dの しまを あるいて\nどうぶつと まちを つくろう！' },
     en:{ name:'Dream Island Town',   desc:'Explore a 3D island and\nbuild a town with animals!' },
