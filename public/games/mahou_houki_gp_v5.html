@@ -26,6 +26,10 @@
   #homeBtn{ top:calc(var(--sat) + 10px); left:calc(var(--sal) + 10px); }
   #bgmBtn{ top:calc(var(--sat) + 10px); right:calc(var(--sar) + 10px); }
   #bgmBtn.off{ background:#9a93b5; color:#574f73; }
+  /* #homeBtn削除によりback roleが不在になり、共有wakuwaku_ui.jsのsound配置は
+     見えないback分の空白(--ww-ui-back-width fallback 44px)を残したまま
+     leftへ配置してしまうため、safe-area基準の左端へ明示的に詰める。 */
+  #bgmBtn[data-ww-ui="sound"]{ left:var(--ww-ui-left)!important; right:auto!important; }
   #rot{ position:fixed; top:calc(var(--sat)+64px); left:50%; transform:translateX(-50%);
     z-index:99990; background:rgba(10,18,45,0.85); color:#fff; pointer-events:none;
     display:none; align-items:center; gap:8px; font-size:14px; text-align:center;
@@ -38,7 +42,6 @@
 </head>
 <body>
 <div id="wrap"><canvas id="cv"></canvas></div>
-<button id="homeBtn" class="ui-btn" aria-label="ホーム">🏠</button>
 <button id="bgmBtn" class="ui-btn" aria-label="BGM">🔊</button>
 <div id="rot"><span class="ic">📱</span><span>よこむきにすると大きく遊べるよ</span></div>
 <div id="err"></div>
@@ -127,7 +130,6 @@ try{
     bgmBtn.textContent=bgmOn?'🔊':'🔇';
     if(typeof WakuwakuMP3BGM!=='undefined'&&WakuwakuMP3BGM.saveState) WakuwakuMP3BGM.saveState(bgmOn);
     if(bgmOn){initAudio();startBgm();}else stopBgm(); });
-  document.getElementById('homeBtn').addEventListener('click',()=>{ stopBgm(); try{window.parent.postMessage({type:'goHome'},'*');}catch(e){} });
 
   /* safe-area の反映は共通スクリプト /games/safe_area.js が担う（--sat/--sab/--sal/--sar） */
 
