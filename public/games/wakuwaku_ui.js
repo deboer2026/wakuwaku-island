@@ -52,6 +52,35 @@
     });
     syncSpacing();
   }
+  /* Many games keep their HUD (and the back button inside it) at
+     display:none until the player reaches the play screen. At
+     DOMContentLoaded the back button therefore measures 0px wide and
+     syncSpacing() bakes in the 44px fallback into --ww-ui-back-width.
+     That value never gets recalculated once the HUD is actually shown,
+     so a back label wider than 44px (e.g. "◀ もどる") overlaps the sound
+     button next to it. Re-measure whenever the back button's own box
+     changes size (covers the hidden->visible transition, since a
+     display:none element has no box for ResizeObserver to report until
+     it becomes visible), with a MutationObserver on its ancestors as a
+     fallback for engines/cases where the resize isn't observed. */
+  function observeBackButtonSize(back) {
+    var lastWidth = -1;
+    function reSync() {
+      var w = Math.ceil(back.getBoundingClientRect().width);
+      if (w === lastWidth) return;
+      lastWidth = w;
+      syncSpacing();
+    }
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(reSync).observe(back);
+    }
+    if (typeof MutationObserver !== 'undefined') {
+      var mo = new MutationObserver(reSync);
+      for (var parent = back.parentElement; parent && parent !== document.documentElement; parent = parent.parentElement) {
+        mo.observe(parent, { attributes: true, attributeFilter: ['class', 'style'] });
+      }
+    }
+  }
   document.addEventListener('DOMContentLoaded', function () {
     /* Older games use different ids.  Mark the existing element only; never
        create, replace, clone, or attach behavior to navigation controls. */
@@ -61,5 +90,7 @@
     document.querySelectorAll('[data-ww-ui="sound"]').forEach(function (button) { label(button, 'おんがく'); });
     placeNavigation();
     window.addEventListener('resize', placeNavigation, { passive: true });
+    var back = document.querySelector('[data-ww-ui="back"]');
+    if (back) observeBackButtonSize(back);
   }, { once: true });
 }());
