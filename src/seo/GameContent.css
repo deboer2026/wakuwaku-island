@@ -1,8 +1,23 @@
-.game-page { position: relative; width: 100%; min-height: 100dvh; background: #fdf3f8; }
+.game-page {
+  position: relative; width: 100%; min-height: 100dvh; background: #fdf3f8;
+  /* 共通ゲームヘッダーのトークン。HomeChip.css / .wi-info-chip 双方から参照し、
+     両ボタンの高さ・縦位置・角丸・間隔を一致させる。 */
+  --wi-header-h: 44px;
+  --wi-header-bg: #ffe6ef;
+  --wi-chip-edge: calc(env(safe-area-inset-right, 0px) + 10px);
+  --wi-chip-edge-sm: calc(env(safe-area-inset-right, 0px) + 6px);
+  --wi-chip-gap: 8px;
+  --wi-home-chip-w: 92px;
+  --wi-home-chip-w-sm: 44px;
+}
 .game-frame {
   position: relative; display: flex; flex-direction: column;
   width: 100%; height: 100dvh; overflow: hidden;
   padding-top: env(safe-area-inset-top, 0px);
+  /* ヘッダー帯（HomeChip の行）を意図した共通UI色で塗る。
+     iframe は不透明なので下に隠れ、ボタンの隙間からページ背景(#fdf3f8)が
+     覗いて見える問題だけを解消する。 */
+  background: var(--wi-header-bg);
 }
 .game-frame iframe { flex: 1 1 auto; min-height: 0; width: 100%; height: auto; border: none; display: block; }
 
@@ -46,21 +61,36 @@
   overscroll-behavior: none;
 }
 
-/* せつめい ボタン（ホームチップの左どなり） */
+/* せつめい ボタン（ホームチップの左どなり）
+   HomeChip と同じ top / 高さ / box-sizing を共有トークンから使い、
+   同一ヘッダー帯の中に収まる位置だけを right オフセットで指定する。
+   これにより両者は常に同じ縦位置・高さ・角丸になり、
+   ヘッダー帯（.game-frame の予約領域）の外に出ない＝iframeへの重なりも生まれない。 */
 .wi-info-chip {
   position: fixed; z-index: 60;
-  top: calc(env(safe-area-inset-top, 0px) + 10px);
-  right: calc(env(safe-area-inset-right, 0px) + 88px);
-  display: flex; align-items: center; gap: 5px;
+  top: env(safe-area-inset-top, 0px);
+  right: calc(var(--wi-chip-edge, 10px) + var(--wi-home-chip-w, 92px) + var(--wi-chip-gap, 8px));
+  height: var(--wi-header-h, 44px);
+  box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
   background: rgba(255,255,255,.82);
   -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
   border: 2px solid rgba(255,255,255,.9); border-radius: 999px;
   padding: 6px 11px 6px 9px;
   font-family: 'DotGothic16', sans-serif; font-size: 12px; color: #a34767; font-weight: 700;
+  white-space: nowrap;
   box-shadow: 0 2px 6px rgba(163,71,103,.18);
   cursor: pointer;
 }
 .wi-info-chip:active { transform: scale(.94); }
+@media (max-height: 440px) and (orientation: landscape) {
+  .wi-info-chip {
+    right: calc(var(--wi-chip-edge-sm, 6px) + var(--wi-home-chip-w-sm, 44px) + var(--wi-chip-gap, 8px));
+    padding: 5px 9px;
+    font-size: 0;
+  }
+  .wi-info-chip span { font-size: 17px; }
+}
 
 /* ゲームにもどる ボタン（説明を読んでいるとき） */
 .wi-resume-btn {
