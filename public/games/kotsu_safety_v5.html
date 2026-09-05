@@ -1459,6 +1459,15 @@
         if(c.turning || c.turnOnMain) return;
         if(Math.abs(c.x - PX) < carHalf(c.type) + 46) okX = false;
       });
+      // まがってくる くるま が、ほこうしゃが まだ わたりはじめる まえ（entered に なる まえ）から
+      // すでに この こうさてんを まがっている とちゅう／まがりおわった すぐあとで、おうだんの
+      // いちに ちかい ばあいも、ここで とめる（entered後の turnSeg ガードだけでは、entered に
+      // なる ちょくぜんの アプローチちゅうの しょうとつを ふせげないため）。
+      G.ns.forEach(function(c){
+        if(c.turnSeg !== s) return;
+        if(!c.turning) return;
+        if(Math.abs(c.x - PX) < carHalf(c.type) + 46) okX = false;
+      });
       return okX;
     }
     return true;
@@ -1536,9 +1545,15 @@
     }
     var wantP = G.p + sp * dt;
     var gateSeg = nextBand(G.p);
-    if(gateSeg && !gateSeg.entered && !crossSafe(gateSeg) && wantP + 6 >= gateSeg.bandP0){
-      wantP = Math.min(wantP, gateSeg.bandP0 - 6);
-      if(sp > 0 && G.toast <= 0) showToast("くるまが とまったか みよう");
+    if(gateSeg && !gateSeg.entered && wantP + 6 >= gateSeg.bandP0){
+      // しんごう／こうさてんは「あか・てんめつの あいだは わたりはじめられない」を、
+      // ばついてき な チェックだけでなく、ここでも ソフトに とめる（ぐうぜんの コマ単位の
+      // タイミングで bandP0 を こえて しまい、しんごう いはん に なるのを ふせぐ）。
+      var phaseBlock = (gateSeg.type === "signal" || gateSeg.type === "inter") && phase(gateSeg) !== "green";
+      if(phaseBlock || !crossSafe(gateSeg)){
+        wantP = Math.min(wantP, gateSeg.bandP0 - 6);
+        if(sp > 0 && G.toast <= 0) showToast(phaseBlock ? "しんごうを みよう" : "くるまが とまったか みよう");
+      }
     }
     G.p = Math.min(G.stage.total - 40, wantP);
     G.camP += (G.p - G.camP) * Math.min(1, dt * 11);   // なめらかカメラ
@@ -1798,13 +1813,15 @@
 
     G.ns.forEach(function(c){
       if(c.turning){
-        if(c.turnDone){ c.x += 98 * dt; return; }
         // まがりはじめた あとで ほこうしゃが おなじ こうさてんを わたりはじめた ばあいも、
-        // まがっている とちゅうの 車を 一時停止させる（turnAt の segBlocked チェックは
-        // まがりはじめる まえ にしか きかないので、ここでも おなじ ガードを かける）。
+        // まがっている とちゅう・まがりおわった あとの 車を 一時停止させる（turnAt の
+        // segBlocked チェックは まがりはじめる まえ にしか きかないので、ここでも
+        // おなじ ガードを かける。まがりおわった あとも おなじ こうだんほどうを
+        // よこぎるので、entered中は すすませない）。
         var segBlockedNow = !!(c.turnSeg && c.turnSeg.entered && !c.turnSeg.done);
         if(segBlockedNow){ c.stopped = true; return; }
         c.stopped = false;
+        if(c.turnDone){ c.x += 98 * dt; return; }
         c.turnA = Math.min(Math.PI / 2, c.turnA + dt * 1.5);
         var R = 52;
         c.p = c.turnAt + R * Math.cos(c.turnA);
