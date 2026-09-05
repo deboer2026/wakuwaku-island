@@ -1439,9 +1439,10 @@
     }
     return null;
   }
-  // しんごうの ない おうだんほどうでは、くるまが とまるまで わたりはじめない
+  // しんごうの ない おうだんほどう／しんにゅうろでは、くるまが とまるまで わたりはじめない
+  // （すでに おうだんほどうに いる くるまは 自然に ぬけさせ、あとに つづく くるまだけ とめる）
   function crossSafe(s){
-    if(s.type !== "cross") return true;
+    if(s.type !== "cross" && s.type !== "drive") return true;
     var ok = true;
     s.cars.forEach(function(c){
       if(!c.stopped && c.x > SW0 + TUNE.PED_STOP_FAR - 10 && c.x < SW1 + TUNE.PED_STOP_NEAR + 14) ok = false;
@@ -1521,7 +1522,7 @@
     }
     var wantP = G.p + sp * dt;
     var gateSeg = nextBand(G.p);
-    if(gateSeg && gateSeg.type === "cross" && !gateSeg.entered && !crossSafe(gateSeg) && wantP + 6 >= gateSeg.bandP0){
+    if(gateSeg && (gateSeg.type === "cross" || gateSeg.type === "drive") && !gateSeg.entered && !crossSafe(gateSeg) && wantP + 6 >= gateSeg.bandP0){
       wantP = Math.min(wantP, gateSeg.bandP0 - 6);
       if(sp > 0 && G.toast <= 0) showToast("くるまが とまったか みよう");
     }
@@ -1542,7 +1543,7 @@
     });
 
     G.stage.segs.forEach(function(s){
-      if(s.type !== "cross" || s.done || s.entered) return;
+      if((s.type !== "cross" && s.type !== "drive") || s.done || s.entered) return;
       var safe = crossSafe(s);
       if(safe && !s.pedSafeShown && Math.abs(s.bandP0 - G.p) < CFG.LOOK_RANGE + 60){
         s.pedSafeShown = true;
@@ -1560,11 +1561,16 @@
       }
     });
 
+    // entered（＝ほうてきに わたりはじめた）は、①みる確認が 有効で ②しんごう/あんぜん確認を
+    // クリアしていて ③実際に バンドの きわ(bandP0)を こえたときだけ 立てる。
+    // ソフトブロックの マージン（歩道での 足踏み表現）と 混同しない。
     var nb = nextBand(G.p);
-    if(nb && !nb.entered && G.p + 11 >= nb.bandP0){
+    if(nb && !nb.entered && G.p >= nb.bandP0){
       var v = violation(nb);
+      if(!v && (nb.type === "cross" || nb.type === "drive") && !crossSafe(nb)) v = "car";
       if(v){ penalty(v, nb); return; }
       nb.entered = true;
+      nb.pedSafeShown = false;
     }
 
     // わたり きった か（nextBand の範囲外に出ても かならず 判定する）
@@ -1580,14 +1586,18 @@
         seOk(); confetti(PX, PY - 46, 22); setFace("happy", 1.3);
         G.zoom = .075;
         addBuddy();
-        G.lookedSeg = -1; updateHud();
+        G.lookedSeg = -1; G.lookDone = false; updateHud();
       }
     }
 
-    // かくにんの ゆうこう はんい から はなれたら リセット
+    // かくにんの ゆうこう はんい から はなれたら／じかんぎれ(LOOK_VALID)に なったら リセット。
+    // ただし、すでに ほうてきに わたりはじめている(entered)あいだは、みちのとちゅうで
+    // かくにんが きれても わたりを ちゅうだんさせない（わたる まえの チェックだけに つかう）。
     if(G.lookedSeg >= 0){
       var ls = G.stage.segs[G.lookedSeg];
-      if(!ls || ls.done || G.p < ls.bandP0 - CFG.LOOK_RANGE - 40){
+      var staleLook = !!(ls && !ls.entered && !ls.done && (G.t - G.lookedAt > CFG.LOOK_VALID));
+      if(!ls || ls.done || G.p < ls.bandP0 - CFG.LOOK_RANGE - 40 || staleLook){
+        if(staleLook && G.toast <= 0) showToast("もういちど みてみよう");
         G.lookedSeg = -1; G.lookDone = false; G.lookStep = 0; G.lookT = 0;
       }
     }
@@ -1692,18 +1702,27 @@
       if(!s.cars) return;
       var mid = (s.bandP0 + s.bandP1) / 2;
       if(Math.abs(mid - G.p) > 780){ s.cars.length = 0; return; }
+      // ほうてきに わたりはじめてから(entered) わたりおわる(done)まで の あいだは
+      // 「わたっている さいちゅう」＝ activeCrossing。この あいだは ぜったいに
+      // おうだんほどうへ くるまを 入れない（いちじ停止で とめても・すこし待っても、あんぜん）。
+      var activeCrossing = s.entered && !s.done;
       if(s.type === "drive"){
-        s.next[0] -= dt;
-        if(s.next[0] <= 0){
-          s.next[0] = rnd(6, 11) * TRAFFIC_W;
-          s.cars.push({ x:BLD + 52, p:mid, dir:-1, v:38, col:pick(CAR_COLORS), type:"car", turnOnMain:true });
+        // わたっている あいだは しんにゅうろから 新しい 車を 出さない（プリファードの スポーン一時停止）
+        if(!activeCrossing){
+          s.next[0] -= dt;
+          if(s.next[0] <= 0){
+            s.next[0] = rnd(6, 11) * TRAFFIC_W;
+            s.cars.push({ x:BLD + 52, p:mid, dir:-1, v:38, col:pick(CAR_COLORS), type:"car", turnOnMain:true });
+          }
         }
       }else if(s.type === "cross"){
-        s.next[0] -= dt;
-        if(s.next[0] <= 0){
-          s.next[0] = rnd(3.4, 6.5) * TRAFFIC_W;
-          s.cars.push({ x:W + 50, p:mid, dir:-1, v:rnd(70, 95) * Math.min(1.7, TRAFFIC_W),
-                        col:pick(CAR_COLORS), type:pick(VTYPE), turnOnMain:true });
+        if(!activeCrossing){
+          s.next[0] -= dt;
+          if(s.next[0] <= 0){
+            s.next[0] = rnd(3.4, 6.5) * TRAFFIC_W;
+            s.cars.push({ x:W + 50, p:mid, dir:-1, v:rnd(70, 95) * Math.min(1.7, TRAFFIC_W),
+                          col:pick(CAR_COLORS), type:pick(VTYPE), turnOnMain:true });
+          }
         }
       }else{
         var lanes = [{ p:s.bandP0 + 30, dir:-1 }, { p:s.bandP1 - 30, dir:1 }];
@@ -1719,10 +1738,14 @@
         });
       }
       var ph = (s.type === "signal" || s.type === "inter") ? phase(s) : null;
-      var pedWait = (s.type === "cross" && !s.done && !s.entered);
+      // しんごうの ない おうだんほどう／しんにゅうろ：わたりはじめてから おわるまで、ずっと とめる
+      // （「!s.entered」を はずして、わたっている あいだも とめつづけるのが こんかいの しゅうせい）。
+      var pedWait = (s.type === "cross" || s.type === "drive") && !s.done;
       s.cars.forEach(function(c){
         var move = true;
-        if(ph && ph !== "red"){
+        // しんごう/こうさてん：しんごうの フェーズが 途中で かわっても、わたっている さいちゅうは
+        // ぜったいに くるまを うごかさない（activeCrossing が フェーズの ズレを 上書きする）。
+        if(ph && (ph !== "red" || activeCrossing)){
           if(c.dir < 0 && c.x <= SW1 + 24 && c.x > SW0 + 60) move = false;
           if(c.dir > 0 && c.x >= SW0 - 24 && c.x < SW0 + 46) move = false;
         }
@@ -1748,13 +1771,13 @@
       var ok = true;
       G.ns.forEach(function(o){ if(o.x === car.x && Math.abs(o.p - car.p) < 140) ok = false; });
       if(ok && !up && Math.random() < CFG.TURN_RATE){
-        var tgt = null;
+        var tgt = null, tgtSeg = null;
         G.stage.segs.forEach(function(s){
           if(s.type !== "inter") return;
           var mid = (s.bandP0 + s.bandP1) / 2;
-          if(mid < car.p - 70 && mid > G.p - 40 && (!tgt || mid > tgt)) tgt = mid;
+          if(mid < car.p - 70 && mid > G.p - 40 && (!tgt || mid > tgt)){ tgt = mid; tgtSeg = s; }
         });
-        if(tgt !== null){ car.turnAt = tgt; car.blink = true; }
+        if(tgt !== null){ car.turnAt = tgt; car.turnSeg = tgtSeg; car.blink = true; }
       }
       if(ok) G.ns.push(car);
     }
@@ -1762,6 +1785,12 @@
     G.ns.forEach(function(c){
       if(c.turning){
         if(c.turnDone){ c.x += 98 * dt; return; }
+        // まがりはじめた あとで ほこうしゃが おなじ こうさてんを わたりはじめた ばあいも、
+        // まがっている とちゅうの 車を 一時停止させる（turnAt の segBlocked チェックは
+        // まがりはじめる まえ にしか きかないので、ここでも おなじ ガードを かける）。
+        var segBlockedNow = !!(c.turnSeg && c.turnSeg.entered && !c.turnSeg.done);
+        if(segBlockedNow){ c.stopped = true; return; }
+        c.stopped = false;
         c.turnA = Math.min(Math.PI / 2, c.turnA + dt * 1.5);
         var R = 52;
         c.p = c.turnAt + R * Math.cos(c.turnA);
@@ -1771,7 +1800,10 @@
       }
       if(c.turnAt !== undefined){
         var R2 = 52, entry = c.turnAt + R2;
-        var pedDeep = (Math.abs(G.p - c.turnAt) < 46) && (G.p > c.turnAt - 30);
+        // その こうさてんを ほうてきに わたっている さいちゅう(entered && !done)なら、
+        // まがってくる くるまは ぜったいに おうだんほどうへ 入らせない（きょり だけに たよらない）。
+        var segBlocked = !!(c.turnSeg && c.turnSeg.entered && !c.turnSeg.done);
+        var pedDeep = segBlocked || ((Math.abs(G.p - c.turnAt) < 46) && (G.p > c.turnAt - 30));
         if(c.p <= entry + 2){
           if(pedDeep){ c.p = entry + 2; c.stopped = true; return; }
           c.stopped = false; c.turning = true; c.lane = c.x; c.turnA = 0;
