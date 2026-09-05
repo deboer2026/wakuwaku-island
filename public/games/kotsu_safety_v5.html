@@ -1654,6 +1654,14 @@
     if(G.mode === "bike" && G.onBike) return "bike";
     if((s.type === "signal" || s.type === "inter") && phase(s) !== "green") return "signal";
     if(G.lookedSeg !== s.i) return "look";
+    // かくにんずみでも、LOOK_VALID(びょう)を こえていたら わたりはじめられない。
+    // じかんぎれの リセットしょりは べつの ばしょ(update内)に あるが、その じっこう
+    // じゅんばんに たよらず、わたりはじめる はんてい そのものでも かならず たしかめる
+    // （かくにん完了から ちょうど LOOK_VALID びょう こえた フレームで bandP0 に とうたつする
+    // ような きわどい タイミングでも、ふるい かくにんじょうたいのまま entered=true に
+    // ならないように）。すでに ほうてきに わたりはじめた あと（entered後）は、この
+    // チェックは よばれない（entered判定の いちどきりの ゲートでしか つかわないため）。
+    if(G.t - G.lookedAt > CFG.LOOK_VALID) return "look";
     return null;
   }
 
