@@ -1442,12 +1442,26 @@
   // しんごうの ない おうだんほどう／しんにゅうろでは、くるまが とまるまで わたりはじめない
   // （すでに おうだんほどうに いる くるまは 自然に ぬけさせ、あとに つづく くるまだけ とめる）
   function crossSafe(s){
-    if(s.type !== "cross" && s.type !== "drive") return true;
-    var ok = true;
-    s.cars.forEach(function(c){
-      if(!c.stopped && c.x > SW0 + TUNE.PED_STOP_FAR - 10 && c.x < SW1 + TUNE.PED_STOP_NEAR + 14) ok = false;
-    });
-    return ok;
+    if(s.type === "cross" || s.type === "drive"){
+      var ok = true;
+      s.cars.forEach(function(c){
+        if(!c.stopped && c.x > SW0 + TUNE.PED_STOP_FAR - 10 && c.x < SW1 + TUNE.PED_STOP_NEAR + 14) ok = false;
+      });
+      return ok;
+    }
+    if(s.type === "signal" || s.type === "inter"){
+      // しんごう／こうさてんの「なおしんの おうだんしゃせん」を よこぎる くるま（まがってくる くるまは
+      // turnSeg で べつに ガードずみ）が、あお（じぶんの ばん）に なった しゅんかんにも まだ
+      // わたりばの まんなかを つうかちゅう、という「すりぬけ」を ふせぐ。あかの あいだに はいった
+      // くるまが とおりきる まで、あおに なっても わたりはじめさせない。
+      var okX = true;
+      s.cars.forEach(function(c){
+        if(c.turning || c.turnOnMain) return;
+        if(Math.abs(c.x - PX) < carHalf(c.type) + 46) okX = false;
+      });
+      return okX;
+    }
+    return true;
   }
 
   /* ---- 「みる」押しっぱなし確認 ---- */
@@ -1522,7 +1536,7 @@
     }
     var wantP = G.p + sp * dt;
     var gateSeg = nextBand(G.p);
-    if(gateSeg && (gateSeg.type === "cross" || gateSeg.type === "drive") && !gateSeg.entered && !crossSafe(gateSeg) && wantP + 6 >= gateSeg.bandP0){
+    if(gateSeg && !gateSeg.entered && !crossSafe(gateSeg) && wantP + 6 >= gateSeg.bandP0){
       wantP = Math.min(wantP, gateSeg.bandP0 - 6);
       if(sp > 0 && G.toast <= 0) showToast("くるまが とまったか みよう");
     }
@@ -1567,7 +1581,7 @@
     var nb = nextBand(G.p);
     if(nb && !nb.entered && G.p >= nb.bandP0){
       var v = violation(nb);
-      if(!v && (nb.type === "cross" || nb.type === "drive") && !crossSafe(nb)) v = "car";
+      if(!v && !crossSafe(nb)) v = "car";
       if(v){ penalty(v, nb); return; }
       nb.entered = true;
       nb.pedSafeShown = false;
