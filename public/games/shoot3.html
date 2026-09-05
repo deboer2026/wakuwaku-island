@@ -231,6 +231,7 @@ let wclearing=false,wkilled=0,wtotal=0;
 let combo=0,comboT=0;
 let plt=false,ptimer=null;
 let raf=null,frame=0;
+let runEpoch=0; // bumped each startStage(); guards delayed callbacks (spawnWave/wave-advance/stageClear) against firing into a later run
 
 const cv=document.getElementById('cv');
 const ctx=cv.getContext('2d');
@@ -731,6 +732,7 @@ function drawBG(t){
 const WAVES_PER_STAGE=3; // wave1,2=ざこ, wave3=ボス
 
 function startStage(si){
+  runEpoch++;
   curStage=si;
   document.getElementById('ts').style.display='none';
   document.getElementById('map').classList.remove('show');
@@ -766,9 +768,10 @@ function spawnWave(w){
   wclearing=false;wkilled=0;wtotal=0;
   enemies=[];ebullets=[];
   const isBoss=w===WAVES_PER_STAGE;
+  const epoch=runEpoch;
   showBanner(w,isBoss);
   setTimeout(()=>{
-    if(!running)return;
+    if(!running||epoch!==runEpoch)return;
     if(isBoss)spawnBoss();else spawnEnemies(w);
   },1900);
 }
@@ -880,7 +883,7 @@ function update(t){
       if(boss.hp<=0){
         score+=boss.sc;expl(boss.x,boss.y,true);spop(`+${boss.sc}`,boss.x,boss.y,'#FFD700');
         boss=null;document.getElementById('bhpw').style.display='none';
-        wclearing=true;setTimeout(()=>stageClear(),1400);
+        wclearing=true;const bEpoch=runEpoch;setTimeout(()=>{if(!running||bEpoch!==runEpoch)return;stageClear();},1400);
       }
     }
   });
@@ -900,7 +903,7 @@ function update(t){
     for(const e of enemies){
       if(e.dead)continue;
       if(Math.abs(e.x-px)<24&&Math.abs(e.y-py)<24){
-        e.dead=true;expl(e.x,e.y);
+        e.dead=true;wkilled++;expl(e.x,e.y);
         if(pwtype!=='shield')hitP();
         break;
       }
@@ -914,7 +917,8 @@ function update(t){
   // ウェーブ完了
   if(!wclearing&&!boss&&wtotal>0&&wkilled>=wtotal&&running){
     wclearing=true;
-    setTimeout(()=>{if(!running)return;wave++;spawnWave(wave);},1300);
+    const wEpoch=runEpoch;
+    setTimeout(()=>{if(!running||wEpoch!==runEpoch)return;wave++;spawnWave(wave);},1300);
   }
 
   // パーティクル
