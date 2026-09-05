@@ -55,6 +55,9 @@ body.sc-yoru{background:linear-gradient(180deg,#3C3470 0%,#5A4B92 55%,#7E63A8 10
 .ov.on{display:flex;}
 .ov-in{width:100%;max-width:520px;margin:auto;}
 .card{background:rgba(255,252,246,.93);border-radius:24px;padding:18px 16px;box-shadow:0 10px 30px rgba(110,60,20,.28);}
+/* 低い高さのviewport（スマホ横向き等）では.ovが縦スクロールになるため、
+   もどるボタンをsticky化してスクロール中も常に見える位置に保つ。 */
+#b-zukan-back{position:sticky; bottom:calc(var(--sab,0px) + 4px);}
 .ttl{font-family:'DotGothic16',sans-serif;font-size:32px;line-height:1.25;text-align:center;color:#fff;
   text-shadow:0 0 16px rgba(255,190,120,.95),0 4px 0 rgba(190,90,40,.65),0 8px 18px rgba(90,40,0,.35);margin-bottom:5px;}
 .sub{text-align:center;font-size:13px;font-weight:800;color:#fff;text-shadow:0 2px 6px rgba(90,40,0,.55);margin-bottom:14px;}
@@ -2314,17 +2317,6 @@ if(document.fonts&&document.fonts.ready){
   }).catch(()=>{});
 }
 
-/* おやフレーム からの メッセージ */
-window.addEventListener('message',e=>{
-  const d=e&&e.data; if(!d||typeof d!=='object')return;
-  if(d.type==='safeArea'){
-    const r=document.documentElement.style;
-    r.setProperty('--sat',(d.top||0)+'px');
-    r.setProperty('--sab',(d.bottom||0)+'px');
-    r.setProperty('--sal',(d.left||0)+'px');
-    r.setProperty('--sar',(d.right||0)+'px');
-  }
-});
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){ ST.paused=true; if(_bgm&&_bgm.enabled)try{_bgm.stop();}catch(e){} }
   else{ ST.paused=false; lastT=0; if(_bgm&&_bgm.enabled)try{_bgm.start();}catch(e){} }
