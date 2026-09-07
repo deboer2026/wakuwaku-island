@@ -311,24 +311,24 @@
 /* ---------- キャラクター定義 ---------- */
 const CHARS = [
   {id:'momo', name:'モモ',  kind:'ねこ',   skill:'たかく とべる',   desc:'ジャンプりょくが すごい！',
-   body:0xffc0d9, ear:0xff9ec4, belly:0xfff3f8, jump:1.28, speed:1.0, reach:6, friend:1.6},
+   body:0xf58db8, ear:0xe9659d, belly:0xffeaf2, jump:1.28, speed:1.0, reach:6, friend:1.6},
   {id:'kuu',  name:'クゥ',  kind:'うさぎ', skill:'はやく はしる',   desc:'いちばん あしが はやい！',
-   body:0xbfe6ff, ear:0xffd0e4, belly:0xf2fbff, jump:1.05, speed:1.35, reach:6, friend:1.6},
+   body:0x71c9ef, ear:0xf4a0c2, belly:0xe9f8ff, jump:1.05, speed:1.35, reach:6, friend:1.6},
   {id:'pon',  name:'ポン',  kind:'くま',   skill:'とおくに とどく', desc:'はなれた ブロックも さわれる！',
-   body:0xffdf9a, ear:0xe8b96e, belly:0xfff6e2, jump:1.0,  speed:0.95, reach:9, friend:1.6},
+   body:0xefb755, ear:0xc68a39, belly:0xffedc9, jump:1.0,  speed:0.95, reach:9, friend:1.6},
   {id:'peta', name:'ペタ',  kind:'ぺんぎん',skill:'どうぶつと なかよし',desc:'どうぶつが すぐ ともだちに！',
-   body:0xa9c8ff, ear:0xffc46b, belly:0xffffff, jump:1.0,  speed:1.05, reach:6, friend:3.2},
+   body:0x719be5, ear:0xffb34d, belly:0xf2f6ff, jump:1.0,  speed:1.05, reach:6, friend:3.2},
 ];
 
 /* ---------- ブロック定義（色はぜんぶオリジナルのパステル） ---------- */
 // c = [+X, -X, +Y(上), -Y(下), +Z, -Z]
 const BLOCKS = {
-  1:{n:'くさ',  c:[0x89d867,0x89d867,0x9ff07d,0xc79a6c,0x89d867,0x89d867], solid:1, pal:0x9ff07d},
+  1:{n:'くさ',  c:[0x59ab39,0x59ab39,0x82ce49,0xb18450,0x59ab39,0x59ab39], solid:1, pal:0x82ce49},
   2:{n:'つち',  c:[0xc79a6c,0xc79a6c,0xd4a878,0xb98a5e,0xc79a6c,0xc79a6c], solid:1, pal:0xc79a6c},
   3:{n:'いし',  c:[0xc2c9d6,0xc2c9d6,0xd2d8e3,0xaeb5c4,0xc2c9d6,0xc2c9d6], solid:1, pal:0xc2c9d6},
   4:{n:'すな',  c:[0xf4e3b2,0xf4e3b2,0xfbeec4,0xe6d29c,0xf4e3b2,0xf4e3b2], solid:1, pal:0xf4e3b2},
   5:{n:'き',    c:[0xd0a06a,0xd0a06a,0xe0b982,0xb98757,0xd0a06a,0xd0a06a], solid:1, pal:0xd0a06a},
-  6:{n:'はっぱ',c:[0x8ddb90,0x8ddb90,0xa6ecab,0x74c47c,0x8ddb90,0x8ddb90], solid:1, pal:0x8ddb90},
+  6:{n:'はっぱ',c:[0x369f56,0x369f56,0x62bd65,0x237744,0x369f56,0x369f56], solid:1, pal:0x369f56},
   7:{n:'みず',  c:[0x7cc9f2,0x7cc9f2,0x9fdcff,0x63b6e4,0x7cc9f2,0x7cc9f2], solid:0, pal:0x7cc9f2, water:1},
   8:{n:'にじ',  c:[0xffb3d4,0xffe2a1,0xb7f0d8,0xd7c2ff,0xa9dcff,0xffc8a3], solid:1, pal:0xffb3d4},
   9:{n:'ぷに',  c:[0xd9c4ff,0xd9c4ff,0xeadcff,0xc0a6f2,0xd9c4ff,0xd9c4ff], solid:1, pal:0xd9c4ff},
@@ -573,7 +573,8 @@ function buildCabin(){
    3D 初期化
    ========================================================= */
 /* v3 presentation is deterministic and never consumes the terrain RNG. */
-const VISUAL = {DAY_SECONDS:420, GRASS_DENSITY:.52, BUTTERFLIES:16, GUIDE_INTERVAL:.09, UNDO_LIMIT:40};
+const VISUAL = {DAY_SECONDS:420, GRASS_DENSITY:.52, BUTTERFLIES:16, GUIDE_INTERVAL:.09, UNDO_LIMIT:40,
+  EXPOSURE:.94, FOG_NEAR:28, FOG_FAR:125, AMBIENT_MIN:.30, AMBIENT_DAY:.30, SUN_MIN:.45, SUN_DAY:.70};
 let visualTime=0, seaUniforms, natureGroup, grassMesh, lightGraphics=false;
 const natureCells=new Map(), natureMatrix=new THREE.Object3D();
 const guidePointer=new THREE.Vector2(), guideRay=new THREE.Raycaster();
@@ -711,7 +712,7 @@ function initThree(){
   renderer.setSize(innerWidth, innerHeight);
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.18;
+  renderer.toneMappingExposure = VISUAL.EXPOSURE;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   bgm = window.WakuwakuMP3BGM ? new WakuwakuMP3BGM('nature') : null;
@@ -719,15 +720,15 @@ function initThree(){
   $('#musicBtn').textContent = musicOn ? '🎵' : '🔇';
 
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xa9e7ff);
-  scene.fog = new THREE.FogExp2(0xbfe9ff, 0.0115);
+  scene.background = new THREE.Color(0x63bce8).convertSRGBToLinear();
+  scene.fog = new THREE.Fog(scene.background, VISUAL.FOG_NEAR, VISUAL.FOG_FAR);
 
   camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 400);
   clock = new THREE.Clock();
 
-  hemi = new THREE.HemisphereLight(0xffffff, 0x9fd6a8, 0.95);
+  hemi = new THREE.HemisphereLight(0xe3efff, 0x557347, VISUAL.AMBIENT_MIN+VISUAL.AMBIENT_DAY);
   scene.add(hemi);
-  sunLight = new THREE.DirectionalLight(0xfff3d6, 0.85);
+  sunLight = new THREE.DirectionalLight(0xfff3df, VISUAL.SUN_MIN+VISUAL.SUN_DAY);
   sunLight.position.set(24, 40, 16);
   sunLight.castShadow = true;
   sunLight.shadow.mapSize.set(1024,1024);
@@ -736,7 +737,7 @@ function initThree(){
   sunLight.shadow.normalBias = 0.035;
   scene.add(sunLight.target);
   scene.add(sunLight);
-  const fill = new THREE.DirectionalLight(0xd9e8ff, 0.28);
+  const fill = new THREE.DirectionalLight(0xc4daff, 0.14);
   fill.position.set(-20,18,-14); scene.add(fill);
 
   blockGroup = new THREE.Group(); scene.add(blockGroup);
@@ -901,8 +902,8 @@ function makeCharModel(ch){
 
 function makeAnimalModel(kind){
   const P = {
-    hiyoko:{body:0xffe27a, ear:0xffab52, name:'ひよこ'},
-    kobuta:{body:0xffc2d4, ear:0xff9ec4, name:'こぶた'},
+    hiyoko:{body:0xffcb42, ear:0xf18e2c, name:'ひよこ'},
+    kobuta:{body:0xf58daf, ear:0xde6590, name:'こぶた'},
     hitsuji:{body:0xfff6ea, ear:0xd9c4ff, name:'ひつじ'},
   }[kind];
   const g = new THREE.Group();
@@ -1529,13 +1530,13 @@ function step(dt){
   });
   timeOfDay = (timeOfDay + dt/VISUAL.DAY_SECONDS) % 1;
   const day = Math.sin(timeOfDay*Math.PI*2)*0.5+0.5;   // 0=よる 1=ひる
-  const skyDay = new THREE.Color(0xa9e7ff), skyEve = new THREE.Color(0xffc8a8), skyNight = new THREE.Color(0x8fa4dd);
+  const skyDay = new THREE.Color(0x63bce8).convertSRGBToLinear(), skyEve = new THREE.Color(0xf4ac80).convertSRGBToLinear(), skyNight = new THREE.Color(0x526cad).convertSRGBToLinear();
   let sky;
   if(day>0.5) sky = skyEve.clone().lerp(skyDay, (day-0.5)*2);
   else sky = skyNight.clone().lerp(skyEve, day*2);
   scene.background.copy(sky); scene.fog.color.copy(sky);
-  hemi.intensity = 0.55 + day*0.5;
-  sunLight.intensity = 0.35 + day*0.6;
+  hemi.intensity = VISUAL.AMBIENT_MIN + day*VISUAL.AMBIENT_DAY;
+  sunLight.intensity = VISUAL.SUN_MIN + day*VISUAL.SUN_DAY;
   const ang = timeOfDay*Math.PI*2;
   sunLight.position.set(player.pos.x+Math.cos(ang)*30, player.pos.y+35, player.pos.z+22);
   sunLight.target.position.copy(player.pos);
