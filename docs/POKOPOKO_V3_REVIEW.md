@@ -39,7 +39,12 @@ Undoはセッション内のみ。統計は累計操作数なのでUndoでスコ
 
 ## マージ前に残る確認
 
-確認用ブラウザがプレビューへの接続を `ERR_BLOCKED_BY_CLIENT` で拒否したため、以下は未確認。
+ローカルプレビューは `ERR_BLOCKED_BY_CLIENT` で接続できなかった。Cloudflareのブランチプレビューではページとv3の読み込みを確認できたが、`THREE.WebGLRenderer: Error creating WebGL context.` で3D初期化が失敗した。同じ確認用ブラウザで旧v2にも同一エラーが発生することを確認済み。この環境では描画の比較ができず、以下は未確認。
+
+GitHub Draft PR: https://github.com/deboer2026/wakuwaku-island/pull/41
+初回実装コミット `6b1ecbc979ced42053c0448d1d9b5c4ae0560f8f` の `verify` と Cloudflare Pages はともに成功。
+試遊版: https://85b6da8a.wakuwaku-island.pages.dev/pokopoko-island/
+試遊版は本番と別のドメインなので、本番ブラウザ内のセーブは自動では見えない。実際に同じ本番ドメインへ適用された際にv2から移行する。
 
 - WebGLシェーダーコンパイル、実際の色・影・カメラ、画面全体の見栄え。
 - PC/スマホの表示崩れ・タッチ操作・設置ガイド。
