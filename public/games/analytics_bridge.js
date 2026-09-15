@@ -7,8 +7,17 @@
   var milestones = [30, 60, 180, 300];
   var sentMilestones = {};
 
+  function analyticsSuppressed() {
+    try {
+      var value = new URLSearchParams(window.location.search).get('rb_qa');
+      return value === '1' || value === 'true';
+    } catch {
+      return false;
+    }
+  }
+
   function send(eventName, params) {
-    if (window.parent === window || !config) return;
+    if (window.parent === window || !config || analyticsSuppressed()) return;
     window.parent.postMessage({
       type: 'wakuwaku-analytics',
       eventName: eventName,
