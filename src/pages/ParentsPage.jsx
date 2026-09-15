@@ -24,7 +24,7 @@ export default function ParentsPage() {
       <main className="legal-content">
         <div className="legal-icon">👪</div>
         <h1 className="legal-title">{en ? 'For Parents and Guardians' : '保護者の方へ'}</h1>
-        <p className="legal-date">{en ? 'Last updated: 2026-08-10' : '最終更新日：2026年8月10日'}</p>
+        <p className="legal-date">{en ? 'Last updated: 2026-08-26' : '最終更新日：2026年8月26日'}</p>
 
         <div className="legal-section legal-highlight">
           <h2>🌟 {en ? 'Quick summary' : 'まず知っていただきたいこと'}</h2>
@@ -45,16 +45,16 @@ export default function ParentsPage() {
         <div className="legal-section">
           <h2>🔒 {en ? 'Privacy and analytics' : 'プライバシーとアクセス解析'}</h2>
           <p>{en
-            ? 'We do not provide account registration, chat, comments, or payment. Google Analytics is used to understand page usage and improve the site. Please see the Privacy Policy for details.'
-            : '会員登録、チャット、コメント、決済機能は提供していません。利用状況の把握と改善のためGoogle Analyticsを使用しています。詳しくはプライバシーポリシーをご確認ください。'}</p>
+            ? 'We do not provide a feature to enter names or contact details, or provide account registration, chat, comments, or payment. Google Analytics may process cookie-like identifiers and usage metrics to improve the site. Ads personalization, Google Signals, remarketing, Google Ads links, and detailed location/device-data collection are disabled. Please see the Privacy Policy for details.'
+            : '氏名・連絡先を入力する機能、会員登録、チャット、コメント、決済機能は提供していません。サイト改善のため、Google AnalyticsがCookie等の識別子や利用指標を扱う場合があります。広告パーソナライズ、Google Signals、リマーケティング、Google Ads等の広告連携、詳細な地域・端末データ収集は無効です。詳しくはプライバシーポリシーをご確認ください。'}</p>
           <button className="legal-link-btn" onClick={() => navigate('/privacy')}>{en ? 'Read the Privacy Policy' : 'プライバシーポリシーを見る'}</button>
         </div>
 
         <div className="legal-section">
           <h2>💾 {en ? 'Data saved on the device' : '端末内に保存されるデータ'}</h2>
           <p>{en
-            ? 'Language, sound, scores, coins, login bonuses, costume settings, unlocked items, and recent play history may be stored in localStorage. This data does not move to another device.'
-            : '言語、音量、スコア、コイン、ログインボーナス、着せ替え、解放済みアイテム、最近遊んだゲームなどをlocalStorageに保存する場合があります。これらのデータは別の端末へ引き継がれません。'}</p>
+            ? 'Language, sound, scores, stars, game progress, coins, login bonuses, costume settings, unlocked items, recent play history, and other settings may be stored in localStorage. This game-save data does not move to another device. Some usage metrics, such as scores or stages, may be sent as analytics events for site improvement.'
+            : '言語、音声/BGM、スコア、星、ゲーム進行、コイン、ログインボーナス、着せ替え、解放済み項目、最近遊んだゲーム、各種設定などをlocalStorageに保存する場合があります。これらのゲームセーブは別の端末へ引き継がれません。一部のスコア・ステージ等の利用指標は、サイト改善のため分析イベントとして送信される場合があります。'}</p>
         </div>
 
         <div className="legal-section">

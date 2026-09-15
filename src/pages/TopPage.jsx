@@ -114,35 +114,84 @@ const GAME_SVGS = {
 
   g_neon: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0" y="0" width="100" height="85" rx="12" fill="#1a1040"/>
-      <circle cx="20" cy="14" r="1.6" fill="#fff" opacity=".9"/>
-      <circle cx="78" cy="11" r="1.4" fill="#fff" opacity=".8"/>
-      <circle cx="88" cy="20" r="1.2" fill="#fff" opacity=".7"/>
-      <rect x="12" y="20" width="6" height="20" rx="1" fill="#2b1e5c"/>
-      <rect x="12" y="22" width="6" height="4" fill="#ffd24d" opacity=".9"/>
-      <rect x="12" y="30" width="6" height="4" fill="#7df9ff" opacity=".85"/>
-      <rect x="80" y="16" width="7" height="26" rx="1" fill="#2b1e5c"/>
-      <rect x="80" y="20" width="7" height="4" fill="#ff2fb0" opacity=".9"/>
-      <rect x="80" y="30" width="7" height="4" fill="#ffd24d" opacity=".85"/>
-      <path d="M38 40 L62 40 L82 85 L18 85 Z" fill="#241a44"/>
-      <path d="M38 40 L62 40 L82 85 L18 85 Z" fill="none" stroke="#0e0a24" strokeWidth="1"/>
-      <path d="M38 40 L18 85" stroke="#ff2fb0" strokeWidth="2.5"/>
-      <path d="M62 40 L82 85" stroke="#00e5ff" strokeWidth="2.5"/>
-      <rect x="48.4" y="45" width="3" height="7" fill="#bfe8ff" opacity=".85"/>
-      <rect x="47.4" y="58" width="4" height="9" fill="#bfe8ff" opacity=".85"/>
-      <rect x="46" y="72" width="6" height="11" fill="#bfe8ff" opacity=".85"/>
-      <g transform="translate(50 64)">
-        <rect x="-13" y="-4" width="26" height="9" rx="3" fill="#10c8e8"/>
-        <rect x="-8" y="-10" width="16" height="7" rx="3" fill="#2ad2f0"/>
-        <rect x="-13" y="4" width="26" height="2.4" rx="1.2" fill="#00ffff"/>
-        <path d="M-9 -10 L-6 -15 L-3 -11 Z" fill="#10c8e8"/>
-        <path d="M9 -10 L6 -15 L3 -11 Z" fill="#10c8e8"/>
-        <path d="M-8.5 -11 L-6.5 -14 L-4.5 -11.5 Z" fill="#ffb0d8"/>
-        <path d="M8.5 -11 L6.5 -14 L4.5 -11.5 Z" fill="#ffb0d8"/>
-        <rect x="-11" y="-6" width="3" height="2.4" rx="1" fill="#fff2cc"/>
-        <rect x="8" y="-6" width="3" height="2.4" rx="1" fill="#fff2cc"/>
+      <defs>
+      <linearGradient id="nd_sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stopColor="#150b38"/>
+      <stop offset="0.55" stopColor="#3a1f6e"/>
+      <stop offset="1" stopColor="#7a3f8e"/>
+      </linearGradient>
+      <linearGradient id="nd_road" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stopColor="#241a44"/>
+      <stop offset="1" stopColor="#3b2a5e"/>
+      </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="100" height="85" rx="12" fill="url(#nd_sky)"/>
+      <circle cx="16" cy="12" r="1.5" fill="#fff" opacity=".9"/>
+      <circle cx="30" cy="7" r="1.1" fill="#fff" opacity=".75"/>
+      <circle cx="72" cy="9" r="1.3" fill="#fff" opacity=".85"/>
+      <circle cx="86" cy="17" r="1" fill="#fff" opacity=".7"/>
+      <circle cx="58" cy="13" r="1" fill="#fff" opacity=".6"/>
+      <circle cx="79" cy="15" r="7" fill="#fff2c6" opacity=".25"/>
+      <circle cx="79" cy="15" r="4.6" fill="#fff4d0"/>
+      <g opacity=".95">
+      <path d="M22 46 a28 28 0 0 1 56 0" fill="none" stroke="#ff6b6b" strokeWidth="2.1"/>
+      <path d="M25 46 a25 25 0 0 1 50 0" fill="none" stroke="#ffd166" strokeWidth="2.1"/>
+      <path d="M28 46 a22 22 0 0 1 44 0" fill="none" stroke="#7dff8a" strokeWidth="2.1"/>
+      <path d="M31 46 a19 19 0 0 1 38 0" fill="none" stroke="#5ecdff" strokeWidth="2.1"/>
+      <path d="M34 46 a16 16 0 0 1 32 0" fill="none" stroke="#c77dff" strokeWidth="2.1"/>
       </g>
-      <path d="M30 20 l1.6 3.2 l3.4 .4 l-2.5 2.3 l.7 3.4 l-3.2 -1.7 l-3.2 1.7 l.7 -3.4 l-2.5 -2.3 l3.4 -.4 Z" fill="#ffe14d" stroke="#e0a800" strokeWidth="1"/>
+      <rect x="4" y="24" width="9" height="24" rx="1.5" fill="#0e0b1e"/>
+      <rect x="5.6" y="27" width="2.4" height="2.4" fill="#ffd98a"/>
+      <rect x="9.4" y="27" width="2.4" height="2.4" fill="#7df9ff"/>
+      <rect x="5.6" y="32" width="2.4" height="2.4" fill="#7df9ff"/>
+      <rect x="9.4" y="37" width="2.4" height="2.4" fill="#ffd98a"/>
+      <rect x="5" y="20" width="7" height="3" rx="1" fill="#ff2fb0"/>
+      <rect x="15" y="32" width="7" height="16" rx="1.5" fill="#0e0b1e"/>
+      <rect x="16.4" y="35" width="2.2" height="2.2" fill="#ffd98a"/>
+      <rect x="19" y="40" width="2.2" height="2.2" fill="#7df9ff"/>
+      <rect x="87" y="27" width="9" height="21" rx="1.5" fill="#0e0b1e"/>
+      <rect x="88.6" y="30" width="2.4" height="2.4" fill="#7df9ff"/>
+      <rect x="92.4" y="30" width="2.4" height="2.4" fill="#ffd98a"/>
+      <rect x="88.6" y="35" width="2.4" height="2.4" fill="#ffd98a"/>
+      <rect x="88" y="23" width="7" height="3" rx="1" fill="#ffe14d"/>
+      <rect x="78" y="34" width="7" height="14" rx="1.5" fill="#0e0b1e"/>
+      <rect x="79.4" y="37" width="2.2" height="2.2" fill="#7df9ff"/>
+      <path d="M38 46 L62 46 L88 85 L12 85 Z" fill="url(#nd_road)"/>
+      <path d="M38 46 L12 85" stroke="#ff2fb0" strokeWidth="2.6" strokeLinecap="round"/>
+      <path d="M62 46 L88 85" stroke="#00e5ff" strokeWidth="2.6" strokeLinecap="round"/>
+      <g stroke="#dff2ff" strokeWidth="1.6" opacity=".55" strokeLinecap="round">
+      <path d="M50 48 L50 52"/><path d="M50 57 L50 63"/><path d="M50 69 L50 78"/>
+      </g>
+      <g fill="#ffe14d">
+      <path d="M31 57 l1.1 2.3 2.5 .3 -1.9 1.7 .5 2.5 -2.2 -1.3 -2.2 1.3 .5 -2.5 -1.9 -1.7 2.5 -.3z"/>
+      <path d="M69 54 l.9 1.9 2.1 .3 -1.6 1.4 .4 2.1 -1.8 -1.1 -1.8 1.1 .4 -2.1 -1.6 -1.4 2.1 -.3z"/>
+      <path d="M62 71 l.8 1.6 1.8 .2 -1.3 1.2 .3 1.8 -1.6 -.9 -1.6 .9 .3 -1.8 -1.3 -1.2 1.8 -.2z"/>
+      </g>
+      <g transform="translate(50 71)">
+      <ellipse cx="0" cy="9" rx="13" ry="3.2" fill="#00e5ff" opacity=".22"/>
+      <path d="M-11 5 q0 -6 3 -7 l16 0 q3 1 3 7 z" fill="#f6b6d4"/>
+      <rect x="-11.5" y="4.6" width="23" height="2.6" rx="1.3" fill="#ff5ea8"/>
+      <path d="M-6.6 -2 q1.4 -3.4 6.6 -3.4 q5.2 0 6.6 3.4 z" fill="#4a6f92"/>
+      <path d="M-8 -2 l16 0 q2.6 .6 3 3 l-22 0 q.4 -2.4 3 -3z" fill="#f9cbe0"/>
+      <ellipse cx="-6.5" cy="-9" rx="2" ry="5.2" fill="#f6b6d4"/>
+      <ellipse cx="6.5" cy="-9" rx="2" ry="5.2" fill="#f6b6d4"/>
+      <ellipse cx="-6.5" cy="-8.6" rx=".9" ry="3.4" fill="#ffdcea"/>
+      <ellipse cx="6.5" cy="-8.6" rx=".9" ry="3.4" fill="#ffdcea"/>
+      <rect x="-9.5" y="-1.2" width="3.6" height="1.8" rx=".9" fill="#fff6d8"/>
+      <rect x="5.9" y="-1.2" width="3.6" height="1.8" rx=".9" fill="#fff6d8"/>
+      <circle cx="-8.4" cy="6.4" r="2.4" fill="#14121c"/>
+      <circle cx="8.4" cy="6.4" r="2.4" fill="#14121c"/>
+      <circle cx="-8.4" cy="6.4" r="1" fill="#d8e6f2"/>
+      <circle cx="8.4" cy="6.4" r="1" fill="#d8e6f2"/>
+      </g>
+      <g transform="translate(30 77)">
+      <circle cx="0" cy="0" r="4.6" fill="#8fd8f0"/>
+      <circle cx="-1.6" cy="-1" r="1" fill="#26343f"/>
+      <circle cx="1.6" cy="-1" r="1" fill="#26343f"/>
+      <path d="M-1.2 1.4 h2.4 l-1.2 1.4z" fill="#ffb347"/>
+      <path d="M-4.4 -3.4 l-1 -3.4 l3.2 2.2z" fill="#8fd8f0"/>
+      <path d="M4.4 -3.4 l1 -3.4 l-3.2 2.2z" fill="#8fd8f0"/>
+      </g>
     </svg>
   ),
   g_mura: (
@@ -1451,6 +1500,76 @@ const GAME_SVGS = {
   g_ofuro: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="76" rx="42" ry="8" fill="#BFEAF5" opacity=".55"/><path d="M10 44h80v14a20 20 0 0 1-20 20H30A20 20 0 0 1 10 58z" fill="#F6FBFE" stroke="#9FC7D8" strokeWidth="2"/><rect x="8" y="40" width="84" height="8" rx="4" fill="#BFEAF5" stroke="#8FBFD2" strokeWidth="1.5"/><ellipse cx="50" cy="34" rx="20" ry="18" fill="#F3D9A8" stroke="#D9B478" strokeWidth="2"/><ellipse cx="34" cy="20" rx="7" ry="9" fill="#D9B478"/><ellipse cx="66" cy="20" rx="7" ry="9" fill="#D9B478"/><ellipse cx="50" cy="38" rx="8" ry="6" fill="#FFF3DE"/><ellipse cx="50" cy="35" rx="3" ry="2.4" fill="#5A4636"/><path d="M40 28q4-4 8 0M54 28q4-4 8 0" stroke="#3A2C22" strokeWidth="2.6" fill="none" strokeLinecap="round"/><circle cx="20" cy="24" r="7" fill="#fff" opacity=".92"/><circle cx="80" cy="16" r="5.5" fill="#fff" opacity=".9"/></svg>
   ),
+  g_kotsu: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="85" rx="12" fill="#7FD1F5"/>
+      <circle cx="82" cy="14" r="9" fill="#FFE27A"/>
+      <ellipse cx="18" cy="18" rx="13" ry="7" fill="#fff" opacity=".9"/>
+      <ellipse cx="30" cy="14" rx="9" ry="5.4" fill="#fff" opacity=".85"/>
+      <rect x="0" y="46" width="100" height="24" fill="#5B6270"/>
+      <rect x="0" y="70" width="100" height="15" fill="#8FC47A"/>
+      <rect x="10" y="50" width="9" height="16" fill="#F4F1E6"/>
+      <rect x="27" y="50" width="9" height="16" fill="#F4F1E6"/>
+      <rect x="44" y="50" width="9" height="16" fill="#F4F1E6"/>
+      <rect x="61" y="50" width="9" height="16" fill="#F4F1E6"/>
+      <rect x="78" y="50" width="9" height="16" fill="#F4F1E6"/>
+      <g transform="translate(14 26)">
+        <rect x="-3" y="10" width="6" height="20" rx="2" fill="#8A93A3"/>
+        <rect x="-9" y="0" width="18" height="24" rx="5" fill="#3C4453"/>
+        <circle cx="0" cy="6" r="5" fill="#E4423E"/>
+        <circle cx="0" cy="16" r="5" fill="#4CAF63"/>
+      </g>
+      <g transform="translate(70 54)">
+        <rect x="-16" y="-4" width="34" height="13" rx="6" fill="#F26B4B"/>
+        <rect x="-11" y="-11" width="20" height="9" rx="4" fill="#F8DDE0"/>
+        <circle cx="-8" cy="10" r="5.2" fill="#3C4453"/>
+        <circle cx="12" cy="10" r="5.2" fill="#3C4453"/>
+      </g>
+      <g transform="translate(24 58)">
+        <ellipse cx="0" cy="14" rx="10" ry="3" fill="#3a4a20" opacity=".2"/>
+        <rect x="-6" y="-2" width="12" height="14" rx="4" fill="#4AA3E0"/>
+        <circle cx="0" cy="-10" r="8.4" fill="#F4A95C"/>
+        <circle cx="-3.4" cy="-11" r="1.3" fill="#3a2a10"/>
+        <circle cx="3.4" cy="-11" r="1.3" fill="#3a2a10"/>
+        <path d="M-3 -6.5q3 2.6 6 0" stroke="#a8565a" strokeWidth="1.4" fill="none" strokeLinecap="round"/>
+        <ellipse cx="-6.6" cy="-8" rx="2.2" ry="1.6" fill="#ffb6c1"/>
+        <ellipse cx="6.6" cy="-8" rx="2.2" ry="1.6" fill="#ffb6c1"/>
+      </g>
+    </svg>
+  ),
+
+  g_ballpool: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="85" rx="12" fill="#4fc3f7"/>
+      <ellipse cx="50" cy="66" rx="46" ry="16" fill="#ff6fa5"/>
+      <circle cx="18" cy="58" r="6" fill="#ffd23f"/>
+      <circle cx="30" cy="66" r="6.5" fill="#9ee34f"/>
+      <circle cx="44" cy="56" r="6" fill="#8a6bff"/>
+      <circle cx="58" cy="66" r="6.5" fill="#ff6fa5"/>
+      <circle cx="72" cy="58" r="6" fill="#ffd23f"/>
+      <circle cx="84" cy="66" r="6.5" fill="#4fc3f7"/>
+      <circle cx="12" cy="70" r="5.5" fill="#9ee34f"/>
+      <circle cx="92" cy="72" r="5.5" fill="#8a6bff"/>
+      <g transform="translate(38 40)">
+        <circle cx="0" cy="0" r="11" fill="#bfefff" opacity=".55"/>
+        <circle cx="0" cy="4" r="5.6" fill="#ffe08a"/>
+        <path d="M-4 4.4q4 3 8 0" stroke="#3a3450" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+        <circle cx="-2.4" cy="1.6" r="1" fill="#2b2340"/>
+        <circle cx="2.4" cy="1.6" r="1" fill="#2b2340"/>
+        <ellipse cx="-4.4" cy="-2.4" rx="2.2" ry="2.8" fill="#d9a23c"/>
+        <ellipse cx="4.4" cy="-2.4" rx="2.2" ry="2.8" fill="#d9a23c"/>
+      </g>
+      <g transform="translate(66 46)">
+        <ellipse cx="0" cy="13" rx="9" ry="3" fill="#3a4a20" opacity=".2"/>
+        <circle cx="0" cy="0" r="9" fill="#ffb36b"/>
+        <ellipse cx="-3" cy="-9.4" rx="2.6" ry="3.2" fill="#8a5a2b"/>
+        <ellipse cx="3" cy="-9.4" rx="2.6" ry="3.2" fill="#8a5a2b"/>
+        <circle cx="-2.6" cy="-1.4" r="1.2" fill="#2b2340"/>
+        <circle cx="2.6" cy="-1.4" r="1.2" fill="#2b2340"/>
+        <path d="M-3 3q3 2.4 6 0" stroke="#2b2340" strokeWidth="1.3" fill="none" strokeLinecap="round"/>
+      </g>
+    </svg>
+  ),
 };
 
 /* ════════════════════════════════════════════════════
@@ -1515,11 +1634,11 @@ const GAMES = [
     ko:{ name:'글자의 숲 3D',         desc:'3D 숲에서 글자를 모아\n단어를 만들어요!'               },
     es:{ name:'Bosque de Letras 3D',  desc:'¡Recoge letras en un bosque 3D\ny forma palabras!'            } },
   { id:'g12', route:'/tashizan',       icon:'🚂', num:12, color:'#2196F3', stars:5, isNew:true, category:'かずあそび',
-    ja:{ name:'たしざんトレイン3D', desc:'どうぶつを かぞえて\nきしゃを はっしゃ！\n3ろせん・24のえき'          },
-    en:{ name:'Addition Train 3D',   desc:'Count animals and\nsend off the train!\n3 routes, 24 stations'        },
-    zh:{ name:'加法列车3D',           desc:'数一数动物，\n发车出发！\n3条路线・24个车站'                             },
-    ko:{ name:'덧셈 기차 3D',          desc:'동물을 세어\n기차를 출발시켜요!\n3개 노선・24개 역'                    },
-    es:{ name:'Tren de Sumas 3D',     desc:'¡Cuenta animales y\nhaz partir el tren!\n3 rutas, 24 estaciones'       } },
+    ja:{ name:'さんすうトレイン3D', desc:'＋ － × ÷ を あそんで おぼえる\nどうぶつを のせて はっしゃ！\n4ろせん・32のえき' },
+    en:{ name:'Math Train 3D',       desc:'Learn + - × ÷ by playing!\nLoad the animals and go!\n4 routes, 32 stations'   },
+    zh:{ name:'算术列车3D',           desc:'边玩边学 ＋ － × ÷\n载上动物，发车出发！\n4条路线・32个车站'                    },
+    ko:{ name:'산수 기차 3D',          desc:'＋ － × ÷ 를 놀며 배워요\n동물을 태우고 출발!\n4개 노선・32개 역'              },
+    es:{ name:'Tren de Matemáticas 3D', desc:'¡Aprende + - × ÷ jugando!\n¡Sube a los animales y sal!\n4 rutas, 32 estaciones' } },
   { id:'g13', route:'/iro',            icon:'🎨', num:13, color:'#7E57C2', stars:5, isNew:true, category:'パズル',
     ja:{ name:'いろまぜこうぼう3D', desc:'そらの アトリエで えのぐを まぜて\nいろの せいれいを あつめよう！' },
     en:{ name:'Color Mixing Workshop 3D', desc:'Mix paints in a sky atelier and\ncollect 24 color spirits!' },
@@ -1533,17 +1652,29 @@ const GAMES = [
     ko:{ name:'동물 마을',        desc:'채소를 키워 요리하고\n동물에게 배달해요!' },
     es:{ name:'Aldea Animal',     desc:'¡Cultiva, cocina y\nreparte a los animales!' } },
   { id:'g_pokopoko', route:'/pokopoko-island', icon:'🏝️', num:26, color:'#ef8fae', stars:5, isNew:true, category:'そうぞう',
-    ja:{ name:'ポコポコアイランド', desc:'フルーツと どうぶつと\nじぶんだけの 3Dしま！' },
-    en:{ name:'Pokopoko Island', desc:'Build your own 3D island\nwith fruit and animal friends!' },
-    zh:{ name:'啵咕啵咕岛', desc:'收集水果和动物朋友，\n打造自己的3D小岛！' },
-    ko:{ name:'포코포코 아일랜드', desc:'과일과 동물 친구와 함께\n나만의 3D 섬을 만들어요!' },
-    es:{ name:'Isla Pokopoko', desc:'¡Crea tu isla 3D con\nfrutas y amigos animales!' } },
+    ja:{ name:'ポコポコアイランド', desc:'そらを とんで つくる\nじぶんだけの 3Dしま！' },
+    en:{ name:'Pokopoko Island', desc:'Fly over and build\nyour own 3D island!' },
+    zh:{ name:'啵咕啵咕岛', desc:'飞上天空，\n打造自己的3D小岛！' },
+    ko:{ name:'포코포코 아일랜드', desc:'하늘을 날며\n나만의 3D 섬을 만들어요!' },
+    es:{ name:'Isla Pokopoko', desc:'¡Vuela y crea\ntu propia isla 3D!' } },
   { id:'g_ofuro', route:'/ofuro', icon:'🛁', num:27, color:'#7FD8F5', stars:5, isNew:true, category:'そうぞう',
     ja:{ name:'あわあわおふろやさん', desc:'あわあわで ゴシゴシ！\nどうぶつを ピカピカに' },
     en:{ name:'Bubbly Bath House', desc:'Scrub with fluffy suds\nand make animals sparkle!' },
     zh:{ name:'泡泡澡堂', desc:'用泡泡搓一搓，\n把动物洗得亮晶晶！' },
     ko:{ name:'거품 목욕탕', desc:'거품으로 문질문질!\n동물을 반짝반짝하게' },
     es:{ name:'Baño de Burbujas', desc:'¡Frota con espuma\ny deja a los animales brillantes!' } },
+  { id:'g_kotsu', route:'/kotsu-safety', icon:'🚦', num:28, color:'#F26B4B', stars:5, isNew:true, category:'がくしゅう',
+    ja:{ name:'とまって みて わたろう', desc:'とまる・みる・まつを れんしゅう！\nしんごうを まもって わたろう' },
+    en:{ name:'Stop, Look & Cross', desc:'Practice stop, look, wait!\nCross safely at the signal' },
+    zh:{ name:'停下 看看 再过马路', desc:'练习停下、观察、等待！\n遵守信号灯安全过马路' },
+    ko:{ name:'멈추고 보고 건너요', desc:'멈추고 보고 기다리기 연습!\n신호를 지키며 건너요' },
+    es:{ name:'Para, mira y cruza', desc:'¡Practica parar, mirar y esperar!\nCruza con seguridad en el semáforo' } },
+  { id:'g_ballpool', route:'/ball-pool', icon:'●', num:29, color:'#ff6fa5', stars:4, isNew:true, category:'アクション',
+    ja:{ name:'わくわくボールプール', desc:'ボールを なげて\nどうぶつを たすけよう！' },
+    en:{ name:'Wakuwaku Ball Pool', desc:'Throw balls and\nrescue the animals!' },
+    zh:{ name:'快乐球池', desc:'投出彩球，\n救出小动物！' },
+    ko:{ name:'두근두근 볼풀', desc:'공을 던져\n동물을 구해요!' },
+    es:{ name:'Piscina de Bolas', desc:'¡Lanza bolas y\nrescata animales!' } },
   { id:'g14', route:'/machi',          icon:'🏙️', num:14, color:'#00897B', stars:5, isNew:true, category:'そうぞう',
     ja:{ name:'わくわくまちづくり', desc:'3Dの しまを あるいて\nどうぶつと まちを つくろう！' },
     en:{ name:'Dream Island Town',   desc:'Explore a 3D island and\nbuild a town with animals!' },
@@ -1629,11 +1760,11 @@ const SCHOOL_GAMES = [
     ko:{ name:'애니멀 카트 GP',   desc:'6명 중 캐릭터를 골라\n별로 특수 기술을 쓰는 3D 레이스!' },
     es:{ name:'Kart de Animales GP', desc:'¡Elige 1 de 6 pilotos!\nJunta estrellas y usa habilidades en 3D!' } },
   { id:'g_neon', route:'/neon-drive', icon:'🚗', num:22, color:'#00d5ff', stars:5, isNew:true, category:'レース',
-    ja:{ name:'きらきらドライブ',  desc:'よるのまちをドライブ！\nほしをあつめてはしろう！' },
-    en:{ name:'Neon Drive',        desc:'Cruise the night city\nand collect the stars!' },
-    zh:{ name:'霓虹夜间兜风',       desc:'在夜晚的城市里兜风，\n收集星星吧！' },
-    ko:{ name:'반짝반짝 드라이브', desc:'밤의 도시를 달리며\n별을 모아요!' },
-    es:{ name:'Paseo de Neón',     desc:'¡Recorre la ciudad nocturna\ny recoge las estrellas!' } },
+    ja:{ name:'きらきらドライブ',  desc:'6つのコースをたびしよう！\nけしきはまいかいかわるよ' },
+    en:{ name:'Neon Drive',        desc:'Journey across 6 courses.\nThe scenery changes every time!' },
+    zh:{ name:'霓虹夜间兜风',       desc:'畅游6条路线，\n每次风景都不一样！' },
+    ko:{ name:'반짝반짝 드라이브', desc:'6개 코스를 여행해요.\n풍경이 매번 달라져요!' },
+    es:{ name:'Paseo de Neón',     desc:'¡Viaja por 6 rutas!\n¡El paisaje cambia cada vez!' } },
   { id:'g_astral', route:'/astral-fang', icon:'🌟', num:23, color:'#7cecff', stars:5, isNew:true, category:'アクション',
     ja:{ name:'ほしぞらアニマルレスキュー', desc:'ゆびで そらを とんで\nどうぶつの ぎょうれつを つくろう！' },
     en:{ name:'Starry Animal Rescue',       desc:'Glide with one finger\nand lead a parade of animals!' },
@@ -1791,7 +1922,6 @@ const THUMB_ALIASES = {
   '/sniper': 'sniper',
 };
 const NO_THUMB_ROUTES = new Set([
-  '/neon-drive',
   '/moji',
 ]);
 
@@ -2114,7 +2244,7 @@ export default function TopPage() {
               <span className="tp-parents-ic" aria-hidden="true">
                 <svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 8.5 L6.5 12 L13 4.5" stroke="#7B8BD4" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </span>
-              <span><b>{{ja:'登録なし', en:'No sign-up', zh:'无需注册', ko:'가입 없음', es:'Sin registro'}[lang] || '登録なし'}</b><small>{{ja:'個人情報は取得しません', en:'No personal data collected', zh:'不收集个人信息', ko:'개인정보 수집 없음', es:'No recopilamos datos'}[lang] || '個人情報は取得しません'}</small></span>
+              <span><b>{{ja:'登録なし', en:'No sign-up', zh:'无需注册', ko:'가입 없음', es:'Sin registro'}[lang] || '登録なし'}</b><small>{{ja:'氏名・連絡先の入力なし', en:'No name or contact details required', zh:'无需提供姓名或联系方式', ko:'이름·연락처 입력 없음', es:'No pedimos nombre ni datos de contacto'}[lang] || '氏名・連絡先の入力なし'}</small></span>
             </div>
             <div className="tp-parents-item">
               <span className="tp-parents-ic" aria-hidden="true">

@@ -31,7 +31,7 @@ export default function TermsPage() {
           {en ? 'Terms of Use' : '利用規約'}
         </h1>
         <p className="legal-date">
-          {en ? 'Last updated: 2026-08-10' : '最終更新日：2026年8月10日'}
+          {en ? 'Last updated: 2026-08-26' : '最終更新日：2026年8月26日'}
         </p>
 
         {/* 1 */}
@@ -97,14 +97,14 @@ export default function TermsPage() {
             {en ? (
               <>
                 <li>Game scores and progress saved in localStorage may be lost if browser data is cleared</li>
-                <li>The site operator is not responsible for any damages resulting from use of this site</li>
+                <li>To the extent permitted by applicable law, the operator’s liability arising from use of this site may be excluded or limited. Nothing in these Terms excludes liability that cannot lawfully be excluded.</li>
                 <li>Content and features may be changed or discontinued without notice</li>
                 <li>We do not guarantee uninterrupted availability of the site</li>
               </>
             ) : (
               <>
                 <li>localStorageに保存されたゲームデータはブラウザのデータ削除により消去される場合があります</li>
-                <li>当サイトの利用により生じた損害について、運営者は一切の責任を負いません</li>
+                <li>当サイトの利用に関連して生じた損害について、運営者の責任は、法令上免責または制限が認められる範囲で免責または制限されます。法令上免責できない責任については、適用される法令に従います。</li>
                 <li>コンテンツや機能は予告なく変更・終了する場合があります</li>
                 <li>サイトの継続的な利用可能性を保証するものではありません</li>
               </>
@@ -129,18 +129,6 @@ export default function TermsPage() {
             {en
               ? 'These Terms of Use may be updated at any time without prior notice. The latest version will always be available on this page.'
               : '本利用規約は予告なく変更される場合があります。最新版は常にこのページでご確認いただけます。'}
-          </p>
-        </div>
-
-        {/* Contact */}
-        <div className="legal-contact">
-          <h2 style={{ justifyContent: 'center', marginBottom: 8 }}>
-            ✉️ {en ? 'Contact' : 'お問い合わせ'}
-          </h2>
-          <p>
-            {en
-              ? 'A public contact channel is being prepared. When available, it will be published on this page and the For Parents page.'
-              : '公開用のお問い合わせ窓口は現在整備中です。開設後、このページと「保護者の方へ」に掲載します。'}
           </p>
         </div>
 

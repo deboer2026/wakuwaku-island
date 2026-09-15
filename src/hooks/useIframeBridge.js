@@ -29,6 +29,24 @@ export function useIframeBridge(iframeRef) {
       };
     };
 
+    // iframe自身のviewportから見て「まだ避ける必要のある」safe-areaだけを送る。
+    // 親側（.game-frame のヘッダー帯・padding）が既に画面端からの距離を
+    // 消費している分は、iframe側では二重に空けなくてよいので差し引く。
+    const getEffectiveSafeArea = () => {
+      const raw = getSafeArea();
+      const f = iframeRef.current;
+      if (!f) return raw;
+      const rect = f.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      return {
+        top:    Math.max(0, raw.top    - rect.top),
+        bottom: Math.max(0, raw.bottom - (vh - rect.bottom)),
+        left:   Math.max(0, raw.left   - rect.left),
+        right:  Math.max(0, raw.right  - (vw - rect.right)),
+      };
+    };
+
     const notify = () => {
       const f = iframeRef.current;
       if (!f || !f.contentWindow) return;
@@ -38,7 +56,7 @@ export function useIframeBridge(iframeRef) {
         Math.min(window.innerWidth, window.innerHeight) < 500;
       f.contentWindow.postMessage({ type: 'orientation', landscapePhone }, '*');
 
-      const sa = getSafeArea();
+      const sa = getEffectiveSafeArea();
       f.contentWindow.postMessage({ type: 'safeArea', ...sa }, '*');
     };
 
@@ -46,7 +64,7 @@ export function useIframeBridge(iframeRef) {
       if (ev.data?.type === 'requestSafeArea') {
         const f = iframeRef.current;
         if (f && f.contentWindow) {
-          f.contentWindow.postMessage({ type: 'safeArea', ...getSafeArea() }, '*');
+          f.contentWindow.postMessage({ type: 'safeArea', ...getEffectiveSafeArea() }, '*');
         }
       }
     };

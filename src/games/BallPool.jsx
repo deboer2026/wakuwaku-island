@@ -5,7 +5,7 @@ import { useGameNav } from '../hooks/useGameNav';
 import GameContent from '../seo/GameContent';
 import HomeChip from '../components/HomeChip';
 
-export default function NeonDrive() {
+export default function BallPool() {
   const navigate = useNavigate();
   const iframeRef = useRef(null);
   useGameNav(navigate);
@@ -17,14 +17,14 @@ export default function NeonDrive() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/neon_drive_v2.html"
-          title="きらきらドライブ"
+          src="/games/ball_pool_v1.html"
+          title="わくわくボールプール"
           allow="autoplay; fullscreen"
           allowFullScreen
           sandbox="allow-scripts allow-same-origin allow-popups"
         />
       </div>
-      <GameContent route="/neon-drive" />
+      <GameContent route="/ball-pool" />
     </div>
   );
 }
