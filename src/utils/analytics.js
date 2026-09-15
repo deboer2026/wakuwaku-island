@@ -2,6 +2,7 @@
 import { incrementPlayCount } from './playCounter';
 
 const SITE_SCOPE = 'wakuwaku_island';
+const QA_QUERY_PARAMETER = 'rb_qa';
 const ALLOWED_KEYS = new Set([
   'site_scope', 'hostname', 'page_path', 'page_title', 'content_type',
   'content_id', 'content_name', 'series_name', 'game_id', 'game_name',
@@ -9,6 +10,12 @@ const ALLOWED_KEYS = new Set([
   'score', 'engagement_seconds', 'value', 'source_page'
 ]);
 const sent = new Map();
+
+export function isAnalyticsSuppressed() {
+  if (typeof window === 'undefined') return true;
+  const value = new URLSearchParams(window.location.search).get(QA_QUERY_PARAMETER);
+  return value === '1' || value === 'true';
+}
 
 function cleanValue(value) {
   if (value === null || value === undefined) return undefined;
@@ -33,6 +40,7 @@ function commonParams(params = {}) {
 
 export function trackEvent(eventName, params = {}, options = {}) {
   if (typeof window === 'undefined') return false;
+  if (isAnalyticsSuppressed()) return false;
   const name = String(eventName || '').trim();
   if (!/^[a-z][a-z0-9_]{0,39}$/.test(name)) return false;
   const payload = commonParams(params);
