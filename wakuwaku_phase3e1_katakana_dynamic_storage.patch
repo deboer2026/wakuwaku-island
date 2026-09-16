@@ -1,0 +1,227 @@
+diff --git a/docs/GAME_AUDIT.md b/docs/GAME_AUDIT.md
+index 3ba58d2..6d7ba64 100644
+--- a/docs/GAME_AUDIT.md
++++ b/docs/GAME_AUDIT.md
+@@ -79,3 +79,12 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実
+ - 監査: active STORAGE errorは14件から2件、warningは10件から8件、問題ファイルは5件から3件へ減少した。active全体はerror 40件・warning 69件で、39ゲームを維持している。
+ - 保存・復元: `/shabondama`はブラウザでキャラクター変更を新規ページでも復元し、進行JSONとハイスコアは実コードfixtureで確認した。`/jewelry-master`は実プレイでコインとコレクションを保存し、新規ページで復元した。SAVE JSON、コレクション、ハイスコアは実コードfixtureでも確認した。
+ - 次段階: Phase 3Eで動的キーの`katakana_asobi_v1.html`と、頻繁な同期保存を持つ`machi_v7.html`を個別に扱う。
++
++## Phase 3E-1 実施結果
++
++- 対象: `/katakana-asobi`（`public/games/katakana_asobi_v1.html`）の直接localStorage get 3件・set 1件。
++- 動的キー: `mode==='word'?'katakana_hi_word':'katakana_hi_char'`を変更せず維持し、実キー`katakana_hi_word`と`katakana_hi_char`が衝突しないことを確認した。
++- 結果: HTMLへ標準`SAFE_LS`を1件追加し、ゲームロジック内の直接get/setを0件にした。数値文字列形式、`parseInt(...||'0')`、読込・保存タイミング、条件分岐は変更していない。
++- 監査: active STORAGE errorは2件から0件、warningは8件から6件、問題ファイルは3件から2件へ減少した。active全体はerror 38件・warning 67件で、39ゲームを維持している。
++- 保存・復元: 実コードfixtureでword=8、char=5を別キーへ保存し、新規コンテキストから個別に復元した。SecurityError時もword=12、char=3をメモリ上で分離して保存・読込でき、値が文字列化されることを確認した。
++- 次段階: Phase 3E-2で`/machi`（`public/games/machi_v7.html`）を扱う。
+diff --git a/docs/STORAGE_REVIEW.md b/docs/STORAGE_REVIEW.md
+index c059678..e90efe4 100644
+--- a/docs/STORAGE_REVIEW.md
++++ b/docs/STORAGE_REVIEW.md
+@@ -235,3 +235,12 @@ Phase 3Cの目的は、複数キー、旧版共有キー、動的キー、頻繁
+ - `/jewelry-master`: ブラウザで起動、マップ、ゲーム画面、SVG描画、BGMを確認した。注文成功後のコイン10とコレクション1/60を新規ページで復元した。`jm8_save`、`jm_col`、`jm_hs`は実コードfixtureでも保存・再読込を確認した。
+ - 共通: localStorageがSecurityErrorを投げるfixtureでもメモリフォールバックのget/setを確認した。ブラウザコンソールエラーとSecurityErrorは0件だった。
+ - 次段階: Phase 3Eで`katakana_asobi_v1.html`と`machi_v7.html`を個別に扱う。
++
++## 15. Phase 3E-1 実施結果
++
++- 対象: `/katakana-asobi`（`public/games/katakana_asobi_v1.html`）のget 3 / set 1。remove、clear、列挙APIは使用していない。
++- 動的キー: `hiKey()`の`mode==='word'?'katakana_hi_word':'katakana_hi_char'`をHEAD版のまま維持した。wordモードは`katakana_hi_word`、charモードは`katakana_hi_char`へ保存する。
++- 結果: 標準`SAFE_LS`を1件追加し、ゲームロジック内の直接get/setを0件にした。キー式、get/set件数、`parseInt`3件、`||'0'`3件、保存関数と読込関数の呼出位置、終了時の新記録分岐はHEAD版と機械比較で一致した。JSON、`Number`、`String`、`??`はゲームロジックで使用していない。
++- 監査: active STORAGE errorは2件から0件、warningは8件から6件、問題ファイルは3件から2件へ減少した。SAFE_LS初期化テストの誤検出と重複カウントは0件だった。
++- 保存・復元: 実コードfixtureで`katakana_hi_word=8`と`katakana_hi_char=5`を保存し、新規コンテキストで個別に復元した。SecurityErrorフォールバックでも両キーは衝突せず、`String(value)`互換を維持した。
++- 残存STORAGE対象: `/machi`と、既存作業状態を保持している`/iro`。次はPhase 3E-2で`/machi`を扱う。
+diff --git a/public/games/katakana_asobi_v1.html b/public/games/katakana_asobi_v1.html
+index a34baa8..59a930b 100644
+--- a/public/games/katakana_asobi_v1.html
++++ b/public/games/katakana_asobi_v1.html
+@@ -462,15 +462,42 @@ const TOTAL=10;
+ let mode='word';
+ let queue=[],current=null,qIdx=0,score=0,locked=false;
+ 
++const SAFE_LS = (function () {
++  try {
++    const testKey = "__ww_storage_test__";
++    localStorage.setItem(testKey, testKey);
++    localStorage.removeItem(testKey);
++    return localStorage;
++  } catch (e) {
++    const memory = {};
++
++    return {
++      getItem(key) {
++        return Object.prototype.hasOwnProperty.call(memory, key)
++          ? memory[key]
++          : null;
++      },
++
++      setItem(key, value) {
++        memory[key] = String(value);
++      },
++
++      removeItem(key) {
++        delete memory[key];
++      }
++    };
++  }
++})();
++
+ function shuffle(a){return [...a].sort(()=>Math.random()-.5);}
+ function hiKey(){return mode==='word'?'katakana_hi_word':'katakana_hi_char';}
+-function getHi(){return parseInt(localStorage.getItem(hiKey())||'0');}
++function getHi(){return parseInt(SAFE_LS.getItem(hiKey())||'0');}
+ function getTitleHi(){
+-  const w=parseInt(localStorage.getItem('katakana_hi_word')||'0');
+-  const c=parseInt(localStorage.getItem('katakana_hi_char')||'0');
++  const w=parseInt(SAFE_LS.getItem('katakana_hi_word')||'0');
++  const c=parseInt(SAFE_LS.getItem('katakana_hi_char')||'0');
+   return Math.max(w,c);
+ }
+-function saveHi(v){localStorage.setItem(hiKey(),v);}
++function saveHi(v){SAFE_LS.setItem(hiKey(),v);}
+ function updateHiBadge(){document.getElementById('hi-title').textContent='🏆 ハイスコア: '+getTitleHi()+'もん';}
+ 
+ function initStars(){
+diff --git a/reports/game-audit.json b/reports/game-audit.json
+index fa6d398..87296e2 100644
+--- a/reports/game-audit.json
++++ b/reports/game-audit.json
+@@ -1,5 +1,5 @@
+ {
+-  "generatedAt": "2026-07-19T00:42:17.748Z",
++  "generatedAt": "2026-07-19T01:03:44.052Z",
+   "baseline": {
+     "phase1Errors": 183,
+     "phase1Warnings": 111,
+@@ -17,22 +17,22 @@
+   "comparison": {
+     "falsePositivesResolved": 36,
+     "actualFixesResolved": 5,
+-    "remainingActiveErrors": 40
++    "remainingActiveErrors": 38
+   },
+   "localStorage": {
+     "active": {
+-      "errorFiles": 1,
+-      "errorOccurrences": 2,
+-      "warningFiles": 3,
+-      "warningOccurrences": 8,
+-      "problemFiles": 3
++      "errorFiles": 0,
++      "errorOccurrences": 0,
++      "warningFiles": 2,
++      "warningOccurrences": 6,
++      "problemFiles": 2
+     },
+     "phase3a": {
+       "preFixErrors": 45,
+-      "fixedOccurrences": 43,
+-      "remainingErrors": 2,
+-      "remainingWarnings": 8,
+-      "remainingProblemFiles": 3
++      "fixedOccurrences": 45,
++      "remainingErrors": 0,
++      "remainingWarnings": 6,
++      "remainingProblemFiles": 2
+     }
+   },
+   "summary": {
+@@ -45,17 +45,17 @@
+     "activeHtml": 39,
+     "referencedSecondaryHtml": 1,
+     "archivedOrUnusedHtml": 24,
+-    "activeErrors": 40,
+-    "activeWarnings": 69,
+-    "activeLocalStorageErrors": 2,
+-    "activeLocalStorageWarnings": 8,
+-    "activeLocalStorageProblemFiles": 3,
+-    "allHtmlReferenceErrors": 95,
+-    "allHtmlReferenceWarnings": 120,
++    "activeErrors": 38,
++    "activeWarnings": 67,
++    "activeLocalStorageErrors": 0,
++    "activeLocalStorageWarnings": 6,
++    "activeLocalStorageProblemFiles": 2,
++    "allHtmlReferenceErrors": 93,
++    "allHtmlReferenceWarnings": 118,
+     "archivedReferenceErrors": 54,
+     "archivedReferenceWarnings": 50,
+-    "errors": 40,
+-    "warnings": 177
++    "errors": 38,
++    "warnings": 175
+   },
+   "errors": [
+     {
+@@ -94,30 +94,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/katakana_asobi_v1.html",
+-      "status": "active",
+-      "route": "/katakana-asobi",
+-      "wrapper": "src/games/KatakanaAsobi.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 469,
+-      "evidence": "const w=parseInt(localStorage.getItem('katakana_hi_word')||'0');"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/katakana_asobi_v1.html",
+-      "status": "active",
+-      "route": "/katakana-asobi",
+-      "wrapper": "src/games/KatakanaAsobi.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 470,
+-      "evidence": "const c=parseInt(localStorage.getItem('katakana_hi_char')||'0');"
+-    },
+     {
+       "severity": "error",
+       "referenceSeverity": "error",
+@@ -1404,30 +1380,6 @@
+       "line": 277,
+       "evidence": "function goBack(){ if (window.parent !== window) window.parent.postMessage({type:'goBack'}, '*'); else history.back(); }"
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "STORAGE",
+-      "file": "public/games/katakana_asobi_v1.html",
+-      "status": "active",
+-      "route": "/katakana-asobi",
+-      "wrapper": "src/games/KatakanaAsobi.jsx",
+-      "message": "可能性があります: ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 467,
+-      "evidence": "function getHi(){return parseInt(localStorage.getItem(hiKey())||'0');}"
+-    },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "STORAGE",
+-      "file": "public/games/katakana_asobi_v1.html",
+-      "status": "active",
+-      "route": "/katakana-asobi",
+-      "wrapper": "src/games/KatakanaAsobi.jsx",
+-      "message": "可能性があります: ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 473,
+-      "evidence": "function saveHi(v){localStorage.setItem(hiKey(),v);}"
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "warning",
+@@ -1437,7 +1389,7 @@
+       "route": "/katakana-asobi",
+       "wrapper": "src/games/KatakanaAsobi.jsx",
+       "message": "history.back() に依存する戻る操作があります",
+-      "line": 600,
++      "line": 627,
+       "evidence": "function goBack(){if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');else history.back();}"
+     },
+     {

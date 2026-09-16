@@ -1,0 +1,165 @@
+diff --git a/src/App.jsx b/src/App.jsx
+index 81fb09e..43abd2e 100644
+--- a/src/App.jsx
++++ b/src/App.jsx
+@@ -36,6 +36,7 @@ import TokeiYomi from './games/TokeiYomi'
+ import KatakanaAsobi from './games/KatakanaAsobi'
+ import NurieOekaki from './games/NurieOekaki'
+ import MahouNakama from './games/MahouNakama'
++import OtakaraHorihori from './games/OtakaraHorihori'
+ import KatachiAwase from './games/KatachiAwase'
+ import PrivacyPage from './pages/PrivacyPage'
+ import TermsPage from './pages/TermsPage'
+@@ -63,6 +64,7 @@ const GAME_ROUTES = new Set([
+   '/moji-asobi', '/iro-awase', '/flag-quiz', '/shoot',
+   '/mori', '/sora', '/bike', '/kart', '/block', '/houki', '/usagi-carrot', '/usagi', '/neko-chou', '/neko', '/mahou-meiro',
+   '/tokei-yomi', '/katakana-asobi', '/nurie', '/mahou-nakama', '/katachi', '/katachi-awase',
++  '/otakara-horihori',
+   // 短縮URLエイリアスも記録
+   '/kudamono', '/puzzle', '/kazu', '/soccer',
+ ]);
+@@ -144,6 +146,7 @@ export default function App() {
+         <Route path="/katakana-asobi" element={<GameWithSEO route="/katakana-asobi"><KatakanaAsobi /></GameWithSEO>} />
+         <Route path="/nurie" element={<GameWithSEO route="/nurie"><NurieOekaki /></GameWithSEO>} />
+         <Route path="/mahou-nakama" element={<GameWithSEO route="/mahou-nakama"><MahouNakama /></GameWithSEO>} />
++        <Route path="/otakara-horihori" element={<GameWithSEO route="/otakara-horihori"><OtakaraHorihori /></GameWithSEO>} />
+         <Route path="/privacy" element={<PrivacyPage />} />
+         <Route path="/terms"   element={<TermsPage />} />
+       </Routes>
+diff --git a/src/games/OtakaraHorihori.jsx b/src/games/OtakaraHorihori.jsx
+new file mode 100644
+index 0000000..e2ea55b
+--- /dev/null
++++ b/src/games/OtakaraHorihori.jsx
+@@ -0,0 +1,41 @@
++import { useEffect, useRef } from 'react';
++import { useNavigate } from 'react-router-dom';
++import { useIframeBridge } from '../hooks/useIframeBridge';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
++
++export default function OtakaraHorihori() {
++  const navigate = useNavigate();
++  const iframeRef = useRef(null);
++  useIframeBridge(iframeRef);
++
++  useEffect(() => {
++    const handler = (e) => {
++      if (e.data?.type === 'goHome') { navigate('/'); return; }
++      if (e.data?.type === 'goBack') {
++        let internal = false;
++        try { internal = sessionStorage.getItem('ww_nav_internal') === '1'; } catch {}
++        navigate(internal ? -1 : '/');
++      }
++    };
++    window.addEventListener('message', handler);
++    return () => window.removeEventListener('message', handler);
++  }, [navigate]);
++
++  return (
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/otakara_horihori_v1.html"
++          title="おたからほりほり"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/otakara-horihori" />
++    </div>
++  );
++}
+diff --git a/src/pages/TopPage.jsx b/src/pages/TopPage.jsx
+index ca8773f..fc180c4 100644
+--- a/src/pages/TopPage.jsx
++++ b/src/pages/TopPage.jsx
+@@ -57,6 +57,43 @@ const MASCOT_LINES = {
+    ゲームSVGイラスト（SNES風）
+ ════════════════════════════════════════════════════ */
+ const GAME_SVGS = {
++  g_otakara: (
++    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
++      <rect x="0" y="0" width="100" height="85" fill="#aee9ff"/>
++      <circle cx="20" cy="14" r="6" fill="#fff" opacity=".8"/>
++      <circle cx="28" cy="16" r="8" fill="#fff" opacity=".8"/>
++      <rect x="0" y="34" width="100" height="51" fill="#8a5a30"/>
++      <rect x="0" y="34" width="100" height="6" fill="#a06c3c"/>
++      <rect x="8" y="46" width="20" height="30" rx="3" fill="#151c2b"/>
++      <g stroke="#e6b84c" strokeWidth="2" strokeLinecap="round">
++        <line x1="60" y1="40" x2="60" y2="80"/>
++        <line x1="70" y1="40" x2="70" y2="80"/>
++        <line x1="60" y1="48" x2="70" y2="48"/>
++        <line x1="60" y1="58" x2="70" y2="58"/>
++        <line x1="60" y1="68" x2="70" y2="68"/>
++      </g>
++      <g transform="translate(84 58)">
++        <path d="M 0 -9 L 7 -2 L 0 10 L -7 -2 Z" fill="#3fc9dc"/>
++        <path d="M 0 -9 L 7 -2 L 0 -0.5 L -7 -2 Z" fill="#a8f0f8"/>
++      </g>
++      <g transform="translate(38 56)">
++        <circle cx="-6" cy="-8" r="4" fill="#f2d4a0"/>
++        <circle cx="6" cy="-8" r="4" fill="#f2d4a0"/>
++        <circle cx="-6" cy="-8" r="2" fill="#e79aa0"/>
++        <circle cx="6" cy="-8" r="2" fill="#e79aa0"/>
++        <circle cx="0" cy="0" r="11" fill="#f2d4a0"/>
++        <circle cx="-5" cy="4" r="5" fill="#f9edd2"/>
++        <circle cx="5" cy="4" r="5" fill="#f9edd2"/>
++        <circle cx="-4" cy="-1" r="1.6" fill="#3a2a1a"/>
++        <circle cx="4" cy="-1" r="1.6" fill="#3a2a1a"/>
++        <circle cx="0" cy="3" r="1.5" fill="#c96a6a"/>
++      </g>
++      <g transform="translate(56 40) rotate(20)">
++        <line x1="0" y1="0" x2="0" y2="14" stroke="#8a5a30" strokeWidth="2.4"/>
++        <path d="M -9 -2 Q 0 -6 9 -2" stroke="#c9d1dc" strokeWidth="3" fill="none" strokeLinecap="round"/>
++      </g>
++    </svg>
++  ),
+   g_mahounakama: (
+     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+       <rect x="0" y="0" width="100" height="85" fill="#d9ecff"/>
+@@ -1064,6 +1101,12 @@ const SCHOOL_GAMES = [
+     zh:{ name:'魔法伙伴小队',        desc:'用魔法棒轻轻一点，\n把怪物变成伙伴！' },
+     ko:{ name:'마법 친구 부대',      desc:'마법 지팡이로 콩!\n몬스터를 친구로 만들자!' },
+     es:{ name:'Escuadrón Mágico',    desc:'¡Toca monstruos con tu varita\ny hazlos tus amigos!' } },
++  { id:'g_otakara', route:'/otakara-horihori', icon:'⛏️', num:19, color:'#b06a3b', stars:4, isNew:true, category:'アクション',
++    ja:{ name:'おたからほりほり', desc:'じめんをほって おたからを\nあつめよう！' },
++    en:{ name:'Treasure Digger',   desc:'Dig the ground and\ncollect the treasures!' },
++    zh:{ name:'挖挖小宝藏',        desc:'挖开地面，\n收集所有宝藏！' },
++    ko:{ name:'보물 파기',          desc:'땅을 파서\n보물을 모아요!' },
++    es:{ name:'Cava Tesoros',      desc:'¡Cava la tierra y\nrecoge los tesoros!' } },
+   { id:'g_okashi', route:'/okashi-crossing', icon:'🍭', num:16, color:'#ff9ecb', stars:4, isNew:true, category:'アクション',
+     ja:{ name:'おかしのくにたんけん', desc:'グミのくるまとチョコのかわ！\nどこまでもすすもう！' },
+     en:{ name:'Candy Land Explorer',  desc:'Cross gummy roads and\nchocolate rivers—go far!' },
+diff --git a/src/seo/gameMeta.js b/src/seo/gameMeta.js
+index 72fc5ce..4dd1f32 100644
+--- a/src/seo/gameMeta.js
++++ b/src/seo/gameMeta.js
+@@ -242,6 +242,24 @@ const GAME_META = {
+   ],
+ },
+ 
++'/otakara-horihori': {
++  name: 'おたからほりほり', desc: 'じめんをほって おたからをあつめよう！キツネをあなにおとしてすすむ、ほりほりアクション！',
++  category: 'アクション', ageMin: 4, ageMax: 12,
++  intro: 'おたからほりほりは、ハムスターの「ほりほりくん」をうごかして、ちかにねむるおたからをぜんぶあつめる、むりょうのほりほりアクションゲームです。じめんにあなをほって、おいかけてくるキツネをあなにおとしながらすすもう。あなはしばらくするともとにもどるので、タイミングがだいじ。3つのレベルにちょうせんできます。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'じゅうじボタンで ほりほりくんを うごかす',
++    '「ほる」ボタンで となりの じめんに あなを ほる',
++    'おいかけてくる キツネを あなに おとす',
++    'おたからを ぜんぶ あつめて レベルクリア',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '4さい〜12さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
+ '/okashi-crossing': {
+   name: 'おかしのくにたんけん', desc: 'グミのくるまとチョコのかわをこえて、おかしのくにをどこまでもすすもう！',
+   category: 'アクション', ageMin: 4, ageMax: 12,

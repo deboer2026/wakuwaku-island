@@ -1,0 +1,73 @@
+diff --git a/docs/GAME_AUDIT.md b/docs/GAME_AUDIT.md
+index e8dc6d0..cbd34ac 100644
+--- a/docs/GAME_AUDIT.md
++++ b/docs/GAME_AUDIT.md
+@@ -104,3 +104,13 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実
+ - 互換性: `iro_hi`と`iro_hi_hard`、数値文字列、`parseInt(...||'0')`、既定値0、タイトル表示時の読込、ゲーム終了時に`score>hi`の場合だけ保存する条件を維持した。
+ - 監査: active STORAGE error 0件・warning 2件から、error 0件・warning 0件になった。active全体はerror 38件・warning 61件、active 39件を維持し、Phase 3のSTORAGE対応を完了した。
+ - 保存・復元: fixtureでeasy=8、hard=5を独立保存し、新規コンテキストから復元した。SecurityError時もeasy=7、hard=3を分離して保存・読込でき、null・文字列化・removeItem互換を確認した。
++
++## Phase 4A: Phase 3完了監査（2026-07-19）
++
++- 最終構成: HTML 64件、active 39件、referenced-secondary 1件、archived-or-unused 24件を維持した。
++- STORAGEカテゴリ: active error 0件、warning 0件、問題ファイル0件。SAFE_LS初期化テストの誤検出と重複カウントも0件で、Phase 3のactive STORAGE対応を完了とする。
++- 実装集計: Phase 3で25ゲーム・74件（get 39、set 35）の直接localStorageアクセスを解消した。現在のactiveではSAFE_LS使用34ゲーム、ストレージ未使用5ゲーム、ゲームロジック内の直接get/set/remove/clear・列挙APIはいずれも0件である。
++- SecurityError: SAFE_LS使用34ゲームすべてに、localStorage利用不可時もscriptを継続するメモリ退避経路がある。メモリ値は同一ページセッション内だけ有効で、ページ再読込後に失われることは仕様とする。
++- 保存互換性: 既存キー、JSON構造、数値・文字列形式、既定値、読込・保存タイミング、ハイスコア更新条件を維持した。固定キー、複数キー、旧版共有キー、動的キー、ページライフサイクル保存は個別fixtureとHEAD比較で確認した。
++- 残る非STORAGE問題: active error 38件（HTML 12、CANVAS 26）、warning 61件（REGISTRY 1、NAV 43、SAFE_AREA 13、ORIENTATION 4）。次のPhase 4Bで優先順位を付ける。
++- 運用: 新規ゲームは初回実装からSAFE_LSを使用し、直接localStorageを追加しない。監査、構文検査、正常保存・復元、SecurityErrorフォールバックを登録・変更時の必須確認とする。
+diff --git a/docs/STORAGE_REVIEW.md b/docs/STORAGE_REVIEW.md
+index 10284ec..f8dd2df 100644
+--- a/docs/STORAGE_REVIEW.md
++++ b/docs/STORAGE_REVIEW.md
+@@ -261,3 +261,39 @@ Phase 3Cの目的は、複数キー、旧版共有キー、動的キー、頻繁
+ - 採用変更: 標準`SAFE_LS`定義1件と、get/set各1件の呼び出し先変更だけ。修正・除外・HEADへ復元した既存変更はない。SAFE_LS定義を除去して呼び出し先を戻す正規化比較はHEAD版と完全一致した。
+ - 監査: `/iro`のSTORAGE error 0・warning 2→error 0・warning 0。active STORAGEはerror 0・warning 0、問題ファイル0になった。active全体error 38・warning 61、active 39を維持し、SAFE_LSテストの誤検出はない。
+ - 保存・復元: 実コードfixtureで`iro_hi=8`と`iro_hi_hard=5`を独立保存し、新規コンテキストから復元した。SecurityErrorフォールバックでも両キーの分離、既定値0、`String(value)`、null、removeItem互換を確認した。Phase 3のactive STORAGE対応は完了した。
++
++## 18. Phase 3完了確定（Phase 4A、2026-07-19）
++
++### Phase別実績
++
++| Phase | コミット | 対象 | ゲーム数 | 解消アクセス数 |
++| --- | --- | --- | ---: | ---: |
++| 3A | `23aa6f7` | kazu-asobi、kudamono-catch、houki、moji、okashi-crossing、animal-soccer、tashizan、tokei-yomi | 8 | 17 |
++| 3B | `c458c4d` | block、animal-block、doubutsu-puzzle、kokki、kakurenbo、mori、sniper、usagi-carrot | 8 | 17 |
++| 3C | `cf2b649` | 残存9ゲームの設計・互換性レビュー | 9 | 0（調査のみ） |
++| 3D-1 | `b2e5e74` | ichigo、runner | 2 | 8 |
++| 3D-2 | `99921f0` | shooting、sora | 2 | 8 |
++| 3D-3 | `ffd1127` | shabondama、jewelry-master | 2 | 14 |
++| 3E-1 | `fd53af4` | katakana-asobi | 1 | 4 |
++| 3E-2 | `8c9bf10` | machi | 1 | 4 |
++| 3F | `5528469` | iro | 1 | 2 |
++
++実装対象は重複なしの25ゲーム、直接アクセスは合計74件（get 39、set 35、remove 0）。開始時のactive STORAGEはerror 45・warning 29・問題25ファイル、完了時はerror 0・warning 0・問題0ファイルである。
++
++### 最終状態と互換性
++
++- active 39ゲームのうちSAFE_LS使用は34ゲーム、ストレージ未使用は5ゲーム。SAFE_LS定義を除外したゲームロジック内の直接localStorageは、使用ゲーム数0、getItem 0、setItem 0、removeItem 0、clear・length・key・全キー列挙0である。
++- SAFE_LS使用34ゲームはすべてlocalStorage可用性エラーを捕捉し、メモリへフォールバックする。標準実装は`String(value)`、未登録キーのnull、removeItemをlocalStorage互換で提供する。既存独自shimもSecurityError時にscriptを継続する。
++- メモリフォールバックは同一ページセッションだけの退避であり、ページ再読込後に値が消えることは仕様である。永続保存に成功した場合のキー・値形式・保存タイミングは従来どおりである。
++- `/machi`の旧版共有コイン、`/iro`と`/katakana-asobi`のモード別キーを含め、キー名、JSON構造、数値変換、既定値、更新条件を変更していない。
++- HEAD正規化比較、インラインscript構文検査、正常保存・新規コンテキスト復元、破損値・SecurityError fixture、監査、client/SSRビルド、39ルートプリレンダで検証した。
++
++### 今後の運用ルール
++
++1. 新規ゲームは最初からHTML内の既存スコープに標準SAFE_LSを1つだけ置き、ゲームロジックから直接localStorageを呼ばない。
++2. キー、値形式、JSON、数値変換、既定値、読込・保存タイミングを変更する場合は、SAFE_LS対応とは別コミット・別レビューにする。
++3. 監査でSAFE_LS可用性テストをゲーム利用として数えず、route別allowlistや例外で指摘を隠さない。
++4. 変更時は正常保存・再読込復元とSecurityError時の同一セッション内復元を確認し、メモリ保存が再読込で消える仕様を維持する。
++5. `node scripts/audit-games.mjs`と`npm run audit:games`でactive STORAGE error/warning 0を継続確認する。
++
++未対応active STORAGE対象は0件で、Phase 3ストレージ安全化を完了とする。
+diff --git a/reports/game-audit.json b/reports/game-audit.json
+index 62913ab..af08a72 100644
+--- a/reports/game-audit.json
++++ b/reports/game-audit.json
+@@ -1,5 +1,5 @@
+ {
+-  "generatedAt": "2026-07-19T03:52:39.835Z",
++  "generatedAt": "2026-07-19T04:01:54.361Z",
+   "baseline": {
+     "phase1Errors": 183,
+     "phase1Warnings": 111,

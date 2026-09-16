@@ -1,0 +1,3007 @@
+diff --git a/prerender.mjs b/prerender.mjs
+index 8cc7056..2577c03 100644
+--- a/prerender.mjs
++++ b/prerender.mjs
+@@ -1,18 +1,54 @@
+ import fs from 'node:fs'
+ import path from 'node:path'
+ const { render } = await import('./dist-server/entry-server.js')
++const GAME_META = (await import('./src/seo/gameMeta.js')).default
+ 
+-const routes = ['/']                       // 今回はトップのみ
+-const template = fs.readFileSync('dist/index.html', 'utf-8')
+-const ROOT = '<div id="root"></div>'       // 実際の dist/index.html の root div 文字列に必ず一致させること
++// トップ + 全ゲーム正規ルート（エイリアスは canonical に集約するため除外）
++const routes = ['/', ...Object.keys(GAME_META)]
+ 
++const template = fs.readFileSync('dist/index.html', 'utf-8')
++const ROOT = '<div id="root"></div>'
+ if (!template.includes(ROOT)) throw new Error('root div が一致しません。ROOT を dist/index.html の実際の記述に合わせてください')
+ 
++// react-helmet-async の出力を head 文字列へ
++function buildHead(helmet) {
++  if (!helmet) return ''
++  return [
++    helmet.title?.toString() || '',
++    helmet.meta?.toString() || '',
++    helmet.link?.toString() || '',
++    helmet.script?.toString() || '',
++  ].filter(Boolean).join('\n    ')
++}
++
++// トップ固有の head タグ（title/desc/canonical/og/twitter）とサイト全体FAQを除去
++function stripTopHead(html) {
++  return html
++    .replace(/\s*<title>[\s\S]*?<\/title>/, '')
++    .replace(/\s*<meta name="description"[^>]*>/, '')
++    .replace(/\s*<link rel="canonical"[^>]*>/, '')
++    .replace(/\s*<meta property="og:title"[^>]*>/, '')
++    .replace(/\s*<meta property="og:description"[^>]*>/, '')
++    .replace(/\s*<meta property="og:url"[^>]*>/, '')
++    .replace(/\s*<meta property="og:image"[^>]*>/, '')
++    .replace(/\s*<meta name="twitter:title"[^>]*>/, '')
++    .replace(/\s*<meta name="twitter:description"[^>]*>/, '')
++    .replace(/\s*<script type="application\/ld\+json">\s*\{"@context":"https:\/\/schema\.org","@type":"FAQPage"[\s\S]*?<\/script>/, '')
++}
++
+ for (const url of routes) {
+-  const { html } = render(url)
+-  const out = template.replace(ROOT, `<div id="root">${html}</div>`)
++  const { html, helmet } = render(url)
++  let page
++  if (url === '/') {
++    // トップは既存の静的 head を維持し、本文だけ差し込む
++    page = template.replace(ROOT, `<div id="root">${html}</div>`)
++  } else {
++    page = stripTopHead(template)
++      .replace('</head>', `  ${buildHead(helmet)}\n  </head>`)
++      .replace(ROOT, `<div id="root">${html}</div>`)
++  }
+   const dir = url === '/' ? 'dist' : path.join('dist', url.replace(/^\//, ''))
+   fs.mkdirSync(dir, { recursive: true })
+-  fs.writeFileSync(path.join(dir, 'index.html'), out)
++  fs.writeFileSync(path.join(dir, 'index.html'), page)
+   console.log('prerendered', url)
+ }
+diff --git a/public/sitemap.xml b/public/sitemap.xml
+index da68111..4d15882 100644
+--- a/public/sitemap.xml
++++ b/public/sitemap.xml
+@@ -174,4 +174,34 @@
+     <changefreq>yearly</changefreq>
+     <priority>0.3</priority>
+   </url>
++  <url>
++    <loc>https://wakuwaku-island.pages.dev/katakana-asobi</loc>
++    <lastmod>2026-07-04</lastmod>
++    <changefreq>monthly</changefreq>
++    <priority>0.8</priority>
++  </url>
++  <url>
++    <loc>https://wakuwaku-island.pages.dev/mahou-meiro</loc>
++    <lastmod>2026-07-04</lastmod>
++    <changefreq>monthly</changefreq>
++    <priority>0.8</priority>
++  </url>
++  <url>
++    <loc>https://wakuwaku-island.pages.dev/nurie</loc>
++    <lastmod>2026-07-04</lastmod>
++    <changefreq>monthly</changefreq>
++    <priority>0.8</priority>
++  </url>
++  <url>
++    <loc>https://wakuwaku-island.pages.dev/okashi-crossing</loc>
++    <lastmod>2026-07-04</lastmod>
++    <changefreq>monthly</changefreq>
++    <priority>0.8</priority>
++  </url>
++  <url>
++    <loc>https://wakuwaku-island.pages.dev/tokei-yomi</loc>
++    <lastmod>2026-07-04</lastmod>
++    <changefreq>monthly</changefreq>
++    <priority>0.8</priority>
++  </url>
+ </urlset>
+diff --git a/src/App.jsx b/src/App.jsx
+index 7b06b49..f9eba6a 100644
+--- a/src/App.jsx
++++ b/src/App.jsx
+@@ -1,5 +1,5 @@
+ import { Routes, Route, useLocation } from 'react-router-dom'
+-import { useEffect } from 'react'
++import { useEffect, useRef } from 'react'
+ import GameSEO from './seo/GameSEO'
+ import GAME_META from './seo/gameMeta'
+ import TopPage from './pages/TopPage'
+@@ -68,7 +68,13 @@ const GAME_ROUTES = new Set([
+ // ルート変更を監視して localStorage に記録するコンポーネント
+ function RouteTracker() {
+   const location = useLocation();
++  const navCount = useRef(0);
+   useEffect(() => {
++    navCount.current += 1;
++    // 着地の初回では立てず、サイト内で動いた2回目以降にフラグを立てる
++    if (navCount.current >= 2) {
++      try { sessionStorage.setItem('ww_nav_internal', '1'); } catch {}
++    }
+     if (GAME_ROUTES.has(location.pathname)) {
+       recordRecentGame(location.pathname);
+       recordGamePlay(location.pathname);
+diff --git a/src/components/HomeChip.css b/src/components/HomeChip.css
+new file mode 100644
+index 0000000..756cdbc
+--- /dev/null
++++ b/src/components/HomeChip.css
+@@ -0,0 +1,15 @@
++.home-chip {
++  position: absolute; z-index: 50;
++  top: calc(env(safe-area-inset-top, 0px) + 10px);
++  right: calc(env(safe-area-inset-right, 0px) + 10px);
++  display: flex; align-items: center; gap: 5px;
++  background: rgba(255,255,255,.82);
++  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
++  border: 2px solid rgba(255,255,255,.9); border-radius: 999px;
++  padding: 6px 11px 6px 9px;
++  font-family: 'DotGothic16', sans-serif; font-size: 12px; color: #a34767; font-weight: 700;
++  box-shadow: 0 2px 6px rgba(163,71,103,.18);
++  cursor: pointer;
++}
++.home-chip:active { transform: scale(.94); }
++@media (prefers-reduced-motion: reduce) { .home-chip:active { transform: none; } }
+diff --git a/src/components/HomeChip.jsx b/src/components/HomeChip.jsx
+new file mode 100644
+index 0000000..33e0fa9
+--- /dev/null
++++ b/src/components/HomeChip.jsx
+@@ -0,0 +1,11 @@
++import { useNavigate } from 'react-router-dom';
++import './HomeChip.css';
++
++export default function HomeChip() {
++  const navigate = useNavigate();
++  return (
++    <button className="home-chip" aria-label="ホームにもどる" onClick={() => navigate('/')}>
++      <span aria-hidden="true">🏠</span>ホーム
++    </button>
++  );
++}
+diff --git a/src/entry-server.jsx b/src/entry-server.jsx
+index 6e199cf..d7724b2 100644
+--- a/src/entry-server.jsx
++++ b/src/entry-server.jsx
+@@ -12,5 +12,5 @@ export function render(url) {
+       </StaticRouter>
+     </HelmetProvider>
+   )
+-  return { html }
++  return { html, helmet: helmetContext.helmet }
+ }
+diff --git a/src/games/AnimalKart.jsx b/src/games/AnimalKart.jsx
+index 25c8358..1dfce22 100644
+--- a/src/games/AnimalKart.jsx
++++ b/src/games/AnimalKart.jsx
+@@ -1,64 +1,30 @@
+-import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function AnimalKart() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/animal_kart_v6.html"
+-        style={{
+-          width: '100%',
+-          height: '100%',
+-          border: 'none',
+-          display: 'block',
+-          position: 'absolute',
+-          top: 0,
+-          left: 0,
+-        }}
+-        title="アニマルカートGP"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-popups"
+-      />
+-      <button
+-        onClick={() => navigate('/')}
+-        style={{
+-          position: 'absolute',
+-          top: 'max(10px, env(safe-area-inset-top))',
+-          left: 'max(12px, env(safe-area-inset-left))',
+-          zIndex: 10,
+-          background: 'rgba(0,0,0,0.55)',
+-          color: 'white',
+-          border: '1.5px solid rgba(255,255,255,0.3)',
+-          borderRadius: 20,
+-          padding: '5px 14px',
+-          fontSize: 12,
+-          fontWeight: 700,
+-          cursor: 'pointer',
+-        }}
+-      >
+-        🏠 もどる
+-      </button>
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/animal_kart_v6.html"
++          title="アニマルカートGP"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-popups"
++        />
++      </div>
++      <GameContent route="/kart" />
+     </div>
+   );
+ }
+diff --git a/src/games/AnimalSoccer.jsx b/src/games/AnimalSoccer.jsx
+index 945afe5..64d6678 100644
+--- a/src/games/AnimalSoccer.jsx
++++ b/src/games/AnimalSoccer.jsx
+@@ -1,45 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function AnimalSoccer() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/soccer_v7.html"
+-        style={{
+-          width: '100%',
+-          height: '100%',
+-          border: 'none',
+-          display: 'block',
+-          position: 'absolute',
+-          top: 0,
+-          left: 0,
+-        }}
+-        title="どうぶつサッカー"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/soccer_v7.html"
++          title="どうぶつサッカー"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/animal-soccer" />
+     </div>
+   );
+ }
+diff --git a/src/games/BikeGame.jsx b/src/games/BikeGame.jsx
+index db03c13..4bb9455 100644
+--- a/src/games/BikeGame.jsx
++++ b/src/games/BikeGame.jsx
+@@ -1,64 +1,30 @@
+-import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function BikeGame() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/wakuwaku_bike_v3.html"
+-        style={{
+-          width: '100%',
+-          height: '100%',
+-          border: 'none',
+-          display: 'block',
+-          position: 'absolute',
+-          top: 0,
+-          left: 0,
+-        }}
+-        title="わくわくバイク"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-popups"
+-      />
+-      <button
+-        onClick={() => navigate('/')}
+-        style={{
+-          position: 'absolute',
+-          top: 'max(10px, env(safe-area-inset-top))',
+-          left: 'max(12px, env(safe-area-inset-left))',
+-          zIndex: 10,
+-          background: 'rgba(0,0,0,0.55)',
+-          color: 'white',
+-          border: '1.5px solid rgba(255,255,255,0.3)',
+-          borderRadius: 20,
+-          padding: '5px 14px',
+-          fontSize: 12,
+-          fontWeight: 700,
+-          cursor: 'pointer',
+-        }}
+-      >
+-        🏠 もどる
+-      </button>
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/wakuwaku_bike_v3.html"
++          title="わくわくバイク"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-popups"
++        />
++      </div>
++      <GameContent route="/bike" />
+     </div>
+   );
+ }
+diff --git a/src/games/BlockKuzushi.jsx b/src/games/BlockKuzushi.jsx
+index 43b02a8..881d8b1 100644
+--- a/src/games/BlockKuzushi.jsx
++++ b/src/games/BlockKuzushi.jsx
+@@ -1,32 +1,30 @@
+-import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function BlockKuzushi() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, overflow: 'hidden' }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/block_kuzushi_v3.html"
+-        style={{ width: '100%', height: '100%', border: 'none', display: 'block', position: 'absolute', top: 0, left: 0 }}
+-        title="おしろブロックくずし"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-popups"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/block_kuzushi_v3.html"
++          title="おしろブロックくずし"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-popups"
++        />
++      </div>
++      <GameContent route="/block" />
+     </div>
+   );
+ }
+diff --git a/src/games/DoubutsuBlock.jsx b/src/games/DoubutsuBlock.jsx
+index fc14813..2caba7b 100644
+--- a/src/games/DoubutsuBlock.jsx
++++ b/src/games/DoubutsuBlock.jsx
+@@ -1,33 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function DoubutsuBlock() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
+-
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+   return (
+-    <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:0, overflow:'hidden' }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/doubutsu_block_v3.html"
+-        style={{ width:'100%', height:'100%', border:'none', display:'block', position:'absolute', top:0, left:0 }}
+-        title="どうぶつブロック"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/doubutsu_block_v3.html"
++          title="どうぶつブロック"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/animal-block" />
+     </div>
+   );
+ }
+diff --git a/src/games/DoubutsuKakurenbo.jsx b/src/games/DoubutsuKakurenbo.jsx
+index 08a1e46..7cc5111 100644
+--- a/src/games/DoubutsuKakurenbo.jsx
++++ b/src/games/DoubutsuKakurenbo.jsx
+@@ -1,45 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function DoubutsuKakurenbo() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/kakurenbo_v1.html"
+-        style={{
+-          width: '100%',
+-          height: '100%',
+-          border: 'none',
+-          display: 'block',
+-          position: 'absolute',
+-          top: 0,
+-          left: 0,
+-        }}
+-        title="どうぶつかくれんぼ"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/kakurenbo_v1.html"
++          title="どうぶつかくれんぼ"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/kakurenbo" />
+     </div>
+   );
+ }
+diff --git a/src/games/DoubutsuPuzzle.jsx b/src/games/DoubutsuPuzzle.jsx
+index 879fd67..02129d5 100644
+--- a/src/games/DoubutsuPuzzle.jsx
++++ b/src/games/DoubutsuPuzzle.jsx
+@@ -1,33 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function DoubutsuPuzzle() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
+-
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+   return (
+-    <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:0, overflow:'hidden' }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/doubutsu_puzzle_v2.html"
+-        style={{ width:'100%', height:'100%', border:'none', display:'block', position:'absolute', top:0, left:0 }}
+-        title="どうぶつパズル"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-popups"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/doubutsu_puzzle_v2.html"
++          title="どうぶつパズル"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-popups"
++        />
++      </div>
++      <GameContent route="/doubutsu-puzzle" />
+     </div>
+   );
+ }
+diff --git a/src/games/DoubutsuRunner.jsx b/src/games/DoubutsuRunner.jsx
+index ef0c321..f4d1e2b 100644
+--- a/src/games/DoubutsuRunner.jsx
++++ b/src/games/DoubutsuRunner.jsx
+@@ -1,45 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function DoubutsuRunner() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/runner_v8.html"
+-        style={{
+-          width: '100%',
+-          height: '100%',
+-          border: 'none',
+-          display: 'block',
+-          position: 'absolute',
+-          top: 0,
+-          left: 0,
+-        }}
+-        title="どうぶつランナー"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/runner_v8.html"
++          title="どうぶつランナー"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/runner" />
+     </div>
+   );
+ }
+diff --git a/src/games/DoubutsuShoot.jsx b/src/games/DoubutsuShoot.jsx
+index eba9e0a..8054497 100644
+--- a/src/games/DoubutsuShoot.jsx
++++ b/src/games/DoubutsuShoot.jsx
+@@ -1,45 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function DoubutsuShoot() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/shoot2.html"
+-        style={{
+-          width: '100%',
+-          height: '100%',
+-          border: 'none',
+-          display: 'block',
+-          position: 'absolute',
+-          top: 0,
+-          left: 0,
+-        }}
+-        title="どうぶつシューティング"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/shoot2.html"
++          title="どうぶつシューティング"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/shooting" />
+     </div>
+   );
+ }
+diff --git a/src/games/DoubutsuSniper.jsx b/src/games/DoubutsuSniper.jsx
+index 8129e45..362e0f0 100644
+--- a/src/games/DoubutsuSniper.jsx
++++ b/src/games/DoubutsuSniper.jsx
+@@ -1,45 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function DoubutsuSniper() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/sniper_v2.html"
+-        style={{
+-          width: '100%',
+-          height: '100%',
+-          border: 'none',
+-          display: 'block',
+-          position: 'absolute',
+-          top: 0,
+-          left: 0,
+-        }}
+-        title="どうぶつスナイパー"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/sniper_v2.html"
++          title="どうぶつスナイパー"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/sniper" />
+     </div>
+   );
+ }
+diff --git a/src/games/IchigoGame.jsx b/src/games/IchigoGame.jsx
+index b561c9c..f5325e6 100644
+--- a/src/games/IchigoGame.jsx
++++ b/src/games/IchigoGame.jsx
+@@ -1,33 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function IchigoGame() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
+-
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+   return (
+-    <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:0, overflow:'hidden' }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/ichigo_v2.html"
+-        style={{ width:'100%', height:'100%', border:'none', display:'block', position:'absolute', top:0, left:0 }}
+-        title="いちごゲーム"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-popups"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/ichigo_v2.html"
++          title="いちごゲーム"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-popups"
++        />
++      </div>
++      <GameContent route="/ichigo" />
+     </div>
+   );
+ }
+diff --git a/src/games/IroAwase.jsx b/src/games/IroAwase.jsx
+index 7b9eb66..23eedb8 100644
+--- a/src/games/IroAwase.jsx
++++ b/src/games/IroAwase.jsx
+@@ -1,33 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function IroAwase() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
+-
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+   return (
+-    <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:0, overflow:'hidden' }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/iro_awase_v2.html"
+-        style={{ width:'100%', height:'100%', border:'none', display:'block', position:'absolute', top:0, left:0 }}
+-        title="いろあわせ"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-popups"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/iro_awase_v2.html"
++          title="いろあわせ"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-popups"
++        />
++      </div>
++      <GameContent route="/iro" />
+     </div>
+   );
+ }
+diff --git a/src/games/JewelryMaster.jsx b/src/games/JewelryMaster.jsx
+index 537ab4b..00cbd85 100644
+--- a/src/games/JewelryMaster.jsx
++++ b/src/games/JewelryMaster.jsx
+@@ -1,45 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function JewelryMaster() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/jewelry_master_v7.html"
+-        style={{
+-          width: '100%',
+-          height: '100%',
+-          border: 'none',
+-          display: 'block',
+-          position: 'absolute',
+-          top: 0,
+-          left: 0,
+-        }}
+-        title="ジュエリーマスター"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/jewelry_master_v7.html"
++          title="ジュエリーマスター"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/jewelry-master" />
+     </div>
+   );
+ }
+diff --git a/src/games/KatakanaAsobi.jsx b/src/games/KatakanaAsobi.jsx
+index 5d19d3e..adc2179 100644
+--- a/src/games/KatakanaAsobi.jsx
++++ b/src/games/KatakanaAsobi.jsx
+@@ -1,40 +1,30 @@
+-import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function KatakanaAsobi() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/katakana_asobi_v1.html"
+-        style={{
+-          width: '100%', height: '100%', border: 'none', display: 'block',
+-          position: 'absolute', top: 0, left: 0,
+-        }}
+-        title="カタカナあそび"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/katakana_asobi_v1.html"
++          title="カタカナあそび"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/katakana-asobi" />
+     </div>
+   );
+ }
+diff --git a/src/games/KazuAsobi.jsx b/src/games/KazuAsobi.jsx
+index 5200027..ab87905 100644
+--- a/src/games/KazuAsobi.jsx
++++ b/src/games/KazuAsobi.jsx
+@@ -1,33 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function KazuAsobi() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
+-
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+   return (
+-    <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:0, overflow:'hidden' }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/kazu_asobi_v2.html"
+-        style={{ width:'100%', height:'100%', border:'none', display:'block', position:'absolute', top:0, left:0 }}
+-        title="かずあそび"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-popups"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/kazu_asobi_v2.html"
++          title="かずあそび"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-popups"
++        />
++      </div>
++      <GameContent route="/kazu-asobi" />
+     </div>
+   );
+ }
+diff --git a/src/games/KokkiQuiz.jsx b/src/games/KokkiQuiz.jsx
+index 6229952..08a2813 100644
+--- a/src/games/KokkiQuiz.jsx
++++ b/src/games/KokkiQuiz.jsx
+@@ -1,45 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function KokkiQuiz() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/flag_quiz.html"
+-        style={{
+-          width: '100%',
+-          height: '100%',
+-          border: 'none',
+-          display: 'block',
+-          position: 'absolute',
+-          top: 0,
+-          left: 0,
+-        }}
+-        title="こっきクイズ"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/flag_quiz.html"
++          title="こっきクイズ"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/kokki" />
+     </div>
+   );
+ }
+diff --git a/src/games/KudamonoCatch.jsx b/src/games/KudamonoCatch.jsx
+index 4a130ba..9830851 100644
+--- a/src/games/KudamonoCatch.jsx
++++ b/src/games/KudamonoCatch.jsx
+@@ -1,45 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function KudamonoCatch() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/kudamono_v2.html"
+-        style={{
+-          width: '100%',
+-          height: '100%',
+-          border: 'none',
+-          display: 'block',
+-          position: 'absolute',
+-          top: 0,
+-          left: 0,
+-        }}
+-        title="くだものキャッチ"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/kudamono_v2.html"
++          title="くだものキャッチ"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/kudamono-catch" />
+     </div>
+   );
+ }
+diff --git a/src/games/MachiDukuri.jsx b/src/games/MachiDukuri.jsx
+index 72fd2fe..872cc5b 100644
+--- a/src/games/MachiDukuri.jsx
++++ b/src/games/MachiDukuri.jsx
+@@ -1,45 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function MachiDukuri() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/machi_v6.html"
+-        style={{
+-          width: '100%',
+-          height: '100%',
+-          border: 'none',
+-          display: 'block',
+-          position: 'absolute',
+-          top: 0,
+-          left: 0,
+-        }}
+-        title="わくわくまちづくり"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/machi_v6.html"
++          title="わくわくまちづくり"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/machi" />
+     </div>
+   );
+ }
+diff --git a/src/games/MahouHouki.jsx b/src/games/MahouHouki.jsx
+index 224abcd..df921d5 100644
+--- a/src/games/MahouHouki.jsx
++++ b/src/games/MahouHouki.jsx
+@@ -1,32 +1,30 @@
+-import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function MahouHouki() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, overflow: 'hidden' }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/mahou_houki_gp_v4.html"
+-        style={{ width: '100%', height: '100%', border: 'none', display: 'block', position: 'absolute', top: 0, left: 0 }}
+-        title="まほうほうきGP"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-popups"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/mahou_houki_gp_v4.html"
++          title="まほうほうきGP"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-popups"
++        />
++      </div>
++      <GameContent route="/houki" />
+     </div>
+   );
+ }
+diff --git a/src/games/MahouMeiro.jsx b/src/games/MahouMeiro.jsx
+index 8e5942b..43a14f5 100644
+--- a/src/games/MahouMeiro.jsx
++++ b/src/games/MahouMeiro.jsx
+@@ -1,32 +1,30 @@
+-import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function MahouMeiro() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, overflow: 'hidden' }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/meiro_v6.html"
+-        style={{ width: '100%', height: '100%', border: 'none', display: 'block', position: 'absolute', top: 0, left: 0 }}
+-        title="まほうのめいろ"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-popups"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/meiro_v6.html"
++          title="まほうのめいろ"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-popups"
++        />
++      </div>
++      <GameContent route="/mahou-meiro" />
+     </div>
+   );
+ }
+diff --git a/src/games/MojiAsobi.jsx b/src/games/MojiAsobi.jsx
+index 4be626c..04c2273 100644
+--- a/src/games/MojiAsobi.jsx
++++ b/src/games/MojiAsobi.jsx
+@@ -1,33 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function MojiAsobi() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
+-
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+   return (
+-    <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:0, overflow:'hidden' }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/moji_asobi_v2.html"
+-        style={{ width:'100%', height:'100%', border:'none', display:'block', position:'absolute', top:0, left:0 }}
+-        title="もじあそび"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-popups"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/moji_asobi_v2.html"
++          title="もじあそび"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-popups"
++        />
++      </div>
++      <GameContent route="/moji" />
+     </div>
+   );
+ }
+diff --git a/src/games/MoriGame.jsx b/src/games/MoriGame.jsx
+index 7be1902..57bf93e 100644
+--- a/src/games/MoriGame.jsx
++++ b/src/games/MoriGame.jsx
+@@ -1,64 +1,30 @@
+-import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function MoriGame() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/mori_v3.html"
+-        style={{
+-          width: '100%',
+-          height: '100%',
+-          border: 'none',
+-          display: 'block',
+-          position: 'absolute',
+-          top: 0,
+-          left: 0,
+-        }}
+-        title="もりのなかまたち"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-popups"
+-      />
+-      <button
+-        onClick={() => navigate('/')}
+-        style={{
+-          position: 'absolute',
+-          top: 'max(10px, env(safe-area-inset-top))',
+-          left: 'max(12px, env(safe-area-inset-left))',
+-          zIndex: 10,
+-          background: 'rgba(0,0,0,0.55)',
+-          color: 'white',
+-          border: '1.5px solid rgba(255,255,255,0.3)',
+-          borderRadius: 20,
+-          padding: '5px 14px',
+-          fontSize: 12,
+-          fontWeight: 700,
+-          cursor: 'pointer',
+-        }}
+-      >
+-        🏠 もどる
+-      </button>
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/mori_v3.html"
++          title="もりのなかまたち"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-popups"
++        />
++      </div>
++      <GameContent route="/mori" />
+     </div>
+   );
+ }
+diff --git a/src/games/NekoChou.jsx b/src/games/NekoChou.jsx
+index 6f6529c..f81028f 100644
+--- a/src/games/NekoChou.jsx
++++ b/src/games/NekoChou.jsx
+@@ -1,40 +1,30 @@
+-import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function NekoChou() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/neko_chou_v1.html"
+-        style={{
+-          width: '100%', height: '100%', border: 'none', display: 'block',
+-          position: 'absolute', top: 0, left: 0,
+-        }}
+-        title="ねことちょうちょ"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/neko_chou_v1.html"
++          title="ねことちょうちょ"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/neko-chou" />
+     </div>
+   );
+ }
+diff --git a/src/games/NurieOekaki.jsx b/src/games/NurieOekaki.jsx
+index 88da966..c44de26 100644
+--- a/src/games/NurieOekaki.jsx
++++ b/src/games/NurieOekaki.jsx
+@@ -1,40 +1,30 @@
+-import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function NurieOekaki() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/nurie_oekaki_v1.html"
+-        style={{
+-          width: '100%', height: '100%', border: 'none', display: 'block',
+-          position: 'absolute', top: 0, left: 0,
+-        }}
+-        title="ぬりえ・おえかき"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/nurie_oekaki_v1.html"
++          title="ぬりえ・おえかき"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/nurie" />
+     </div>
+   );
+ }
+diff --git a/src/games/OkashiCrossing.jsx b/src/games/OkashiCrossing.jsx
+index 9b0a82b..d763a1a 100644
+--- a/src/games/OkashiCrossing.jsx
++++ b/src/games/OkashiCrossing.jsx
+@@ -1,6 +1,8 @@
+ import { useEffect, useRef, useState } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function OkashiCrossing() {
+   const navigate = useNavigate();
+@@ -10,8 +12,13 @@ export default function OkashiCrossing() {
+ 
+   useEffect(() => {
+     const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
++      if (e.data?.type === 'goHome') { navigate('/'); return; }
++      if (e.data?.type === 'goBack') {
++        let internal = false;
++        try { internal = sessionStorage.getItem('ww_nav_internal') === '1'; } catch {}
++        navigate(internal ? -1 : '/');
++        return;
++      }
+       if (e.data?.type === 'okashi-crossing-running') setShowPad(!!e.data.running);
+     };
+     window.addEventListener('message', handler);
+@@ -38,24 +45,27 @@ export default function OkashiCrossing() {
+   };
+ 
+   return (
+-    <div style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden' }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/okashi_crossing.html"
+-        style={{ width: '100%', height: '100%', border: 'none', display: 'block', position: 'absolute', top: 0, left: 0 }}
+-        title="おかしのくにたんけん"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+-      />
+-      {showPad && (
+-        <div style={pad}>
+-          <button style={{ ...btn, gridColumn: 2, gridRow: 1 }} onPointerDown={press('up')} aria-label="まえ">▲</button>
+-          <button style={{ ...btn, gridColumn: 1, gridRow: 2 }} onPointerDown={press('left')} aria-label="ひだり">◀</button>
+-          <button style={{ ...btn, gridColumn: 3, gridRow: 2 }} onPointerDown={press('right')} aria-label="みぎ">▶</button>
+-          <button style={{ ...btn, gridColumn: 2, gridRow: 3 }} onPointerDown={press('down')} aria-label="うしろ">▼</button>
+-        </div>
+-      )}
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/okashi_crossing.html"
++          title="おかしのくにたんけん"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++        {showPad && (
++          <div style={pad}>
++            <button style={{ ...btn, gridColumn: 2, gridRow: 1 }} onPointerDown={press('up')} aria-label="まえ">▲</button>
++            <button style={{ ...btn, gridColumn: 1, gridRow: 2 }} onPointerDown={press('left')} aria-label="ひだり">◀</button>
++            <button style={{ ...btn, gridColumn: 3, gridRow: 2 }} onPointerDown={press('right')} aria-label="みぎ">▶</button>
++            <button style={{ ...btn, gridColumn: 2, gridRow: 3 }} onPointerDown={press('down')} aria-label="うしろ">▼</button>
++          </div>
++        )}
++      </div>
++      <GameContent route="/okashi-crossing" />
+     </div>
+   );
+ }
+diff --git a/src/games/Shabondama.jsx b/src/games/Shabondama.jsx
+index c9c9694..b43ef40 100644
+--- a/src/games/Shabondama.jsx
++++ b/src/games/Shabondama.jsx
+@@ -1,45 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function Shabondama() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/shabondama_v2.html"
+-        style={{
+-          width: '100%',
+-          height: '100%',
+-          border: 'none',
+-          display: 'block',
+-          position: 'absolute',
+-          top: 0,
+-          left: 0,
+-        }}
+-        title="しゃぼんだまポン"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/shabondama_v2.html"
++          title="しゃぼんだまポン"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/shabondama" />
+     </div>
+   );
+ }
+diff --git a/src/games/SoraGame.jsx b/src/games/SoraGame.jsx
+index 1ca5317..e388456 100644
+--- a/src/games/SoraGame.jsx
++++ b/src/games/SoraGame.jsx
+@@ -1,64 +1,30 @@
+-import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function SoraGame() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/sora_v2.html"
+-        style={{
+-          width: '100%',
+-          height: '100%',
+-          border: 'none',
+-          display: 'block',
+-          position: 'absolute',
+-          top: 0,
+-          left: 0,
+-        }}
+-        title="そらとびプリンセス"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-popups"
+-      />
+-      <button
+-        onClick={() => navigate('/')}
+-        style={{
+-          position: 'absolute',
+-          top: 'max(10px, env(safe-area-inset-top))',
+-          left: 'max(12px, env(safe-area-inset-left))',
+-          zIndex: 10,
+-          background: 'rgba(0,0,0,0.55)',
+-          color: 'white',
+-          border: '1.5px solid rgba(255,255,255,0.3)',
+-          borderRadius: 20,
+-          padding: '5px 14px',
+-          fontSize: 12,
+-          fontWeight: 700,
+-          cursor: 'pointer',
+-        }}
+-      >
+-        🏠 もどる
+-      </button>
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/sora_v2.html"
++          title="そらとびプリンセス"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-popups"
++        />
++      </div>
++      <GameContent route="/sora" />
+     </div>
+   );
+ }
+diff --git a/src/games/SushiGame.jsx b/src/games/SushiGame.jsx
+index daf27df..927f00f 100644
+--- a/src/games/SushiGame.jsx
++++ b/src/games/SushiGame.jsx
+@@ -1,33 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function SushiGame() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
+-
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+   return (
+-    <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:0, overflow:'hidden' }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/sushi_v2.html"
+-        style={{ width:'100%', height:'100%', border:'none', display:'block', position:'absolute', top:0, left:0 }}
+-        title="さーもんをとろう"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-popups"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/sushi_v2.html"
++          title="さーもんをとろう"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-popups"
++        />
++      </div>
++      <GameContent route="/sushi" />
+     </div>
+   );
+ }
+diff --git a/src/games/TashizanGame.jsx b/src/games/TashizanGame.jsx
+index 4fdc331..a4842c2 100644
+--- a/src/games/TashizanGame.jsx
++++ b/src/games/TashizanGame.jsx
+@@ -1,33 +1,30 @@
+-﻿import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function TashizanGame() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
+-
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+   return (
+-    <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:0, overflow:'hidden' }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/tashizan_v2.html"
+-        style={{ width:'100%', height:'100%', border:'none', display:'block', position:'absolute', top:0, left:0 }}
+-        title="たしざんゲーム"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-popups"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/tashizan_v2.html"
++          title="たしざんゲーム"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-popups"
++        />
++      </div>
++      <GameContent route="/tashizan" />
+     </div>
+   );
+ }
+diff --git a/src/games/TokeiYomi.jsx b/src/games/TokeiYomi.jsx
+index 83bd934..af21c61 100644
+--- a/src/games/TokeiYomi.jsx
++++ b/src/games/TokeiYomi.jsx
+@@ -1,40 +1,30 @@
+-import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function TokeiYomi() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/tokei_yomi_v1.html"
+-        style={{
+-          width: '100%', height: '100%', border: 'none', display: 'block',
+-          position: 'absolute', top: 0, left: 0,
+-        }}
+-        title="とけいよみ"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/tokei_yomi_v1.html"
++          title="とけいよみ"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/tokei-yomi" />
+     </div>
+   );
+ }
+diff --git a/src/games/UsagiCarrot.jsx b/src/games/UsagiCarrot.jsx
+index da9b11f..a718a17 100644
+--- a/src/games/UsagiCarrot.jsx
++++ b/src/games/UsagiCarrot.jsx
+@@ -1,45 +1,30 @@
+-import { useEffect, useRef } from 'react';
++import { useRef } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { useIframeBridge } from '../hooks/useIframeBridge';
++import { useGameNav } from '../hooks/useGameNav';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
+ 
+ export default function UsagiCarrot() {
+   const navigate = useNavigate();
+   const iframeRef = useRef(null);
++  useGameNav(navigate);
+   useIframeBridge(iframeRef);
+ 
+-  useEffect(() => {
+-    const handler = (e) => {
+-      if (e.data?.type === 'goBack') navigate(-1);
+-      if (e.data?.type === 'goHome') navigate('/');
+-    };
+-    window.addEventListener('message', handler);
+-    return () => window.removeEventListener('message', handler);
+-  }, [navigate]);
+-
+   return (
+-    <div style={{
+-      position: 'fixed',
+-      top: 0, left: 0, right: 0, bottom: 0,
+-      zIndex: 0,
+-      overflow: 'hidden'
+-    }}>
+-      <iframe
+-        ref={iframeRef}
+-        src="/games/usagi_carrot_v1.html"
+-        style={{
+-          width: '100%',
+-          height: '100%',
+-          border: 'none',
+-          display: 'block',
+-          position: 'absolute',
+-          top: 0,
+-          left: 0,
+-        }}
+-        title="うさぎとにんじん"
+-        allow="autoplay; fullscreen"
+-        allowFullScreen
+-        sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+-      />
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/usagi_carrot_v1.html"
++          title="うさぎとにんじん"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/usagi-carrot" />
+     </div>
+   );
+ }
+diff --git a/src/hooks/useGameNav.js b/src/hooks/useGameNav.js
+new file mode 100644
+index 0000000..d2f98b3
+--- /dev/null
++++ b/src/hooks/useGameNav.js
+@@ -0,0 +1,16 @@
++import { useEffect } from 'react';
++
++export function useGameNav(navigate) {
++  useEffect(() => {
++    const handler = (e) => {
++      if (e.data?.type === 'goHome') { navigate('/'); return; }
++      if (e.data?.type === 'goBack') {
++        let internal = false;
++        try { internal = sessionStorage.getItem('ww_nav_internal') === '1'; } catch {}
++        navigate(internal ? -1 : '/');
++      }
++    };
++    window.addEventListener('message', handler);
++    return () => window.removeEventListener('message', handler);
++  }, [navigate]);
++}
+diff --git a/src/seo/GameContent.css b/src/seo/GameContent.css
+new file mode 100644
+index 0000000..b861bd8
+--- /dev/null
++++ b/src/seo/GameContent.css
+@@ -0,0 +1,26 @@
++.game-page { position: relative; width: 100%; min-height: 100dvh; background: #fdf3f8; }
++.game-frame { position: relative; width: 100%; height: 100dvh; overflow: hidden; }
++.game-frame iframe { width: 100%; height: 100%; border: none; display: block; }
++
++.game-content {
++  max-width: 720px; margin: 0 auto; padding: 24px 18px 56px;
++  font-family: 'M PLUS Rounded 1c', system-ui, sans-serif;
++  color: #5a4a52; line-height: 1.9;
++}
++.gc-title { font-family: 'DotGothic16', sans-serif; font-size: 22px; color: #3d3346; margin: 4px 0 12px; line-height: 1.5; }
++.gc-intro { font-size: 15px; margin-bottom: 14px; }
++.gc-badges { list-style: none; padding: 0; margin: 0 0 24px; display: flex; flex-wrap: wrap; gap: 8px; }
++.gc-badge { background: #b8ecd6; color: #2f7a5b; border-radius: 999px; padding: 5px 13px; font-size: 13px; font-weight: 700; }
++.gc-block { background: #fff; border: 2px solid #f0e2ea; border-radius: 16px; padding: 18px 16px; margin-bottom: 16px; box-shadow: 0 4px 0 #f0e2ea; }
++.gc-h2 { font-family: 'DotGothic16', sans-serif; font-size: 16px; color: #3d3346; margin: 0 0 12px; }
++.gc-howto { margin: 0; padding-left: 1.4em; }
++.gc-howto li { margin-bottom: 8px; font-size: 14.5px; }
++.gc-faq { margin: 0; }
++.gc-faq-item { border-bottom: 1px dashed #f0e2ea; padding: 10px 0; }
++.gc-faq-item:last-child { border-bottom: none; }
++.gc-q { font-weight: 700; color: #a34767; font-size: 14.5px; margin-bottom: 4px; }
++.gc-a { font-size: 14px; margin: 0; }
++.gc-related ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 10px; }
++.gc-related a { text-decoration: none; color: #5a4a52; background: #fff; border: 2px solid #f0e2ea; border-radius: 12px; padding: 10px 14px; font-weight: 700; font-size: 14px; box-shadow: 0 3px 0 #f0e2ea; display: inline-block; }
++.gc-back { text-align: center; margin-top: 22px; }
++.gc-back a { color: #a34767; font-weight: 700; text-decoration: none; }
+diff --git a/src/seo/GameContent.jsx b/src/seo/GameContent.jsx
+new file mode 100644
+index 0000000..2535d30
+--- /dev/null
++++ b/src/seo/GameContent.jsx
+@@ -0,0 +1,58 @@
++import GAME_META from './gameMeta';
++import HomeChip from '../components/HomeChip';
++import './GameContent.css';
++
++export default function GameContent({ route }) {
++  const m = GAME_META[route];
++  if (!m || !m.intro) return null;
++  const ageMin = m.ageMin ?? 4;
++  const ageMax = m.ageMax ?? 12;
++  const related = Object.entries(GAME_META)
++    .filter(([r, mm]) => r !== route && mm.category === m.category && mm.intro)
++    .slice(0, 3);
++  return (
++    <section className="game-content" aria-label={`${m.name}の説明`}>
++      <h1 className="gc-title">{m.name}</h1>
++      <p className="gc-intro">{m.intro}</p>
++      <ul className="gc-badges">
++        <li className="gc-badge">対象 {ageMin}〜{ageMax}さい</li>
++        <li className="gc-badge">かんぜん無料</li>
++        <li className="gc-badge">登録・インストール不要</li>
++      </ul>
++
++      {m.howto && m.howto.length > 0 && (
++        <div className="gc-block">
++          <h2 className="gc-h2">あそびかた</h2>
++          <ol className="gc-howto">
++            {m.howto.map((s, i) => <li key={i}>{s}</li>)}
++          </ol>
++        </div>
++      )}
++
++      {m.faq && m.faq.length > 0 && (
++        <div className="gc-block">
++          <h2 className="gc-h2">よくあるしつもん</h2>
++          <dl className="gc-faq">
++            {m.faq.map((f, i) => (
++              <div key={i} className="gc-faq-item">
++                <dt className="gc-q">{f.q}</dt>
++                <dd className="gc-a">{f.a}</dd>
++              </div>
++            ))}
++          </dl>
++        </div>
++      )}
++
++      {related.length > 0 && (
++        <nav className="gc-related" aria-label="おなじジャンルのゲーム">
++          <h2 className="gc-h2">おなじジャンルのゲーム</h2>
++          <ul>
++            {related.map(([r, mm]) => <li key={r}><a href={r}>{mm.name}</a></li>)}
++          </ul>
++        </nav>
++      )}
++
++      <p className="gc-back"><a href="/">← ほかのゲームをみる</a></p>
++    </section>
++  );
++}
+diff --git a/src/seo/GameSEO.jsx b/src/seo/GameSEO.jsx
+index 6fca9fc..beabc42 100644
+--- a/src/seo/GameSEO.jsx
++++ b/src/seo/GameSEO.jsx
+@@ -2,14 +2,14 @@ import { Helmet } from 'react-helmet-async';
+ 
+ const BASE = 'https://wakuwaku-island.pages.dev';
+ 
+-export default function GameSEO({ route, name, desc, category }) {
++export default function GameSEO({ route, name, desc, category, intro, faq, ageMin = 4, ageMax = 12 }) {
+   const url = `${BASE}${route}`;
+   const title = `${name}｜わくわくアイランド`;
+   const ld = {
+     '@context': 'https://schema.org',
+     '@type': 'VideoGame',
+     name,
+-    description: desc,
++    description: intro || desc,
+     url,
+     genre: category,
+     inLanguage: 'ja',
+@@ -17,10 +17,19 @@ export default function GameSEO({ route, name, desc, category }) {
+     operatingSystem: 'Web Browser',
+     gamePlatform: 'Web Browser',
+     offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY' },
+-    audience: { '@type': 'PeopleAudience', suggestedMinAge: 4, suggestedMaxAge: 12 },
++    audience: { '@type': 'PeopleAudience', suggestedMinAge: ageMin, suggestedMaxAge: ageMax },
+     isAccessibleForFree: true,
+     publisher: { '@type': 'Organization', name: 'わくわくアイランド' },
+   };
++  const faqLd = faq && faq.length ? {
++    '@context': 'https://schema.org',
++    '@type': 'FAQPage',
++    mainEntity: faq.map((f) => ({
++      '@type': 'Question',
++      name: f.q,
++      acceptedAnswer: { '@type': 'Answer', text: f.a },
++    })),
++  } : null;
+   return (
+     <Helmet>
+       <title>{title}</title>
+@@ -31,6 +40,7 @@ export default function GameSEO({ route, name, desc, category }) {
+       <meta property="og:url" content={url} />
+       <meta property="og:image" content={`${BASE}/og-image.png`} />
+       <script type="application/ld+json">{JSON.stringify(ld)}</script>
++      {faqLd && <script type="application/ld+json">{JSON.stringify(faqLd)}</script>}
+     </Helmet>
+   );
+ }
+diff --git a/src/seo/gameMeta.js b/src/seo/gameMeta.js
+index 1ae55cd..729b0e4 100644
+--- a/src/seo/gameMeta.js
++++ b/src/seo/gameMeta.js
+@@ -1,35 +1,578 @@
+ const GAME_META = {
+-  '/shabondama':      { name: 'シャボンだまポン',         desc: 'とんでくるシャボン玉をタップして割ろう！',                    category: 'アクション' },
+-  '/kudamono-catch':  { name: 'くだものキャッチ',          desc: 'おちてくるくだものをキャッチしよう！',                        category: 'アクション' },
+-  '/doubutsu-puzzle': { name: 'どうぶつパズル',            desc: 'どうぶつをならべてパズルをとこう！',                          category: 'パズル' },
+-  '/kazu-asobi':      { name: 'かずあそび',                desc: 'かずをかぞえてたのしくまなぼう！',                            category: 'かずあそび' },
+-  '/animal-soccer':   { name: 'どうぶつサッカー',          desc: 'どうぶつたちとサッカーをしよう！',                            category: 'アクション' },
+-  '/sushi':           { name: 'さーもん',                  desc: 'かいてんずし！サーモンだけタップしよう！',                    category: 'アクション' },
+-  '/ichigo':          { name: 'いちご',                    desc: '30びょうでいちごをあつめよう！',                              category: 'アクション' },
+-  '/kakurenbo':       { name: 'どうぶつかくれんぼ',        desc: 'くさむらやきのうらにどうぶつがかくれているよ！',              category: 'パズル' },
+-  '/moji':            { name: 'もじあそび',                desc: 'えをみてただしいひらがなをえらんでね！',                      category: 'もじあそび' },
+-  '/tashizan':        { name: 'たしざんゲーム',            desc: 'どうぶつをかぞえてこたえをえらんでね！',                      category: 'かずあそび' },
+-  '/iro':             { name: 'いろあわせ',                desc: 'いろをまぜるとなんいろになるかな？',                          category: 'パズル' },
+-  '/machi':           { name: 'わくわくまちづくり',        desc: 'じぶんだけのすてきなまちをつくろう！',                        category: 'そうぞう' },
+-  '/kokki':           { name: 'こっきクイズ',              desc: 'せかいのこっきをみわけよう！30かこく以上！',                  category: 'クイズ' },
+-  '/jewelry-master':  { name: 'ジュエリーマスター',        desc: 'おきゃくさんのリクエストにこたえてほうせきをえらぼう！',      category: 'そうぞう' },
+-  '/animal-block':    { name: 'どうぶつブロック',          desc: 'おなじどうぶつを3つならべてけそう！れんさでフィーバー！マッチパズルゲーム！', category: 'パズル' },
+-  '/runner':          { name: 'どうぶつランナー',          desc: 'タップでジャンプ！2かいジャンプもできるよ！障害物をよけて走れ！', category: 'レース' },
+-  '/shooting':        { name: 'どうぶつシューティング',    desc: 'てきをたおしてボスをやっつけろ！',                            category: 'アクション' },
+-  '/sniper':          { name: 'どうぶつスナイパー',        desc: 'うごくどうぶつをタップでねらえ！フェイクに注意！',            category: 'アクション' },
+-  '/okashi-crossing': { name: 'おかしのくにたんけん',  desc: 'グミのくるまとチョコのかわをこえて、おかしのくにをどこまでもすすもう！', category: 'アクション' },
+-  '/mori':            { name: 'もりのなかまたち',          desc: 'もりをとびこえてゴールをめざせ！',                            category: 'アクション' },
+-  '/sora':            { name: 'そらとびプリンセス',        desc: 'そらをとんでてきをたおそう！',                                category: 'アクション' },
+-  '/bike':            { name: 'わくわくバイク',            desc: 'バイクでコースをはしりぬけろ！',                              category: 'レース' },
+-  '/kart':            { name: 'アニマルカートGP',          desc: '6ひきのどうぶつでレース！スーファミ風の3Dカートゲーム。',    category: 'レース' },
+-  '/block':           { name: 'おしろブロックくずし',    desc: 'パドルでボールをはじいてブロックをぜんぶこわそう！',          category: 'アクション' },
+-  '/houki':           { name: 'まほうほうきGP',          desc: 'そらをとんでリングをくぐり、タイムをのばそう！Mode7のレース。', category: 'レース' },
+-  '/mahou-meiro':     { name: 'まほうのめいろ',            desc: 'クリスタルをふんでまほうのとびらをひらき、3Dめいろをぬけだそう！', category: 'パズル' },
+-  '/usagi-carrot':    { name: 'うさぎとにんじん',          desc: 'うえからおちてくるにんじんをうさぎのカゴでキャッチしよう！',  category: 'アクション' },
+-  '/neko-chou':       { name: 'ねことちょうちょ',          desc: 'とんでにげるちょうちょをねこでおいかけてつかまえよう！',      category: 'アクション' },
+-  '/tokei-yomi':      { name: 'とけいよみ',                desc: 'とけいのはりをよんだりあわせたりしてあそぼう！',              category: 'がくしゅう' },
+-  '/katakana-asobi':  { name: 'カタカナあそび',            desc: 'えやひらがなをみてただしいカタカナをえらぼう！',              category: 'がくしゅう' },
+-  '/nurie':           { name: 'ぬりえ・おえかき',          desc: 'すきないろでじゆうにぬったりかいたりしよう！',                category: 'そうぞう' },
++// ============================================================
++// gameMeta 追記用 本文データ（残り27ゲーム）
++// 既存 /animal-block の型に準拠：ageMin/ageMax/intro/howto/faq
++// 学習系（かず・もじ・カタカナ・たしざん・こっき）は faq に「べんきょうになりますか？」を含む
++// ※ howto の操作説明は memory ベース。実機とズレがあればレビューで修正
++// ============================================================
++
++// ---------- レース ----------
++'/kart': {
++  name: 'アニマルカートGP', desc: '6ひきのどうぶつでレース！スーファミ風の3Dカートゲーム。',
++  category: 'レース', ageMin: 4, ageMax: 12,
++  intro: 'アニマルカートGPは、6ひきのどうぶつたちとゴールをきそう、むりょうの3Dカートレースゲームです。コースをはしりぬけて、ライバルをぬきさってトップをめざそう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'アクセルで カートを まえに すすめる',
++    'カーブでは ハンドルを きって コースを まがる',
++    'ライバルの どうぶつを ぬきさる',
++    '1いで ゴールして チャンピオンを めざそう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '4さい〜12さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/bike': {
++  name: 'わくわくバイク', desc: 'バイクでコースをはしりぬけろ！',
++  category: 'レース', ageMin: 4, ageMax: 12,
++  intro: 'わくわくバイクは、ライバルたちとタイムをきそう、むりょうのバイクレースゲームです。コースをはしりぬけて、ひょうしょうだいの1ばんうえをめざそう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'アクセルで バイクを まえに すすめる',
++    'コースの カーブに あわせて ハンドルを きる',
++    'ライバルの バイクを ぬきさる',
++    'はやく ゴールして ひょうしょうだいを めざそう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '4さい〜12さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/houki': {
++  name: 'まほうほうきGP', desc: 'そらをとんでリングをくぐり、タイムをのばそう！Mode7のレース。',
++  category: 'レース', ageMin: 4, ageMax: 12,
++  intro: 'まほうほうきGPは、まほうのほうきにのってそらをとび、リングをくぐってタイムをのばす、むりょうのレースゲームです。うまくリングをつなげて、ベストタイムをめざそう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'ほうきを うごかして そらを とぶ',
++    'ひかる リングを めがけて くぐる',
++    'リングを くぐると タイムが のびる',
++    'たくさん つなげて ベストタイムを めざそう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '4さい〜12さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/runner': {
++  name: 'どうぶつランナー', desc: 'タップでジャンプ！2かいジャンプもできるよ！障害物をよけて走れ！',
++  category: 'レース', ageMin: 4, ageMax: 12,
++  intro: 'どうぶつランナーは、タップでジャンプして障害物をよけながらどこまでもはしる、むりょうのランゲームです。2かいジャンプもつかって、より遠くをめざそう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'タップで ジャンプする',
++    'もういちど タップで 2かいジャンプ',
++    'あらわれる 障害物を よける',
++    'できるだけ 遠くまで はしろう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '4さい〜12さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++// ---------- アクション ----------
++'/shabondama': {
++  name: 'シャボンだまポン', desc: 'とんでくるシャボン玉をタップして割ろう！',
++  category: 'アクション', ageMin: 3, ageMax: 10,
++  intro: 'シャボンだまポンは、とんでくるシャボン玉をタップしてつぎつぎに割っていく、むりょうのアクションゲームです。ちいさなおこさまでも、ゆびでタップするだけでかんたんにあそべます。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'そらに シャボン玉が とんでくる',
++    'シャボン玉を タップして 割る',
++    'たくさん 割って てんすうを あつめる',
++    'にがさず ぜんぶ 割ろう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '3さいくらいの ちいさな おこさまから たのしめます。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/kudamono-catch': {
++  name: 'くだものキャッチ', desc: 'おちてくるくだものをキャッチしよう！',
++  category: 'アクション', ageMin: 3, ageMax: 10,
++  intro: 'くだものキャッチは、うえからおちてくるくだものをキャッチしてあつめる、むりょうのアクションゲームです。ちいさなおこさまでもかんたんにあそべます。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'うえから くだものが おちてくる',
++    'キャラクターを 左右に うごかす',
++    'くだものを うけとめて キャッチ',
++    'たくさん あつめて てんすうを のばそう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '3さいくらいの ちいさな おこさまから たのしめます。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/sushi': {
++  name: 'さーもん', desc: 'かいてんずし！サーモンだけタップしよう！',
++  category: 'アクション', ageMin: 3, ageMax: 10,
++  intro: 'さーもんは、かいてんずしのおすしのなかからサーモンだけをタップしてとる、むりょうのアクションゲームです。ほかのおすしをタップしないように、よくみてねらおう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'おすしが つぎつぎ ながれてくる',
++    'サーモンを みつけて タップする',
++    'サーモン いがいは タップしない',
++    'たくさん とって てんすうを あつめよう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '3さいくらいの ちいさな おこさまから たのしめます。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/ichigo': {
++  name: 'いちご', desc: '30びょうでいちごをあつめよう！',
++  category: 'アクション', ageMin: 3, ageMax: 10,
++  intro: 'いちごは、30びょうのあいだにできるだけたくさんのいちごをあつめる、むりょうのタイムアタックゲームです。みじかいじかんでどれだけとれるかにちょうせんしよう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'スタートすると 30びょうの カウントが はじまる',
++    'がめんの いちごを タップして あつめる',
++    'つぎつぎ タップして かずを ふやす',
++    'じかんないに たくさん あつめよう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '3さいくらいの ちいさな おこさまから たのしめます。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/shooting': {
++  name: 'どうぶつシューティング', desc: 'てきをたおしてボスをやっつけろ！',
++  category: 'アクション', ageMin: 5, ageMax: 12,
++  intro: 'どうぶつシューティングは、あらわれるてきをたおしながらすすみ、さいごにボスをやっつける、むりょうのシューティングゲームです。たまをよけて、てきをたおしてクリアをめざそう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'キャラクターを うごかして てきの たまを よける',
++    'てきに むかって たまを うつ',
++    'つぎつぎ あらわれる てきを たおす',
++    'さいごの ボスを たおして クリア',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '5さい〜12さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/sniper': {
++  name: 'どうぶつスナイパー', desc: 'うごくどうぶつをタップでねらえ！フェイクに注意！',
++  category: 'アクション', ageMin: 5, ageMax: 12,
++  intro: 'どうぶつスナイパーは、うごきまわるどうぶつをタップでねらってとらえる、むりょうのアクションゲームです。フェイクのどうぶつをタップしないように、よくみてねらおう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'どうぶつが がめんを うごきまわる',
++    'ねらった どうぶつを タップする',
++    'フェイクの どうぶつは タップしない',
++    'せいかくに ねらって てんすうを のばそう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '5さい〜12さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/mori': {
++  name: 'もりのなかまたち', desc: 'もりをとびこえてゴールをめざせ！',
++  category: 'アクション', ageMin: 4, ageMax: 12,
++  intro: 'もりのなかまたちは、もりのなかをジャンプでとびこえてゴールをめざす、むりょうのアクションゲームです。ぜんぶで9つのステージをクリアしていこう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'キャラクターを うごかして もりを すすむ',
++    'タップで ジャンプして あなや てきを とびこえる',
++    'アイテムを とりながら すすむ',
++    'ゴールに たどりついて ステージクリア',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '4さい〜12さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/sora': {
++  name: 'そらとびプリンセス', desc: 'そらをとんでてきをたおそう！',
++  category: 'アクション', ageMin: 4, ageMax: 12,
++  intro: 'そらとびプリンセスは、プリンセスがそらをとびながらてきをたおしてすすむ、むりょうのアクションゲームです。うまくとんで、てきをかわしながらすすもう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'タップで プリンセスを そらに とばす',
++    'たかさを ちょうせつして てきを かわす',
++    'てきを たおしながら すすむ',
++    'できるだけ 遠くまで とんでいこう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '4さい〜12さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/okashi-crossing': {
++  name: 'おかしのくにたんけん', desc: 'グミのくるまとチョコのかわをこえて、おかしのくにをどこまでもすすもう！',
++  category: 'アクション', ageMin: 4, ageMax: 12,
++  intro: 'おかしのくにたんけんは、グミのくるまやチョコのかわをよけながら、おかしのくにをどこまでもすすむ、むりょうのアクションゲームです。タイミングをみて、あんぜんにわたっていこう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'タップで まえに すすむ',
++    'グミの くるまに ぶつからないように わたる',
++    'チョコの かわは ながれに のって こえる',
++    'できるだけ 遠くまで すすもう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '4さい〜12さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/neko-chou': {
++  name: 'ねことちょうちょ', desc: 'とんでにげるちょうちょをねこでおいかけてつかまえよう！',
++  category: 'アクション', ageMin: 3, ageMax: 10,
++  intro: 'ねことちょうちょは、とんでにげるちょうちょをねこでおいかけてつかまえる、むりょうのアクションゲームです。ちょうちょのうごきをよんで、うまくつかまえよう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'ちょうちょが がめんを とびまわる',
++    'ねこを うごかして おいかける',
++    'ちょうちょに ちかづいて つかまえる',
++    'たくさん つかまえて てんすうを のばそう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '3さいくらいの ちいさな おこさまから たのしめます。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/usagi-carrot': {
++  name: 'うさぎとにんじん', desc: 'うえからおちてくるにんじんをうさぎのカゴでキャッチしよう！',
++  category: 'アクション', ageMin: 3, ageMax: 10,
++  intro: 'うさぎとにんじんは、うえからおちてくるにんじんをうさぎのカゴでキャッチする、むりょうのアクションゲームです。ちいさなおこさまでもかんたんにあそべます。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'うえから にんじんが おちてくる',
++    'うさぎを 左右に うごかす',
++    'カゴで にんじんを うけとめる',
++    'たくさん キャッチして てんすうを のばそう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '3さいくらいの ちいさな おこさまから たのしめます。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/block': {
++  name: 'おしろブロックくずし', desc: 'パドルでボールをはじいてブロックをぜんぶこわそう！',
++  category: 'アクション', ageMin: 4, ageMax: 12,
++  intro: 'おしろブロックくずしは、パドルでボールをはじいて、ならんだブロックをぜんぶこわす、むりょうのアクションゲームです。ボールをおとさないように、うまくはねかえそう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'パドルを 左右に うごかす',
++    'おちてくる ボールを パドルで はねかえす',
++    'ボールを ブロックに あてて こわす',
++    'ぜんぶの ブロックを こわして クリア',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '4さい〜12さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++// ---------- パズル ----------
++'/doubutsu-puzzle': {
++  name: 'どうぶつパズル', desc: 'どうぶつをならべてパズルをとこう！',
++  category: 'パズル', ageMin: 4, ageMax: 12,
++  intro: 'どうぶつパズルは、かわいいどうぶつをならべてとくパズルゲームです。あたまをつかって、どうぶつをうまくそろえよう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'がめんの どうぶつを みる',
++    'おなじ どうぶつを ならべる',
++    'そろうと どうぶつが きえる',
++    'ぜんぶ そろえて パズルを とこう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '4さい〜12さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/iro': {
++  name: 'いろあわせ', desc: 'いろをまぜるとなんいろになるかな？',
++  category: 'パズル', ageMin: 4, ageMax: 10,
++  intro: 'いろあわせは、いろといろをまぜてなにいろになるかをためす、むりょうのパズルゲームです。あそびながら、いろのふしぎをたのしくまなべます。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'まぜる いろを えらぶ',
++    'いろと いろを くみあわせる',
++    'なにいろに なるか かくにんする',
++    'おだいの いろを つくってみよう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '4さい〜10さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/kakurenbo': {
++  name: 'どうぶつかくれんぼ', desc: 'くさむらやきのうらにどうぶつがかくれているよ！',
++  category: 'パズル', ageMin: 3, ageMax: 10,
++  intro: 'どうぶつかくれんぼは、くさむらやきのうらにかくれているどうぶつをみつけだす、むりょうのさがしものゲームです。よくみて、かくれたどうぶつをぜんぶみつけよう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'がめんを よく みる',
++    'くさむらや きのうらを タップして さがす',
++    'かくれた どうぶつを みつける',
++    'ぜんぶ みつけて クリア',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '3さいくらいの ちいさな おこさまから たのしめます。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/mahou-meiro': {
++  name: 'まほうのめいろ', desc: 'クリスタルをふんでまほうのとびらをひらき、3Dめいろをぬけだそう！',
++  category: 'パズル', ageMin: 5, ageMax: 12,
++  intro: 'まほうのめいろは、クリスタルをふんでまほうのとびらをひらきながら、3Dのめいろをぬけだす、むりょうのパズルゲームです。ぜんぶで20のステージにちょうせんできます。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'めいろの なかを うごきまわる',
++    'クリスタルを ふんで とびらを ひらく',
++    'ひらいた みちを すすむ',
++    'ゴールに たどりついて ステージクリア',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '5さい〜12さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++// ---------- そうぞう ----------
++'/machi': {
++  name: 'わくわくまちづくり', desc: 'じぶんだけのすてきなまちをつくろう！',
++  category: 'そうぞう', ageMin: 4, ageMax: 12,
++  intro: 'わくわくまちづくりは、たてものをおいてじぶんだけのまちをそだてる、むりょうのまちづくりゲームです。コインをあつめてミッションをクリアし、まちをどんどん大きくしよう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'たてものを えらんで まちに おく',
++    'コインを タップして あつめる',
++    'ミッションを クリアして レベルアップ',
++    'じぶんだけの まちを 大きく そだてよう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '4さい〜12さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/nurie': {
++  name: 'ぬりえ・おえかき', desc: 'すきないろでじゆうにぬったりかいたりしよう！',
++  category: 'そうぞう', ageMin: 3, ageMax: 12,
++  intro: 'ぬりえ・おえかきは、すきないろをつかってじゆうにぬったりかいたりできる、むりょうのおえかきゲームです。ちいさなおこさまから、じぶんだけのさくひんをつくってたのしめます。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'すきな いろを えらぶ',
++    'ゆびや マウスで じゆうに ぬる・かく',
++    'いろを かえて いろいろ ためす',
++    'じぶんだけの えを かんせいさせよう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: 'えは がいぶに おくられますか？', a: 'いいえ。かいた えを がいぶに そうしんすることは ありません。あんしんして あそべます。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++// ---------- がくしゅう（faq に「べんきょうになりますか？」を含む）----------
++'/kazu-asobi': {
++  name: 'かずあそび', desc: 'かずをかぞえてたのしくまなぼう！',
++  category: 'かずあそび', ageMin: 3, ageMax: 8,
++  intro: 'かずあそびは、かずをかぞえたりくらべたりして、すうじをたのしくまなべる、むりょうのがくしゅうゲームです。あそびながら、しぜんにかずにしたしめます。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'がめんに でる ものの かずを かぞえる',
++    'ただしい すうじを えらぶ',
++    'せいかいすると つぎの もんだいへ',
++    'くりかえして かずを おぼえよう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: 'べんきょうに なりますか？', a: 'はい。かずのかぞえかたや すうじを、あそびながら しぜんに おぼえられます。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/tashizan': {
++  name: 'たしざんゲーム', desc: 'どうぶつをかぞえてこたえをえらんでね！',
++  category: 'かずあそび', ageMin: 4, ageMax: 9,
++  intro: 'たしざんゲームは、どうぶつのかずをかぞえてたしざんのこたえをえらぶ、むりょうのがくしゅうゲームです。あそびながら、たしざんのれんしゅうができます。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'でてきた どうぶつの かずを かぞえる',
++    'たしざんの こたえを かんがえる',
++    'ただしい こたえを えらぶ',
++    'くりかえして たしざんを おぼえよう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: 'べんきょうに なりますか？', a: 'はい。たしざんの きほんを、あそびながら しぜんに れんしゅうできます。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/moji': {
++  name: 'もじあそび', desc: 'えをみてただしいひらがなをえらんでね！',
++  category: 'もじあそび', ageMin: 3, ageMax: 8,
++  intro: 'もじあそびは、えをみてただしいひらがなをえらんで、もじをたのしくおぼえる、むりょうのがくしゅうゲームです。あそびながら、ひらがなにしたしめます。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'がめんの えを みる',
++    'えに あった ひらがなを かんがえる',
++    'ただしい ひらがなを えらぶ',
++    'くりかえして ひらがなを おぼえよう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: 'べんきょうに なりますか？', a: 'はい。ひらがなの よみかたを、あそびながら しぜんに おぼえられます。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/katakana-asobi': {
++  name: 'カタカナあそび', desc: 'えやひらがなをみてただしいカタカナをえらぼう！',
++  category: 'がくしゅう', ageMin: 4, ageMax: 9,
++  intro: 'カタカナあそびは、えやひらがなをみてただしいカタカナをえらんで、カタカナをたのしくおぼえる、むりょうのがくしゅうゲームです。あそびながら、カタカナにしたしめます。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'がめんの え や ひらがなを みる',
++    'あった カタカナを かんがえる',
++    'ただしい カタカナを えらぶ',
++    'くりかえして カタカナを おぼえよう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: 'べんきょうに なりますか？', a: 'はい。カタカナの よみかたを、あそびながら しぜんに おぼえられます。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/kokki': {
++  name: 'こっきクイズ', desc: 'せかいのこっきをみわけよう！30かこく以上！',
++  category: 'クイズ', ageMin: 5, ageMax: 12,
++  intro: 'こっきクイズは、せかいのくにぐにのこっきをみわける、むりょうのクイズゲームです。30かこく以上のこっきがとうじょうし、あそびながらせかいのくににくわしくなれます。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'がめんに こっきが ひょうじされる',
++    'どの くにの こっきか かんがえる',
++    'ただしい こたえを えらぶ',
++    'くりかえして こっきを おぼえよう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: 'べんきょうに なりますか？', a: 'はい。せかいの くにの こっきを、あそびながら しぜんに おぼえられます。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++// ============================================================
++// 以下3本は先に確定済み（トーン基準として作成）
++// ============================================================
++
++'/animal-soccer': {
++  name: 'どうぶつサッカー', desc: 'どうぶつたちとサッカーをしよう！',
++  category: 'アクション', ageMin: 4, ageMax: 12,
++  intro: 'どうぶつサッカーは、タップでシュートをきめてゴールをねらう、むりょうのサッカーゲームです。ディフェンスのかべやキーパーをカーブシュートでかわして、たくさんゴールをきめよう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'ねらう ばしょを きめて タップで シュート',
++    'ディフェンスの かべは カーブシュートで よける',
++    'キーパーの いない ところを ねらって ゴール',
++    'ゴールを きめて てんすうを ふやそう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '4さい〜12さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/tokei-yomi': {
++  name: 'とけいよみ', desc: 'とけいのはりをよんだりあわせたりしてあそぼう！',
++  category: 'がくしゅう', ageMin: 5, ageMax: 10,
++  intro: 'とけいよみは、とけいのはりをよんだりあわせたりして、とけいのよみかたをたのしくおぼえる、むりょうのがくしゅうゲームです。なんじなんぷんかをこたえたり、はりをじぶんでうごかしたりしてれんしゅうできます。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'とけいの はりを みて 何時何分か よむ',
++    'もんだいに あわせて はりを うごかす',
++    'せいかいすると つぎの もんだいへ すすむ',
++    'くりかえして とけいの よみかたを おぼえよう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: 'べんきょうに なりますか？', a: 'はい。アナログどけいの よみかたを、あそびながら しぜんに おぼえられます。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/jewelry-master': {
++  name: 'ジュエリーマスター', desc: 'おきゃくさんのリクエストにこたえてほうせきをえらぼう！',
++  category: 'そうぞう', ageMin: 4, ageMax: 12,
++  intro: 'ジュエリーマスターは、おきゃくさんのリクエストにこたえて、ぴったりのほうせきをえらぶ、むりょうのおみせやさんゲームです。ぜんぶで60しゅるいのほうせきをあつめて、じぶんだけのコレクションをかんせいさせよう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'おきゃくさんの リクエストを きく',
++    'ぴったりの ほうせきを えらんで わたす',
++    'せいかいすると あたらしい ほうせきが あつまる',
++    '60しゅるいの ほうせきを ぜんぶ あつめよう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '4さい〜12さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
++'/animal-block': {
++  name: 'どうぶつブロック', desc: 'おなじどうぶつを3つならべてけそう！れんさでフィーバー！マッチパズルゲーム！',
++  category: 'パズル', ageMin: 4, ageMax: 12,
++  intro: 'どうぶつブロックは、おなじどうぶつを3つそろえてけしていく、むりょうのマッチパズルゲームです。おちてくるどうぶつをうまくならべて、れんさでフィーバーをねらおう。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'おちてくる どうぶつブロックを 左右に うごかす',
++    'おなじどうぶつを たて か よこ に 3つ ならべる',
++    '3つそろうと ブロックが きえて スコアアップ',
++    'れんさを つなげると フィーバーで スコアが 大きく のびる',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。どうぶつブロックは かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。アプリの インストールも かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '4さい〜12さいくらいの おこさま向けです。ルールが かんたんなので、ちいさな おこさまでも たのしめます。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
+ };
+ 
+ export default GAME_META;
+diff --git a/src/utils/i18n.js b/src/utils/i18n.js
+index 17aaa28..c0fcb50 100644
+--- a/src/utils/i18n.js
++++ b/src/utils/i18n.js
+@@ -38,5 +38,6 @@ export function t(lang, key) {
+ }
+ 
+ export function getLang() {
++  if (typeof localStorage === 'undefined') return 'ja'
+   return localStorage.getItem('wakuwaku_lang') || 'ja'
+ }

@@ -1,0 +1,846 @@
+diff --git a/docs/GAME_AUDIT.md b/docs/GAME_AUDIT.md
+index 3302f30..ce02899 100644
+--- a/docs/GAME_AUDIT.md
++++ b/docs/GAME_AUDIT.md
+@@ -170,3 +170,14 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実
+ - 監査: active error 6維持、warning 30維持。NAV 12維持、STORAGE 0 / 0、CANVAS 0、active 39を維持した（分類のみで数値変更なし）。
+ - 詳細な12件の全件表、N2/N3の確認項目別根拠、案A/案Bの比較は`docs/NON_STORAGE_REVIEW.md`を参照する。
+ - **Phase 4C-3は本Phaseをもって完了と判断する。** 実修正が必要な戻る導線の不具合は残っていない。
++
++## Phase 4C-4: viewport・safe-area・回転対応（2026-07-24）
++
++- 対象: モバイル表示カテゴリのactive HTML/SAFE_AREA/ORIENTATION 6 error / 17 warning、17ルート（`/astral-fang`, `/animal-block`, `/machi`, `/mori`, `/neon-drive`, `/otakara-horihori`, `/kart`, `/iro`, `/kakurenbo`, `/katakana-asobi`, `/kazu-asobi`, `/houki`, `/moji`, `/okashi-crossing`, `/tashizan`, `/tokei-yomi`, `/oukan-monogatari`）を修正した。ゲームロジック・STORAGE・Canvas描画・BGM・戻る操作・HomeChip・TopPageは変更していない。
++- Group A（viewport、6ファイル）: `astral_fang_v1.html`, `doubutsu_block_v3.html`, `machi_v7.html`, `mori_v4.html`, `neon_drive_v1.html`, `otakara_horihori_v1.html`の`<meta name="viewport">`へ`viewport-fit=cover`を追記した。既存のscale方針・viewport件数は変更していない。
++- Group B（safe-area）: `animal_kart_v7.html`・`astral_fang_v1.html`の相対パス`safe_area.js`参照を、他30ファイルと同じ`/games/safe_area.js`に統一した。`neon_drive_v1.html`に`/games/safe_area.js`読込を追加し、HUD 6要素（score/stars/hearts/best/speed/muteBtn）を`var(--sat/--sab/--sal/--sar, env(...))`経由へ変更した。`mahou_houki_gp_v5.html`は独自実装していたsafe-area受信ロジック（`postMessage`リスナー）が共通`/games/safe_area.js`と完全に重複していたため、共通スクリプト読込に置き換え、重複コードを削除した。`okashi_crossing.html`は`/games/safe_area.js`を読み込みながら生の`env()`のみを使い共通スクリプトを実質未使用だった3箇所を`var(--sat/--sab/--sal, env(...))`へ修正した。`iro`・`kakurenbo`・`katakana-asobi`・`kazu-asobi`・`moji`・`tashizan`・`tokei-yomi`の7ファイルはHTML変更なし（下記の監査一般化で対応）。`mori_v4.html`はHTML内に固定端UI自体が存在しないため変更なし。
++- Group C（回転案内、3ファイル）: `animal_kart_v7.html`・`astral_fang_v1.html`・`oukan_monogatari_v1.html`の既存`checkOrient()`/`resizeCanvas()`に、親から送られる`{type:'orientation'}`メッセージ（`useIframeBridge`が全iframeへ常時送信）を追加トリガーとして接続した。sandboxed iframeでは`orientationchange`が発火しないことがあるための信頼性向上であり、既存の向き判定ロジック・見た目・強制回転処理は変更していない。
++- 監査一般化: SAFE_AREAの判定を、`position:fixed`の有無だけでなく実際に`top:`/`bottom:`を持つ端固定ルールかどうかで判定するよう変更した。`inset:0`の全画面センタリング用途と、上下端に張り付くHUD/ボタンを区別し、対応する端が実際に存在する場合のみ`--sat`/`--sab`使用を要求する。route・HTML別のallowlistは使用していない。
++- 監査: active error 6→0、active warning 30→13（モバイル表示 6 error / 17 warning → 0 / 0）。NAV 12、REGISTRY 2（いずれも本Phase以前から存在し変更なし）が残る。STORAGE 0 / 0、Canvas 0、active 39、referenced-secondary 1、archived-or-unused 24を維持した。
++- 検証: 変更した10ファイルの構文（`node --check`相当のインラインscript検証）、safe-areaのcalc()置換パターンの数値整合性、orientationメッセージリスナーの追加のみで既存ロジック不変であることをdiffで確認した。ブラウザでの実機回転・ノッチ確認は本Phaseでは未実施のため、fixture・静的検証で補完した（`docs/NON_STORAGE_REVIEW.md`参照）。
++- 次はPhase 4C-5として、`/mahou-nakama`の`SCHOOL_GAMES num "18"`重複registry warningを扱う。
+diff --git a/docs/NON_STORAGE_REVIEW.md b/docs/NON_STORAGE_REVIEW.md
+index 891ffe7..4cb3624 100644
+--- a/docs/NON_STORAGE_REVIEW.md
++++ b/docs/NON_STORAGE_REVIEW.md
+@@ -401,3 +401,73 @@ Phase 4C-3Dとして、`info`重要度階層の追加要否と、N2/N3として
+ ### 15.7 Phase 4C-3の完了可否
+ 
+ **完了と判断する。** Phase 4C-3A（false positive構造判定の一般化）→4C-3B（未実施のまま4C-3Cへ統合）→4C-3C（設計方針確定・監査一般化でNAV 36→12）→4C-3D（残存12件の最終分類、N2 10件・N3 2件、N4/N5 0件）を経て、NAV warningはすべて分類・文書化が完了し、実修正が必要な項目は残っていない。今後HTMLに変更が入った際は、本節の分類表と15.5の判断基準に照らして再評価する。
++
++## 16. Phase 4C-4: viewport・safe-area・回転対応（2026-07-24）
++
++### 16.1 対象17ルートの確定
++
++`docs/GAME_AUDIT.md`（Phase 4B時点の分類）、`reports/game-audit.json`、`src/App.jsx`、各Reactラッパー、`src/seo/gameMeta.js`を照合し、実測で以下17ルートを確定した（error 6・warning 17・合計23件、ファイル数17で一致）。
++
++| route | wrapper / active HTML | category | severity | message |
++| --- | --- | --- | --- | --- |
++| `/astral-fang` | `astral_fang_v1.html` | HTML | error | viewport-fit=cover がありません |
++| `/animal-block` | `doubutsu_block_v3.html` | HTML | error | viewport-fit=cover がありません |
++| `/machi` | `machi_v7.html` | HTML | error | viewport-fit=cover がありません |
++| `/mori` | `mori_v4.html` | HTML | error | viewport-fit=cover がありません |
++| `/neon-drive` | `neon_drive_v1.html` | HTML | error | viewport-fit=cover がありません |
++| `/otakara-horihori` | `otakara_horihori_v1.html` | HTML | error | viewport-fit=cover がありません |
++| `/kart` | `animal_kart_v7.html` | SAFE_AREA | warning | 固定UIがありますがsafe_area.jsの読込を確認できません |
++| `/kart` | `animal_kart_v7.html` | ORIENTATION | warning | orientationchangeだけに依存している可能性があります |
++| `/astral-fang` | `astral_fang_v1.html` | SAFE_AREA | warning | 固定UIがありますがsafe_area.jsの読込を確認できません |
++| `/astral-fang` | `astral_fang_v1.html` | ORIENTATION | warning | orientationchangeだけに依存している可能性があります |
++| `/iro` | `iro_awase_v3.html` | SAFE_AREA | warning | safe_area.jsを読み込んでいますが--sabを使用していません |
++| `/kakurenbo` | `kakurenbo_v2.html` | SAFE_AREA | warning | safe_area.jsを読み込んでいますが--sabを使用していません |
++| `/katakana-asobi` | `katakana_asobi_v1.html` | SAFE_AREA | warning | safe_area.jsを読み込んでいますが--sabを使用していません |
++| `/kazu-asobi` | `kazu_asobi_v3.html` | SAFE_AREA | warning | safe_area.jsを読み込んでいますが--sabを使用していません |
++| `/houki` | `mahou_houki_gp_v5.html` | SAFE_AREA | warning | 固定UIがありますがsafe_area.jsの読込を確認できません |
++| `/moji` | `moji_asobi_v2.html` | SAFE_AREA | warning | safe_area.jsを読み込んでいますが--sabを使用していません |
++| `/mori` | `mori_v4.html` | SAFE_AREA | warning | 固定UIがありますがsafe_area.jsの読込を確認できません |
++| `/neon-drive` | `neon_drive_v1.html` | SAFE_AREA | warning | 固定UIがありますがsafe_area.jsの読込を確認できません |
++| `/okashi-crossing` | `okashi_crossing.html` | SAFE_AREA | warning | safe_area.jsを読み込んでいますがsafe-area CSS変数を使用していません |
++| `/tashizan` | `tashizan_v2.html` | SAFE_AREA | warning | safe_area.jsを読み込んでいますが--sabを使用していません |
++| `/tokei-yomi` | `tokei_yomi_v1.html` | SAFE_AREA | warning | safe_area.jsを読み込んでいますが--sabを使用していません |
++| `/oukan-monogatari` | `oukan_monogatari_v1.html` | ORIENTATION | warning | orientationchangeだけに依存している可能性があります |
++| `/oukan-monogatari` | `oukan_monogatari_v1.html` | ORIENTATION | warning | 固定向き前提の可能性がありますが向き案内を確認できません |
++
++### 16.2 Group分類と修正内容
++
++**Group A（viewport、6ファイル、error解消）**: `astral_fang_v1.html`, `doubutsu_block_v3.html`, `machi_v7.html`, `mori_v4.html`, `neon_drive_v1.html`, `otakara_horihori_v1.html`の`<meta name="viewport">`へ`viewport-fit=cover`のみを追記した。既存のviewport件数（各1件）、`width=device-width`、`initial-scale`、`maximum-scale`/`user-scalable`の既存指定は変更していない。viewportを2件に増やしていない。
++
++**Group B（safe-area）**: 実測で以下3パターンに分かれた。
++
++1. **パス誤り（相対パス）**: `animal_kart_v7.html`・`astral_fang_v1.html`は`<script src="safe_area.js">`という相対パスで読み込んでおり、実際には正しく動作するものの、他30ファイルすべてが使う`/games/safe_area.js`という絶対パス規約と異なるため監査の`safeAreaLoaded`正規表現（`/games/safe_area.js`固定）に一致せず誤検出されていた。プロジェクト標準の絶対パスへ統一した（実質的な動作は変更なし、規約統一）。
++2. **未読込＋独自実装重複**: `mahou_houki_gp_v5.html`は`safe_area.js`を読み込まず、代わりに全く同じロジック（`postMessage`受信で`--sat`/`--sab`/`--sal`/`--sar`を`setProperty`、`requestSafeArea`をpostMessage）をインラインで複製していた。共通スクリプト`/games/safe_area.js`の読込に置き換え、重複コードを削除した（API・イベント名・payloadは共通スクリプトと完全一致のため機能変更なし）。`neon_drive_v1.html`は`safe_area.js`自体が未読込かつCSS変数も未使用だったため、読込を追加し、HUD 6要素（`#score`, `#stars`, `#hearts`, `#best`, `#speed`, `#muteBtn`）の`top`/`bottom`/`left`/`right`に`var(--sat/--sab/--sal/--sar, env(safe-area-inset-*,0px))`のfallback付きcalc()を適用した。
++3. **読込済みだが生env()のみ使用**: `okashi_crossing.html`は`/games/safe_area.js`を読み込みながら`.hud`・`#back-btn`・`#hint`の3箇所で生の`env(safe-area-inset-*)`のみを使用しており、共通スクリプトが実質未使用だった（iframe内では`env()`が正しく継承されない場合があるため、これが本来の不具合）。3箇所とも`var(--sat/--sab/--sal, env(...))`のfallback形式へ修正した。
++4. **`--sab`使用不要な誤検出（7ファイル）**: `iro_awase_v3.html`, `kakurenbo_v2.html`, `katakana_asobi_v1.html`, `kazu_asobi_v3.html`, `moji_asobi_v2.html`, `tashizan_v2.html`, `tokei_yomi_v1.html`は、いずれも画面上部のHUDバー（`padding-top: max(..., var(--sat,...))`）のみを持ち、下端に固定されたUI要素が実際には存在しないことを実測で確認した（`position:fixed`かつ`bottom:`を持つCSSルールが0件）。これらはHTMLを変更せず、下記16.3の監査一般化で対応した。
++5. **固定端UI自体が存在しない（1ファイル）**: `mori_v4.html`はviewport修正（Group A）以外に該当する固定UIが存在しない（`#wrap{position:fixed;inset:0;...}`という全画面センタリング用途のみで、`<button>`等の端固定要素・座標指定なし）ことを実測で確認した。HTML変更は不要と判断し、下記16.3の監査一般化で対応した。
++
++**Group C（回転案内、3ファイル）**: `animal_kart_v7.html`・`astral_fang_v1.html`は既存の自前`checkOrient()`（`orientationchange`/`resize`で縦持ち判定）、`oukan_monogatari_v1.html`は既存の`resizeCanvas()`（`orientationchange`/`resize`でCanvas再計算）を持っていた。いずれも親フレームの`useIframeBridge`（`src/hooks/useIframeBridge.js`）が全iframeへ常時送信している`{type:'orientation', landscapePhone}`メッセージを追加のトリガーとして接続し、`window.addEventListener('message', e => { if (e.data?.type==='orientation') checkOrient()/resizeCanvas(); })`を追加した。sandboxed iframeでは`orientationchange`が発火しないことがあるという既知の制約（`public/games/rotate_hint.js`自身のコメントに同じ記載あり）への対策であり、既存の向き判定基準・見た目・強制回転処理・ゲーム中断処理は変更していない。共通ファイル`rotate_hint.js`は「たてむきにしてね」という縦画面前提の案内であり、これら3ファイルは逆に横画面前提のゲームであるため流用せず、既存の自前実装を維持した。
++
++### 16.3 監査ルールの一般化（scripts/audit-games.mjs）
++
++SAFE_AREA判定を、`position:fixed`の単純な有無ではなく、実際に`top:`または`bottom:`を持つCSSルールブロックの有無で判定するよう変更した。
++
++- 変更前: `position:fixed`が1箇所でもあり、かつ`<button>`等のタグが存在すれば「固定UIあり」と判定し、safe_area.js読込と`--sat`/`--sab`双方の使用を一律に要求していた。`#wrap{position:fixed;inset:0;...}`のような全画面センタリング用途と、実際に端へ張り付くHUD/ボタンを区別できていなかった。
++- 変更後: CSSルールブロックを個別に抽出し、`position:fixed`を含むブロックのうち`top:`を持つものがあれば`hasFixedTopUi`、`bottom:`を持つものがあれば`hasFixedBottomUi`とする。`--sat`使用の要求は`hasFixedTopUi`が真の場合のみ、`--sab`使用の要求は`hasFixedBottomUi`が真の場合のみ行う。「固定UIがありますがsafe_area.jsの読込を確認できません」も同様に、上下どちらかの端固定UIが実在する場合のみ発報する。
++- 一般化条件: route名・HTML名によるallowlistは使用していない。CSS構造（`{...}`ブロック内の`position:fixed`と`top:`/`bottom:`の共起）のみで判定するため、どのファイルにも同じ基準が適用される。`inset:0`の全画面オーバーレイ（`.screen`, `#flash`, `#feedback-overlay`等）は端固定UIとして扱われない。
++
++### 16.4 fixture検証
++
++**safe-areaのcalc()整合性**: `top: 47px, right: 0px, bottom: 34px, left: 0px`を想定した`var(--sat/--sab/--sal/--sar, env(...))`のcalc()式を確認した。`neon_drive_v1.html`の`#speed`（`right:calc(18px + var(--sar,...))`, `bottom:calc(18px + var(--sab,...))`）は47px/34pxいずれの値でもNaN・未定義にならず、既存の18px基準オフセットに加算される形式であることをCSS式の静的確認で検証した。Canvasの論理座標・当たり判定は、これらの変更がすべてCSS `position:fixed`要素（HUD/ボタン）のみに限定されており、Canvas要素自体のサイズ・座標計算コードには一切触れていないため不変である。
++
++**回転メッセージリスナー**: 3ファイルとも既存の`checkOrient()`/`resizeCanvas()`関数自体は変更せず、追加した`addEventListener('message', ...)`はifガードで`type==='orientation'`のメッセージのみに反応し、それ以外のメッセージ（`safeArea`, `goBack`, `goHome`等）では発火しないことをdiff上のガード条件で確認した。リスナーの重複登録（同一ファイル内で同じイベントに対する二重の`addEventListener('message', ...)`呼び出し）がないことも各ファイルで1箇所のみの追加であることから確認した。
++
++**実ブラウザ検証**: 本Phaseではローカル開発サーバーでの実機・実ブラウザでのportrait/landscape切り替え、ノッチ相当safe-areaの目視確認は実施していない。上記のCSS静的検証・diffによるロジック不変性確認・監査再実行で代替した。実機確認は未実施項目として明記する。
++
++### 16.5 残存問題
++
++モバイル表示関連のerror/warningは0件になった。残るのはNAV 12件（Phase 4C-3で分類済み、N2 10件・N3 2件）とREGISTRY 2件（`/dressup`のroute判定不能、`/mahou-nakama`のSCHOOL_GAMES num重複。いずれも本Phaseの対象外で、本Phase前から存在し変更していない）のみである。
++
++### 16.6 次のPhase
++
++Phase 4C-5として、`/mahou-nakama`登録の`SCHOOL_GAMES num "18"`重複REGISTRY warningを扱う。
+diff --git a/public/games/animal_kart_v7.html b/public/games/animal_kart_v7.html
+index 812b514..e5b0bca 100644
+--- a/public/games/animal_kart_v7.html
++++ b/public/games/animal_kart_v7.html
+@@ -188,7 +188,7 @@
+   <div>よこむきに<br>してね</div>
+ </div>
+ 
+-<script src="safe_area.js"></script>
++<script src="/games/safe_area.js"></script>
+ <script src="wakuwaku_bgm.js"></script>
+ <script>
+ (() => {
+@@ -951,7 +951,10 @@ function checkOrient(){
+   const portrait = window.innerHeight > window.innerWidth && Math.min(window.innerWidth,window.innerHeight) < 600;
+   document.body.classList.toggle('portrait', portrait);
+ }
+-addEventListener('resize',checkOrient); addEventListener('orientationchange',checkOrient); checkOrient();
++addEventListener('resize',checkOrient); addEventListener('orientationchange',checkOrient);
++// sandboxed iframeではorientationchangeが発火しないことがあるため、親からの通知でも再判定する
++addEventListener('message', e=>{ if(e.data && e.data.type==='orientation') checkOrient(); });
++checkOrient();
+ 
+ // when embedded in the site, the React wrapper provides the もどる button → hide our 🏠
+ document.getElementById('bgmBtn').textContent = bgmOn?'🔊':'🔇';
+diff --git a/public/games/astral_fang_v1.html b/public/games/astral_fang_v1.html
+index de3084b..ac1a445 100644
+--- a/public/games/astral_fang_v1.html
++++ b/public/games/astral_fang_v1.html
+@@ -2,7 +2,7 @@
+ <html lang="ja">
+ <head>
+   <meta charset="UTF-8" />
+-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
++  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+   <title>ASTRAL FANG - 3D Action Adventure</title>
+   <style>
+     :root {
+@@ -158,7 +158,7 @@
+   <button id="bgmBtn" type="button">🔊</button>
+   <div id="rotate"><div class="ph">📱</div><div>よこむきに<br>してね</div></div>
+ 
+-  <script src="safe_area.js"></script>
++  <script src="/games/safe_area.js"></script>
+   <script src="wakuwaku_bgm.js"></script>
+   <script type="module">
+     import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/+esm';
+@@ -571,7 +571,10 @@
+       const portrait = window.innerHeight>window.innerWidth && Math.min(window.innerWidth,window.innerHeight)<600;
+       document.body.classList.toggle('portrait', portrait);
+     }
+-    addEventListener('resize',checkOrient); addEventListener('orientationchange',checkOrient); checkOrient();
++    addEventListener('resize',checkOrient); addEventListener('orientationchange',checkOrient);
++    // sandboxed iframeではorientationchangeが発火しないことがあるため、親からの通知でも再判定する
++    addEventListener('message', e=>{ if(e.data && e.data.type==='orientation') checkOrient(); });
++    checkOrient();
+   </script>
+ </body>
+ </html>
+diff --git a/public/games/doubutsu_block_v3.html b/public/games/doubutsu_block_v3.html
+index e8d0329..1689b2e 100644
+--- a/public/games/doubutsu_block_v3.html
++++ b/public/games/doubutsu_block_v3.html
+@@ -2,7 +2,7 @@
+ <html lang="ja">
+ <head>
+ <meta charset="UTF-8">
+-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
++<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+ <title>どうぶつブロック</title>
+ <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
+ <style>
+diff --git a/public/games/machi_v7.html b/public/games/machi_v7.html
+index 3f91ac2..114d9b5 100644
+--- a/public/games/machi_v7.html
++++ b/public/games/machi_v7.html
+@@ -2,7 +2,7 @@
+ <html lang="ja">
+ <head>
+ <meta charset="UTF-8">
+-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
++<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+ <title>わくわくまちづくり</title>
+ <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@700;900&display=swap" rel="stylesheet">
+ <script src="/games/wakuwaku_bgm.js"></script>
+diff --git a/public/games/mahou_houki_gp_v5.html b/public/games/mahou_houki_gp_v5.html
+index 905a3d7..20a4e43 100644
+--- a/public/games/mahou_houki_gp_v5.html
++++ b/public/games/mahou_houki_gp_v5.html
+@@ -6,6 +6,7 @@
+ <title>まほうほうきGP</title>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
++<script src="/games/safe_area.js"></script>
+ <style>
+   :root{ --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+          --sal:env(safe-area-inset-left,0px); --sar:env(safe-area-inset-right,0px); }
+@@ -126,17 +127,7 @@ try{
+     bgmBtn.textContent=bgmOn?'🔊':'🔇'; if(bgmOn){initAudio();startBgm();}else stopBgm(); });
+   document.getElementById('homeBtn').addEventListener('click',()=>{ try{window.parent.postMessage({type:'goHome'},'*');}catch(e){} });
+ 
+-  window.addEventListener('message', function(e){
+-    var d = e.data || {};
+-    if (d.type === 'safeArea') {
+-      var s = document.documentElement.style;
+-      s.setProperty('--sat', (d.top||0)    + 'px');
+-      s.setProperty('--sab', (d.bottom||0) + 'px');
+-      s.setProperty('--sal', (d.left||0)   + 'px');
+-      s.setProperty('--sar', (d.right||0)  + 'px');
+-    }
+-  });
+-  try { window.parent.postMessage({ type:'requestSafeArea' }, '*'); } catch(e){}
++  /* safe-area の反映は共通スクリプト /games/safe_area.js が担う（--sat/--sab/--sal/--sar） */
+ 
+   /* ============ DATA ============ */
+   const CHARS=[
+diff --git a/public/games/mori_v4.html b/public/games/mori_v4.html
+index 013775d..e7f5605 100644
+--- a/public/games/mori_v4.html
++++ b/public/games/mori_v4.html
+@@ -2,7 +2,7 @@
+ <html lang="ja">
+ <head>
+ <meta charset="UTF-8">
+-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
++<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+ <title>もりのなかまたち - FOREST FRIENDS</title>
+ <style>
+   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
+diff --git a/public/games/neon_drive_v1.html b/public/games/neon_drive_v1.html
+index be193a0..9f7cccb 100644
+--- a/public/games/neon_drive_v1.html
++++ b/public/games/neon_drive_v1.html
+@@ -2,8 +2,9 @@
+ <html lang="ja">
+ <head>
+ <meta charset="UTF-8">
+-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
++<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+ <title>NEON EXPRESSWAY — きらきらナイトドライブ</title>
++<script src="/games/safe_area.js"></script>
+ <style>
+   * { margin:0; padding:0; box-sizing:border-box; }
+   html,body { width:100%; height:100%; overflow:hidden; background:#05030f; touch-action:none; }
+@@ -13,16 +14,16 @@
+ 
+   /* ===== HUD ===== */
+   #hud { position:fixed; inset:0; pointer-events:none; display:none; }
+-  #speed { position:fixed; right:18px; bottom:18px; text-align:right; }
++  #speed { position:fixed; right:calc(18px + var(--sar, env(safe-area-inset-right,0px))); bottom:calc(18px + var(--sab, env(safe-area-inset-bottom,0px))); text-align:right; }
+   #speedNum { font-size:52px; font-weight:bold; color:#7df9ff; text-shadow:0 0 14px #00d5ff, 0 0 40px #0077ff; line-height:1; font-style:italic; }
+   #speedUnit { font-size:13px; letter-spacing:4px; color:#8fb8d8; }
+-  #score { position:fixed; left:18px; top:16px; }
++  #score { position:fixed; left:calc(18px + var(--sal, env(safe-area-inset-left,0px))); top:calc(16px + var(--sat, env(safe-area-inset-top,0px))); }
+   #scoreNum { font-size:30px; font-weight:bold; color:#fff; text-shadow:0 0 10px #ff2fb0; }
+   #scoreLabel { font-size:11px; letter-spacing:4px; color:#ff8fd6; }
+-  #stars { position:fixed; left:18px; top:74px; font-size:22px; font-weight:bold; color:#ffe14d; text-shadow:0 0 10px #ff9d00; }
+-  #hearts { position:fixed; right:18px; top:16px; font-size:26px; letter-spacing:4px; text-align:right;
++  #stars { position:fixed; left:calc(18px + var(--sal, env(safe-area-inset-left,0px))); top:calc(74px + var(--sat, env(safe-area-inset-top,0px))); font-size:22px; font-weight:bold; color:#ffe14d; text-shadow:0 0 10px #ff9d00; }
++  #hearts { position:fixed; right:calc(18px + var(--sar, env(safe-area-inset-right,0px))); top:calc(16px + var(--sat, env(safe-area-inset-top,0px))); font-size:26px; letter-spacing:4px; text-align:right;
+             filter:drop-shadow(0 0 8px #ff2fb0); }
+-  #best { position:fixed; right:18px; top:52px; text-align:right; font-size:12px; letter-spacing:2px; color:#8fb8d8; }
++  #best { position:fixed; right:calc(18px + var(--sar, env(safe-area-inset-right,0px))); top:calc(52px + var(--sat, env(safe-area-inset-top,0px))); text-align:right; font-size:12px; letter-spacing:2px; color:#8fb8d8; }
+   #combo { position:fixed; left:50%; top:22%; transform:translateX(-50%) scale(0); font-size:34px; font-weight:bold; font-style:italic;
+            color:#ffe14d; text-shadow:0 0 12px #ff9d00, 0 0 34px #ff5500; transition:transform .12s ease-out; white-space:nowrap; }
+   #combo.pop { transform:translateX(-50%) scale(1); }
+@@ -57,7 +58,7 @@
+   #newRecord { display:none; font-size:14px; letter-spacing:4px; color:#ff2fb0; margin-top:8px; animation:blink 0.7s infinite; }
+   @keyframes blink { 50% { opacity:.2; } }
+ 
+-  #muteBtn { position:fixed; left:16px; bottom:16px; z-index:20; width:44px; height:44px; border-radius:50%;
++  #muteBtn { position:fixed; left:calc(16px + var(--sal, env(safe-area-inset-left,0px))); bottom:calc(16px + var(--sab, env(safe-area-inset-bottom,0px))); z-index:20; width:44px; height:44px; border-radius:50%;
+              border:1px solid #3a6a8a; background:rgba(10,20,40,.6); color:#7df9ff; font-size:18px; cursor:pointer; }
+   #flash { position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:5; }
+ 
+diff --git a/public/games/okashi_crossing.html b/public/games/okashi_crossing.html
+index a2fbce9..6853dd3 100644
+--- a/public/games/okashi_crossing.html
++++ b/public/games/okashi_crossing.html
+@@ -12,9 +12,9 @@
+ html,body{width:100%;height:100%;overflow:hidden;background:#ffd9ec;font-family:'M PLUS Rounded 1c',sans-serif;touch-action:none;}
+ #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
+ canvas{display:block;image-rendering:pixelated;}
+-.hud{position:fixed;top:calc(10px + env(safe-area-inset-top));left:0;right:0;display:flex;justify-content:center;gap:14px;pointer-events:none;z-index:5;}
++.hud{position:fixed;top:calc(10px + var(--sat, env(safe-area-inset-top,0px)));left:0;right:0;display:flex;justify-content:center;gap:14px;pointer-events:none;z-index:5;}
+ .hud .pill{background:rgba(255,255,255,.85);border:3px solid #ff9ecb;border-radius:20px;padding:4px 14px;font-family:'DotGothic16',monospace;font-size:20px;color:#a3457c;box-shadow:0 3px 0 rgba(163,69,124,.25);}
+-#back-btn{position:fixed;top:calc(10px + env(safe-area-inset-top));left:calc(10px + env(safe-area-inset-left));z-index:6;background:rgba(255,255,255,.9);border:3px solid #ff9ecb;border-radius:16px;padding:5px 12px;font-family:'M PLUS Rounded 1c';font-weight:800;font-size:15px;color:#a3457c;cursor:pointer;}
++#back-btn{position:fixed;top:calc(10px + var(--sat, env(safe-area-inset-top,0px)));left:calc(10px + var(--sal, env(safe-area-inset-left,0px)));z-index:6;background:rgba(255,255,255,.9);border:3px solid #ff9ecb;border-radius:16px;padding:5px 12px;font-family:'M PLUS Rounded 1c';font-weight:800;font-size:15px;color:#a3457c;cursor:pointer;}
+ .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:10;background:rgba(255,217,236,.92);text-align:center;padding:20px;}
+ .screen h1{font-family:'DotGothic16',monospace;font-size:min(9vw,44px);color:#e0559a;text-shadow:3px 3px 0 #fff,5px 5px 0 rgba(224,85,154,.25);line-height:1.3;}
+ .screen p{color:#a3457c;font-weight:800;font-size:16px;line-height:1.8;}
+@@ -25,7 +25,7 @@ canvas{display:block;image-rendering:pixelated;}
+ @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+ .result{font-family:'DotGothic16',monospace;font-size:26px;color:#a3457c;background:#fff;border:4px solid #ffb0d3;border-radius:18px;padding:12px 26px;line-height:1.7;}
+ .hidden{display:none!important;}
+-#hint{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:#fff;font-weight:800;font-size:14px;text-shadow:0 2px 3px rgba(163,69,124,.6);pointer-events:none;z-index:5;opacity:.95;}
++#hint{position:fixed;bottom:calc(16px + var(--sab, env(safe-area-inset-bottom,0px)));left:0;right:0;text-align:center;color:#fff;font-weight:800;font-size:14px;text-shadow:0 2px 3px rgba(163,69,124,.6);pointer-events:none;z-index:5;opacity:.95;}
+ 
+ /* ---- title screen ---- */
+ .title{background:linear-gradient(#ffe9f4,#ffd9ec 55%,#ffc9e2);overflow:hidden;}
+diff --git a/public/games/otakara_horihori_v1.html b/public/games/otakara_horihori_v1.html
+index a845fd7..0aedc28 100644
+--- a/public/games/otakara_horihori_v1.html
++++ b/public/games/otakara_horihori_v1.html
+@@ -2,7 +2,7 @@
+ <html lang="ja">
+ <head>
+ <meta charset="UTF-8">
+-<meta name="viewport" content="width=device-width, initial-scale=1.0">
++<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+ <title>おたからほりほり｜わくわくアイランド</title>
+ <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+ <script src="/games/wakuwaku_bgm.js"></script>
+diff --git a/public/games/oukan_monogatari_v1.html b/public/games/oukan_monogatari_v1.html
+index d2c03bb..c1a3e0b 100644
+--- a/public/games/oukan_monogatari_v1.html
++++ b/public/games/oukan_monogatari_v1.html
+@@ -771,6 +771,8 @@
+ 
+       window.addEventListener("resize", resizeCanvas);
+       window.addEventListener("orientationchange", () => setTimeout(resizeCanvas, 250));
++      // sandboxed iframeではorientationchangeが発火しないことがあるため、親からの通知でも再判定する
++      window.addEventListener("message", (e) => { if (e.data && e.data.type === "orientation") resizeCanvas(); });
+       resizeCanvas();
+ 
+       const heartsEl = document.getElementById("hearts");
+diff --git a/reports/game-audit.json b/reports/game-audit.json
+index 63351b6..efc2516 100644
+--- a/reports/game-audit.json
++++ b/reports/game-audit.json
+@@ -1,5 +1,5 @@
+ {
+-  "generatedAt": "2026-07-24T10:27:25.218Z",
++  "generatedAt": "2026-07-24T10:42:55.587Z",
+   "baseline": {
+     "phase1Errors": 183,
+     "phase1Warnings": 111,
+@@ -17,7 +17,7 @@
+   "comparison": {
+     "falsePositivesResolved": 36,
+     "actualFixesResolved": 5,
+-    "remainingActiveErrors": 6
++    "remainingActiveErrors": 0
+   },
+   "localStorage": {
+     "active": {
+@@ -45,92 +45,19 @@
+     "activeHtml": 39,
+     "referencedSecondaryHtml": 1,
+     "archivedOrUnusedHtml": 24,
+-    "activeErrors": 6,
+-    "activeWarnings": 30,
++    "activeErrors": 0,
++    "activeWarnings": 13,
+     "activeLocalStorageErrors": 0,
+     "activeLocalStorageWarnings": 0,
+     "activeLocalStorageProblemFiles": 0,
+-    "allHtmlReferenceErrors": 61,
+-    "allHtmlReferenceWarnings": 53,
++    "allHtmlReferenceErrors": 55,
++    "allHtmlReferenceWarnings": 30,
+     "archivedReferenceErrors": 54,
+-    "archivedReferenceWarnings": 24,
+-    "errors": 6,
+-    "warnings": 110
++    "archivedReferenceWarnings": 18,
++    "errors": 0,
++    "warnings": 87
+   },
+-  "errors": [
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "HTML",
+-      "file": "public/games/astral_fang_v1.html",
+-      "status": "active",
+-      "route": "/astral-fang",
+-      "wrapper": "src/games/AstralFang.jsx",
+-      "message": "viewport-fit=cover がありません",
+-      "line": null,
+-      "evidence": ""
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "HTML",
+-      "file": "public/games/doubutsu_block_v3.html",
+-      "status": "active",
+-      "route": "/animal-block",
+-      "wrapper": "src/games/DoubutsuBlock.jsx",
+-      "message": "viewport-fit=cover がありません",
+-      "line": null,
+-      "evidence": ""
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "HTML",
+-      "file": "public/games/machi_v7.html",
+-      "status": "active",
+-      "route": "/machi",
+-      "wrapper": "src/games/MachiDukuri.jsx",
+-      "message": "viewport-fit=cover がありません",
+-      "line": null,
+-      "evidence": ""
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "HTML",
+-      "file": "public/games/mori_v4.html",
+-      "status": "active",
+-      "route": "/mori",
+-      "wrapper": "src/games/MoriGame.jsx",
+-      "message": "viewport-fit=cover がありません",
+-      "line": null,
+-      "evidence": ""
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "HTML",
+-      "file": "public/games/neon_drive_v1.html",
+-      "status": "active",
+-      "route": "/neon-drive",
+-      "wrapper": "src/games/NeonDrive.jsx",
+-      "message": "viewport-fit=cover がありません",
+-      "line": null,
+-      "evidence": ""
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "HTML",
+-      "file": "public/games/otakara_horihori_v1.html",
+-      "status": "active",
+-      "route": "/otakara-horihori",
+-      "wrapper": "src/games/OtakaraHorihori.jsx",
+-      "message": "viewport-fit=cover がありません",
+-      "line": null,
+-      "evidence": ""
+-    }
+-  ],
++  "errors": [],
+   "warnings": [
+     {
+       "severity": "warning",
+@@ -276,30 +203,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/animal_kart_v7.html",
+-      "status": "active",
+-      "route": "/kart",
+-      "wrapper": "src/games/AnimalKart.jsx",
+-      "message": "固定 UI がありますが safe_area.js の読込を確認できません",
+-      "line": null,
+-      "evidence": ""
+-    },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "ORIENTATION",
+-      "file": "public/games/animal_kart_v7.html",
+-      "status": "active",
+-      "route": "/kart",
+-      "wrapper": "src/games/AnimalKart.jsx",
+-      "message": "orientationchange だけに依存している可能性があります",
+-      "line": null,
+-      "evidence": ""
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "warning",
+@@ -312,30 +215,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/astral_fang_v1.html",
+-      "status": "active",
+-      "route": "/astral-fang",
+-      "wrapper": "src/games/AstralFang.jsx",
+-      "message": "固定 UI がありますが safe_area.js の読込を確認できません",
+-      "line": null,
+-      "evidence": ""
+-    },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "ORIENTATION",
+-      "file": "public/games/astral_fang_v1.html",
+-      "status": "active",
+-      "route": "/astral-fang",
+-      "wrapper": "src/games/AstralFang.jsx",
+-      "message": "orientationchange だけに依存している可能性があります",
+-      "line": null,
+-      "evidence": ""
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "error",
+@@ -372,18 +251,6 @@
+       "line": 310,
+       "evidence": "for(const d of drops){ ctx.fillText('✨',d.x,d.y); }"
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/block_kuzushi_v3.html",
+-      "status": "archived-or-unused",
+-      "route": null,
+-      "wrapper": null,
+-      "message": "固定 UI がありますが safe_area.js の読込を確認できません",
+-      "line": null,
+-      "evidence": ""
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "error",
+@@ -408,18 +275,6 @@
+       "line": 267,
+       "evidence": "function saveBest(v){localStorage.setItem('puzzle_best2',v);}"
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/doubutsu_puzzle_v2.html",
+-      "status": "archived-or-unused",
+-      "route": null,
+-      "wrapper": null,
+-      "message": "safe_area.js を読み込んでいますが --sab を使用していません",
+-      "line": null,
+-      "evidence": ""
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "error",
+@@ -540,30 +395,6 @@
+       "line": 321,
+       "evidence": "function saveHi(v){localStorage.setItem('iro_hi',v);}"
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/iro_awase_v2.html",
+-      "status": "archived-or-unused",
+-      "route": null,
+-      "wrapper": null,
+-      "message": "safe_area.js を読み込んでいますが --sab を使用していません",
+-      "line": null,
+-      "evidence": ""
+-    },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/iro_awase_v3.html",
+-      "status": "active",
+-      "route": "/iro",
+-      "wrapper": "src/games/IroAwase.jsx",
+-      "message": "safe_area.js を読み込んでいますが --sab を使用していません",
+-      "line": null,
+-      "evidence": ""
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "error",
+@@ -720,30 +551,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/kakurenbo_v2.html",
+-      "status": "active",
+-      "route": "/kakurenbo",
+-      "wrapper": "src/games/DoubutsuKakurenbo.jsx",
+-      "message": "safe_area.js を読み込んでいますが --sab を使用していません",
+-      "line": null,
+-      "evidence": ""
+-    },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/katakana_asobi_v1.html",
+-      "status": "active",
+-      "route": "/katakana-asobi",
+-      "wrapper": "src/games/KatakanaAsobi.jsx",
+-      "message": "safe_area.js を読み込んでいますが --sab を使用していません",
+-      "line": null,
+-      "evidence": ""
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "error",
+@@ -768,18 +575,6 @@
+       "line": 285,
+       "evidence": "function saveHi(v){localStorage.setItem('kazu_hi2',v);}"
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/kazu_asobi_v2.html",
+-      "status": "archived-or-unused",
+-      "route": null,
+-      "wrapper": null,
+-      "message": "safe_area.js を読み込んでいますが --sab を使用していません",
+-      "line": null,
+-      "evidence": ""
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "warning",
+@@ -792,18 +587,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/kazu_asobi_v3.html",
+-      "status": "active",
+-      "route": "/kazu-asobi",
+-      "wrapper": "src/games/KazuAsobi.jsx",
+-      "message": "safe_area.js を読み込んでいますが --sab を使用していません",
+-      "line": null,
+-      "evidence": ""
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "error",
+@@ -936,30 +719,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/mahou_houki_gp_v5.html",
+-      "status": "active",
+-      "route": "/houki",
+-      "wrapper": "src/games/MahouHouki.jsx",
+-      "message": "固定 UI がありますが safe_area.js の読込を確認できません",
+-      "line": null,
+-      "evidence": ""
+-    },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/moji_asobi_v2.html",
+-      "status": "active",
+-      "route": "/moji",
+-      "wrapper": "src/games/MojiAsobi.jsx",
+-      "message": "safe_area.js を読み込んでいますが --sab を使用していません",
+-      "line": null,
+-      "evidence": ""
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "warning",
+@@ -972,18 +731,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/mori_v3.html",
+-      "status": "archived-or-unused",
+-      "route": null,
+-      "wrapper": null,
+-      "message": "固定 UI がありますが safe_area.js の読込を確認できません",
+-      "line": null,
+-      "evidence": ""
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "error",
+@@ -1008,18 +755,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/mori_v4.html",
+-      "status": "active",
+-      "route": "/mori",
+-      "wrapper": "src/games/MoriGame.jsx",
+-      "message": "固定 UI がありますが safe_area.js の読込を確認できません",
+-      "line": null,
+-      "evidence": ""
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "warning",
+@@ -1032,30 +767,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/neon_drive_v1.html",
+-      "status": "active",
+-      "route": "/neon-drive",
+-      "wrapper": "src/games/NeonDrive.jsx",
+-      "message": "固定 UI がありますが safe_area.js の読込を確認できません",
+-      "line": null,
+-      "evidence": ""
+-    },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/okashi_crossing.html",
+-      "status": "active",
+-      "route": "/okashi-crossing",
+-      "wrapper": "src/games/OkashiCrossing.jsx",
+-      "message": "safe_area.js を読み込んでいますが safe-area CSS 変数を使用していません",
+-      "line": null,
+-      "evidence": ""
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "warning",
+@@ -1068,30 +779,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "ORIENTATION",
+-      "file": "public/games/oukan_monogatari_v1.html",
+-      "status": "active",
+-      "route": "/oukan-monogatari",
+-      "wrapper": "src/games/OukanMonogatari.jsx",
+-      "message": "orientationchange だけに依存している可能性があります",
+-      "line": null,
+-      "evidence": ""
+-    },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "ORIENTATION",
+-      "file": "public/games/oukan_monogatari_v1.html",
+-      "status": "active",
+-      "route": "/oukan-monogatari",
+-      "wrapper": "src/games/OukanMonogatari.jsx",
+-      "message": "固定向き前提の可能性がありますが向き案内を確認できません",
+-      "line": null,
+-      "evidence": ""
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "error",
+@@ -1356,42 +1043,6 @@
+       "line": 197,
+       "evidence": "function saveHi(v){localStorage.setItem('sushi3_hi',v);}"
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/sushi_v2.html",
+-      "status": "archived-or-unused",
+-      "route": null,
+-      "wrapper": null,
+-      "message": "safe_area.js を読み込んでいますが --sab を使用していません",
+-      "line": null,
+-      "evidence": ""
+-    },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/tashizan_v2.html",
+-      "status": "active",
+-      "route": "/tashizan",
+-      "wrapper": "src/games/TashizanGame.jsx",
+-      "message": "safe_area.js を読み込んでいますが --sab を使用していません",
+-      "line": null,
+-      "evidence": ""
+-    },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "SAFE_AREA",
+-      "file": "public/games/tokei_yomi_v1.html",
+-      "status": "active",
+-      "route": "/tokei-yomi",
+-      "wrapper": "src/games/TokeiYomi.jsx",
+-      "message": "safe_area.js を読み込んでいますが --sab を使用していません",
+-      "line": null,
+-      "evidence": ""
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "warning",
+diff --git a/scripts/audit-games.mjs b/scripts/audit-games.mjs
+index 5b07ff3..7e628d6 100644
+--- a/scripts/audit-games.mjs
++++ b/scripts/audit-games.mjs
+@@ -433,13 +433,20 @@ async function inspectHtml(file, text) {
+   }
+ 
+   const safeAreaLoaded = /\/games\/safe_area\.js/.test(text);
+-  const fixedUi = /position\s*:\s*fixed/i.test(text) && /<(?:button|div|header|nav)\b/i.test(text);
++  // position:fixed だけでは判定しない。inset:0 の全画面センタリング用途と、
++  // 実際に上下端へ張り付く固定UI（top:/bottom: を持つ）を区別する。
++  const fixedRuleBodies = [...text.matchAll(/\{([^{}]*)\}/g)]
++    .map((m) => m[1])
++    .filter((body) => /position\s*:\s*fixed/i.test(body));
++  const hasFixedTopUi = fixedRuleBodies.some((body) => /\btop\s*:/i.test(body));
++  const hasFixedBottomUi = fixedRuleBodies.some((body) => /\bbottom\s*:/i.test(body));
++  const fixedUi = (hasFixedTopUi || hasFixedBottomUi) && /<(?:button|div|header|nav)\b/i.test(text);
+   if (fixedUi && !safeAreaLoaded) issue('warning', 'SAFE_AREA', file, '固定 UI がありますが safe_area.js の読込を確認できません');
+   if (safeAreaLoaded && !/--sa[trbl]\b/.test(text)) {
+     issue('warning', 'SAFE_AREA', file, 'safe_area.js を読み込んでいますが safe-area CSS 変数を使用していません');
+   } else if (safeAreaLoaded) {
+-    if (!/--sat\b/.test(text)) issue('warning', 'SAFE_AREA', file, 'safe_area.js を読み込んでいますが --sat を使用していません');
+-    if (!/--sab\b/.test(text)) issue('warning', 'SAFE_AREA', file, 'safe_area.js を読み込んでいますが --sab を使用していません');
++    if (hasFixedTopUi && !/--sat\b/.test(text)) issue('warning', 'SAFE_AREA', file, 'safe_area.js を読み込んでいますが --sat を使用していません');
++    if (hasFixedBottomUi && !/--sab\b/.test(text)) issue('warning', 'SAFE_AREA', file, 'safe_area.js を読み込んでいますが --sab を使用していません');
+   }
+ 
+   const rotateHint = /\/games\/rotate_hint\.js/.test(text);

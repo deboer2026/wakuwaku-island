@@ -1,0 +1,465 @@
+diff --git a/docs/GAME_AUDIT.md b/docs/GAME_AUDIT.md
+index f990238..3ba58d2 100644
+--- a/docs/GAME_AUDIT.md
++++ b/docs/GAME_AUDIT.md
+@@ -71,3 +71,11 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実
+ - 監査: active STORAGE errorは20件から14件、warningは12件から10件、問題ファイルは7件から5件へ減少した。active全体はerror 52件・warning 71件で、39ゲームを維持している。
+ - 保存・復元: `/shooting`はブラウザでマップ進行表示を新規ページでも確認し、`shooting_hs2`と`shooting_v3_progress`は実コードfixtureで保存・再読込を確認した。`/sora`はブラウザでキャラクター変更を新規ページでも復元し、進行JSONと`best`は実コードfixtureで確認した。両ゲームとも起動・Canvas・BGM・SecurityErrorなしを確認した。
+ - 次バッチ: Phase 3D-3で`public/games/shabondama_v3.html`と`public/games/jewelry_master_v8.html`を扱う。
++
++## Phase 3D-3 実施結果
++
++- 対象: `/shabondama`（`public/games/shabondama_v3.html`）と`/jewelry-master`（`public/games/jewelry_master_v8.html`）の直接localStorage get 7件・set 7件。
++- 結果: 両HTMLへ標準`SAFE_LS`を1件ずつ追加し、ゲームロジック内の直接get/setを0件にした。保存キー、JSON構造、数値変換、読込・保存タイミング、分岐は変更していない。
++- 監査: active STORAGE errorは14件から2件、warningは10件から8件、問題ファイルは5件から3件へ減少した。active全体はerror 40件・warning 69件で、39ゲームを維持している。
++- 保存・復元: `/shabondama`はブラウザでキャラクター変更を新規ページでも復元し、進行JSONとハイスコアは実コードfixtureで確認した。`/jewelry-master`は実プレイでコインとコレクションを保存し、新規ページで復元した。SAVE JSON、コレクション、ハイスコアは実コードfixtureでも確認した。
++- 次段階: Phase 3Eで動的キーの`katakana_asobi_v1.html`と、頻繁な同期保存を持つ`machi_v7.html`を個別に扱う。
+diff --git a/docs/STORAGE_REVIEW.md b/docs/STORAGE_REVIEW.md
+index 4f79156..c059678 100644
+--- a/docs/STORAGE_REVIEW.md
++++ b/docs/STORAGE_REVIEW.md
+@@ -225,3 +225,13 @@ Phase 3Cの目的は、複数キー、旧版共有キー、動的キー、頻繁
+ - `/sora`: ブラウザでキャラクターをプリンセスからプリンスへ変更し、新規ページでプリンスの選択復元を確認した。ステージ開始、Canvas、BGMも確認した。`{stars:{0:2},char:'prince'}`と`best`値88は実コードfixtureで保存・再読込を確認した。
+ - 共通: localStorageがSecurityErrorを投げるfixtureでもメモリフォールバックのget/setを確認した。ブラウザコンソールエラーとSecurityErrorは0件だった。
+ - 次バッチ: Phase 3D-3で`public/games/shabondama_v3.html`と`public/games/jewelry_master_v8.html`を扱う。
++
++## 14. Phase 3D-3 実施結果
++
++- 対象: `/shabondama`（get 3 / set 3）と`/jewelry-master`（get 4 / set 4）の合計14箇所。
++- 結果: 両HTMLへ標準`SAFE_LS`を1件ずつ追加し、ゲームロジック内の直接get/setを0件にした。キー数、JSON.parse/stringify、`parseInt`、デフォルト値、保存関数の呼出位置と条件分岐はHEAD版と機械比較で一致した。
++- 監査: active STORAGE errorは14件から2件、warningは10件から8件、問題ファイルは5件から3件へ減少した。監査スクリプトの変更は不要で、SAFE_LS初期化テストの誤検出と重複カウントは0件だった。
++- `/shabondama`: ブラウザで起動、キャラクター選択、マップ、ステージ開始、Canvas、BGMを確認した。キャラクターを「にゃんた」へ変更し、新規ページで復元した。進行`{stars,unlocked}`、キャラクターID、ハイスコアは実コードfixtureでも保存・再読込を確認した。
++- `/jewelry-master`: ブラウザで起動、マップ、ゲーム画面、SVG描画、BGMを確認した。注文成功後のコイン10とコレクション1/60を新規ページで復元した。`jm8_save`、`jm_col`、`jm_hs`は実コードfixtureでも保存・再読込を確認した。
++- 共通: localStorageがSecurityErrorを投げるfixtureでもメモリフォールバックのget/setを確認した。ブラウザコンソールエラーとSecurityErrorは0件だった。
++- 次段階: Phase 3Eで`katakana_asobi_v1.html`と`machi_v7.html`を個別に扱う。
+diff --git a/public/games/jewelry_master_v8.html b/public/games/jewelry_master_v8.html
+index e2a6b9e..387389a 100644
+--- a/public/games/jewelry_master_v8.html
++++ b/public/games/jewelry_master_v8.html
+@@ -1289,11 +1289,34 @@ let phase=PHASE.ARRIVE;
+ let score=0,lives=3,combo=0,currentQ=null,selGem=null,selAcc=null;
+ let timerIv=null,timerLeft=100,running=false;
+ let curDay=1,custIdx=0,dayMiss=0,roundNum=0,timeLimit=20;
++const SAFE_LS = (function () {
++  try {
++    const testKey = "__ww_storage_test__";
++    localStorage.setItem(testKey, testKey);
++    localStorage.removeItem(testKey);
++    return localStorage;
++  } catch (e) {
++    const memory = {};
++    return {
++      getItem(key) {
++        return Object.prototype.hasOwnProperty.call(memory, key)
++          ? memory[key]
++          : null;
++      },
++      setItem(key, value) {
++        memory[key] = String(value);
++      },
++      removeItem(key) {
++        delete memory[key];
++      }
++    };
++  }
++})();
+ const SAVE_KEY='jm8_save';
+ function loadSave(){
+   const d={stars:{},coins:0,decor:{owned:[],wall:'none',carpet:false,chand:false,caseg:false},rainbowSeen:false};
+   try{
+-    const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');
++    const s=JSON.parse(SAFE_LS.getItem(SAVE_KEY)||'{}');
+     Object.assign(d,s);
+     d.decor=Object.assign({owned:[],wall:'none',carpet:false,chand:false,caseg:false},s.decor||{});
+     d.stars=s.stars||{};
+@@ -1301,7 +1324,7 @@ function loadSave(){
+   return d;
+ }
+ let SAVE=loadSave();
+-function persist(){localStorage.setItem(SAVE_KEY,JSON.stringify(SAVE));}
++function persist(){SAFE_LS.setItem(SAVE_KEY,JSON.stringify(SAVE));}
+ const $=id=>document.getElementById(id);
+ 
+ // ===== 初期化 =====
+@@ -1425,8 +1448,8 @@ function dayClear(){
+   if((SAVE.stars[curDay]||0)<stars)SAVE.stars[curDay]=stars;
+   const bonus=stars*20;
+   SAVE.coins+=bonus;persist();
+-  const hs=parseInt(localStorage.getItem('jm_hs')||'0');
+-  if(score>hs)localStorage.setItem('jm_hs',score);
++  const hs=parseInt(SAFE_LS.getItem('jm_hs')||'0');
++  if(score>hs)SAFE_LS.setItem('jm_hs',score);
+   $('dr-day').textContent='Day '+curDay+' クリア！';
+   $('dr-stars').innerHTML=[1,2,3].map(i=>'<span class="dr-star '+(i<=stars?'on':'')+'" style="animation-delay:'+(i*0.25)+'s">★</span>').join('');
+   $('dr-body').innerHTML='⭐ スコア '+score.toLocaleString()+'<br>🪙 コインボーナス +'+bonus+'（ぜんぶで '+SAVE.coins+'）';
+@@ -1781,8 +1804,8 @@ function allClear(){
+   running=false;clearInterval(timerIv);
+   sfx('fanfare');
+   $('reaction-ov').classList.remove('show');
+-  const hs=parseInt(localStorage.getItem('jm_hs')||'0');
+-  if(score>hs)localStorage.setItem('jm_hs',score);
++  const hs=parseInt(SAFE_LS.getItem('jm_hs')||'0');
++  if(score>hs)SAFE_LS.setItem('jm_hs',score);
+   // all-clear-ovを表示
+   const ov=document.getElementById('all-clear-ov');
+   if(ov){
+@@ -1810,11 +1833,11 @@ function restartGame(){
+ 
+ 
+ // ===== コレクション =====
+-function loadCol(){try{return JSON.parse(localStorage.getItem('jm_col')||'[]');}catch(e){return [];}}
++function loadCol(){try{return JSON.parse(SAFE_LS.getItem('jm_col')||'[]');}catch(e){return [];}}
+ function addCollection(gid,aid){
+   const c=loadCol();const k=gid+'_'+aid;
+   if(c.includes(k))return false;
+-  c.push(k);localStorage.setItem('jm_col',JSON.stringify(c));
++  c.push(k);SAFE_LS.setItem('jm_col',JSON.stringify(c));
+   updateColCount();return true;
+ }
+ function updateColCount(){
+diff --git a/public/games/shabondama_v3.html b/public/games/shabondama_v3.html
+index 0347cc3..84434ea 100644
+--- a/public/games/shabondama_v3.html
++++ b/public/games/shabondama_v3.html
+@@ -277,16 +277,40 @@ let progress={stars:[0,0,0,0,0,0,0,0],unlocked:1};
+ const cv=document.getElementById('cv');
+ const ctx=cv.getContext('2d');
+ 
++const SAFE_LS = (function () {
++  try {
++    const testKey = "__ww_storage_test__";
++    localStorage.setItem(testKey, testKey);
++    localStorage.removeItem(testKey);
++    return localStorage;
++  } catch (e) {
++    const memory = {};
++    return {
++      getItem(key) {
++        return Object.prototype.hasOwnProperty.call(memory, key)
++          ? memory[key]
++          : null;
++      },
++      setItem(key, value) {
++        memory[key] = String(value);
++      },
++      removeItem(key) {
++        delete memory[key];
++      }
++    };
++  }
++})();
++
+ // ================= セーブ =================
+ function loadProgress(){
+-  try{const p=JSON.parse(localStorage.getItem('shabondama_v3_progress'));
++  try{const p=JSON.parse(SAFE_LS.getItem('shabondama_v3_progress'));
+     if(p&&Array.isArray(p.stars)){progress.stars=p.stars.concat([0,0,0,0,0,0,0,0]).slice(0,8);progress.unlocked=p.unlocked||1;}
+   }catch(e){}
+-  const c=localStorage.getItem('shabondama_v3_char'); if(c){const f=CHARACTERS.find(x=>x.id===c); if(f)curChar=f;}
++  const c=SAFE_LS.getItem('shabondama_v3_char'); if(c){const f=CHARACTERS.find(x=>x.id===c); if(f)curChar=f;}
+ }
+-function saveProgress(){try{localStorage.setItem('shabondama_v3_progress',JSON.stringify(progress));}catch(e){}}
+-function getHs(){return parseInt(localStorage.getItem('shabondama_hs')||'0');}
+-function saveHs(s){try{localStorage.setItem('shabondama_hs',s);}catch(e){}}
++function saveProgress(){try{SAFE_LS.setItem('shabondama_v3_progress',JSON.stringify(progress));}catch(e){}}
++function getHs(){return parseInt(SAFE_LS.getItem('shabondama_hs')||'0');}
++function saveHs(s){try{SAFE_LS.setItem('shabondama_hs',s);}catch(e){}}
+ 
+ // ================= 初期化 =================
+ function init(){
+@@ -349,7 +373,7 @@ function buildCharCards(){
+ function markSelectedChar(){
+   document.querySelectorAll('.char-card').forEach(el=>el.classList.toggle('sel',el.dataset.id===curChar.id));
+ }
+-function saveCharChoice(){try{localStorage.setItem('shabondama_v3_char',curChar.id);}catch(e){}}
++function saveCharChoice(){try{SAFE_LS.setItem('shabondama_v3_char',curChar.id);}catch(e){}}
+ 
+ // ================= マップ配置 =================
+ function layoutMap(){
+diff --git a/reports/game-audit.json b/reports/game-audit.json
+index a09637e..fa6d398 100644
+--- a/reports/game-audit.json
++++ b/reports/game-audit.json
+@@ -1,5 +1,5 @@
+ {
+-  "generatedAt": "2026-07-18T23:17:02.157Z",
++  "generatedAt": "2026-07-19T00:42:17.748Z",
+   "baseline": {
+     "phase1Errors": 183,
+     "phase1Warnings": 111,
+@@ -17,22 +17,22 @@
+   "comparison": {
+     "falsePositivesResolved": 36,
+     "actualFixesResolved": 5,
+-    "remainingActiveErrors": 52
++    "remainingActiveErrors": 40
+   },
+   "localStorage": {
+     "active": {
+-      "errorFiles": 3,
+-      "errorOccurrences": 14,
+-      "warningFiles": 4,
+-      "warningOccurrences": 10,
+-      "problemFiles": 5
++      "errorFiles": 1,
++      "errorOccurrences": 2,
++      "warningFiles": 3,
++      "warningOccurrences": 8,
++      "problemFiles": 3
+     },
+     "phase3a": {
+       "preFixErrors": 45,
+-      "fixedOccurrences": 31,
+-      "remainingErrors": 14,
+-      "remainingWarnings": 10,
+-      "remainingProblemFiles": 5
++      "fixedOccurrences": 43,
++      "remainingErrors": 2,
++      "remainingWarnings": 8,
++      "remainingProblemFiles": 3
+     }
+   },
+   "summary": {
+@@ -45,17 +45,17 @@
+     "activeHtml": 39,
+     "referencedSecondaryHtml": 1,
+     "archivedOrUnusedHtml": 24,
+-    "activeErrors": 52,
+-    "activeWarnings": 71,
+-    "activeLocalStorageErrors": 14,
+-    "activeLocalStorageWarnings": 10,
+-    "activeLocalStorageProblemFiles": 5,
+-    "allHtmlReferenceErrors": 107,
+-    "allHtmlReferenceWarnings": 122,
++    "activeErrors": 40,
++    "activeWarnings": 69,
++    "activeLocalStorageErrors": 2,
++    "activeLocalStorageWarnings": 8,
++    "activeLocalStorageProblemFiles": 3,
++    "allHtmlReferenceErrors": 95,
++    "allHtmlReferenceWarnings": 120,
+     "archivedReferenceErrors": 54,
+     "archivedReferenceWarnings": 50,
+-    "errors": 52,
+-    "warnings": 179
++    "errors": 40,
++    "warnings": 177
+   },
+   "errors": [
+     {
+@@ -94,78 +94,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/jewelry_master_v8.html",
+-      "status": "active",
+-      "route": "/jewelry-master",
+-      "wrapper": "src/games/JewelryMaster.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 1428,
+-      "evidence": "const hs=parseInt(localStorage.getItem('jm_hs')||'0');"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/jewelry_master_v8.html",
+-      "status": "active",
+-      "route": "/jewelry-master",
+-      "wrapper": "src/games/JewelryMaster.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 1429,
+-      "evidence": "if(score>hs)localStorage.setItem('jm_hs',score);"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/jewelry_master_v8.html",
+-      "status": "active",
+-      "route": "/jewelry-master",
+-      "wrapper": "src/games/JewelryMaster.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 1784,
+-      "evidence": "const hs=parseInt(localStorage.getItem('jm_hs')||'0');"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/jewelry_master_v8.html",
+-      "status": "active",
+-      "route": "/jewelry-master",
+-      "wrapper": "src/games/JewelryMaster.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 1785,
+-      "evidence": "if(score>hs)localStorage.setItem('jm_hs',score);"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/jewelry_master_v8.html",
+-      "status": "active",
+-      "route": "/jewelry-master",
+-      "wrapper": "src/games/JewelryMaster.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 1813,
+-      "evidence": "function loadCol(){try{return JSON.parse(localStorage.getItem('jm_col')||'[]');}catch(e){return [];}}"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/jewelry_master_v8.html",
+-      "status": "active",
+-      "route": "/jewelry-master",
+-      "wrapper": "src/games/JewelryMaster.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 1817,
+-      "evidence": "c.push(k);localStorage.setItem('jm_col',JSON.stringify(c));"
+-    },
+     {
+       "severity": "error",
+       "referenceSeverity": "error",
+@@ -442,78 +370,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/shabondama_v3.html",
+-      "status": "active",
+-      "route": "/shabondama",
+-      "wrapper": "src/games/Shabondama.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 282,
+-      "evidence": "try{const p=JSON.parse(localStorage.getItem('shabondama_v3_progress'));"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/shabondama_v3.html",
+-      "status": "active",
+-      "route": "/shabondama",
+-      "wrapper": "src/games/Shabondama.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 285,
+-      "evidence": "const c=localStorage.getItem('shabondama_v3_char'); if(c){const f=CHARACTERS.find(x=>x.id===c); if(f)curChar=f;}"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/shabondama_v3.html",
+-      "status": "active",
+-      "route": "/shabondama",
+-      "wrapper": "src/games/Shabondama.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 287,
+-      "evidence": "function saveProgress(){try{localStorage.setItem('shabondama_v3_progress',JSON.stringify(progress));}catch(e){}}"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/shabondama_v3.html",
+-      "status": "active",
+-      "route": "/shabondama",
+-      "wrapper": "src/games/Shabondama.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 288,
+-      "evidence": "function getHs(){return parseInt(localStorage.getItem('shabondama_hs')||'0');}"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/shabondama_v3.html",
+-      "status": "active",
+-      "route": "/shabondama",
+-      "wrapper": "src/games/Shabondama.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 289,
+-      "evidence": "function saveHs(s){try{localStorage.setItem('shabondama_hs',s);}catch(e){}}"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/shabondama_v3.html",
+-      "status": "active",
+-      "route": "/shabondama",
+-      "wrapper": "src/games/Shabondama.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 352,
+-      "evidence": "function saveCharChoice(){try{localStorage.setItem('shabondama_v3_char',curChar.id);}catch(e){}}"
+-    },
+     {
+       "severity": "error",
+       "referenceSeverity": "error",
+@@ -1404,30 +1260,6 @@
+       "line": 1460,
+       "evidence": "else{window.location.href='/';}"
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "STORAGE",
+-      "file": "public/games/jewelry_master_v8.html",
+-      "status": "active",
+-      "route": "/jewelry-master",
+-      "wrapper": "src/games/JewelryMaster.jsx",
+-      "message": "可能性があります: ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 1296,
+-      "evidence": "const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');"
+-    },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "STORAGE",
+-      "file": "public/games/jewelry_master_v8.html",
+-      "status": "active",
+-      "route": "/jewelry-master",
+-      "wrapper": "src/games/JewelryMaster.jsx",
+-      "message": "可能性があります: ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 1304,
+-      "evidence": "function persist(){localStorage.setItem(SAVE_KEY,JSON.stringify(SAVE));}"
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "warning",
+@@ -1437,7 +1269,7 @@
+       "route": "/jewelry-master",
+       "wrapper": "src/games/JewelryMaster.jsx",
+       "message": "history.back() に依存する戻る操作があります",
+-      "line": 1889,
++      "line": 1912,
+       "evidence": "else history.back();"
+     },
+     {
+@@ -1449,7 +1281,7 @@
+       "route": "/jewelry-master",
+       "wrapper": "src/games/JewelryMaster.jsx",
+       "message": "location 代入に依存する戻る操作があります",
+-      "line": 1899,
++      "line": 1922,
+       "evidence": "else{window.location.href='/';}"
+     },
+     {
+@@ -2397,7 +2229,7 @@
+       "route": "/shabondama",
+       "wrapper": "src/games/Shabondama.jsx",
+       "message": "history.back() に依存する戻る操作があります",
+-      "line": 848,
++      "line": 872,
+       "evidence": "if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');else history.back();}"
+     },
+     {

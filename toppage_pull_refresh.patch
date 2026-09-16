@@ -1,0 +1,178 @@
+diff --git a/src/hooks/usePullToRefresh.js b/src/hooks/usePullToRefresh.js
+new file mode 100644
+index 0000000..e885f45
+--- /dev/null
++++ b/src/hooks/usePullToRefresh.js
+@@ -0,0 +1,81 @@
++import { useEffect, useState } from 'react';
++
++/**
++ * usePullToRefresh — フルスクリーンPWA向けの引っ張って更新
++ *
++ * ページ最上部でのみ有効。下方向に threshold px 引っ張って離すと onRefresh を実行。
++ * 戻り値: { pull, ready }
++ *   pull  … 現在の引っ張り量(px, 0〜)。インジケーター表示用
++ *   ready … 発火閾値に到達しているか(離すと更新される状態)
++ *
++ * PWA(display:fullscreen/standalone)ではブラウザ標準のpull-to-refreshが無効なため自前実装。
++ */
++export function usePullToRefresh(onRefresh, { threshold = 70, max = 120 } = {}) {
++  const [pull, setPull]   = useState(0);
++  const [ready, setReady] = useState(false);
++
++  useEffect(() => {
++    let startY = 0;
++    let pulling = false;
++    let armed = false; // スクリーン最上部で開始したか
++
++    const atTop = () =>
++      (window.scrollY || document.documentElement.scrollTop || 0) <= 0;
++
++    const onStart = (e) => {
++      if (!atTop()) { armed = false; return; }
++      armed = true;
++      pulling = false;
++      startY = e.touches[0].clientY;
++    };
++
++    const onMove = (e) => {
++      if (!armed) return;
++      const dy = e.touches[0].clientY - startY;
++      if (dy <= 0) { // 上方向スワイプは通常スクロールに委ねる
++        if (pulling) { pulling = false; setPull(0); setReady(false); }
++        return;
++      }
++      if (!atTop()) { armed = false; if (pulling){ pulling=false; setPull(0); setReady(false);} return; }
++
++      pulling = true;
++      // ゴム感: 引くほど鈍く
++      const damped = Math.min(max, dy * 0.5);
++      setPull(damped);
++      setReady(damped >= threshold);
++      // ブラウザのバウンス/選択を抑止
++      if (e.cancelable) e.preventDefault();
++    };
++
++    const onEnd = () => {
++      if (!pulling) { armed = false; return; }
++      const willRefresh = pull >= threshold;
++      pulling = false;
++      armed = false;
++      if (willRefresh) {
++        setReady(true);
++        setPull(threshold); // スピナー位置で保持
++        setTimeout(() => { onRefresh(); }, 180);
++      } else {
++        setPull(0);
++        setReady(false);
++      }
++    };
++
++    // passive:false で preventDefault を有効化
++    window.addEventListener('touchstart', onStart, { passive: true });
++    window.addEventListener('touchmove',  onMove,  { passive: false });
++    window.addEventListener('touchend',   onEnd,   { passive: true });
++    window.addEventListener('touchcancel', onEnd,  { passive: true });
++
++    return () => {
++      window.removeEventListener('touchstart', onStart);
++      window.removeEventListener('touchmove',  onMove);
++      window.removeEventListener('touchend',   onEnd);
++      window.removeEventListener('touchcancel', onEnd);
++    };
++    // pull を依存に入れると onEnd が最新値を読めるようにする
++  }, [onRefresh, threshold, max, pull]);
++
++  return { pull, ready };
++}
+diff --git a/src/pages/TopPage.css b/src/pages/TopPage.css
+index 3a84034..09d8ce6 100644
+--- a/src/pages/TopPage.css
++++ b/src/pages/TopPage.css
+@@ -1577,3 +1577,49 @@
+ @media (min-width: 700px) {
+   .tp-shelf-card { width: 148px; }
+ }
++
++/* ══════════════════════════════════════════════════════════
++   ✨ 引っ張って更新(pull-to-refresh)
++══════════════════════════════════════════════════════════ */
++.tp-wrap { overscroll-behavior-y: contain; }
++.tp-ptr {
++  position: absolute;
++  left: 50%;
++  transform: translateX(-50%);
++  z-index: 60;
++  width: 40px;
++  height: 40px;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  pointer-events: none;
++  transition: opacity .15s ease;
++}
++.tp-ptr-spin {
++  width: 38px;
++  height: 38px;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  border-radius: 50%;
++  background: rgba(255,255,255,.9);
++  border: 2px solid #ffb3c8;
++  box-shadow: 0 3px 8px rgba(163,71,103,.22);
++  font-size: 20px;
++  font-weight: 800;
++  color: #d14a76;
++  line-height: 1;
++}
++.tp-ptr-spin--ready {
++  background: linear-gradient(135deg,#ff8ab0,#ff5d8f);
++  border-color: #fff;
++  color: #fff;
++  animation: tp-ptr-pop .3s cubic-bezier(.34,1.56,.64,1);
++}
++@keyframes tp-ptr-pop {
++  0% { transform: scale(.8) rotate(0deg); }
++  100% { transform: scale(1) rotate(0deg); }
++}
++@media (prefers-reduced-motion: reduce) {
++  .tp-ptr-spin--ready { animation: none; }
++}
+diff --git a/src/pages/TopPage.jsx b/src/pages/TopPage.jsx
+index 1c86fe6..6644b25 100644
+--- a/src/pages/TopPage.jsx
++++ b/src/pages/TopPage.jsx
+@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
+ import { startBGM, stopBGM, toggleBGM } from '../utils/audio';
+ import { transitionTo } from '../utils/transition';
+ import { getPlayCount } from '../utils/playCounter';
++import { usePullToRefresh } from '../hooks/usePullToRefresh';
+ import { KisekaeCharacters, KisekaePanel, DEFAULT_KISEKAE } from '../components/Kisekae';
+ import LoginBonus from '../components/LoginBonus';
+ import Shop from '../components/Shop';
+@@ -1209,6 +1210,9 @@ export default function TopPage() {
+   const season    = getSeason();
+   const daysSince = getDaysSinceUpdate();
+ 
++  // 引っ張って更新(フルスクリーンPWA向け)
++  const { pull, ready } = usePullToRefresh(() => window.location.reload());
++
+ 
+   // 最近遊んだゲームを可視化用データに変換
+   const recentGames = recentRoutes
+@@ -1361,7 +1365,13 @@ export default function TopPage() {
+     (daysSince === 0 ? 'きょう！' : `${daysSince}にちまえ`);
+ 
+   return (
+-    <div className="tp-wrap">
++    <div className="tp-wrap" style={{ transform: pull ? `translateY(${pull}px)` : undefined, transition: pull ? 'none' : 'transform .25s ease' }}>
++      {/* ── 引っ張って更新インジケーター ── */}
++      <div className="tp-ptr" aria-hidden="true" style={{ top: `${pull - 46}px`, opacity: pull > 6 ? 1 : 0 }}>
++        <span className={`tp-ptr-spin${ready ? ' tp-ptr-spin--ready' : ''}`} style={{ transform: `rotate(${pull * 3}deg)` }}>
++          {ready ? '↻' : '↓'}
++        </span>
++      </div>
+       <Helmet>
+         <title>わくわくアイランド｜こども向け無料ブラウザゲーム</title>
+         <meta name="description" content="幼児・小学生向けの無料ミニゲームが20種類以上。かず・もじ・パズル・アクション・レースなどを登録不要・インストール不要でブラウザですぐ遊べます。" />

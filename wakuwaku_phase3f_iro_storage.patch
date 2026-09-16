@@ -1,0 +1,174 @@
+diff --git a/docs/GAME_AUDIT.md b/docs/GAME_AUDIT.md
+index a8d6235..e8dc6d0 100644
+--- a/docs/GAME_AUDIT.md
++++ b/docs/GAME_AUDIT.md
+@@ -96,3 +96,11 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実
+ - 監査: active STORAGE errorは0件のまま、warningは6件から2件、問題ファイルは2件から1件へ減少した。active全体はerror 38件・warning 63件、active 39件を維持した。
+ - 保存・復元: fixtureでstory JSONと共有コインを新規コンテキストから復元し、v6形式の数値文字列37の読込と42の書込互換、非表示時のBGM停止→保存、`pagehide`保存でコインが重複増減しないこと、SecurityError時の同一セッション内復元を確認した。
+ - 残存STORAGE対象は既存差分を保持している`/iro`のみ。次はPhase 3Fで個別に扱う。
++
++## Phase 3F 実施結果
++
++- 対象: `/iro`（`public/games/iro_awase_v3.html`）。開始時は変更扱いだったが、HEAD blobと作業ファイルのハッシュはともに`42c8eb1c62ee714b103d92f44e092e8f04760d79`で、内容差分は0行だった。
++- 採用変更: 標準`SAFE_LS`を1件追加し、`getHi()`と`saveHi()`の直接localStorage get 1件・set 1件だけを置換した。除外・復元した既存変更はない。
++- 互換性: `iro_hi`と`iro_hi_hard`、数値文字列、`parseInt(...||'0')`、既定値0、タイトル表示時の読込、ゲーム終了時に`score>hi`の場合だけ保存する条件を維持した。
++- 監査: active STORAGE error 0件・warning 2件から、error 0件・warning 0件になった。active全体はerror 38件・warning 61件、active 39件を維持し、Phase 3のSTORAGE対応を完了した。
++- 保存・復元: fixtureでeasy=8、hard=5を独立保存し、新規コンテキストから復元した。SecurityError時もeasy=7、hard=3を分離して保存・読込でき、null・文字列化・removeItem互換を確認した。
+diff --git a/docs/STORAGE_REVIEW.md b/docs/STORAGE_REVIEW.md
+index 1eb817e..10284ec 100644
+--- a/docs/STORAGE_REVIEW.md
++++ b/docs/STORAGE_REVIEW.md
+@@ -253,3 +253,11 @@ Phase 3Cの目的は、複数キー、旧版共有キー、動的キー、頻繁
+ - 結果: 標準`SAFE_LS`を1件追加し、ゲームロジック内の直接get/set 4件を0件にした。キー、JSON、数値変換、既定値、条件分岐、保存・読込位置はHEAD版との正規化機械比較で一致した。
+ - 監査: active STORAGE error 0件、warning 6→2件、問題ファイル2→1件。active全体error 38件・warning 63件、active 39件を維持し、SAFE_LS初期化テストの誤検出はない。
+ - 保存・復元: story JSON、共有coin、v6数値文字列の双方向互換、`visibilitychange`、`pagehide`、SecurityErrorメモリフォールバックをfixtureで確認した。残存対象は既存差分を保持している`/iro`のみで、次はPhase 3Fとする。
++
++## 17. Phase 3F 実施結果
++
++- 対象: `/iro`（`public/games/iro_awase_v3.html`）。開始時のGit変更表示を精査した結果、HEADと作業ファイルは同一blob・同一ハッシュで、改行コード差分、文字コード差分、コメント追加、整形、UI・CSS・Canvas・BGM変更を含む内容差分はなかった。
++- STORAGE仕様: `HI_KEYS={easy:'iro_hi',hard:'iro_hi_hard'}`、`getHi(m)`は`parseInt(value||'0')`、`saveHi(m,v)`は値をそのままsetItemへ渡す。タイトル初期化とタイトル復帰時に読込み、ゲーム終了時の`score>hi`だけで選択中モードの最高値を保存する。remove・clear・列挙API・storageイベント・ページライフサイクル保存はない。
++- 採用変更: 標準`SAFE_LS`定義1件と、get/set各1件の呼び出し先変更だけ。修正・除外・HEADへ復元した既存変更はない。SAFE_LS定義を除去して呼び出し先を戻す正規化比較はHEAD版と完全一致した。
++- 監査: `/iro`のSTORAGE error 0・warning 2→error 0・warning 0。active STORAGEはerror 0・warning 0、問題ファイル0になった。active全体error 38・warning 61、active 39を維持し、SAFE_LSテストの誤検出はない。
++- 保存・復元: 実コードfixtureで`iro_hi=8`と`iro_hi_hard=5`を独立保存し、新規コンテキストから復元した。SecurityErrorフォールバックでも両キーの分離、既定値0、`String(value)`、null、removeItem互換を確認した。Phase 3のactive STORAGE対応は完了した。
+diff --git a/public/games/iro_awase_v3.html b/public/games/iro_awase_v3.html
+index 42c8eb1..c49cf25 100644
+--- a/public/games/iro_awase_v3.html
++++ b/public/games/iro_awase_v3.html
+@@ -511,13 +511,40 @@ const MIX3=[
+ ];
+ const NAME=['あか','あお','きいろ','みどり','オレンジ','むらさき','ピンク','みずいろ'];
+ 
++const SAFE_LS = (function () {
++  try {
++    const testKey = "__ww_storage_test__";
++    localStorage.setItem(testKey, testKey);
++    localStorage.removeItem(testKey);
++    return localStorage;
++  } catch (e) {
++    const memory = {};
++
++    return {
++      getItem(key) {
++        return Object.prototype.hasOwnProperty.call(memory, key)
++          ? memory[key]
++          : null;
++      },
++
++      setItem(key, value) {
++        memory[key] = String(value);
++      },
++
++      removeItem(key) {
++        delete memory[key];
++      }
++    };
++  }
++})();
++
+ /* ===== Game state ===== */
+ const TOTAL=10;
+ let queue=[],current=null,qIdx=0,score=0,locked=false,mode='easy';
+ function shuffle(a){return [...a].sort(()=>Math.random()-.5);}
+ const HI_KEYS={easy:'iro_hi',hard:'iro_hi_hard'};
+-function getHi(m){return parseInt(localStorage.getItem(HI_KEYS[m])||'0');}
+-function saveHi(m,v){localStorage.setItem(HI_KEYS[m],v);}
++function getHi(m){return parseInt(SAFE_LS.getItem(HI_KEYS[m])||'0');}
++function saveHi(m,v){SAFE_LS.setItem(HI_KEYS[m],v);}
+ function updateHiBadges(){
+   document.getElementById('hi-easy').textContent='🏆 '+getHi('easy');
+   document.getElementById('hi-hard').textContent='🏆 '+getHi('hard');
+diff --git a/reports/game-audit.json b/reports/game-audit.json
+index 6f855b6..d87caf5 100644
+--- a/reports/game-audit.json
++++ b/reports/game-audit.json
+@@ -1,5 +1,5 @@
+ {
+-  "generatedAt": "2026-07-19T01:47:51.130Z",
++  "generatedAt": "2026-07-19T03:51:53.736Z",
+   "baseline": {
+     "phase1Errors": 183,
+     "phase1Warnings": 111,
+@@ -23,16 +23,16 @@
+     "active": {
+       "errorFiles": 0,
+       "errorOccurrences": 0,
+-      "warningFiles": 1,
+-      "warningOccurrences": 2,
+-      "problemFiles": 1
++      "warningFiles": 0,
++      "warningOccurrences": 0,
++      "problemFiles": 0
+     },
+     "phase3a": {
+       "preFixErrors": 45,
+       "fixedOccurrences": 45,
+       "remainingErrors": 0,
+-      "remainingWarnings": 2,
+-      "remainingProblemFiles": 1
++      "remainingWarnings": 0,
++      "remainingProblemFiles": 0
+     }
+   },
+   "summary": {
+@@ -46,16 +46,16 @@
+     "referencedSecondaryHtml": 1,
+     "archivedOrUnusedHtml": 24,
+     "activeErrors": 38,
+-    "activeWarnings": 63,
++    "activeWarnings": 61,
+     "activeLocalStorageErrors": 0,
+-    "activeLocalStorageWarnings": 2,
+-    "activeLocalStorageProblemFiles": 1,
++    "activeLocalStorageWarnings": 0,
++    "activeLocalStorageProblemFiles": 0,
+     "allHtmlReferenceErrors": 93,
+-    "allHtmlReferenceWarnings": 114,
++    "allHtmlReferenceWarnings": 112,
+     "archivedReferenceErrors": 54,
+     "archivedReferenceWarnings": 50,
+     "errors": 38,
+-    "warnings": 171
++    "warnings": 169
+   },
+   "errors": [
+     {
+@@ -1092,30 +1092,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "STORAGE",
+-      "file": "public/games/iro_awase_v3.html",
+-      "status": "active",
+-      "route": "/iro",
+-      "wrapper": "src/games/IroAwase.jsx",
+-      "message": "可能性があります: ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 519,
+-      "evidence": "function getHi(m){return parseInt(localStorage.getItem(HI_KEYS[m])||'0');}"
+-    },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "STORAGE",
+-      "file": "public/games/iro_awase_v3.html",
+-      "status": "active",
+-      "route": "/iro",
+-      "wrapper": "src/games/IroAwase.jsx",
+-      "message": "可能性があります: ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 520,
+-      "evidence": "function saveHi(m,v){localStorage.setItem(HI_KEYS[m],v);}"
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "warning",
+@@ -1125,7 +1101,7 @@
+       "route": "/iro",
+       "wrapper": "src/games/IroAwase.jsx",
+       "message": "history.back() に依存する戻る操作があります",
+-      "line": 856,
++      "line": 883,
+       "evidence": "function goBack(){if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');else history.back();}"
+     },
+     {

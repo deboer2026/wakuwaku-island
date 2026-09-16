@@ -2523,13 +2523,37 @@ const INTERIOR_CAMERA_KITCHEN = {
   targetY: 0.9,
   minDistance: 7.0
 };
+/* 第2弾: キッチン以外の室内も広さ・専用カメラを持たせる(まずプレイヤー宅・おみせ・ねこ/うさぎ/ふくろうの5室)。
+   未対応の住民宅(くま・きつね・パンダ・りす・かわうそ)は既存のROOM_W/D/H・INTERIOR_CAMERAのまま。 */
+const ROOM_SIZES = {
+  "interior:player":   { w: ROOM_W * 1.5,  d: ROOM_D * 1.5,  h: ROOM_H * 1.05, sideWallH: ROOM_H * 1.05 * 0.75 },
+  "interior:boutique": { w: ROOM_W * 1.55, d: ROOM_D * 1.55, h: ROOM_H * 1.08, sideWallH: ROOM_H * 1.08 * 0.72 },
+};
+const RESIDENT_ROOM = { w: ROOM_W * 1.4, d: ROOM_D * 1.4, h: ROOM_H * 1.02, sideWallH: ROOM_H * 1.02 * 0.75 };
+["interior:resident_neko","interior:resident_usagi","interior:resident_fukurou"].forEach(id=>{ ROOM_SIZES[id] = RESIDENT_ROOM; });
+const ROOM_CAMERAS = {
+  "interior:player":   { fov:52, position:{x:0,y:5.35,z:4.66}, targetScale:0.3, targetY:0.85, minDistance:5.7 },
+  "interior:boutique": { fov:52, position:{x:0,y:5.51,z:4.82}, targetScale:0.3, targetY:0.85, minDistance:5.9 },
+};
+const RESIDENT_CAMERA = { fov:52, position:{x:0,y:5.19,z:4.35}, targetScale:0.3, targetY:0.85, minDistance:5.4 };
+["interior:resident_neko","interior:resident_usagi","interior:resident_fukurou"].forEach(id=>{ ROOM_CAMERAS[id] = RESIDENT_CAMERA; });
 function currentRoomDims(){
-  const cfg = INTERIORS[S.currentArea];
+  const id = S.currentArea;
+  if(ROOM_SIZES[id]) return ROOM_SIZES[id];
+  const cfg = INTERIORS[id];
   return (cfg && cfg.kind === "kitchen") ? KITCHEN_ROOM : { w:ROOM_W, d:ROOM_D, h:ROOM_H };
 }
 function currentInteriorCamera(){
-  const cfg = INTERIORS[S.currentArea];
+  const id = S.currentArea;
+  if(ROOM_CAMERAS[id]) return ROOM_CAMERAS[id];
+  const cfg = INTERIORS[id];
   return (cfg && cfg.kind === "kitchen") ? INTERIOR_CAMERA_KITCHEN : INTERIOR_CAMERA;
+}
+/* buildInteriorContent(まだ室内に入っていない時点)から呼ぶための、interiorId直指定版 */
+function roomDimsFor(interiorId){
+  if(ROOM_SIZES[interiorId]) return ROOM_SIZES[interiorId];
+  const cfg = INTERIORS[interiorId];
+  return (cfg && cfg.kind === "kitchen") ? KITCHEN_ROOM : { w:ROOM_W, d:ROOM_D, h:ROOM_H };
 }
 function buildInteriorShell(theme, dims){
   dims = dims || { w:ROOM_W, d:ROOM_D, h:ROOM_H };
@@ -2586,24 +2610,43 @@ function buildInteriorContent(interiorId){
   const cfg = INTERIORS[interiorId];
   let g;
   if(cfg.kind === "player"){
-    g = buildInteriorShell(FURN_THEME.cozy);
+    /* プレイヤー宅: 「かわいい自分の部屋」。広くしてベッド・すがたみ・本棚を離して配置し、
+       すがたみにきらきらの軽いギミックをつける。 */
+    const dims = ROOM_SIZES["interior:player"];
+    g = buildInteriorShell(FURN_THEME.cozy, dims);
     const bed = buildFurniturePiece("bed", FURN_THEME.cozy.bed);
-    bed.position.set(-1.9, 0, -1.6); bed.rotation.y = 0.3; g.add(bed);
-    const table = buildFurniturePiece("table", 0xe8d2a8);
-    table.position.set(1.6, 0, -1.4); g.add(table);
-    const storage = buildFurniturePiece("shelf", 0xf3d6ff);
-    storage.position.set(2.5, 0, 1.4); storage.rotation.y = -Math.PI/2; g.add(storage);
+    bed.scale.set(1.25, 1.15, 1.25);
+    bed.position.set(-dims.w/2+1.5, 0, -dims.d/2+1.3); bed.rotation.y = 0.28; g.add(bed);
+    const cushion = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.34, 0.16, 12), mat(0xffc2d6));
+    cushion.position.set(-dims.w/2+1.0, 0.08, -dims.d/2+2.5); cushion.castShadow = true; g.add(cushion);
+    const desk = buildFurniturePiece("table", 0xe8d2a8);
+    desk.position.set(dims.w/2-1.4, 0, -dims.d/2+1.2); g.add(desk);
+    const bookshelf = buildFurniturePiece("shelf", 0xffe0b0);
+    bookshelf.scale.set(1.2, 1.3, 1.2);
+    bookshelf.position.set(dims.w/2-0.55, 0, 0.4); bookshelf.rotation.y = -Math.PI/2; g.add(bookshelf);
+    ["📕","📗","📘"].forEach((emj,i)=>{ const s=makeEmojiSprite(emj,0.26); s.position.set(dims.w/2-0.55+0.5, 0.55+i*0.32, 0.4-0.4+i*0.35); g.add(s); });
+    const wardrobe = buildFurniturePiece("shelf", 0xf3d6ff);
+    wardrobe.scale.set(1.15, 1.25, 1.15);
+    wardrobe.position.set(-dims.w/2+0.55, 0, dims.d/2-1.3); wardrobe.rotation.y = Math.PI/2; g.add(wardrobe);
     const memoryShelf = buildFurniturePiece("shelf", 0xffe0b0);
-    memoryShelf.position.set(-2.6, 0, 1.6); memoryShelf.rotation.y = Math.PI/2; g.add(memoryShelf);
-    /* すがたみ（Phase1のワードローブ処理を再利用） */
-    const mirrorFrame = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.5, 0.1), mat(0xd9c98e));
-    const mirrorGlass = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 1.25), new THREE.MeshBasicMaterial({ color:0xdff3ff }));
+    memoryShelf.position.set(dims.w/2-0.55, 0, dims.d/2-1.3); memoryShelf.rotation.y = -Math.PI/2; g.add(memoryShelf);
+    /* すがたみ（Phase1のワードローブ処理を再利用）。少し大きくして奥壁の中心に。 */
+    const mirrorFrame = new THREE.Mesh(new THREE.BoxGeometry(0.85, 1.75, 0.1), mat(0xd9c98e));
+    const mirrorGlass = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 1.5), new THREE.MeshBasicMaterial({ color:0xdff3ff }));
     mirrorGlass.position.z = 0.06;
     const mirrorGroup = new THREE.Group();
     mirrorGroup.add(mirrorFrame); mirrorGroup.add(mirrorGlass);
-    mirrorGroup.position.set(0, 0.75, -ROOM_D/2 + 0.12);
+    mirrorGroup.position.set(0, 0.85, -dims.d/2 + 0.12);
     g.add(mirrorGroup);
-    g.userData.mirrorPos = new THREE.Vector3(0, 0, -ROOM_D/2 + 0.9);
+    g.userData.mirrorPos = new THREE.Vector3(0, 0, -dims.d/2 + 1.0);
+    /* 軽いギミック: すがたみのまわりに きらきら */
+    const sparkles = [];
+    for(let i=0;i<3;i++){
+      const s = makeEmojiSprite("✨", 0.22);
+      s.position.set(-0.5+i*0.5, 1.5+ (i%2)*0.2, -dims.d/2+0.2);
+      g.add(s); sparkles.push(s);
+    }
+    g.userData.mirrorSparkles = sparkles;
   } else if(cfg.kind === "kitchen"){
     /* 「レストラン厨房＋かわいい料理工房」。5つの作業ゾーン(火/下ごしらえ/洗い場/盛り付け/食材保管)＋
        主役の大型中央アイランドで構成し、大きな家具の色分けで遠目にも用途が分かるようにする。 */
@@ -2762,68 +2805,162 @@ function buildInteriorContent(interiorId){
     g.add(cookMarker);
     g.userData.cookMarker = cookMarker;
   } else if(cfg.kind === "boutique"){
-    g = buildInteriorShell({ floor:0xf3d6ff, wall:0xf9ecff, accent:0xb98ae0, rug:0xe8c2ff });
+    /* おみせ: 商品棚・レジ・箱。広くして着せかえラック(既存のインタラクト地点)を奥に、
+       レジまわりに商品棚と箱を配置し、レジにきらきらの軽いギミックをつける。 */
+    const dims = ROOM_SIZES["interior:boutique"];
+    g = buildInteriorShell({ floor:0xf3d6ff, wall:0xf9ecff, accent:0xb98ae0, rug:0xe8c2ff }, dims);
     const rack = new THREE.Group();
-    const bar = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.06, 0.06), mat(0x9a6f45));
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.06, 0.06), mat(0x9a6f45));
     bar.position.y = 1.1; rack.add(bar);
-    const cols = [0xffd6e8, 0x9fdcf7, 0xffd54f, 0xba9df5];
-    for(let i=0;i<4;i++){
+    const cols = [0xffd6e8, 0x9fdcf7, 0xffd54f, 0xba9df5, 0xff9ecb, 0x8fd6a3];
+    for(let i=0;i<6;i++){
       const cloth = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.5, 6, 1, true), mat(cols[i]));
-      cloth.position.set(-0.6 + i*0.4, 0.8, 0); g.add(cloth);
+      cloth.position.set(-0.75 + i*0.3, 0.8, 0); rack.add(cloth);
     }
-    rack.position.set(0, 0, -1.9);
+    rack.position.set(0, 0, -dims.d/2+1.3);
     g.add(rack);
-    g.userData.rackPos = new THREE.Vector3(0, 0, -1.1);
-    const counter = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.7, 0.5), mat(0xffe9f5));
-    counter.position.set(2.1, 0.35, 1.5); g.add(counter);
+    g.userData.rackPos = new THREE.Vector3(0, 0, -dims.d/2+2.3);
+    /* 商品だな(奥壁ひだり): 箱・アクセサリーが見える */
+    const productShelf = buildFurniturePiece("shelf", 0xffe9f5);
+    productShelf.scale.set(1.3, 1.35, 1.2);
+    productShelf.position.set(-dims.w/2+0.55, 0, -0.8); productShelf.rotation.y = Math.PI/2; g.add(productShelf);
+    ["👗","👒","👜"].forEach((emj,i)=>{ const s=makeEmojiSprite(emj,0.3); s.position.set(-dims.w/2+0.55+0.5, 0.55+i*0.35, -0.8-0.4+i*0.4); g.add(s); });
+    /* 箱づみ(左手前) */
+    for(let i=0;i<3;i++){
+      const box = new THREE.Mesh(new THREE.BoxGeometry(0.45,0.4,0.45), mat([0xffd6e8,0x9fdcf7,0xffe27a][i]));
+      box.position.set(-dims.w/2+0.7+i*0.05, 0.2+i*0.42, dims.d/2-1.3); box.rotation.y = i*0.2; box.castShadow = true; g.add(box);
+    }
+    /* レジカウンター(右手前) */
+    const counter = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.75, 0.55), mat(0xffe9f5));
+    counter.position.set(dims.w/2-1.3, 0.375, dims.d/2-1.4); counter.castShadow = true; g.add(counter);
+    const register = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.28, 0.3), mat(0xfaf6ee));
+    register.position.set(dims.w/2-1.3, 0.9, dims.d/2-1.4); g.add(register);
     const clerk = new THREE.Group();
     const cb = new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.28,0.6,8), mat(0xb98ae0));
     cb.position.y = 0.5; clerk.add(cb);
     const ch = new THREE.Mesh(new THREE.SphereGeometry(0.22,8,7), mat(0xffe3c9));
     ch.position.y = 0.95; clerk.add(ch);
-    clerk.position.set(2.1, 0, 1.0);
+    clerk.position.set(dims.w/2-1.3, 0, dims.d/2-1.9);
     g.add(clerk);
+    /* 軽いギミック: レジのうえで きらきら(常時は控えめ、近づくと明るく) */
+    const registerSpark = new THREE.Mesh(new THREE.RingGeometry(0.14,0.2,16), new THREE.MeshBasicMaterial({ color:0xffe27a, transparent:true, opacity:0.4, side:THREE.DoubleSide }));
+    registerSpark.rotation.x = -Math.PI/2; registerSpark.position.set(dims.w/2-1.3, 1.06, dims.d/2-1.4);
+    g.add(registerSpark);
+    g.userData.registerSparkle = registerSpark;
   } else if(cfg.kind === "resident"){
     const id = cfg.residentId;
     const r = RESIDENTS[id];
     const theme = FURN_THEME[r.furnitureTheme] || FURN_THEME.cozy;
-    g = buildInteriorShell(theme);
-    const bed = buildFurniturePiece("bed", theme.bed);
-    bed.position.set(-1.9, 0, -1.6); bed.rotation.y = 0.25; g.add(bed);
-    const table = buildFurniturePiece("table", theme.accent);
-    table.position.set(1.7, 0, -1.3); g.add(table);
-    const favSprite = makeEmojiSprite(DISH_ICON[r.favoriteDish] || "🍽️", 0.42);
-    favSprite.position.set(1.7, 0.85, -1.3);
-    g.add(favSprite);
-    const shelf = buildFurniturePiece("shelf", theme.accent);
-    shelf.position.set(2.6, 0, 1.4); shelf.rotation.y = -Math.PI/2; g.add(shelf);
-    /* ぬし本人（Phase1のbuildAnimalを再利用） */
-    const residentMesh = buildAnimal(id);
-    residentMesh.position.set(0, 0, 0.3);
-    residentMesh.userData.baseY = 0;
-    g.add(residentMesh);
-    g.userData.residentMesh = residentMesh;
-    /* おくりもの棚：個別依頼クリア後にだけ表示 */
-    const giftShelf = new THREE.Group();
-    const gs = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.4), mat(0xffd54f));
-    gs.position.y = 0.2; giftShelf.add(gs);
-    giftShelf.add(makeEmojiSprite("🎁", 0.3));
-    giftShelf.children[1].position.y = 0.55;
-    giftShelf.position.set(-2.6, 0, 1.6); giftShelf.rotation.y = Math.PI/2;
-    giftShelf.visible = !!(S.residents[id] && S.residents[id].questDone);
-    g.add(giftShelf);
-    g.userData.giftShelf = giftShelf;
-    /* ふくろうの ほんだな（find型の個別依頼） */
-    if(id === "fukurou"){
-      const book = buildFurniturePiece("shelf", 0x8a6a52);
-      book.position.set(0, 0, -ROOM_D/2 + 0.4); g.add(book);
-      g.userData.bookshelfPos = new THREE.Vector3(0, 0, -ROOM_D/2 + 1.2);
+    const themedIds = ["neko","usagi","fukurou"];
+    if(themedIds.indexOf(id) < 0){
+      /* 未対応の住民宅(くま・きつね・パンダ・りす・かわうそ)は既存レイアウトのまま(今回は変更しない) */
+      g = buildInteriorShell(theme);
+      const bed = buildFurniturePiece("bed", theme.bed);
+      bed.position.set(-1.9, 0, -1.6); bed.rotation.y = 0.25; g.add(bed);
+      const table = buildFurniturePiece("table", theme.accent);
+      table.position.set(1.7, 0, -1.3); g.add(table);
+      const favSprite = makeEmojiSprite(DISH_ICON[r.favoriteDish] || "🍽️", 0.42);
+      favSprite.position.set(1.7, 0.85, -1.3);
+      g.add(favSprite);
+      const shelf = buildFurniturePiece("shelf", theme.accent);
+      shelf.position.set(2.6, 0, 1.4); shelf.rotation.y = -Math.PI/2; g.add(shelf);
+      const residentMesh = buildAnimal(id);
+      residentMesh.position.set(0, 0, 0.3);
+      residentMesh.userData.baseY = 0;
+      g.add(residentMesh);
+      g.userData.residentMesh = residentMesh;
+      const giftShelf = new THREE.Group();
+      const gs = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.4), mat(0xffd54f));
+      gs.position.y = 0.2; giftShelf.add(gs);
+      giftShelf.add(makeEmojiSprite("🎁", 0.3));
+      giftShelf.children[1].position.y = 0.55;
+      giftShelf.position.set(-2.6, 0, 1.6); giftShelf.rotation.y = Math.PI/2;
+      giftShelf.visible = !!(S.residents[id] && S.residents[id].questDone);
+      g.add(giftShelf);
+      g.userData.giftShelf = giftShelf;
+    } else {
+      /* 第2弾対象(ねこ・うさぎ・ふくろう): 広くしてテーマ性のある家具＋軽いギミックを追加 */
+      const dims = RESIDENT_ROOM;
+      g = buildInteriorShell(theme, dims);
+      const favSprite = makeEmojiSprite(DISH_ICON[r.favoriteDish] || "🍽️", 0.42);
+      const residentMesh = buildAnimal(id);
+      residentMesh.position.set(0, 0, 0.4);
+      residentMesh.userData.baseY = 0;
+      g.add(residentMesh);
+      g.userData.residentMesh = residentMesh;
+      const giftShelf = new THREE.Group();
+      const gs = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.4), mat(0xffd54f));
+      gs.position.y = 0.2; giftShelf.add(gs);
+      giftShelf.add(makeEmojiSprite("🎁", 0.3));
+      giftShelf.children[1].position.y = 0.55;
+      giftShelf.position.set(-dims.w/2+0.6, 0, dims.d/2-1.2); giftShelf.rotation.y = Math.PI/2;
+      giftShelf.visible = !!(S.residents[id] && S.residents[id].questDone);
+      g.add(giftShelf);
+      g.userData.giftShelf = giftShelf;
+
+      if(id === "neko"){
+        /* ねこの家: 読書とお昼寝。大きな本棚＋クッション＋毛糸(ゆらゆら軽ギミック) */
+        const bed = buildFurniturePiece("bed", theme.bed);
+        bed.scale.set(1.1,1,1.1);
+        bed.position.set(-dims.w/2+1.4, 0, -dims.d/2+1.3); bed.rotation.y = 0.2; g.add(bed);
+        const cushion = new THREE.Mesh(new THREE.CylinderGeometry(0.34,0.36,0.16,12), mat(0xffd54f));
+        cushion.position.set(0.4, 0.08, -dims.d/2+1.2); cushion.castShadow = true; g.add(cushion);
+        favSprite.position.set(0.4, 0.4, -dims.d/2+1.2); g.add(favSprite);
+        const bookshelf = buildFurniturePiece("shelf", theme.accent);
+        bookshelf.scale.set(1.3,1.4,1.2);
+        bookshelf.position.set(dims.w/2-0.55, 0, -0.6); bookshelf.rotation.y = -Math.PI/2; g.add(bookshelf);
+        ["📕","📙","📗"].forEach((emj,i)=>{ const s=makeEmojiSprite(emj,0.26); s.position.set(dims.w/2-0.55+0.5, 0.55+i*0.32, -0.6-0.4+i*0.4); g.add(s); });
+        const yarn = new THREE.Mesh(new THREE.SphereGeometry(0.18,8,7), mat(0xff8fb3));
+        yarn.position.set(dims.w/2-1.1, 0.18, dims.d/2-1.3); yarn.castShadow = true; g.add(yarn);
+        g.userData.yarnBall = yarn;
+      } else if(id === "usagi"){
+        /* うさぎの家: 裁縫とかわいい小物。作業台＋布ロール＋リボン(ゆれる軽ギミック) */
+        const bed = buildFurniturePiece("bed", theme.bed);
+        bed.position.set(-dims.w/2+1.4, 0, -dims.d/2+1.3); bed.rotation.y = 0.2; g.add(bed);
+        const workTable = buildFurniturePiece("table", theme.accent);
+        workTable.position.set(dims.w/2-1.3, 0, -0.6); g.add(workTable);
+        favSprite.position.set(dims.w/2-1.3, 0.85, -0.6); g.add(favSprite);
+        const fabricRoll = new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.16,0.6,10), mat(0xffb3c9));
+        fabricRoll.rotation.z = Math.PI/2; fabricRoll.position.set(-dims.w/2+0.6, 0.5, dims.d/2-1.4); fabricRoll.castShadow = true; g.add(fabricRoll);
+        const ribbon = new THREE.Mesh(new THREE.TorusGeometry(0.14,0.035,6,14), mat(0xff6f9e));
+        ribbon.position.set(dims.w/2-1.3, 1.05, -0.6); g.add(ribbon);
+        g.userData.ribbon = ribbon;
+      } else if(id === "fukurou"){
+        /* ふくろうの家: 勉強部屋。机・本つみ・ランプ(明滅する軽ギミック)＋羽根ペン。
+           既存のほんだな(find型の個別依頼)は機能を維持したまま配置する。 */
+        const bed = buildFurniturePiece("bed", theme.bed);
+        bed.position.set(-dims.w/2+1.4, 0, dims.d/2-1.3); bed.rotation.y = 0.2; g.add(bed);
+        const desk = buildFurniturePiece("table", theme.accent);
+        desk.position.set(dims.w/2-1.3, 0, -0.6); g.add(desk);
+        favSprite.position.set(dims.w/2-1.3, 0.85, -0.6); g.add(favSprite);
+        const lamp = new THREE.Group();
+        const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.12,0.55,8), mat(0x8a6a52));
+        lampBase.position.y = 0.28+0.5; lamp.add(lampBase);
+        const lampShade = new THREE.Mesh(new THREE.ConeGeometry(0.16,0.2,10), mat(0xffe27a));
+        lampShade.position.y = 0.28+0.85; lamp.add(lampShade);
+        const lampGlow = new THREE.Mesh(new THREE.SphereGeometry(0.09,8,6), new THREE.MeshBasicMaterial({ color:0xfff3c0, transparent:true, opacity:0.7 }));
+        lampGlow.position.y = 0.28+0.78; lamp.add(lampGlow);
+        lamp.position.set(dims.w/2-1.75, 0.5, -0.6);
+        g.add(lamp);
+        g.userData.lampGlow = lampGlow;
+        const featherPen = new THREE.Mesh(new THREE.ConeGeometry(0.03,0.32,5), mat(0xfaf6ee));
+        featherPen.rotation.z = 0.9; featherPen.position.set(dims.w/2-1.3, 0.62, -0.4); g.add(featherPen);
+        /* 本つみ(装飾) */
+        for(let i=0;i<3;i++){
+          const stack = new THREE.Mesh(new THREE.BoxGeometry(0.34,0.06,0.24), mat([0x8a6a52,0xd48a4a,0xa88a6a][i]));
+          stack.position.set(-dims.w/2+0.6, 0.06+i*0.07, 0.6); g.add(stack);
+        }
+        /* ほんだな(find型の個別依頼、機能はそのまま維持) */
+        const book = buildFurniturePiece("shelf", 0x8a6a52);
+        book.position.set(0, 0, -dims.d/2 + 0.5); g.add(book);
+        g.userData.bookshelfPos = new THREE.Vector3(0, 0, -dims.d/2 + 1.4);
+      }
     }
   }
   g.userData.isInterior = true;
   g.userData.kind = cfg.kind;
   g.visible = false;
-  const entranceD = cfg.kind === "kitchen" ? KITCHEN_ROOM.d : ROOM_D;
+  const entranceD = roomDimsFor(interiorId).d;
   g.userData.entrance = new THREE.Vector3(0, 0, entranceD/2 - 0.7);
   scene.add(g);
   return g;
@@ -2913,6 +3050,28 @@ const InteriorSystem = {
     if(cookingDisplay && g.userData.dishTableTop){
       cookingDisplay.position.y = g.userData.dishTableTop.y + 0.08 + Math.sin(now/450)*0.025;
     }
+    /* 第2弾: プレイヤー宅・おみせ・ねこ/うさぎ/ふくろうの軽いギミック */
+    if(g.userData.mirrorSparkles){
+      g.userData.mirrorSparkles.forEach((s,i)=>{
+        s.material.opacity = 0.5 + Math.max(0, Math.sin(now/500 + i*1.4))*0.5;
+        s.position.y += Math.sin(now/900 + i)*0.0006;
+      });
+    }
+    if(g.userData.registerSparkle && player){
+      const near = player.position.distanceTo(g.userData.registerSparkle.position) < 1.5;
+      const base = 0.3 + Math.sin(now/500)*0.08;
+      g.userData.registerSparkle.material.opacity = near ? base + 0.3 : base;
+      g.userData.registerSparkle.rotation.z += 0.01;
+    }
+    if(g.userData.yarnBall){
+      g.userData.yarnBall.rotation.y = now/700;
+      g.userData.yarnBall.position.x += Math.sin(now/650)*0.0004;
+    }
+    if(g.userData.ribbon){
+      g.userData.ribbon.rotation.z = Math.sin(now/600)*0.35;
+      g.userData.ribbon.rotation.y = Math.sin(now/900)*0.25;
+    }
+    if(g.userData.lampGlow) g.userData.lampGlow.material.opacity = 0.55 + Math.sin(now/550)*0.2;
   }
 };
 /* 仲良しイベント：移住済み(friendship>=5)かつ個別依頼クリア後、自宅への初回入室で一度だけ発生 */

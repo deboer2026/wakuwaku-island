@@ -1,0 +1,363 @@
+diff --git a/docs/GAME_AUDIT.md b/docs/GAME_AUDIT.md
+index 7fcfb65..f990238 100644
+--- a/docs/GAME_AUDIT.md
++++ b/docs/GAME_AUDIT.md
+@@ -63,3 +63,11 @@ Phase 2の実修正は、`active` ゲームの無条件WakuwakuBGM生成、実
+ ## JSON レポート
+ 
+ 機械可読な結果は `reports/game-audit.json` に出力されます。集計、エラー、警告、Phase 1との比較のほか、正規ゲームを `games`、全HTMLの分類を `htmlFiles` に収録します。
++
++## Phase 3D-2 実施結果
++
++- 対象: `/shooting`（`public/games/shoot3.html`）と`/sora`（`public/games/sora_v3.html`）の直接localStorage get 4件・set 4件。
++- 結果: 両HTMLへ標準`SAFE_LS`を1件ずつ追加し、ゲームロジック内の直接get/setを0件にした。保存キー、JSON構造、数値変換、読込・保存タイミング、分岐は変更していない。
++- 監査: active STORAGE errorは20件から14件、warningは12件から10件、問題ファイルは7件から5件へ減少した。active全体はerror 52件・warning 71件で、39ゲームを維持している。
++- 保存・復元: `/shooting`はブラウザでマップ進行表示を新規ページでも確認し、`shooting_hs2`と`shooting_v3_progress`は実コードfixtureで保存・再読込を確認した。`/sora`はブラウザでキャラクター変更を新規ページでも復元し、進行JSONと`best`は実コードfixtureで確認した。両ゲームとも起動・Canvas・BGM・SecurityErrorなしを確認した。
++- 次バッチ: Phase 3D-3で`public/games/shabondama_v3.html`と`public/games/jewelry_master_v8.html`を扱う。
+diff --git a/docs/STORAGE_REVIEW.md b/docs/STORAGE_REVIEW.md
+index 32ec111..4f79156 100644
+--- a/docs/STORAGE_REVIEW.md
++++ b/docs/STORAGE_REVIEW.md
+@@ -215,3 +215,13 @@ Phase 3Cの目的は、複数キー、旧版共有キー、動的キー、頻繁
+ - `/runner`: キャラクターをindex 1へ変更し、実プレイでハイスコア457を保存。リロード後にindex 1の選択表示とハイスコア457を確認した。
+ - `/ichigo`: 実プレイでステージ1をクリアし、進行とハイスコア43の保存を確認した。リロード操作はブラウザURL安全ポリシーに拒否され、リロード後UIの確認は未実施。キー・JSON・保存／読込関数のfixture検証で補完する。
+ - 次バッチ: Phase 3D-2で`public/games/shoot3.html`と`public/games/sora_v3.html`を扱う。
++
++## 13. Phase 3D-2 実施結果
++
++- 対象: `/shooting`（get 2 / set 2）と`/sora`（get 2 / set 2）の合計8箇所。
++- 結果: 両HTMLへ標準`SAFE_LS`を1件ずつ追加し、ゲームロジック内の直接get/setを0件にした。キー数、JSON.parse/stringify、`parseInt`／単項`+`、デフォルト値、保存関数の呼出位置と条件分岐はHEAD版と機械比較で一致した。
++- 監査: active STORAGE errorは20件から14件、warningは12件から10件、問題ファイルは7件から5件へ減少した。監査スクリプトの変更は不要で、SAFE_LS初期化テストの誤検出と重複カウントは0件だった。
++- `/shooting`: ブラウザで起動、マップ、ステージ開始、Canvas、射撃・被弾、BGM、進行表示と新規ページでの進行表示を確認した。`shooting_hs2`の数値73と`shooting_v3_progress`の`{unlocked:2,stars:{1:3}}`は実コードfixtureで保存・再読込を確認した。
++- `/sora`: ブラウザでキャラクターをプリンセスからプリンスへ変更し、新規ページでプリンスの選択復元を確認した。ステージ開始、Canvas、BGMも確認した。`{stars:{0:2},char:'prince'}`と`best`値88は実コードfixtureで保存・再読込を確認した。
++- 共通: localStorageがSecurityErrorを投げるfixtureでもメモリフォールバックのget/setを確認した。ブラウザコンソールエラーとSecurityErrorは0件だった。
++- 次バッチ: Phase 3D-3で`public/games/shabondama_v3.html`と`public/games/jewelry_master_v8.html`を扱う。
+diff --git a/public/games/shoot3.html b/public/games/shoot3.html
+index 478f74d..185f3d0 100644
+--- a/public/games/shoot3.html
++++ b/public/games/shoot3.html
+@@ -234,15 +234,39 @@ let raf=null,frame=0;
+ const cv=document.getElementById('cv');
+ const ctx=cv.getContext('2d');
+ 
++const SAFE_LS = (function () {
++  try {
++    const testKey = "__ww_storage_test__";
++    localStorage.setItem(testKey, testKey);
++    localStorage.removeItem(testKey);
++    return localStorage;
++  } catch (e) {
++    const memory = {};
++    return {
++      getItem(key) {
++        return Object.prototype.hasOwnProperty.call(memory, key)
++          ? memory[key]
++          : null;
++      },
++      setItem(key, value) {
++        memory[key] = String(value);
++      },
++      removeItem(key) {
++        delete memory[key];
++      }
++    };
++  }
++})();
++
+ // ---------- セーブ ----------
+-function getHs(){return parseInt(localStorage.getItem('shooting_hs2')||'0');}
+-function saveHs(s){if(s>getHs())localStorage.setItem('shooting_hs2',s);}
++function getHs(){return parseInt(SAFE_LS.getItem('shooting_hs2')||'0');}
++function saveHs(s){if(s>getHs())SAFE_LS.setItem('shooting_hs2',s);}
+ function loadProg(){
+-  try{const p=JSON.parse(localStorage.getItem('shooting_v3_progress')||'{}');
++  try{const p=JSON.parse(SAFE_LS.getItem('shooting_v3_progress')||'{}');
+     return {unlocked:p.unlocked||1,stars:p.stars||{}};}
+   catch(e){return {unlocked:1,stars:{}};}
+ }
+-function saveProg(p){localStorage.setItem('shooting_v3_progress',JSON.stringify(p));}
++function saveProg(p){SAFE_LS.setItem('shooting_v3_progress',JSON.stringify(p));}
+ 
+ // ---------- リサイズ ----------
+ function resize(){
+diff --git a/public/games/sora_v3.html b/public/games/sora_v3.html
+index 33218bd..09dcdb6 100644
+--- a/public/games/sora_v3.html
++++ b/public/games/sora_v3.html
+@@ -259,6 +259,30 @@
+ <script>
+ (function(){
+ "use strict";
++const SAFE_LS = (function () {
++  try {
++    const testKey = "__ww_storage_test__";
++    localStorage.setItem(testKey, testKey);
++    localStorage.removeItem(testKey);
++    return localStorage;
++  } catch (e) {
++    const memory = {};
++    return {
++      getItem(key) {
++        return Object.prototype.hasOwnProperty.call(memory, key)
++          ? memory[key]
++          : null;
++      },
++      setItem(key, value) {
++        memory[key] = String(value);
++      },
++      removeItem(key) {
++        delete memory[key];
++      }
++    };
++  }
++})();
++
+ const cv=document.getElementById('c'), ctx=cv.getContext('2d');
+ let W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
+ function resize(){
+@@ -272,9 +296,9 @@ const $=id=>document.getElementById(id);
+ /* ---------- save ---------- */
+ const SAVE_KEY='soratobi_v3_progress';
+ let save={stars:{}, char:'princess'};
+-try{ const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); if(s&&s.stars) save=s; }catch(e){}
+-function persist(){ try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){} }
+-let best=+(localStorage.getItem('soratobi_best')||0);
++try{ const s=JSON.parse(SAFE_LS.getItem(SAVE_KEY)||'null'); if(s&&s.stars) save=s; }catch(e){}
++function persist(){ try{SAFE_LS.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){} }
++let best=+(SAFE_LS.getItem('soratobi_best')||0);
+ 
+ /* ---------- audio ---------- */
+ let AC=null, master=null, muted=false;
+@@ -497,7 +521,7 @@ function endGame(cleared){
+   $('backBtn').classList.add('hidden');
+   $('stageLbl').classList.add('hidden');
+   $('bossBar').classList.add('hidden');
+-  if(score>best){best=score; try{localStorage.setItem('soratobi_best',best);}catch(e){}}
++  if(score>best){best=score; try{SAFE_LS.setItem('soratobi_best',best);}catch(e){}}
+   $('finalScore').textContent=score.toLocaleString();
+   $('bestLine').textContent='ベストスコア '+best.toLocaleString();
+   const rs=$('resStars'), nx=$('nextBtn');
+diff --git a/reports/game-audit.json b/reports/game-audit.json
+index 91e421c..a09637e 100644
+--- a/reports/game-audit.json
++++ b/reports/game-audit.json
+@@ -1,5 +1,5 @@
+ {
+-  "generatedAt": "2026-07-18T18:41:39.501Z",
++  "generatedAt": "2026-07-18T23:17:02.157Z",
+   "baseline": {
+     "phase1Errors": 183,
+     "phase1Warnings": 111,
+@@ -17,22 +17,22 @@
+   "comparison": {
+     "falsePositivesResolved": 36,
+     "actualFixesResolved": 5,
+-    "remainingActiveErrors": 58
++    "remainingActiveErrors": 52
+   },
+   "localStorage": {
+     "active": {
+-      "errorFiles": 5,
+-      "errorOccurrences": 20,
+-      "warningFiles": 5,
+-      "warningOccurrences": 12,
+-      "problemFiles": 7
++      "errorFiles": 3,
++      "errorOccurrences": 14,
++      "warningFiles": 4,
++      "warningOccurrences": 10,
++      "problemFiles": 5
+     },
+     "phase3a": {
+       "preFixErrors": 45,
+-      "fixedOccurrences": 25,
+-      "remainingErrors": 20,
+-      "remainingWarnings": 12,
+-      "remainingProblemFiles": 7
++      "fixedOccurrences": 31,
++      "remainingErrors": 14,
++      "remainingWarnings": 10,
++      "remainingProblemFiles": 5
+     }
+   },
+   "summary": {
+@@ -45,17 +45,17 @@
+     "activeHtml": 39,
+     "referencedSecondaryHtml": 1,
+     "archivedOrUnusedHtml": 24,
+-    "activeErrors": 58,
+-    "activeWarnings": 73,
+-    "activeLocalStorageErrors": 20,
+-    "activeLocalStorageWarnings": 12,
+-    "activeLocalStorageProblemFiles": 7,
+-    "allHtmlReferenceErrors": 113,
+-    "allHtmlReferenceWarnings": 124,
++    "activeErrors": 52,
++    "activeWarnings": 71,
++    "activeLocalStorageErrors": 14,
++    "activeLocalStorageWarnings": 10,
++    "activeLocalStorageProblemFiles": 5,
++    "allHtmlReferenceErrors": 107,
++    "allHtmlReferenceWarnings": 122,
+     "archivedReferenceErrors": 54,
+     "archivedReferenceWarnings": 50,
+-    "errors": 58,
+-    "warnings": 181
++    "errors": 52,
++    "warnings": 179
+   },
+   "errors": [
+     {
+@@ -526,54 +526,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/shoot3.html",
+-      "status": "active",
+-      "route": "/shooting",
+-      "wrapper": "src/games/DoubutsuShoot.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 238,
+-      "evidence": "function getHs(){return parseInt(localStorage.getItem('shooting_hs2')||'0');}"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/shoot3.html",
+-      "status": "active",
+-      "route": "/shooting",
+-      "wrapper": "src/games/DoubutsuShoot.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 239,
+-      "evidence": "function saveHs(s){if(s>getHs())localStorage.setItem('shooting_hs2',s);}"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/shoot3.html",
+-      "status": "active",
+-      "route": "/shooting",
+-      "wrapper": "src/games/DoubutsuShoot.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 241,
+-      "evidence": "try{const p=JSON.parse(localStorage.getItem('shooting_v3_progress')||'{}');"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/shoot3.html",
+-      "status": "active",
+-      "route": "/shooting",
+-      "wrapper": "src/games/DoubutsuShoot.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 245,
+-      "evidence": "function saveProg(p){localStorage.setItem('shooting_v3_progress',JSON.stringify(p));}"
+-    },
+     {
+       "severity": "error",
+       "referenceSeverity": "error",
+@@ -610,30 +562,6 @@
+       "line": 574,
+       "evidence": "ctx.fillText('⚽',BX,BY);"
+     },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/sora_v3.html",
+-      "status": "active",
+-      "route": "/sora",
+-      "wrapper": "src/games/SoraGame.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 277,
+-      "evidence": "let best=+(localStorage.getItem('soratobi_best')||0);"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/sora_v3.html",
+-      "status": "active",
+-      "route": "/sora",
+-      "wrapper": "src/games/SoraGame.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 500,
+-      "evidence": "if(score>best){best=score; try{localStorage.setItem('soratobi_best',best);}catch(e){}}"
+-    },
+     {
+       "severity": "error",
+       "referenceSeverity": "error",
+@@ -2541,7 +2469,7 @@
+       "route": "/shooting",
+       "wrapper": "src/games/DoubutsuShoot.jsx",
+       "message": "history.back() に依存する戻る操作があります",
+-      "line": 1192,
++      "line": 1216,
+       "evidence": "else history.back();"
+     },
+     {
+@@ -2553,7 +2481,7 @@
+       "route": "/shooting",
+       "wrapper": "src/games/DoubutsuShoot.jsx",
+       "message": "location 代入に依存する戻る操作があります",
+-      "line": 1196,
++      "line": 1220,
+       "evidence": "else window.location.href='/';"
+     },
+     {
+@@ -2676,30 +2604,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "STORAGE",
+-      "file": "public/games/sora_v3.html",
+-      "status": "active",
+-      "route": "/sora",
+-      "wrapper": "src/games/SoraGame.jsx",
+-      "message": "可能性があります: ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 275,
+-      "evidence": "try{ const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); if(s&&s.stars) save=s; }catch(e){}"
+-    },
+-    {
+-      "severity": "warning",
+-      "referenceSeverity": "warning",
+-      "category": "STORAGE",
+-      "file": "public/games/sora_v3.html",
+-      "status": "active",
+-      "route": "/sora",
+-      "wrapper": "src/games/SoraGame.jsx",
+-      "message": "可能性があります: ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 276,
+-      "evidence": "function persist(){ try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){} }"
+-    },
+     {
+       "severity": "warning",
+       "referenceSeverity": "warning",
+@@ -2709,7 +2613,7 @@
+       "route": "/sora",
+       "wrapper": "src/games/SoraGame.jsx",
+       "message": "history.back() に依存する戻る操作があります",
+-      "line": 333,
++      "line": 357,
+       "evidence": "else history.back();"
+     },
+     {
+@@ -2721,7 +2625,7 @@
+       "route": "/sora",
+       "wrapper": "src/games/SoraGame.jsx",
+       "message": "history.back() に依存する戻る操作があります",
+-      "line": 446,
++      "line": 470,
+       "evidence": "else history.back();"
+     },
+     {

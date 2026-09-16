@@ -1,0 +1,363 @@
+diff --git a/src/pages/IslandMap.css b/src/pages/IslandMap.css
+index fccc07d..265363c 100644
+--- a/src/pages/IslandMap.css
++++ b/src/pages/IslandMap.css
+@@ -63,7 +63,7 @@
+   position: absolute;
+   left: 0;
+   right: 0;
+-  scroll-margin-top: 12px;
++  scroll-margin-top: 118px; /* sticky bar分 */
+ }
+ .im-area-sign {
+   position: absolute;
+diff --git a/src/pages/IslandMap.jsx b/src/pages/IslandMap.jsx
+index 7fde72e..3aa43b2 100644
+--- a/src/pages/IslandMap.jsx
++++ b/src/pages/IslandMap.jsx
+@@ -1,4 +1,4 @@
+-import React, { useMemo, useRef } from 'react';
++import React, { useMemo } from 'react';
+ import './IslandMap.css';
+ 
+ /* ════════════════════════════════════════════════════
+@@ -9,7 +9,7 @@ import './IslandMap.css';
+    - GAMES/ルート定義は一切変更しない表示層のみの追加。
+ ════════════════════════════════════════════════════ */
+ 
+-const AREA_THEMES = {
++export const AREA_THEMES = {
+   asobu:    { bg:'linear-gradient(180deg,#c9f0bd,#a9e39b)', sign:'#3f9d4a', deco:['🌳','🍄','🌼','🐿️'] },
+   nerau:    { bg:'linear-gradient(180deg,#cdeaff,#a9d8ff)', sign:'#3a86d4', deco:['⛰️','🪁','🎈','🦅'] },
+   race:     { bg:'linear-gradient(180deg,#ffe6c4,#ffd0a0)', sign:'#e07a1f', deco:['🏁','🚦','🌵','⛽'] },
+@@ -32,8 +32,6 @@ const UI_TEXT = {
+ };
+ 
+ export default function IslandMap({ groups, games, lang, svgMap, onPlay }) {
+-  const areaRefs = useRef({});
+-
+   /* エリア・建物のレイアウトを算出（ゲーム追加時も自動対応） */
+   const layout = useMemo(() => {
+     let y = TOP_PAD;
+@@ -77,28 +75,8 @@ export default function IslandMap({ groups, games, lang, svgMap, onPlay }) {
+     return d;
+   }, [layout]);
+ 
+-  function jumpTo(key) {
+-    const el = areaRefs.current[key];
+-    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+-  }
+-
+   return (
+     <div className="im-wrap">
+-      {/* ── エリアクイックジャンプ ── */}
+-      <div className="im-jump">
+-        {layout.areas.map(({ grp }) => (
+-          <button
+-            key={grp.key}
+-            className="im-jump-btn"
+-            style={{ '--sign': (AREA_THEMES[grp.key] || DEFAULT_THEME).sign }}
+-            onClick={() => jumpTo(grp.key)}
+-          >
+-            <span className="im-jump-icon">{grp.icon}</span>
+-            <span className="im-jump-label">{grp.label[lang] || grp.label.ja}</span>
+-          </button>
+-        ))}
+-      </div>
+-
+       {/* ── 島本体 ── */}
+       <div className="im-ocean">
+         <div className="im-island" style={{ height: layout.totalH }}>
+@@ -109,7 +87,7 @@ export default function IslandMap({ groups, games, lang, svgMap, onPlay }) {
+               <div
+                 key={grp.key}
+                 className="im-area"
+-                ref={el => { areaRefs.current[grp.key] = el; }}
++                id={`im-area-${grp.key}`}
+                 style={{ top, height, background: theme.bg }}
+               >
+                 {/* エリア看板 */}
+diff --git a/src/pages/TopPage.css b/src/pages/TopPage.css
+index 42f1201..75be9c1 100644
+--- a/src/pages/TopPage.css
++++ b/src/pages/TopPage.css
+@@ -1754,3 +1754,110 @@
+   box-shadow: 0 3px 0 rgba(0,0,0,0.15);
+ }
+ .tp-view-tab:active { transform: scale(0.96); }
++
++/* ══════════════════════════════════════════════════════════
++   ✨ v2.0 COMPACT HERO + STICKY NAV
++   （1画面目でしまマップの建物が見える構成へ圧縮）
++══════════════════════════════════════════════════════════ */
++
++/* ── ① ヒーロー大幅圧縮 ── */
++.tp-header {
++  padding-top: max(64px, calc(env(safe-area-inset-top, 0px) + 60px));
++  padding-bottom: 0;
++  gap: 2px;
++}
++.tp-title-wrap { animation: none !important; }
++.tp-title {
++  flex-direction: row;
++  align-items: baseline;
++  gap: 6px;
++  flex-wrap: wrap;
++  justify-content: center;
++}
++.tp-title-1 { font-size: clamp(26px, 8vw, 42px) !important; }
++.tp-title-2 { font-size: clamp(26px, 8vw, 42px) !important; }
++.tp-header .ksk-title-zone { padding-bottom: 4px; }
++
++/* キャラを小型化してタイトル1行と同じ高さ帯に */
++.tp-header .ksk-svg { width: 46px; height: 73px; }
++.tp-header .ksk-pet { font-size: 14px; }
++
++/* 吹き出しはコンパクトに */
++.tp-mascot-bubble {
++  font-size: 11px;
++  padding: 4px 10px;
++  margin-bottom: 2px;
++  max-width: 210px;
++}
++
++/* 季節チップ（タイトル直下・非ボタン装飾） */
++.tp-season--chip {
++  margin: 2px auto 0;
++  padding: 3px 12px !important;
++  font-size: 11.5px !important;
++  border-width: 1.5px !important;
++  animation: none !important;
++  background: rgba(255,255,255,0.55) !important;
++  box-shadow: none !important;
++}
++
++.tp-game-section { padding-top: 6px; }
++
++/* ── ② sticky統合バー（タブ＋エリアジャンプ） ── */
++.tp-sticky-bar {
++  position: sticky;
++  top: calc(env(safe-area-inset-top, 0px) + 6px);
++  z-index: 40;
++  display: flex;
++  flex-direction: column;
++  gap: 6px;
++  margin: 0 0 12px;
++  padding: 7px 8px;
++  background: rgba(228,244,255,0.88);
++  backdrop-filter: blur(8px);
++  -webkit-backdrop-filter: blur(8px);
++  border-radius: 22px;
++  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
++}
++.tp-sticky-bar .tp-view-toggle {
++  margin: 0 auto;
++  padding: 4px;
++  max-width: 300px;
++  width: 100%;
++  background: rgba(255,255,255,0.5);
++  box-shadow: inset 0 2px 5px rgba(0,0,0,0.08);
++}
++.tp-sticky-bar .tp-view-tab {
++  padding: 7px 4px;
++  font-size: 13px;
++}
++.tp-sticky-jump {
++  display: flex;
++  gap: 6px;
++  overflow-x: auto;
++  padding: 1px 2px 3px;
++  -webkit-overflow-scrolling: touch;
++  scrollbar-width: none;
++}
++.tp-sticky-jump::-webkit-scrollbar { display: none; }
++.tp-sticky-jump .im-jump-btn {
++  font-size: 12px;
++  padding: 4px 11px;
++  border-width: 2.5px;
++}
++
++/* ── ③ 右上ボタン群：モバイルではショップをアイコン化 ── */
++@media (max-width: 560px) {
++  .tp-top-btns { gap: 5px; }
++  .tp-top-btn { width: 40px; height: 40px; font-size: 16px; }
++  .tp-shop-label { display: none; }
++  .tp-shop-btn {
++    width: 40px !important;
++    padding: 0 !important;
++    border-radius: 50% !important;
++    gap: 0;
++  }
++}
++
++/* ── ④ 最近遊んだ（マップ下配置に合わせ軽量化） ── */
++.tp-recent { margin-top: 16px; }
+diff --git a/src/pages/TopPage.jsx b/src/pages/TopPage.jsx
+index a02fc76..669fb00 100644
+--- a/src/pages/TopPage.jsx
++++ b/src/pages/TopPage.jsx
+@@ -12,7 +12,7 @@ import { getCoins, checkLoginBonus, claimLoginBonus } from '../utils/coins';
+ import { getRecentGames } from '../utils/recentGames';
+ import { getPlayHistory } from '../utils/playHistory';
+ import { detectLang } from '../utils/i18n';
+-import IslandMap from './IslandMap';
++import IslandMap, { AREA_THEMES as MAP_AREA_THEMES } from './IslandMap';
+ import './TopPage.css';
+ 
+ /* ── カテゴリ別グラデーション ──────────────────────────── */
+@@ -1589,7 +1589,15 @@ export default function TopPage() {
+         </div>
+         <button className="tp-top-btn tp-shop-btn" onClick={() => setShopOpen(true)}
+           title={lang === 'en' ? 'Shop' : 'ショップ'}>
+-          🛒 {{ja:'ショップ', en:'Shop', zh:'商店', ko:'상점', es:'Tienda'}[lang] || 'ショップ'}
++          🛒 <span className="tp-shop-label">{{ja:'ショップ', en:'Shop', zh:'商店', ko:'상점', es:'Tienda'}[lang] || 'ショップ'}</span>
++        </button>
++        <button className="tp-top-btn" onClick={startRoulette}
++          title={{ja:'ゲームルーレット', en:'Game Roulette', zh:'游戏轮盘', ko:'게임 룰렛', es:'Ruleta'}[lang] || 'ゲームルーレット'}>
++          🎲
++        </button>
++        <button className="tp-top-btn" onClick={openZukan}
++          title={{ja:'スタンプずかん', en:'Stamp Book', zh:'印章图鉴', ko:'스탬프 도감', es:'Álbum'}[lang] || 'スタンプずかん'}>
++          📖
+         </button>
+         <button className="tp-top-btn ksk-top-btn" onClick={() => openPanel('princess')}
+           title={lang === 'en' ? 'Dress up' : 'きがえ'}>
+@@ -1629,12 +1637,10 @@ export default function TopPage() {
+               </span>
+             </h1>
+           </div>
+-        </div>
+ 
+-        {/* ② 季節バナー */}
+-        <div className="tp-hero-row">
++          {/* ② 季節チップ（タイトル直下に統合） */}
+           <div
+-            className="tp-season"
++            className="tp-season tp-season--chip"
+             style={{ '--season-color': season.color, '--season-glow': season.glow }}
+           >
+             {season.emoji} {season[lang] || season.ja}
+@@ -1644,55 +1650,47 @@ export default function TopPage() {
+ 
+       {/* ── ゲームセクション ── */}
+       <div className="tp-game-section">
+-        {/* ── 最近遊んだゲーム ── */}
+-        {recentGames.length > 0 && (
+-          <div className="tp-recent">
+-            <div className="tp-recent-title">
+-              🕐 {{ja:'さいきんあそんだゲーム', en:'Recently Played', zh:'最近玩过', ko:'최근 플레이', es:'Reciente'}[lang] || 'さいきんあそんだゲーム'}
+-            </div>
+-            <div className="tp-recent-scroll">
+-              {recentGames.map(g => (
+-                <button
+-                  key={g.route}
+-                  className="tp-recent-card"
+-                  onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY); }}
+-                >
+-                  <span className="tp-recent-icon">{g.icon}</span>
+-                  <span className="tp-recent-name">{(g[lang] || g.ja).name}</span>
+-                </button>
+-              ))}
+-            </div>
++        {/* ── sticky統合バー：切替タブ＋エリアジャンプ ── */}
++        <div className="tp-sticky-bar">
++          <div className="tp-view-toggle" role="tablist">
++            <button
++              role="tab"
++              aria-selected={topView === 'map'}
++              className={`tp-view-tab${topView === 'map' ? ' tp-view-tab--on' : ''}`}
++              onClick={() => changeTopView('map')}
++            >
++              🗺️ {{ja:'しまマップ', en:'Island Map', zh:'岛屿地图', ko:'섬 지도', es:'Mapa'}[lang] || 'しまマップ'}
++            </button>
++            <button
++              role="tab"
++              aria-selected={topView === 'list'}
++              className={`tp-view-tab${topView === 'list' ? ' tp-view-tab--on' : ''}`}
++              onClick={() => changeTopView('list')}
++            >
++              📋 {{ja:'いちらん', en:'List', zh:'列表', ko:'목록', es:'Lista'}[lang] || 'いちらん'}
++            </button>
+           </div>
+-        )}
+-
+-        {/* ── アクションボタン行 ── */}
+-        <div className="tp-action-row">
+-          <button className="tp-roulette-btn" onClick={startRoulette}>
+-            🎲 {{ja:'ゲームルーレット', en:'Game Roulette', zh:'游戏轮盘', ko:'게임 룰렛', es:'Ruleta'}[lang] || 'ゲームルーレット'}
+-          </button>
+-          <button className="tp-zukan-btn" onClick={openZukan}>
+-            📖 {{ja:'スタンプずかん', en:'Stamp Book', zh:'印章图鉴', ko:'스탬프 도감', es:'Álbum'}[lang] || 'スタンプずかん'}
+-          </button>
+-        </div>
+-
+-        {/* ── しまマップ⇔いちらん 切替タブ ── */}
+-        <div className="tp-view-toggle" role="tablist">
+-          <button
+-            role="tab"
+-            aria-selected={topView === 'map'}
+-            className={`tp-view-tab${topView === 'map' ? ' tp-view-tab--on' : ''}`}
+-            onClick={() => changeTopView('map')}
+-          >
+-            🗺️ {{ja:'しまマップ', en:'Island Map', zh:'岛屿地图', ko:'섬 지도', es:'Mapa'}[lang] || 'しまマップ'}
+-          </button>
+-          <button
+-            role="tab"
+-            aria-selected={topView === 'list'}
+-            className={`tp-view-tab${topView === 'list' ? ' tp-view-tab--on' : ''}`}
+-            onClick={() => changeTopView('list')}
+-          >
+-            📋 {{ja:'いちらん', en:'List', zh:'列表', ko:'목록', es:'Lista'}[lang] || 'いちらん'}
+-          </button>
++          {topView === 'map' && (
++            <div className="tp-sticky-jump">
++              {SHELF_GROUPS.map(grp => {
++                if (!ALL_SHELF_GAMES.some(g => grp.match(g))) return null;
++                return (
++                  <button
++                    key={grp.key}
++                    className="im-jump-btn"
++                    style={{ '--sign': (MAP_AREA_THEMES[grp.key] || {}).sign || '#888' }}
++                    onClick={() => {
++                      const el = document.getElementById(`im-area-${grp.key}`);
++                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
++                    }}
++                  >
++                    <span className="im-jump-icon">{grp.icon}</span>
++                    <span className="im-jump-label">{grp.label[lang] || grp.label.ja}</span>
++                  </button>
++                );
++              })}
++            </div>
++          )}
+         </div>
+ 
+         {/* ── しまマップ ── */}
+@@ -1728,6 +1726,27 @@ export default function TopPage() {
+             </div>
+           );
+         })}
++
++        {/* ── 最近遊んだゲーム（マップの下へ移動） ── */}
++        {recentGames.length > 0 && (
++          <div className="tp-recent">
++            <div className="tp-recent-title">
++              🕐 {{ja:'さいきんあそんだゲーム', en:'Recently Played', zh:'最近玩过', ko:'최근 플레이', es:'Reciente'}[lang] || 'さいきんあそんだゲーム'}
++            </div>
++            <div className="tp-recent-scroll">
++              {recentGames.map(g => (
++                <button
++                  key={g.route}
++                  className="tp-recent-card"
++                  onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, g.route, e.clientX, e.clientY); }}
++                >
++                  <span className="tp-recent-icon">{g.icon}</span>
++                  <span className="tp-recent-name">{(g[lang] || g.ja).name}</span>
++                </button>
++              ))}
++            </div>
++          </div>
++        )}
+       </div>
+ 
+       {/* ── フッターパレード ── */}

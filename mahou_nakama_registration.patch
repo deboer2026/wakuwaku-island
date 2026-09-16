@@ -1,0 +1,164 @@
+diff --git a/src/App.jsx b/src/App.jsx
+index e7bc842..fb993fb 100644
+--- a/src/App.jsx
++++ b/src/App.jsx
+@@ -35,6 +35,7 @@ import NekoChou from './games/NekoChou'
+ import TokeiYomi from './games/TokeiYomi'
+ import KatakanaAsobi from './games/KatakanaAsobi'
+ import NurieOekaki from './games/NurieOekaki'
++import MahouNakama from './games/MahouNakama'
+ import PrivacyPage from './pages/PrivacyPage'
+ import TermsPage from './pages/TermsPage'
+ import { recordRecentGame } from './utils/recentGames'
+@@ -60,7 +61,7 @@ const GAME_ROUTES = new Set([
+   '/sniper', '/dressup', '/okashi-crossing',
+   '/moji-asobi', '/iro-awase', '/flag-quiz', '/shoot',
+   '/mori', '/sora', '/bike', '/kart', '/block', '/houki', '/usagi-carrot', '/usagi', '/neko-chou', '/neko', '/mahou-meiro',
+-  '/tokei-yomi', '/katakana-asobi', '/nurie',
++  '/tokei-yomi', '/katakana-asobi', '/nurie', '/mahou-nakama',
+   // 短縮URLエイリアスも記録
+   '/kudamono', '/puzzle', '/kazu', '/soccer',
+ ]);
+@@ -139,6 +140,7 @@ export default function App() {
+         <Route path="/tokei-yomi" element={<GameWithSEO route="/tokei-yomi"><TokeiYomi /></GameWithSEO>} />
+         <Route path="/katakana-asobi" element={<GameWithSEO route="/katakana-asobi"><KatakanaAsobi /></GameWithSEO>} />
+         <Route path="/nurie" element={<GameWithSEO route="/nurie"><NurieOekaki /></GameWithSEO>} />
++        <Route path="/mahou-nakama" element={<GameWithSEO route="/mahou-nakama"><MahouNakama /></GameWithSEO>} />
+         <Route path="/privacy" element={<PrivacyPage />} />
+         <Route path="/terms"   element={<TermsPage />} />
+       </Routes>
+diff --git a/src/games/MahouNakama.jsx b/src/games/MahouNakama.jsx
+new file mode 100644
+index 0000000..da58ea8
+--- /dev/null
++++ b/src/games/MahouNakama.jsx
+@@ -0,0 +1,41 @@
++import { useEffect, useRef } from 'react';
++import { useNavigate } from 'react-router-dom';
++import { useIframeBridge } from '../hooks/useIframeBridge';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
++
++export default function MahouNakama() {
++  const navigate = useNavigate();
++  const iframeRef = useRef(null);
++  useIframeBridge(iframeRef);
++
++  useEffect(() => {
++    const handler = (e) => {
++      if (e.data?.type === 'goHome') { navigate('/'); return; }
++      if (e.data?.type === 'goBack') {
++        let internal = false;
++        try { internal = sessionStorage.getItem('ww_nav_internal') === '1'; } catch {}
++        navigate(internal ? -1 : '/');
++      }
++    };
++    window.addEventListener('message', handler);
++    return () => window.removeEventListener('message', handler);
++  }, [navigate]);
++
++  return (
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/mahou_nakama_v1.html"
++          title="まほうのなかまたい"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/mahou-nakama" />
++    </div>
++  );
++}
+diff --git a/src/pages/TopPage.jsx b/src/pages/TopPage.jsx
+index 1c86fe6..8828f1a 100644
+--- a/src/pages/TopPage.jsx
++++ b/src/pages/TopPage.jsx
+@@ -56,6 +56,41 @@ const MASCOT_LINES = {
+    ゲームSVGイラスト（SNES風）
+ ════════════════════════════════════════════════════ */
+ const GAME_SVGS = {
++  g_mahounakama: (
++    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
++      <rect x="0" y="0" width="100" height="85" fill="#d9ecff"/>
++      <circle cx="18" cy="14" r="6" fill="#fff" opacity=".8"/>
++      <circle cx="26" cy="16" r="8" fill="#fff" opacity=".8"/>
++      <circle cx="78" cy="10" r="7" fill="#fff" opacity=".7"/>
++      <rect x="0" y="56" width="100" height="29" fill="#9fdc7a"/>
++      <ellipse cx="20" cy="64" rx="12" ry="3" fill="#8ccb68"/>
++      <ellipse cx="72" cy="72" rx="14" ry="3" fill="#8ccb68"/>
++      <g transform="translate(32 52)">
++        <ellipse cx="0" cy="14" rx="9" ry="3" fill="#3c5078" opacity=".18"/>
++        <ellipse cx="0" cy="2" rx="8" ry="9" fill="#ffd9a0"/>
++        <circle cx="0" cy="-10" r="8" fill="#ffd9a0"/>
++        <path d="M -7 -14 L -10 -22 L -3 -16 Z" fill="#ffd9a0"/>
++        <path d="M 7 -14 L 10 -22 L 3 -16 Z" fill="#ffd9a0"/>
++        <circle cx="-2.5" cy="-11" r="1.4" fill="#3a3a4a"/>
++        <circle cx="3" cy="-11" r="1.4" fill="#3a3a4a"/>
++        <path d="M -1 -7 Q 0.5 -5.5 2 -7" stroke="#c9506a" strokeWidth="1.2" fill="none"/>
++        <rect x="-6" y="-3" width="12" height="3.5" rx="1.7" fill="#ff8fb5"/>
++        <line x1="6" y1="-4" x2="18" y2="-12" stroke="#b58643" strokeWidth="2"/>
++      </g>
++      <path d="M 50 38 L 51.8 42.4 L 56.5 42.7 L 52.9 45.7 L 54 50.3 L 50 47.8 L 46 50.3 L 47.1 45.7 L 43.5 42.7 L 48.2 42.4 Z" fill="#ffd84a" stroke="#e8a900" strokeWidth=".8"/>
++      <g transform="translate(70 56)">
++        <ellipse cx="0" cy="12" rx="9" ry="3" fill="#3c5078" opacity=".18"/>
++        <ellipse cx="0" cy="0" rx="10" ry="9" fill="#8fd8ff"/>
++        <path d="M -3.4 -2 Q -2 -4 -0.6 -2" stroke="#4a4a5a" strokeWidth="1.3" fill="none"/>
++        <path d="M 0.6 -2 Q 2 -4 3.4 -2" stroke="#4a4a5a" strokeWidth="1.3" fill="none"/>
++        <path d="M -2.5 3 Q 0 5.5 2.5 3" stroke="#4a4a5a" strokeWidth="1.3" fill="none"/>
++        <path d="M -4 -9 L -1 -12 L -1 -7 Z" fill="#ff8fb5"/>
++        <path d="M 4 -9 L 1 -12 L 1 -7 Z" fill="#ff8fb5"/>
++      </g>
++      <circle cx="88" cy="40" r="2" fill="#ffd84a"/>
++      <circle cx="10" cy="44" r="2" fill="#ffd84a"/>
++    </svg>
++  ),
+   g_okashi: (
+     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+       <rect x="0" y="0" width="100" height="85" fill="#ffe3f0"/>
+@@ -1003,6 +1038,12 @@ const SCHOOL_GAMES = [
+     zh:{ name:'猫咪抓蝴蝶',        desc:'用猫咪抓住\n飞舞的蝴蝶！' },
+     ko:{ name:'고양이와 나비',     desc:'날아다니는 나비를\n고양이로 잡아요!' },
+     es:{ name:'Gato y Mariposa',   desc:'¡Atrapa las mariposas\ncon el gato!' } },
++  { id:'g_mahounakama', route:'/mahou-nakama', icon:'🪄', num:18, color:'#7fa8ff', stars:4, isNew:true, category:'アクション',
++    ja:{ name:'まほうのなかまたい', desc:'ステッキでポン！モンスターを\nなかまにして すすもう！' },
++    en:{ name:'Magic Friend Squad',  desc:'Tap monsters with your wand\nand make them your friends!' },
++    zh:{ name:'魔法伙伴小队',        desc:'用魔法棒轻轻一点，\n把怪物变成伙伴！' },
++    ko:{ name:'마법 친구 부대',      desc:'마법 지팡이로 콩!\n몬스터를 친구로 만들자!' },
++    es:{ name:'Escuadrón Mágico',    desc:'¡Toca monstruos con tu varita\ny hazlos tus amigos!' } },
+   { id:'g_okashi', route:'/okashi-crossing', icon:'🍭', num:16, color:'#ff9ecb', stars:4, isNew:true, category:'アクション',
+     ja:{ name:'おかしのくにたんけん', desc:'グミのくるまとチョコのかわ！\nどこまでもすすもう！' },
+     en:{ name:'Candy Land Explorer',  desc:'Cross gummy roads and\nchocolate rivers—go far!' },
+diff --git a/src/seo/gameMeta.js b/src/seo/gameMeta.js
+index 729b0e4..e6c6002 100644
+--- a/src/seo/gameMeta.js
++++ b/src/seo/gameMeta.js
+@@ -224,6 +224,24 @@ const GAME_META = {
+   ],
+ },
+ 
++'/mahou-nakama': {
++  name: 'まほうのなかまたい', desc: 'まほうのステッキでポン！いたずらモンスターをなかまにしてすすむアクションゲーム！',
++  category: 'アクション', ageMin: 4, ageMax: 12,
++  intro: 'まほうのなかまたいは、あいぼうをえらんで、まほうのステッキでいたずらモンスターをやさしくポン！なかまにしながらすすむ、むりょうのよこスクロールアクションゲームです。なかまがふえるとステッキのちからもアップ。8つのステージとさいごのボスがまっているよ。とうろくもインストールもいらず、ブラウザですぐにあそべます。',
++  howto: [
++    'スティックで じゆうに あるく',
++    '「ポン✨」ボタンで モンスターに タッチ',
++    'なかまに なった モンスターが ついてくる',
++    'ぜんいん なかまに して ゴールの はたを めざそう',
++  ],
++  faq: [
++    { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++    { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++    { q: '何さいむけですか？', a: '4さい〜12さいくらいの おこさま向けです。' },
++    { q: 'スマホでも あそべますか？', a: 'はい。スマートフォン・タブレット・パソコンの ブラウザで あそべます。' },
++  ],
++},
++
+ '/okashi-crossing': {
+   name: 'おかしのくにたんけん', desc: 'グミのくるまとチョコのかわをこえて、おかしのくにをどこまでもすすもう！',
+   category: 'アクション', ageMin: 4, ageMax: 12,

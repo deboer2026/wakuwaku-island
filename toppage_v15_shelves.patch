@@ -1,0 +1,262 @@
+diff --git a/src/pages/TopPage.css b/src/pages/TopPage.css
+index a432fa5..3a84034 100644
+--- a/src/pages/TopPage.css
++++ b/src/pages/TopPage.css
+@@ -1487,3 +1487,93 @@
+ .tp-action-row { margin-top: 12px; }
+ .tp-action-row .tp-roulette-btn,
+ .tp-zukan-btn { font-size: 14px; }
++
++/* ══════════════════════════════════════════════════════════
++   ✨ v1.5 CATEGORY SHELVES — カテゴリ別横スクロール棚
++══════════════════════════════════════════════════════════ */
++.tp-shelf { margin: 4px 0 14px; }
++.tp-shelf-title {
++  display: flex;
++  align-items: center;
++  gap: 6px;
++  padding: 0 14px 8px;
++  font-family: 'M PLUS Rounded 1c', sans-serif;
++  font-weight: 800;
++  font-size: 15px;
++  color: #2d4a63;
++  text-align: left;
++}
++.tp-shelf-scroll {
++  display: flex;
++  gap: 10px;
++  overflow-x: auto;
++  padding: 2px 14px 10px;
++  scroll-snap-type: x proximity;
++  -webkit-overflow-scrolling: touch;
++  scrollbar-width: none;
++}
++.tp-shelf-scroll::-webkit-scrollbar { display: none; }
++.tp-shelf-card {
++  position: relative;
++  flex: 0 0 auto;
++  width: 128px;
++  scroll-snap-align: start;
++  border: 3px solid rgba(255,255,255,.65);
++  border-radius: 18px;
++  padding: 8px 8px 9px;
++  cursor: pointer;
++  box-shadow: 0 4px 10px rgba(0,0,0,.16);
++  transition: transform .12s cubic-bezier(.34,1.56,.64,1), filter .12s;
++  overflow: hidden;
++}
++.tp-shelf-card:active {
++  transform: scale(.93) rotate(-1deg);
++  filter: brightness(1.12) saturate(1.15);
++}
++.tp-shelf-art {
++  border-radius: 12px;
++  overflow: hidden;
++  background: rgba(255,255,255,.12);
++}
++.tp-shelf-art svg { display: block; width: 100%; height: auto; }
++.tp-shelf-icon-fb { font-size: 44px; line-height: 96px; display: block; }
++.tp-shelf-name {
++  margin-top: 6px;
++  font-family: 'M PLUS Rounded 1c', sans-serif;
++  font-weight: 800;
++  font-size: 12px;
++  line-height: 1.25;
++  color: #fff;
++  text-shadow: 0 2px 3px rgba(0,0,0,.35);
++  min-height: 2.5em;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++}
++.tp-shelf-new {
++  position: absolute;
++  top: 6px;
++  right: 6px;
++  z-index: 2;
++  padding: 2px 7px;
++  border-radius: 999px;
++  background: #ff4d6d;
++  color: #fff;
++  font-size: 9px;
++  font-weight: 800;
++  font-family: 'M PLUS Rounded 1c', sans-serif;
++  box-shadow: 0 2px 4px rgba(0,0,0,.25);
++}
++.tp-shelf-hard {
++  position: absolute;
++  top: 5px;
++  left: 6px;
++  z-index: 2;
++  font-size: 14px;
++  filter: drop-shadow(0 1px 2px rgba(0,0,0,.3));
++}
++
++/* 棚導入に伴い旧グリッドは非表示状態のためエントランスアニメの負荷なし */
++@media (min-width: 700px) {
++  .tp-shelf-card { width: 148px; }
++}
+diff --git a/src/pages/TopPage.jsx b/src/pages/TopPage.jsx
+index 77118d6..f1018a0 100644
+--- a/src/pages/TopPage.jsx
++++ b/src/pages/TopPage.jsx
+@@ -1023,6 +1023,35 @@ const SCHOOL_GAMES = [
+     es:{ name:'Juego de Katakana',  desc:'¡Elige el katakana\ncorrecto con dibujos!' } },
+ ];
+ 
++/* ── 全ゲーム統合(チャレンジ系は🔥マーク) ── */
++const ALL_SHELF_GAMES = [
++  ...GAMES,
++  ...SCHOOL_GAMES.map(g => ({ ...g, hard: true })),
++];
++const SHELF_ORDER = ['アクション','パズル','レース','かずあそび','もじあそび','クイズ','そうぞう','がくしゅう'];
++const SHELF_CATEGORIES = SHELF_ORDER
++  .map(k => CATEGORIES.find(c => c.key === k))
++  .filter(Boolean);
++
++/* ── 棚用コンパクトカード ── */
++function ShelfCard({ game, lang, onClick }) {
++  const t = game[lang] || game.ja;
++  return (
++    <button
++      className="tp-shelf-card"
++      style={{ background: CARD_GRADIENTS[game.category] || DEFAULT_GRADIENT }}
++      onClick={onClick}
++    >
++      {game.isNew && <span className="tp-shelf-new">NEW</span>}
++      {game.hard && <span className="tp-shelf-hard">🔥</span>}
++      <div className="tp-shelf-art">
++        {GAME_SVGS[game.id] || <span className="tp-shelf-icon-fb">{game.icon}</span>}
++      </div>
++      <div className="tp-shelf-name">{t.name}</div>
++    </button>
++  );
++}
++
+ /* ════════════════════════════════════════════════════
+    雲データ（空に浮かぶ雲）
+ ════════════════════════════════════════════════════ */
+@@ -1163,19 +1192,11 @@ export default function TopPage() {
+   const [shopOpen,    setShopOpen]    = useState(false);
+   const [coins,       setCoins]       = useState(() => typeof localStorage !== 'undefined' ? getCoins() : 0);
+   const [loginBonus,  setLoginBonus]  = useState(null);
+-  const [activeTab,      setActiveTab]      = useState(() => (typeof localStorage !== 'undefined' ? localStorage.getItem('wakuwaku_tab') : null) || 'kids');
+-  const [categoryFilter, setCategoryFilter] = useState('すべて');
+   const [recentRoutes,   setRecentRoutes]   = useState(() => typeof localStorage !== 'undefined' ? getRecentGames() : []);
+ 
+   const season    = getSeason();
+   const daysSince = getDaysSinceUpdate();
+-  const todayIdx  = getTodayIndex(GAMES.length);
+ 
+-  function switchTab(tab) {
+-    setActiveTab(tab);
+-    localStorage.setItem('wakuwaku_tab', tab);
+-    setCategoryFilter('すべて');
+-  }
+ 
+   // 最近遊んだゲームを可視化用データに変換
+   const recentGames = recentRoutes
+@@ -1255,7 +1276,7 @@ export default function TopPage() {
+   const rouletteTimer = useRef(null);
+ 
+   function startRoulette() {
+-    const pool = activeTab === 'kids' ? GAMES : SCHOOL_GAMES;
++    const pool = ALL_SHELF_GAMES;
+     setRouletteOpen(true);
+     setRouletteSpin(true);
+     let delay = 55;
+@@ -1460,22 +1481,6 @@ export default function TopPage() {
+           </div>
+         )}
+ 
+-        {/* ── 年齢別タブ ── */}
+-        <div className="tp-tabs">
+-          <button
+-            className={`tp-tab${activeTab === 'kids' ? ' tp-tab--active' : ''}`}
+-            onClick={() => switchTab('kids')}
+-          >
+-            🌸 {{ja:'かんたん', en:'Easy', zh:'简单', ko:'쉬움', es:'Fácil'}[lang] || 'かんたん'}
+-          </button>
+-          <button
+-            className={`tp-tab${activeTab === 'school' ? ' tp-tab--active' : ''}`}
+-            onClick={() => switchTab('school')}
+-          >
+-            🔥 {{ja:'チャレンジ', en:'Challenge', zh:'挑战', ko:'도전', es:'Desafío'}[lang] || 'チャレンジ'}
+-          </button>
+-        </div>
+-
+         {/* ── アクションボタン行 ── */}
+         <div className="tp-action-row">
+           <button className="tp-roulette-btn" onClick={startRoulette}>
+@@ -1486,40 +1491,28 @@ export default function TopPage() {
+           </button>
+         </div>
+ 
+-        {/* ── タブコンテンツ ── */}
+-        <div className={`tp-tab-panel${activeTab === 'kids' ? ' tp-tab-panel--active' : ''}`}>
+-          <div className="tp-grid">
+-            {GAMES
+-              .filter(g => categoryFilter === 'すべて' || g.category === categoryFilter)
+-              .map((game, i) => (
+-                <GameCard
+-                  key={game.id}
+-                  game={game}
+-                  lang={lang}
+-                  isRecommended={GAMES.indexOf(game) === todayIdx && categoryFilter === 'すべて'}
+-                  animIndex={i}
+-                  onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY); }}
+-                />
+-              ))}
+-          </div>
+-        </div>
+-
+-        <div className={`tp-tab-panel${activeTab === 'school' ? ' tp-tab-panel--active' : ''}`}>
+-          <div className="tp-grid">
+-            {SCHOOL_GAMES
+-              .filter(g => categoryFilter === 'すべて' || g.category === categoryFilter)
+-              .map((game, i) => (
+-              <GameCard
+-                key={game.id}
+-                game={game}
+-                lang={lang}
+-                isRecommended={false}
+-                animIndex={i}
+-                onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY); }}
+-              />
+-            ))}
+-          </div>
+-        </div>
++        {/* ── カテゴリ別ゲーム棚 ── */}
++        {SHELF_CATEGORIES.map(cat => {
++          const items = ALL_SHELF_GAMES.filter(g => g.category === cat.key);
++          if (items.length === 0) return null;
++          return (
++            <div className="tp-shelf" key={cat.key}>
++              <div className="tp-shelf-title">
++                {cat.icon} {cat.label[lang] || cat.label.ja}
++              </div>
++              <div className="tp-shelf-scroll">
++                {items.map(game => (
++                  <ShelfCard
++                    key={game.id}
++                    game={game}
++                    lang={lang}
++                    onClick={(e) => { spawnParticles(e.clientX, e.clientY); transitionTo(navigate, game.route, e.clientX, e.clientY); }}
++                  />
++                ))}
++              </div>
++            </div>
++          );
++        })}
+       </div>
+ 
+       {/* ── フッターパレード ── */}
+@@ -1551,7 +1544,7 @@ export default function TopPage() {
+ 
+       {/* ── ルーレットオーバーレイ ── */}
+       {rouletteOpen && (() => {
+-        const pool = activeTab === 'kids' ? GAMES : SCHOOL_GAMES;
++        const pool = ALL_SHELF_GAMES;
+         const g = pool[rouletteIdx % pool.length];
+         return (
+           <div className="tp-roulette-overlay" onClick={() => { if (!rouletteSpin) closeRoulette(); }}>

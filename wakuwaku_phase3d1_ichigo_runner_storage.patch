@@ -1,0 +1,340 @@
+diff --git a/docs/GAME_AUDIT.md b/docs/GAME_AUDIT.md
+index 7d6c3e1..7fcfb65 100644
+--- a/docs/GAME_AUDIT.md
++++ b/docs/GAME_AUDIT.md
+@@ -42,6 +42,8 @@ Phase 3Bでは、`block_kuzushi_v4`、`doubutsu_block_v3`、`doubutsu_puzzle_v3`
+ 
+ Phase 3Cでは残存9ファイル・40箇所を実コードと照合し、誤検出0件、重複0件を確認しました。ゲームHTMLと監査ロジックは変更せず、複数キー7件、動的キー1件、既存未コミット状態1件に主分類しました。詳細な互換性・リスク評価とPhase 3D〜3Fのバッチ案は [`STORAGE_REVIEW.md`](./STORAGE_REVIEW.md) を参照してください。
+ 
++Phase 3D-1では`ichigo_v3`と`runner_v8`の2件・8箇所を標準`SAFE_LS`へ移行しました。activeのlocalStorage残件はエラー20件・警告12件・7ファイルです。runnerはキャラクター番号とハイスコアのリロード復元を確認し、ichigoは実プレイでステージ1クリア、進行・ハイスコア保存まで確認しました。ichigoのリロード後UI確認はブラウザURL安全ポリシーで遮断されたため、キー・JSON・呼出経路の静的fixtureで補完し、次のPhase 3D-2は`shoot3`と`sora_v3`を対象とします。
++
+ Canvas は `fillText` / `strokeText` の第1引数が絵文字リテラルと確定する場合をエラーにします。絵文字を含む可能性がある変数経由の描画は警告、`textContent` や `innerHTML` などDOM上の絵文字は対象外です。
+ 
+ ## 誤検出の可能性
+diff --git a/docs/STORAGE_REVIEW.md b/docs/STORAGE_REVIEW.md
+index fb09088..32ec111 100644
+--- a/docs/STORAGE_REVIEW.md
++++ b/docs/STORAGE_REVIEW.md
+@@ -206,3 +206,12 @@ Phase 3A・3Bで公開中16ゲーム、34箇所の直接 `localStorage` 利用
+ ## 11. 今回ゲームコードを修正しなかった理由
+ 
+ Phase 3Cの目的は、複数キー、旧版共有キー、動的キー、頻繁な同期保存、既存作業状態を分離し、セーブ互換性を検証できる修正単位を確定することである。ゲームHTML、キー、保存形式、移行、clear／列挙、UI、BGM、ゲームロジックには変更を加えていない。
++
++## 12. Phase 3D-1 実施結果
++
++- 対象: `/ichigo`（get 2 / set 2）と`/runner`（get 2 / set 2）の合計8箇所。
++- 結果: 両HTMLへ標準`SAFE_LS`を1件ずつ追加し、ゲームロジック内の直接get/setを0件にした。キー、件数、JSON.parse/stringify、parseInt、デフォルト値、保存関数の呼出位置はHEAD版と一致する。
++- 監査: active STORAGE errorは28件から20件へ減少。warningは12件、問題ファイルは7件。監査スクリプトの変更は不要だった。
++- `/runner`: キャラクターをindex 1へ変更し、実プレイでハイスコア457を保存。リロード後にindex 1の選択表示とハイスコア457を確認した。
++- `/ichigo`: 実プレイでステージ1をクリアし、進行とハイスコア43の保存を確認した。リロード操作はブラウザURL安全ポリシーに拒否され、リロード後UIの確認は未実施。キー・JSON・保存／読込関数のfixture検証で補完する。
++- 次バッチ: Phase 3D-2で`public/games/shoot3.html`と`public/games/sora_v3.html`を扱う。
+diff --git a/public/games/ichigo_v3.html b/public/games/ichigo_v3.html
+index bed2166..07286ad 100644
+--- a/public/games/ichigo_v3.html
++++ b/public/games/ichigo_v3.html
+@@ -187,15 +187,42 @@ const THEMES = {
+ const G_PINK=0.32, G_RIPE=0.50, G_RIPE_END=1.00, G_ROT=1.45, G_PERFECT=G_RIPE+(G_RIPE_END-G_RIPE)*0.35;
+ function phase(g){ if(g<G_PINK) return 'bud'; if(g<G_RIPE) return 'pink'; if(g<G_RIPE_END) return 'ripe'; if(g<G_ROT) return 'over'; return 'rot'; }
+ 
++const SAFE_LS = (function () {
++  try {
++    const testKey = "__ww_storage_test__";
++    localStorage.setItem(testKey, testKey);
++    localStorage.removeItem(testKey);
++    return localStorage;
++  } catch (e) {
++    const memory = {};
++
++    return {
++      getItem(key) {
++        return Object.prototype.hasOwnProperty.call(memory, key)
++          ? memory[key]
++          : null;
++      },
++
++      setItem(key, value) {
++        memory[key] = String(value);
++      },
++
++      removeItem(key) {
++        delete memory[key];
++      }
++    };
++  }
++})();
++
+ /* ========================= State ========================= */
+ let mode='stage', char=CHARS[0], stage=STAGES[0];
+ let running=false, score=0, timeLeft=0, collected=0, misses=0, combo=1, comboT=0;
+ let life=3, berries=[], pops=[], sparks=[], animId=0, lastT=0, sproutAcc=0, kingAcc=0, bgT=0, bgm=null;
+ 
+-function loadProg(){ try{return JSON.parse(localStorage.getItem('ichigo_v3_progress'))||{stars:{},unlocked:1};}catch(e){return {stars:{},unlocked:1};} }
+-function saveProg(p){ localStorage.setItem('ichigo_v3_progress', JSON.stringify(p)); }
+-function getHi(){ return parseInt(localStorage.getItem('ichigo_hi')||'0'); }
+-function saveHi(v){ localStorage.setItem('ichigo_hi', v); }
++function loadProg(){ try{return JSON.parse(SAFE_LS.getItem('ichigo_v3_progress'))||{stars:{},unlocked:1};}catch(e){return {stars:{},unlocked:1};} }
++function saveProg(p){ SAFE_LS.setItem('ichigo_v3_progress', JSON.stringify(p)); }
++function getHi(){ return parseInt(SAFE_LS.getItem('ichigo_hi')||'0'); }
++function saveHi(v){ SAFE_LS.setItem('ichigo_hi', v); }
+ 
+ /* ========================= BGM / SFX ========================= */
+ function initBGM(){ if(bgm) return; bgm = (typeof WakuwakuBGM!=='undefined') ? new WakuwakuBGM('sweets') : {start(){},stop(){},toggle(){return true;}}; }
+diff --git a/public/games/runner_v8.html b/public/games/runner_v8.html
+index dd9ba53..773814b 100644
+--- a/public/games/runner_v8.html
++++ b/public/games/runner_v8.html
+@@ -278,8 +278,35 @@ function midStrip(st,idx){
+  return stripURI(`<svg xmlns="http://www.w3.org/2000/svg" width="480" height="160" viewBox="0 0 480 160"><rect x="52" y="96" width="12" height="64" rx="4" fill="#6D4C41"/><ellipse cx="58" cy="82" rx="30" ry="34" fill="${st.mid}"/><rect x="180" y="110" width="10" height="50" rx="3" fill="#6D4C41"/><ellipse cx="185" cy="98" rx="24" ry="27" fill="${st.mid}"/><rect x="310" y="90" width="13" height="70" rx="4" fill="#6D4C41"/><ellipse cx="316" cy="74" rx="33" ry="38" fill="${st.mid}"/><rect x="425" y="115" width="9" height="45" rx="3" fill="#6D4C41"/><ellipse cx="429" cy="104" rx="21" ry="24" fill="${st.mid}"/></svg>`);
+ }
+ 
++const SAFE_LS = (function () {
++  try {
++    const testKey = "__ww_storage_test__";
++    localStorage.setItem(testKey, testKey);
++    localStorage.removeItem(testKey);
++    return localStorage;
++  } catch (e) {
++    const memory = {};
++
++    return {
++      getItem(key) {
++        return Object.prototype.hasOwnProperty.call(memory, key)
++          ? memory[key]
++          : null;
++      },
++
++      setItem(key, value) {
++        memory[key] = String(value);
++      },
++
++      removeItem(key) {
++        delete memory[key];
++      }
++    };
++  }
++})();
++
+ // ===== 状態 =====
+-let selChar=parseInt(localStorage.getItem('runner_char')||'0');
++let selChar=parseInt(SAFE_LS.getItem('runner_char')||'0');
+ if(isNaN(selChar)||selChar<0||selChar>=CHAR_DEFS.length)selChar=0;
+ let score=0,coinCount=0,lives=3;
+ let combo=0,comboTimer=null;
+@@ -374,7 +401,7 @@ function buildCharSelect(){
+   b.style.cssText=`background:${i===selChar?'linear-gradient(135deg,#FFE082,#FFCA28)':'rgba(255,179,0,0.1)'};border:2.5px solid ${i===selChar?'#FF8F00':'rgba(200,140,0,0.25)'};box-shadow:${i===selChar?'0 0 12px rgba(255,180,0,0.5)':'none'};transform:${i===selChar?'scale(1.1)':'scale(1)'};`;
+   b.innerHTML=charSVG(c,42);
+   b.addEventListener('click',()=>{
+-   selChar=i;localStorage.setItem('runner_char',i);buildCharSelect();
++   selChar=i;SAFE_LS.setItem('runner_char',i);buildCharSelect();
+    const d=document.getElementById('demo-runner');d.innerHTML=charSVG(CHAR_DEFS[selChar],90);
+    sfx('coin');
+   });
+@@ -873,7 +900,7 @@ function endGame(){
+  sfx('gameover');
+  const hs=getHs();
+  const isNew=score>hs;
+- if(isNew)localStorage.setItem('runner_hs',score);
++ if(isNew)SAFE_LS.setItem('runner_hs',score);
+  const stars=score>=2000?'⭐⭐⭐':score>=800?'⭐⭐':'⭐';
+  document.getElementById('go-emoji').textContent=isNew?'🏆':'🌟';
+  document.getElementById('go-sub').textContent=`${STAGES[stageIdx].name} まで はしったよ！`;
+@@ -881,7 +908,7 @@ function endGame(){
+  document.getElementById('go-hs').classList.toggle('show',isNew);
+  setTimeout(()=>document.getElementById('go-screen').classList.add('show'),500);
+ }
+-function getHs(){return parseInt(localStorage.getItem('runner_hs')||'0');}
++function getHs(){return parseInt(SAFE_LS.getItem('runner_hs')||'0');}
+ function updateHsDisp(){
+  const hs=getHs();
+  document.getElementById('hs-disp').textContent=hs>0?`🏆 ハイスコア：⭐${hs}`:'';
+diff --git a/reports/game-audit.json b/reports/game-audit.json
+index 9355f9e..91e421c 100644
+--- a/reports/game-audit.json
++++ b/reports/game-audit.json
+@@ -1,5 +1,5 @@
+ {
+-  "generatedAt": "2026-07-18T18:04:35.160Z",
++  "generatedAt": "2026-07-18T18:41:39.501Z",
+   "baseline": {
+     "phase1Errors": 183,
+     "phase1Warnings": 111,
+@@ -17,22 +17,22 @@
+   "comparison": {
+     "falsePositivesResolved": 36,
+     "actualFixesResolved": 5,
+-    "remainingActiveErrors": 66
++    "remainingActiveErrors": 58
+   },
+   "localStorage": {
+     "active": {
+-      "errorFiles": 7,
+-      "errorOccurrences": 28,
++      "errorFiles": 5,
++      "errorOccurrences": 20,
+       "warningFiles": 5,
+       "warningOccurrences": 12,
+-      "problemFiles": 9
++      "problemFiles": 7
+     },
+     "phase3a": {
+       "preFixErrors": 45,
+-      "fixedOccurrences": 17,
+-      "remainingErrors": 28,
++      "fixedOccurrences": 25,
++      "remainingErrors": 20,
+       "remainingWarnings": 12,
+-      "remainingProblemFiles": 9
++      "remainingProblemFiles": 7
+     }
+   },
+   "summary": {
+@@ -45,16 +45,16 @@
+     "activeHtml": 39,
+     "referencedSecondaryHtml": 1,
+     "archivedOrUnusedHtml": 24,
+-    "activeErrors": 66,
++    "activeErrors": 58,
+     "activeWarnings": 73,
+-    "activeLocalStorageErrors": 28,
++    "activeLocalStorageErrors": 20,
+     "activeLocalStorageWarnings": 12,
+-    "activeLocalStorageProblemFiles": 9,
+-    "allHtmlReferenceErrors": 121,
++    "activeLocalStorageProblemFiles": 7,
++    "allHtmlReferenceErrors": 113,
+     "allHtmlReferenceWarnings": 124,
+     "archivedReferenceErrors": 54,
+     "archivedReferenceWarnings": 50,
+-    "errors": 66,
++    "errors": 58,
+     "warnings": 181
+   },
+   "errors": [
+@@ -94,54 +94,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/ichigo_v3.html",
+-      "status": "active",
+-      "route": "/ichigo",
+-      "wrapper": "src/games/IchigoGame.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 195,
+-      "evidence": "function loadProg(){ try{return JSON.parse(localStorage.getItem('ichigo_v3_progress'))||{stars:{},unlocked:1};}catch(e){return {stars:{},unlocked:1};} }"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/ichigo_v3.html",
+-      "status": "active",
+-      "route": "/ichigo",
+-      "wrapper": "src/games/IchigoGame.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 196,
+-      "evidence": "function saveProg(p){ localStorage.setItem('ichigo_v3_progress', JSON.stringify(p)); }"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/ichigo_v3.html",
+-      "status": "active",
+-      "route": "/ichigo",
+-      "wrapper": "src/games/IchigoGame.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 197,
+-      "evidence": "function getHi(){ return parseInt(localStorage.getItem('ichigo_hi')||'0'); }"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/ichigo_v3.html",
+-      "status": "active",
+-      "route": "/ichigo",
+-      "wrapper": "src/games/IchigoGame.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 198,
+-      "evidence": "function saveHi(v){ localStorage.setItem('ichigo_hi', v); }"
+-    },
+     {
+       "severity": "error",
+       "referenceSeverity": "error",
+@@ -490,54 +442,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/runner_v8.html",
+-      "status": "active",
+-      "route": "/runner",
+-      "wrapper": "src/games/DoubutsuRunner.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 282,
+-      "evidence": "let selChar=parseInt(localStorage.getItem('runner_char')||'0');"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/runner_v8.html",
+-      "status": "active",
+-      "route": "/runner",
+-      "wrapper": "src/games/DoubutsuRunner.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 377,
+-      "evidence": "selChar=i;localStorage.setItem('runner_char',i);buildCharSelect();"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/runner_v8.html",
+-      "status": "active",
+-      "route": "/runner",
+-      "wrapper": "src/games/DoubutsuRunner.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 876,
+-      "evidence": "if(isNew)localStorage.setItem('runner_hs',score);"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/runner_v8.html",
+-      "status": "active",
+-      "route": "/runner",
+-      "wrapper": "src/games/DoubutsuRunner.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 884,
+-      "evidence": "function getHs(){return parseInt(localStorage.getItem('runner_hs')||'0');}"
+-    },
+     {
+       "severity": "error",
+       "referenceSeverity": "error",
+@@ -2481,7 +2385,7 @@
+       "route": "/runner",
+       "wrapper": "src/games/DoubutsuRunner.jsx",
+       "message": "history.back() に依存する戻る操作があります",
+-      "line": 926,
++      "line": 953,
+       "evidence": "else history.back();"
+     },
+     {
+@@ -2493,7 +2397,7 @@
+       "route": "/runner",
+       "wrapper": "src/games/DoubutsuRunner.jsx",
+       "message": "location 代入に依存する戻る操作があります",
+-      "line": 930,
++      "line": 957,
+       "evidence": "else{window.location.href='/';}"
+     },
+     {

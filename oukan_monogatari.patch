@@ -1,0 +1,146 @@
+diff --git a/src/App.jsx b/src/App.jsx
+index 657a767..f304686 100644
+--- a/src/App.jsx
++++ b/src/App.jsx
+@@ -42,6 +42,7 @@ import SoraKyoshitsu from './games/SoraKyoshitsu'
+ import MuraGame from './games/MuraGame'
+ import NeonDrive from './games/NeonDrive'
+ import AstralFang from './games/AstralFang'
++import OukanMonogatari from './games/OukanMonogatari'
+ import PrivacyPage from './pages/PrivacyPage'
+ import TermsPage from './pages/TermsPage'
+ import { recordRecentGame } from './utils/recentGames'
+@@ -73,6 +74,7 @@ const GAME_ROUTES = new Set([
+   '/mura', '/doubutsu-mura',
+   '/neon-drive', '/neon',
+   '/astral-fang', '/astral',
++  '/oukan-monogatari', '/oukan',
+   // 短縮URLエイリアスも記録
+   '/kudamono', '/puzzle', '/kazu', '/soccer',
+ ]);
+@@ -163,6 +165,8 @@ export default function App() {
+         <Route path="/neon"       element={<GameWithSEO route="/neon-drive"><NeonDrive /></GameWithSEO>} />
+         <Route path="/astral-fang" element={<GameWithSEO route="/astral-fang"><AstralFang /></GameWithSEO>} />
+         <Route path="/astral"      element={<GameWithSEO route="/astral-fang"><AstralFang /></GameWithSEO>} />
++        <Route path="/oukan-monogatari" element={<GameWithSEO route="/oukan-monogatari"><OukanMonogatari /></GameWithSEO>} />
++        <Route path="/oukan"            element={<GameWithSEO route="/oukan-monogatari"><OukanMonogatari /></GameWithSEO>} />
+         <Route path="/privacy" element={<PrivacyPage />} />
+         <Route path="/terms"   element={<TermsPage />} />
+       </Routes>
+diff --git a/src/games/OukanMonogatari.jsx b/src/games/OukanMonogatari.jsx
+new file mode 100644
+index 0000000..91cf154
+--- /dev/null
++++ b/src/games/OukanMonogatari.jsx
+@@ -0,0 +1,41 @@
++import { useEffect, useRef } from 'react';
++import { useNavigate } from 'react-router-dom';
++import { useIframeBridge } from '../hooks/useIframeBridge';
++import GameContent from '../seo/GameContent';
++import HomeChip from '../components/HomeChip';
++
++export default function OukanMonogatari() {
++  const navigate = useNavigate();
++  const iframeRef = useRef(null);
++  useIframeBridge(iframeRef);
++
++  useEffect(() => {
++    const handler = (e) => {
++      if (e.data?.type === 'goHome') { navigate('/'); return; }
++      if (e.data?.type === 'goBack') {
++        let internal = false;
++        try { internal = sessionStorage.getItem('ww_nav_internal') === '1'; } catch {}
++        navigate(internal ? -1 : '/');
++      }
++    };
++    window.addEventListener('message', handler);
++    return () => window.removeEventListener('message', handler);
++  }, [navigate]);
++
++  return (
++    <div className="game-page">
++      <div className="game-frame">
++        <HomeChip />
++        <iframe
++          ref={iframeRef}
++          src="/games/oukan_monogatari_v1.html"
++          title="おうかんものがたり"
++          allow="autoplay; fullscreen"
++          allowFullScreen
++          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
++        />
++      </div>
++      <GameContent route="/oukan-monogatari" />
++    </div>
++  );
++}
+diff --git a/src/pages/TopPage.jsx b/src/pages/TopPage.jsx
+index 173a1d3..ad5a5b9 100644
+--- a/src/pages/TopPage.jsx
++++ b/src/pages/TopPage.jsx
+@@ -75,6 +75,24 @@ const GAME_SVGS = {
+     </svg>
+   ),
+ 
++  g_oukan: (
++    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
++      <rect x="0" y="0" width="100" height="85" rx="12" fill="#1d372b"/>
++      <circle cx="20" cy="15" r="1.5" fill="#f6dd8b" opacity=".9"/>
++      <circle cx="80" cy="13" r="1.3" fill="#f6dd8b" opacity=".8"/>
++      <circle cx="70" cy="24" r="1" fill="#fff4cc" opacity=".7"/>
++      <circle cx="30" cy="25" r="1" fill="#fff4cc" opacity=".7"/>
++      <path d="M22 62 L22 34 L34 46 L50 26 L66 46 L78 34 L78 62 Z" fill="#f3d57a"/>
++      <path d="M22 62 L22 34 L34 46 L50 26 L66 46 L78 34 L78 62 Z" fill="none" stroke="#a5761f" strokeWidth="1.4"/>
++      <rect x="20" y="62" width="60" height="9" rx="3" fill="#e0b64a"/>
++      <circle cx="50" cy="24" r="3.4" fill="#ff8fae"/>
++      <circle cx="30" cy="49" r="3" fill="#7fd3ff"/>
++      <circle cx="70" cy="49" r="3" fill="#8be08f"/>
++      <rect x="46" y="66" width="8" height="3" rx="1.5" fill="#fff4cc"/>
++      <path d="M50 6 L51.8 12 L58 12 L53 15.6 L54.8 21.6 L50 18 L45.2 21.6 L47 15.6 L42 12 L48.2 12 Z" fill="#fff4cc" opacity=".85"/>
++    </svg>
++  ),
++
+   g_neon: (
+     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+       <rect x="0" y="0" width="100" height="85" rx="12" fill="#1a1040"/>
+@@ -1265,6 +1283,12 @@ const SCHOOL_GAMES = [
+     zh:{ name:'形状配对',           desc:'在宇宙中拼合\n和分类形状！' },
+     ko:{ name:'모양 맞추기',        desc:'우주에서 모양을\n끼우고 분류해요!' },
+     es:{ name:'Formas Espaciales',  desc:'¡Encaja y clasifica\nformas en el espacio!' } },
++  { id:'g_oukan', route:'/oukan-monogatari', icon:'👑', num:24, color:'#d8b24d', stars:5, isNew:true, category:'アクション',
++    ja:{ name:'おうかんものがたり', desc:'すきなキャラで\n3つのおうこくをぼうけん！' },
++    en:{ name:'Crown Story',        desc:'Adventure through three\nkingdoms with your hero!' },
++    zh:{ name:'王冠物语',           desc:'选择角色，\n冒险三大王国！' },
++    ko:{ name:'왕관 이야기',        desc:'좋아하는 캐릭터로\n세 왕국을 모험하자!' },
++    es:{ name:'Historia de la Corona', desc:'¡Aventúrate por tres\nreinos con tu héroe!' } },
+ ];
+ 
+ /* ── 全ゲーム統合(チャレンジ系は🔥マーク) ── */
+diff --git a/src/seo/gameMeta.js b/src/seo/gameMeta.js
+index fa13044..3925da6 100644
+--- a/src/seo/gameMeta.js
++++ b/src/seo/gameMeta.js
+@@ -1,4 +1,23 @@
+ const GAME_META = {
++  '/oukan-monogatari': {
++    name: 'おうかんものがたり', desc: 'すきなキャラで 3つの王国を たびする、王国アクションアドベンチャー。',
++    category: 'アクション', ageMin: 5, ageMax: 12,
++    intro: 'おうかんものがたりは、3つの王国から ぬすまれた たからもの（王冠石・星月冠・天空の王笏）を とりもどす、むりょうの 王国アクションアドベンチャーゲームです。ねこ騎士・うさぎプリンセス・こぐまプリンス・きつね魔法使いの 4人から すきな キャラクターを えらんで スタート。きんせつ剣タイプや、ハートや星の 魔法弾を とばす えんきょりタイプなど、それぞれ たたかいかたが ちがいます。スティック（またはWASD・矢印キー）で うごき、ボタンで こうげき、しらべるボタンで NPCと はなしたり たからばこを あけたりします。もりの王国 → 月夜の城 → 天空宮殿 と 3つのステージを すすみ、それぞれの ボスに たちむかいましょう。とうろくも インストールも いらず、スマホでも パソコンでも ブラウザで すぐに あそべます。',
++    howto: [
++      'すきな キャラクター（ねこ騎士・うさぎ・こぐま・きつね）を えらんで スタート',
++      'スティック（またはWASD・矢印キー）で キャラを うごかす',
++      'こうげきボタン（PCは スペース）で てきを たおす',
++      'しらべるボタン（PCは E）で NPCと はなす・たからばこを あける',
++      '3つのステージを すすんで、それぞれの ボスを たおそう',
++    ],
++    faq: [
++      { q: 'りょうきんは かかりますか？', a: 'いいえ。かんぜんに 無料で あそべます。りょうきんは いっさい かかりません。' },
++      { q: 'とうろくや インストールは ひつようですか？', a: 'ふようです。ブラウザを ひらいて すぐに あそべます。かいいんとうろくも いりません。' },
++      { q: '何さいむけですか？', a: '5さい〜12さいくらいの、アクションゲームが すきな おこさま向けです。' },
++      { q: 'こわい ないようは ありますか？', a: 'どうぶつや プリンス・プリンセスの ファンタジー世界で たたかいます。ちや ざんこくな ひょうげんは ありません。' },
++      { q: 'スマホでも あそべますか？', a: 'はい。ゆびで うごかす バーチャルスティックに たいおうしています。スマホ・タブレット・パソコンの ブラウザで あそべます。' },
++    ],
++  },
+   '/astral-fang': {
+     name: 'アストラルファング 星喰いの城', desc: 'ひかりをまもる きしとなって、かげのけものに いどむ 本格3Dアクション。',
+     category: 'アクション', ageMin: 7, ageMax: 12,

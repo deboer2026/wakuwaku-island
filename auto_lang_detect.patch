@@ -1,0 +1,52 @@
+diff --git a/src/pages/TopPage.jsx b/src/pages/TopPage.jsx
+index 77118d6..d2a2b45 100644
+--- a/src/pages/TopPage.jsx
++++ b/src/pages/TopPage.jsx
+@@ -11,6 +11,7 @@ import { getCoins, checkLoginBonus, claimLoginBonus } from '../utils/coins';
+ import { getRecentGames } from '../utils/recentGames';
+ import { getPlayHistory } from '../utils/playHistory';
+ import { ALL_GAMES } from '../utils/recommend';
++import { detectLang } from '../utils/i18n';
+ import './TopPage.css';
+ 
+ /* ── カテゴリ別グラデーション ──────────────────────────── */
+@@ -1190,6 +1191,16 @@ export default function TopPage() {
+     return () => stopBGM();
+   }, []);
+ 
++  // 初回訪問時のみ、ブラウザ言語から自動で表示言語を決定する。
++  // 手動選択(wakuwaku_lang)がある場合は常にそちらを優先。
++  // マウント後に実行することでSSR/prerenderとのハイドレーション不一致を防ぐ。
++  useEffect(() => {
++    if (localStorage.getItem('wakuwaku_lang')) return;
++    const detected = detectLang();
++    localStorage.setItem('wakuwaku_lang', detected);
++    if (detected !== lang) setLang(detected);
++  }, []);
++
+   function handleMuteToggle() {
+     toggleBGM();
+     setIsMuted(prev => {
+diff --git a/src/utils/i18n.js b/src/utils/i18n.js
+index c0fcb50..5c10e50 100644
+--- a/src/utils/i18n.js
++++ b/src/utils/i18n.js
+@@ -41,3 +41,18 @@ export function getLang() {
+   if (typeof localStorage === 'undefined') return 'ja'
+   return localStorage.getItem('wakuwaku_lang') || 'ja'
+ }
++
++// ブラウザの言語設定から対応言語(ja/en/zh/ko/es)を判定する。
++// SSR/prerender時は navigator が無いため 'ja' を返す（ハイドレーション不一致を防ぐ）。
++export function detectLang() {
++  if (typeof navigator === 'undefined') return 'ja'
++  const supported = ['ja', 'en', 'zh', 'ko', 'es']
++  const prefs = (navigator.languages && navigator.languages.length)
++    ? navigator.languages
++    : [navigator.language || 'ja']
++  for (const p of prefs) {
++    const code = String(p).toLowerCase().split('-')[0]
++    if (supported.includes(code)) return code
++  }
++  return 'ja'
++}

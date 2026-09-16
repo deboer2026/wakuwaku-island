@@ -1,0 +1,912 @@
+diff --git a/docs/GAME_AUDIT.md b/docs/GAME_AUDIT.md
+index bdded44..e2cdf78 100644
+--- a/docs/GAME_AUDIT.md
++++ b/docs/GAME_AUDIT.md
+@@ -36,6 +36,8 @@ npm run audit:games
+ 
+ localStorage の利用可否を確認する `setItem` → `removeItem` → `return localStorage` 相当のテストや、SAFE_LS初期化内のアクセスは許容します。キーが静的に確定できない直接アクセスは警告、ゲーム用キーの直接アクセスを確定できる場合はエラーにします。
+ 
++Phase 3Aでは、単一キーかつ少数の直接アクセスだけを持つactiveゲームを第1バッチとして選び、各HTML内のローカル`SAFE_LS`へ移行します。監査レポートの`localStorage`では、activeの問題をファイル数と呼び出し箇所数に分けて集計します。`SAFE_LS`自身の利用可否テストは問題箇所に数えません。保存キー、値形式、読み書きのタイミングは変更しません。
++
+ Canvas は `fillText` / `strokeText` の第1引数が絵文字リテラルと確定する場合をエラーにします。絵文字を含む可能性がある変数経由の描画は警告、`textContent` や `innerHTML` などDOM上の絵文字は対象外です。
+ 
+ ## 誤検出の可能性
+diff --git a/public/games/kazu_asobi_v3.html b/public/games/kazu_asobi_v3.html
+index ad62c6f..7e77624 100644
+--- a/public/games/kazu_asobi_v3.html
++++ b/public/games/kazu_asobi_v3.html
+@@ -273,6 +273,27 @@ canvas#bg { position:absolute; inset:0; width:100%; height:100%; pointer-events:
+ </div>
+ 
+ <script>
++const SAFE_LS = (function () {
++  try {
++    const testKey = '__ww_storage_test__';
++    localStorage.setItem(testKey, testKey);
++    localStorage.removeItem(testKey);
++    return localStorage;
++  } catch (e) {
++    const memory = {};
++    return {
++      getItem(key) {
++        return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : null;
++      },
++      setItem(key, value) {
++        memory[key] = String(value);
++      },
++      removeItem(key) {
++        delete memory[key];
++      }
++    };
++  }
++})();
+ /* ===== BGM (guarded for preview env) ===== */
+ var bgm = (typeof WakuwakuBGM !== 'undefined') ? new WakuwakuBGM('quiz') : { start:function(){}, stop:function(){}, toggle:function(){ return false; } };
+ var bgmOn = (typeof WakuwakuBGM !== 'undefined' && WakuwakuBGM.loadState) ? WakuwakuBGM.loadState() : false;
+@@ -314,10 +335,10 @@ var ANIMALS = ['🐱','🐶','🐰','🐸','🐼','🦊','🐧','🐮','🐷','
+ 
+ /* ===== Progress ===== */
+ function loadProg(){
+-  try { var p = JSON.parse(localStorage.getItem('kazu_v3_progress')||'{}'); if(Array.isArray(p.stars)&&p.stars.length===5) return p; } catch(e){}
++  try { var p = JSON.parse(SAFE_LS.getItem('kazu_v3_progress')||'{}'); if(Array.isArray(p.stars)&&p.stars.length===5) return p; } catch(e){}
+   return { stars:[0,0,0,0,0] };
+ }
+-function saveProg(p){ localStorage.setItem('kazu_v3_progress', JSON.stringify(p)); }
++function saveProg(p){ SAFE_LS.setItem('kazu_v3_progress', JSON.stringify(p)); }
+ var prog = loadProg();
+ 
+ /* ===== State ===== */
+diff --git a/public/games/kudamono_v2.html b/public/games/kudamono_v2.html
+index 68b7040..0c8f0e8 100644
+--- a/public/games/kudamono_v2.html
++++ b/public/games/kudamono_v2.html
+@@ -339,6 +339,27 @@ canvas{position:absolute;top:0;left:0;width:100%;height:100%;display:block;}
+ </div>
+ 
+ <script>
++const SAFE_LS = (function () {
++  try {
++    const testKey = '__ww_storage_test__';
++    localStorage.setItem(testKey, testKey);
++    localStorage.removeItem(testKey);
++    return localStorage;
++  } catch (e) {
++    const memory = {};
++    return {
++      getItem(key) {
++        return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : null;
++      },
++      setItem(key, value) {
++        memory[key] = String(value);
++      },
++      removeItem(key) {
++        delete memory[key];
++      }
++    };
++  }
++})();
+ // ===== 定数 =====
+ const FRUITS=[
+   {e:'🍎',pts:10,w:1.0},{e:'🍊',pts:10,w:1.0},{e:'🍋',pts:10,w:1.0},
+@@ -803,8 +824,8 @@ function endGameOver(){
+   document.getElementById('go-ov').classList.add('show');
+ }
+ 
+-function getHs(){return parseInt(localStorage.getItem('kudamono_hs')||'0');}
+-function saveHs(s){localStorage.setItem('kudamono_hs',s);}
++function getHs(){return parseInt(SAFE_LS.getItem('kudamono_hs')||'0');}
++function saveHs(s){SAFE_LS.setItem('kudamono_hs',s);}
+ function updateHsDisp(){const hs=getHs();document.getElementById('ths').textContent=hs>0?`ハイスコア：⭐${hs}`:''}
+ 
+ // ===== 入力（スライド） =====
+diff --git a/public/games/mahou_houki_gp_v5.html b/public/games/mahou_houki_gp_v5.html
+index 336deb2..72b29c2 100644
+--- a/public/games/mahou_houki_gp_v5.html
++++ b/public/games/mahou_houki_gp_v5.html
+@@ -41,6 +41,27 @@
+ <div id="err"></div>
+ 
+ <script>
++const SAFE_LS = (function () {
++  try {
++    const testKey = '__ww_storage_test__';
++    localStorage.setItem(testKey, testKey);
++    localStorage.removeItem(testKey);
++    return localStorage;
++  } catch (e) {
++    const memory = {};
++    return {
++      getItem(key) {
++        return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : null;
++      },
++      setItem(key, value) {
++        memory[key] = String(value);
++      },
++      removeItem(key) {
++        delete memory[key];
++      }
++    };
++  }
++})();
+ (function(){
+   "use strict";
+   function fatal(msg){ const d=document.getElementById('err'); if(d){ d.style.display='block'; d.textContent='⚠ '+msg; } }
+@@ -143,7 +164,7 @@ try{
+   let stageStars=[0,0,0], resultStars=0, resultBonus=0, resultT=0;
+   let keyL=false,keyR=false, ptr=null, tAnim=0;
+   const parts=[];
+-  let bestScore=0; try{ bestScore=parseInt(localStorage.getItem('houki_best_v5')||'0',10)||0; }catch(e){}
++  let bestScore=0; try{ bestScore=parseInt(SAFE_LS.getItem('houki_best_v5')||'0',10)||0; }catch(e){}
+ 
+   function courseX(pat,z){
+     if(pat==='slalom') return 7*Math.sin(z*0.05)+2.5*Math.sin(z*0.13);
+@@ -219,7 +240,7 @@ try{
+     stageStars[stageIdx]=resultStars;
+     totalScore += score;
+     if(stageIdx===STAGES.length-1){
+-      if(totalScore>bestScore){ bestScore=totalScore; try{localStorage.setItem('houki_best_v5',''+bestScore);}catch(e){} } }
++      if(totalScore>bestScore){ bestScore=totalScore; try{SAFE_LS.setItem('houki_best_v5',''+bestScore);}catch(e){} } }
+     resultT=0; state='result'; stopBgm(); sfx.win();
+   }
+   function update(dt){ if(state!=='play')return;
+diff --git a/public/games/moji_asobi_v2.html b/public/games/moji_asobi_v2.html
+index 52682e4..1060f06 100644
+--- a/public/games/moji_asobi_v2.html
++++ b/public/games/moji_asobi_v2.html
+@@ -237,6 +237,27 @@ canvas#bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-eve
+ </div>
+ 
+ <script>
++const SAFE_LS = (function () {
++  try {
++    const testKey = '__ww_storage_test__';
++    localStorage.setItem(testKey, testKey);
++    localStorage.removeItem(testKey);
++    return localStorage;
++  } catch (e) {
++    const memory = {};
++    return {
++      getItem(key) {
++        return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : null;
++      },
++      setItem(key, value) {
++        memory[key] = String(value);
++      },
++      removeItem(key) {
++        delete memory[key];
++      }
++    };
++  }
++})();
+ /* ======== Canvas Background ======== */
+ const cvs = document.getElementById('bg');
+ const ctx = cvs.getContext('2d');
+@@ -323,8 +344,8 @@ const TOTAL=10;
+ let queue=[],current=null,qIdx=0,score=0,locked=false;
+ 
+ function shuffle(a){return [...a].sort(()=>Math.random()-.5);}
+-function getHi(){return parseInt(localStorage.getItem('moji_hi')||'0');}
+-function saveHi(v){localStorage.setItem('moji_hi',v);}
++function getHi(){return parseInt(SAFE_LS.getItem('moji_hi')||'0');}
++function saveHi(v){SAFE_LS.setItem('moji_hi',v);}
+ function updateHiBadge(){document.getElementById('hi-title').textContent='🏆 ハイスコア: '+getHi()+'もん';}
+ 
+ function initStars(){
+diff --git a/public/games/okashi_crossing.html b/public/games/okashi_crossing.html
+index e6eb8dd..db832cc 100644
+--- a/public/games/okashi_crossing.html
++++ b/public/games/okashi_crossing.html
+@@ -97,6 +97,27 @@ canvas{display:block;image-rendering:pixelated;}
+    Crossy Road系メカニクス（保護対象外）＋オリジナル：お菓子の国テーマ、
+    シュガーウェーブ追跡、うさぎ姫キャラ、キャンディ収集 */
+ 'use strict';
++const SAFE_LS = (function () {
++  try {
++    const testKey = '__ww_storage_test__';
++    localStorage.setItem(testKey, testKey);
++    localStorage.removeItem(testKey);
++    return localStorage;
++  } catch (e) {
++    const memory = {};
++    return {
++      getItem(key) {
++        return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : null;
++      },
++      setItem(key, value) {
++        memory[key] = String(value);
++      },
++      removeItem(key) {
++        delete memory[key];
++      }
++    };
++  }
++})();
+ const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+ let W=0,H=0,CELL=0,COLS=9;
+ function resize(){
+@@ -160,7 +181,7 @@ function getRow(n){ensureRows(n+14);return rows[n-baseRow];}
+ 
+ /* ---- player ---- */
+ let P,candy,score,hiScore,best,playing=false,wave,last=0;
+-hiScore=parseInt(localStorage.getItem('okashi_crossing_hs')||'0');
++hiScore=parseInt(SAFE_LS.getItem('okashi_crossing_hs')||'0');
+ 
+ function startGame(){
+   document.getElementById('title-screen').classList.add('hidden');
+@@ -176,7 +197,7 @@ function startGame(){
+ function gameOver(splash){
+   playing=false;notifyRun(false);
+   splash?sSplash():sCrash();
+-  if(score>hiScore){hiScore=score;localStorage.setItem('okashi_crossing_hs',hiScore);}
++  if(score>hiScore){hiScore=score;SAFE_LS.setItem('okashi_crossing_hs',hiScore);}
+   document.getElementById('over-title').innerHTML=splash?'チョコのかわに<br>おっこちた！':(P._hit?'グミカーに<br>ぶつかっちゃった！':'シュガーウェーブに<br>のまれちゃった！');
+   document.getElementById('fin-score').textContent=score;
+   document.getElementById('fin-hs').textContent=hiScore;
+@@ -431,7 +452,7 @@ function drawPlayer(time){
+     s.style.animationDuration=(7+Math.random()*8)+'s';
+     s.style.animationDelay=(-Math.random()*12)+'s';
+     f.appendChild(s);}
+-  const hs=parseInt(localStorage.getItem('okashi_crossing_hs')||'0');
++  const hs=parseInt(SAFE_LS.getItem('okashi_crossing_hs')||'0');
+   if(hs>0)document.getElementById('title-hs').textContent='さいこうスコア '+hs;
+ })();
+ 
+diff --git a/public/games/soccer_v7.html b/public/games/soccer_v7.html
+index d5daa40..89f6b36 100644
+--- a/public/games/soccer_v7.html
++++ b/public/games/soccer_v7.html
+@@ -211,6 +211,27 @@ canvas#cv{position:absolute;top:0;left:0;display:block;}
+   <div class="ov" id="ac-ov"><div class="ob"><div style="font-size:40px;">🏆</div><div class="ot">ぜんぶ クリア！！</div><div class="os" id="ac-sub"></div><div class="osc" id="ac-score"></div><button class="bg" onclick="startGame()">もういちど</button><button class="gg" onclick="showTitle()">タイトルへ</button></div></div>
+ </div>
+ <script>
++const SAFE_LS = (function () {
++  try {
++    const testKey = '__ww_storage_test__';
++    localStorage.setItem(testKey, testKey);
++    localStorage.removeItem(testKey);
++    return localStorage;
++  } catch (e) {
++    const memory = {};
++    return {
++      getItem(key) {
++        return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : null;
++      },
++      setItem(key, value) {
++        memory[key] = String(value);
++      },
++      removeItem(key) {
++        delete memory[key];
++      }
++    };
++  }
++})();
+ const KICKERS=['🧒','👧','🧑','👨','🧔','👩','🏃','🧑‍🦱'];
+ const MAX_STAGE=5;
+ const STAGE_CFG=[
+@@ -644,8 +665,8 @@ function updateHUD(){
+   document.getElementById('hud-score').textContent=`${goals}/${cfg.win}ゴール　${totalScore}点`;
+   document.getElementById('hud-life').textContent='❤️'.repeat(cfg.miss-misses)+'🖤'.repeat(misses);
+ }
+-function getHs(){return parseInt(localStorage.getItem('soccer_hs3')||'0');}
+-function saveHs(s){localStorage.setItem('soccer_hs3',s);}
++function getHs(){return parseInt(SAFE_LS.getItem('soccer_hs3')||'0');}
++function saveHs(s){SAFE_LS.setItem('soccer_hs3',s);}
+ function updateHsDisp(){const hs=getHs();document.getElementById('ths').textContent=hs>0?`ハイスコア：⭐${hs}`:''}
+ 
+ // ===== 入力 =====
+diff --git a/public/games/tashizan_v2.html b/public/games/tashizan_v2.html
+index 32e611a..c1f268c 100644
+--- a/public/games/tashizan_v2.html
++++ b/public/games/tashizan_v2.html
+@@ -232,6 +232,27 @@ canvas#bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-eve
+ </div>
+ 
+ <script>
++const SAFE_LS = (function () {
++  try {
++    const testKey = '__ww_storage_test__';
++    localStorage.setItem(testKey, testKey);
++    localStorage.removeItem(testKey);
++    return localStorage;
++  } catch (e) {
++    const memory = {};
++    return {
++      getItem(key) {
++        return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : null;
++      },
++      setItem(key, value) {
++        memory[key] = String(value);
++      },
++      removeItem(key) {
++        delete memory[key];
++      }
++    };
++  }
++})();
+ /* ===== Canvas BG ===== */
+ const cvs=document.getElementById('bg'),ctx=cvs.getContext('2d');
+ let W,H,stars=[],floats=[];
+@@ -271,8 +292,8 @@ const ANIMALS=['🐱','🐶','🐰','🐸','🐼','🦊','🐧','🐮','🐷','
+ const TOTAL=10;
+ let qIdx=0,score=0,locked=false,current=null;
+ 
+-function getHi(){return parseInt(localStorage.getItem('tashizan_hi')||'0');}
+-function saveHi(v){localStorage.setItem('tashizan_hi',v);}
++function getHi(){return parseInt(SAFE_LS.getItem('tashizan_hi')||'0');}
++function saveHi(v){SAFE_LS.setItem('tashizan_hi',v);}
+ function updateHiBadge(){document.getElementById('hi-title').textContent='🏆 ハイスコア: '+getHi()+'もん';}
+ function shuffle(a){return [...a].sort(()=>Math.random()-.5);}
+ 
+diff --git a/public/games/tokei_yomi_v1.html b/public/games/tokei_yomi_v1.html
+index 9d98e80..a0dd406 100644
+--- a/public/games/tokei_yomi_v1.html
++++ b/public/games/tokei_yomi_v1.html
+@@ -282,6 +282,27 @@ svg.clockface { width: 100%; height: 100%; overflow: visible; }
+ </div>
+ 
+ <script>
++const SAFE_LS = (function () {
++  try {
++    const testKey = '__ww_storage_test__';
++    localStorage.setItem(testKey, testKey);
++    localStorage.removeItem(testKey);
++    return localStorage;
++  } catch (e) {
++    const memory = {};
++    return {
++      getItem(key) {
++        return Object.prototype.hasOwnProperty.call(memory, key) ? memory[key] : null;
++      },
++      setItem(key, value) {
++        memory[key] = String(value);
++      },
++      removeItem(key) {
++        delete memory[key];
++      }
++    };
++  }
++})();
+ /* ===== Canvas BG (shared visual language) ===== */
+ const cvs=document.getElementById('bg'),ctx=cvs.getContext('2d');
+ let W,H,stars=[],fireworks=[];
+@@ -320,8 +341,8 @@ let diff='easy', mode='choice';
+ let qIndex=0, correctCount=0, currentTarget=null, locked=false;
+ let dragState={hourIdx:0, minuteIdx:0, dragging:null};
+ 
+-function getHi(){return parseInt(localStorage.getItem('tokei_hi_v1')||'0');}
+-function saveHi(v){localStorage.setItem('tokei_hi_v1',v);}
++function getHi(){return parseInt(SAFE_LS.getItem('tokei_hi_v1')||'0');}
++function saveHi(v){SAFE_LS.setItem('tokei_hi_v1',v);}
+ function updateHiBadge(){document.getElementById('hi-title').textContent='🏆 ハイスコア: '+getHi()+'もん';}
+ 
+ function showTitleScreen(){
+diff --git a/reports/game-audit.json b/reports/game-audit.json
+index 93615f2..ed86de4 100644
+--- a/reports/game-audit.json
++++ b/reports/game-audit.json
+@@ -1,17 +1,39 @@
+ {
+-  "generatedAt": "2026-07-18T17:01:34.076Z",
++  "generatedAt": "2026-07-18T17:27:12.089Z",
+   "baseline": {
+     "phase1Errors": 183,
+     "phase1Warnings": 111,
+     "phase1ActiveErrors": 124,
+     "phase1ActiveWarnings": 60,
+     "phase2PreFixActiveErrors": 88,
+-    "phase2PreFixActiveWarnings": 90
++    "phase2PreFixActiveWarnings": 90,
++    "phase2PostFixActiveErrors": 83
++  },
++  "phase3aBaseline": {
++    "activeLocalStorageErrors": 45,
++    "activeLocalStorageWarnings": 29,
++    "activeLocalStorageProblemFiles": 25
+   },
+   "comparison": {
+     "falsePositivesResolved": 36,
+     "actualFixesResolved": 5,
+-    "remainingActiveErrors": 83
++    "remainingActiveErrors": 66
++  },
++  "localStorage": {
++    "active": {
++      "errorFiles": 7,
++      "errorOccurrences": 28,
++      "warningFiles": 13,
++      "warningOccurrences": 29,
++      "problemFiles": 17
++    },
++    "phase3a": {
++      "preFixErrors": 45,
++      "fixedOccurrences": 17,
++      "remainingErrors": 28,
++      "remainingWarnings": 29,
++      "remainingProblemFiles": 17
++    }
+   },
+   "summary": {
+     "gameMetaRoutes": 39,
+@@ -23,13 +45,16 @@
+     "activeHtml": 39,
+     "referencedSecondaryHtml": 1,
+     "archivedOrUnusedHtml": 24,
+-    "activeErrors": 83,
++    "activeErrors": 66,
+     "activeWarnings": 90,
+-    "allHtmlReferenceErrors": 138,
++    "activeLocalStorageErrors": 28,
++    "activeLocalStorageWarnings": 29,
++    "activeLocalStorageProblemFiles": 17,
++    "allHtmlReferenceErrors": 121,
+     "allHtmlReferenceWarnings": 141,
+     "archivedReferenceErrors": 54,
+     "archivedReferenceWarnings": 50,
+-    "errors": 83,
++    "errors": 66,
+     "warnings": 198
+   },
+   "errors": [
+@@ -213,54 +238,6 @@
+       "line": 470,
+       "evidence": "const c=parseInt(localStorage.getItem('katakana_hi_char')||'0');"
+     },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/kazu_asobi_v3.html",
+-      "status": "active",
+-      "route": "/kazu-asobi",
+-      "wrapper": "src/games/KazuAsobi.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 317,
+-      "evidence": "try { var p = JSON.parse(localStorage.getItem('kazu_v3_progress')||'{}'); if(Array.isArray(p.stars)&&p.stars.length===5) return p; } catch(e){}"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/kazu_asobi_v3.html",
+-      "status": "active",
+-      "route": "/kazu-asobi",
+-      "wrapper": "src/games/KazuAsobi.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 320,
+-      "evidence": "function saveProg(p){ localStorage.setItem('kazu_v3_progress', JSON.stringify(p)); }"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/kudamono_v2.html",
+-      "status": "active",
+-      "route": "/kudamono-catch",
+-      "wrapper": "src/games/KudamonoCatch.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 806,
+-      "evidence": "function getHs(){return parseInt(localStorage.getItem('kudamono_hs')||'0');}"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/kudamono_v2.html",
+-      "status": "active",
+-      "route": "/kudamono-catch",
+-      "wrapper": "src/games/KudamonoCatch.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 807,
+-      "evidence": "function saveHs(s){localStorage.setItem('kudamono_hs',s);}"
+-    },
+     {
+       "severity": "error",
+       "referenceSeverity": "error",
+@@ -402,7 +379,7 @@
+       "route": "/houki",
+       "wrapper": "src/games/MahouHouki.jsx",
+       "message": "Canvas の文字描画に絵文字リテラルを直接渡しています",
+-      "line": 404,
++      "line": 425,
+       "evidence": "ctx.fillText('💍 '+got+'/'+total, 70, 26);"
+     },
+     {
+@@ -414,7 +391,7 @@
+       "route": "/houki",
+       "wrapper": "src/games/MahouHouki.jsx",
+       "message": "Canvas の文字描画に絵文字リテラルを直接渡しています",
+-      "line": 410,
++      "line": 431,
+       "evidence": "ctx.textAlign='left'; ctx.fillText('◀',24,LH-16); ctx.textAlign='right'; ctx.fillText('▶',LW-24,LH-16); ctx.globalAlpha=1; }"
+     },
+     {
+@@ -426,33 +403,9 @@
+       "route": "/houki",
+       "wrapper": "src/games/MahouHouki.jsx",
+       "message": "Canvas の文字描画に絵文字リテラルを直接渡しています",
+-      "line": 448,
++      "line": 469,
+       "evidence": "ctx.fillText('✨グランプリ✨',cx,185+bob);"
+     },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/mahou_houki_gp_v5.html",
+-      "status": "active",
+-      "route": "/houki",
+-      "wrapper": "src/games/MahouHouki.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 146,
+-      "evidence": "let bestScore=0; try{ bestScore=parseInt(localStorage.getItem('houki_best_v5')||'0',10)||0; }catch(e){}"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/mahou_houki_gp_v5.html",
+-      "status": "active",
+-      "route": "/houki",
+-      "wrapper": "src/games/MahouHouki.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 222,
+-      "evidence": "if(totalScore>bestScore){ bestScore=totalScore; try{localStorage.setItem('houki_best_v5',''+bestScore);}catch(e){} } }"
+-    },
+     {
+       "severity": "error",
+       "referenceSeverity": "error",
+@@ -465,30 +418,6 @@
+       "line": 336,
+       "evidence": "<div id=\"char-label\" style=\"margin-top:2px;\">むずかしさ</div>"
+     },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/moji_asobi_v2.html",
+-      "status": "active",
+-      "route": "/moji",
+-      "wrapper": "src/games/MojiAsobi.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 326,
+-      "evidence": "function getHi(){return parseInt(localStorage.getItem('moji_hi')||'0');}"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/moji_asobi_v2.html",
+-      "status": "active",
+-      "route": "/moji",
+-      "wrapper": "src/games/MojiAsobi.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 327,
+-      "evidence": "function saveHi(v){localStorage.setItem('moji_hi',v);}"
+-    },
+     {
+       "severity": "error",
+       "referenceSeverity": "error",
+@@ -522,7 +451,7 @@
+       "route": "/okashi-crossing",
+       "wrapper": "src/games/OkashiCrossing.jsx",
+       "message": "Canvas の文字描画に絵文字リテラルを直接渡しています",
+-      "line": 334,
++      "line": 355,
+       "evidence": "ctx.font=(cw*.6)+'px serif';ctx.textAlign='center';ctx.fillText('⚠️',W/2,y+bh*.7);"
+     },
+     {
+@@ -534,7 +463,7 @@
+       "route": "/okashi-crossing",
+       "wrapper": "src/games/OkashiCrossing.jsx",
+       "message": "Canvas の文字描画に絵文字リテラルを直接渡しています",
+-      "line": 345,
++      "line": 366,
+       "evidence": "ctx.fillText('🍬',px(row.candy+.5,s),y+bh*.55+bob);"
+     },
+     {
+@@ -546,45 +475,9 @@
+       "route": "/okashi-crossing",
+       "wrapper": "src/games/OkashiCrossing.jsx",
+       "message": "Canvas の文字描画に絵文字リテラルを直接渡しています",
+-      "line": 391,
++      "line": 412,
+       "evidence": "ctx.fillText('🍭',px(row.trainX,s)+CELL*s,y-h*.3);"
+     },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/okashi_crossing.html",
+-      "status": "active",
+-      "route": "/okashi-crossing",
+-      "wrapper": "src/games/OkashiCrossing.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 163,
+-      "evidence": "hiScore=parseInt(localStorage.getItem('okashi_crossing_hs')||'0');"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/okashi_crossing.html",
+-      "status": "active",
+-      "route": "/okashi-crossing",
+-      "wrapper": "src/games/OkashiCrossing.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 179,
+-      "evidence": "if(score>hiScore){hiScore=score;localStorage.setItem('okashi_crossing_hs',hiScore);}"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/okashi_crossing.html",
+-      "status": "active",
+-      "route": "/okashi-crossing",
+-      "wrapper": "src/games/OkashiCrossing.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 434,
+-      "evidence": "const hs=parseInt(localStorage.getItem('okashi_crossing_hs')||'0');"
+-    },
+     {
+       "severity": "error",
+       "referenceSeverity": "error",
+@@ -798,7 +691,7 @@
+       "route": "/animal-soccer",
+       "wrapper": "src/games/AnimalSoccer.jsx",
+       "message": "Canvas の文字描画に絵文字リテラルを直接渡しています",
+-      "line": 539,
++      "line": 560,
+       "evidence": "ctx.fillText('🐻',KX,KY);"
+     },
+     {
+@@ -810,33 +703,9 @@
+       "route": "/animal-soccer",
+       "wrapper": "src/games/AnimalSoccer.jsx",
+       "message": "Canvas の文字描画に絵文字リテラルを直接渡しています",
+-      "line": 553,
++      "line": 574,
+       "evidence": "ctx.fillText('⚽',BX,BY);"
+     },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/soccer_v7.html",
+-      "status": "active",
+-      "route": "/animal-soccer",
+-      "wrapper": "src/games/AnimalSoccer.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 647,
+-      "evidence": "function getHs(){return parseInt(localStorage.getItem('soccer_hs3')||'0');}"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/soccer_v7.html",
+-      "status": "active",
+-      "route": "/animal-soccer",
+-      "wrapper": "src/games/AnimalSoccer.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 648,
+-      "evidence": "function saveHs(s){localStorage.setItem('soccer_hs3',s);}"
+-    },
+     {
+       "severity": "error",
+       "referenceSeverity": "error",
+@@ -885,54 +754,6 @@
+       "line": null,
+       "evidence": ""
+     },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/tashizan_v2.html",
+-      "status": "active",
+-      "route": "/tashizan",
+-      "wrapper": "src/games/TashizanGame.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 274,
+-      "evidence": "function getHi(){return parseInt(localStorage.getItem('tashizan_hi')||'0');}"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/tashizan_v2.html",
+-      "status": "active",
+-      "route": "/tashizan",
+-      "wrapper": "src/games/TashizanGame.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 275,
+-      "evidence": "function saveHi(v){localStorage.setItem('tashizan_hi',v);}"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/tokei_yomi_v1.html",
+-      "status": "active",
+-      "route": "/tokei-yomi",
+-      "wrapper": "src/games/TokeiYomi.jsx",
+-      "message": "ゲーム HTML から localStorage.getItem を直接使用しています",
+-      "line": 323,
+-      "evidence": "function getHi(){return parseInt(localStorage.getItem('tokei_hi_v1')||'0');}"
+-    },
+-    {
+-      "severity": "error",
+-      "referenceSeverity": "error",
+-      "category": "STORAGE",
+-      "file": "public/games/tokei_yomi_v1.html",
+-      "status": "active",
+-      "route": "/tokei-yomi",
+-      "wrapper": "src/games/TokeiYomi.jsx",
+-      "message": "ゲーム HTML から localStorage.setItem を直接使用しています",
+-      "line": 324,
+-      "evidence": "function saveHi(v){localStorage.setItem('tokei_hi_v1',v);}"
+-    },
+     {
+       "severity": "error",
+       "referenceSeverity": "error",
+@@ -2180,7 +2001,7 @@
+       "route": "/kudamono-catch",
+       "wrapper": "src/games/KudamonoCatch.jsx",
+       "message": "history.back() に依存する戻る操作があります",
+-      "line": 846,
++      "line": 867,
+       "evidence": "else history.back();"
+     },
+     {
+@@ -2192,7 +2013,7 @@
+       "route": "/kudamono-catch",
+       "wrapper": "src/games/KudamonoCatch.jsx",
+       "message": "location 代入に依存する戻る操作があります",
+-      "line": 864,
++      "line": 885,
+       "evidence": "else{window.location.href='/';}"
+     },
+     {
+@@ -2480,7 +2301,7 @@
+       "route": "/moji",
+       "wrapper": "src/games/MojiAsobi.jsx",
+       "message": "history.back() に依存する戻る操作があります",
+-      "line": 443,
++      "line": 464,
+       "evidence": "function goBack(){if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');else history.back();}"
+     },
+     {
+@@ -2636,7 +2457,7 @@
+       "route": "/okashi-crossing",
+       "wrapper": "src/games/OkashiCrossing.jsx",
+       "message": "history.back() に依存する戻る操作があります",
+-      "line": 454,
++      "line": 475,
+       "evidence": "else history.back();"
+     },
+     {
+@@ -3080,7 +2901,7 @@
+       "route": "/animal-soccer",
+       "wrapper": "src/games/AnimalSoccer.jsx",
+       "message": "history.back() に依存する戻る操作があります",
+-      "line": 687,
++      "line": 708,
+       "evidence": "else history.back();"
+     },
+     {
+@@ -3092,7 +2913,7 @@
+       "route": "/animal-soccer",
+       "wrapper": "src/games/AnimalSoccer.jsx",
+       "message": "location 代入に依存する戻る操作があります",
+-      "line": 704,
++      "line": 725,
+       "evidence": "else{window.location.href='/';}"
+     },
+     {
+@@ -3260,7 +3081,7 @@
+       "route": "/tashizan",
+       "wrapper": "src/games/TashizanGame.jsx",
+       "message": "history.back() に依存する戻る操作があります",
+-      "line": 409,
++      "line": 430,
+       "evidence": "function goBack(){if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');else history.back();}"
+     },
+     {
+@@ -3284,7 +3105,7 @@
+       "route": "/tokei-yomi",
+       "wrapper": "src/games/TokeiYomi.jsx",
+       "message": "history.back() に依存する戻る操作があります",
+-      "line": 652,
++      "line": 673,
+       "evidence": "function goBack(){if(window.parent!==window)window.parent.postMessage({type:'goBack'},'*');else history.back();}"
+     },
+     {
+diff --git a/scripts/audit-games.mjs b/scripts/audit-games.mjs
+index 3dfd460..f1f2908 100644
+--- a/scripts/audit-games.mjs
++++ b/scripts/audit-games.mjs
+@@ -539,6 +539,9 @@ for (let index = errors.length - 1; index >= 0; index -= 1) {
+ const activeIssues = [...errors, ...warnings].filter((item) => item.status === 'active');
+ const activeErrors = activeIssues.filter((item) => item.severity === 'error');
+ const activeWarnings = activeIssues.filter((item) => item.severity === 'warning');
++const activeStorageErrors = activeErrors.filter((item) => item.category === 'STORAGE');
++const activeStorageWarnings = activeWarnings.filter((item) => item.category === 'STORAGE');
++const activeStorageFiles = new Set([...activeStorageErrors, ...activeStorageWarnings].map((item) => item.file));
+ const htmlIssues = [...errors, ...warnings].filter((item) => item.file.startsWith('public/games/'));
+ const allHtmlReferenceErrors = htmlIssues.filter((item) => item.referenceSeverity === 'error');
+ const allHtmlReferenceWarnings = htmlIssues.filter((item) => item.referenceSeverity === 'warning');
+@@ -558,6 +561,9 @@ const summary = {
+   archivedOrUnusedHtml: htmlFiles.filter((entry) => entry.status === 'archived-or-unused').length,
+   activeErrors: activeErrors.length,
+   activeWarnings: activeWarnings.length,
++  activeLocalStorageErrors: activeStorageErrors.length,
++  activeLocalStorageWarnings: activeStorageWarnings.length,
++  activeLocalStorageProblemFiles: activeStorageFiles.size,
+   allHtmlReferenceErrors: allHtmlReferenceErrors.length,
+   allHtmlReferenceWarnings: allHtmlReferenceWarnings.length,
+   archivedReferenceErrors: archivedReferenceErrors.length,
+@@ -586,7 +592,38 @@ const comparison = {
+   actualFixesResolved: Math.max(0, (baseline.phase2PreFixActiveErrors ?? summary.activeErrors) - summary.activeErrors),
+   remainingActiveErrors: summary.activeErrors,
+ };
+-const report = { generatedAt: new Date().toISOString(), baseline, comparison, summary, errors, warnings, games, htmlFiles };
++const previousIssues = [...priorErrors, ...priorWarnings];
++const previousActiveStorageErrors = previousIssues.filter((item) => item.status === 'active' && item.category === 'STORAGE' && item.severity === 'error');
++const previousActiveStorageWarnings = previousIssues.filter((item) => item.status === 'active' && item.category === 'STORAGE' && item.severity === 'warning');
++const phase3aBaseline = previousReport?.phase3aBaseline ?? {
++  activeLocalStorageErrors: previousActiveStorageErrors.length,
++  activeLocalStorageWarnings: previousActiveStorageWarnings.length,
++  activeLocalStorageProblemFiles: new Set([...previousActiveStorageErrors, ...previousActiveStorageWarnings].map((item) => item.file)).size,
++};
++if (baseline.phase2PostFixActiveErrors == null) {
++  baseline.phase2PostFixActiveErrors = phase3aBaseline.activeLocalStorageErrors
++    + (summary.activeErrors - activeStorageErrors.length);
++}
++comparison.actualFixesResolved = Math.max(0,
++  (baseline.phase2PreFixActiveErrors ?? baseline.phase2PostFixActiveErrors)
++    - baseline.phase2PostFixActiveErrors);
++const localStorage = {
++  active: {
++    errorFiles: new Set(activeStorageErrors.map((item) => item.file)).size,
++    errorOccurrences: activeStorageErrors.length,
++    warningFiles: new Set(activeStorageWarnings.map((item) => item.file)).size,
++    warningOccurrences: activeStorageWarnings.length,
++    problemFiles: activeStorageFiles.size,
++  },
++  phase3a: {
++    preFixErrors: phase3aBaseline.activeLocalStorageErrors,
++    fixedOccurrences: Math.max(0, phase3aBaseline.activeLocalStorageErrors - activeStorageErrors.length),
++    remainingErrors: activeStorageErrors.length,
++    remainingWarnings: activeStorageWarnings.length,
++    remainingProblemFiles: activeStorageFiles.size,
++  },
++};
++const report = { generatedAt: new Date().toISOString(), baseline, phase3aBaseline, comparison, localStorage, summary, errors, warnings, games, htmlFiles };
+ await mkdir(rel('reports'), { recursive: true });
+ await writeFile(rel('reports', 'game-audit.json'), `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+ 
+@@ -604,14 +641,22 @@ console.log(`- referenced-secondary HTML: ${summary.referencedSecondaryHtml}`);
+ console.log(`- archived-or-unused HTML: ${summary.archivedOrUnusedHtml}`);
+ console.log(`- active errors: ${summary.activeErrors}`);
+ console.log(`- active warnings: ${summary.activeWarnings}`);
++console.log(`- active localStorage errors: ${summary.activeLocalStorageErrors} in ${localStorage.active.errorFiles} files`);
++console.log(`- active localStorage warnings: ${summary.activeLocalStorageWarnings} in ${localStorage.active.warningFiles} files`);
+ console.log(`- all HTML reference errors: ${summary.allHtmlReferenceErrors}`);
+ console.log(`- all HTML reference warnings: ${summary.allHtmlReferenceWarnings}`);
+ console.log('\nPhase comparison');
+ console.log(`- Phase 1 active-equivalent errors: ${baseline.phase1ActiveErrors}`);
+ console.log(`- Phase 2 pre-fix active errors: ${baseline.phase2PreFixActiveErrors}`);
+-console.log(`- Phase 2 current active errors: ${summary.activeErrors}`);
++console.log(`- Phase 2 post-fix active errors: ${baseline.phase2PostFixActiveErrors}`);
+ console.log(`- resolved as false positives: ${comparison.falsePositivesResolved}`);
+ console.log(`- resolved by P0 fixes: ${comparison.actualFixesResolved}`);
++console.log('\nPhase 3A storage comparison');
++console.log(`- pre-fix active localStorage errors: ${localStorage.phase3a.preFixErrors}`);
++console.log(`- fixed localStorage occurrences: ${localStorage.phase3a.fixedOccurrences}`);
++console.log(`- remaining active localStorage errors: ${localStorage.phase3a.remainingErrors}`);
++console.log(`- remaining active localStorage warnings: ${localStorage.phase3a.remainingWarnings}`);
++console.log(`- remaining localStorage problem files: ${localStorage.phase3a.remainingProblemFiles}`);
+ for (const [heading, items] of [['ERRORS', errors], ['WARNINGS', warnings]]) {
+   console.log(`\n${heading} (${items.length})`);
+   if (!items.length) console.log('- none');
