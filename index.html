@@ -61,13 +61,33 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap" rel="stylesheet">
 
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6T1PPPP7TR"></script>
+    <!-- Google Analytics is initialized only when this browser session is not in QA mode. -->
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-6T1PPPP7TR', { send_page_view: false });
+      (function () {
+        var key = 'ww_qa_tracking_disabled';
+        var queryValue = null;
+        var disabled = false;
+        try {
+          queryValue = new URLSearchParams(window.location.search || '').get('rb_qa');
+          if (queryValue === '1' || queryValue === 'true') window.sessionStorage.setItem(key, '1');
+          else if (queryValue === '0') window.sessionStorage.removeItem(key);
+          disabled = window.sessionStorage.getItem(key) === '1';
+        } catch (error) {
+          disabled = queryValue === '1' || queryValue === 'true';
+        }
+        window.__WW_QA_TRACKING_DISABLED__ = disabled;
+        if (disabled) return;
+
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { window.dataLayer.push(arguments); }
+        window.gtag = gtag;
+        gtag('js', new Date());
+        gtag('config', 'G-6T1PPPP7TR', { send_page_view: false });
+        var tag = document.createElement('script');
+        tag.async = true;
+        tag.src = 'https://www.googletagmanager.com/gtag/js?id=G-6T1PPPP7TR';
+        document.head.appendChild(tag);
+      })();
     </script>
   </head>
   <body>

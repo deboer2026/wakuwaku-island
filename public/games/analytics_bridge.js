@@ -6,14 +6,18 @@
   var lastActivity = Date.now();
   var milestones = [30, 60, 180, 300];
   var sentMilestones = {};
+  var qaSessionKey = 'ww_qa_tracking_disabled';
 
   function analyticsSuppressed() {
+    var value = null;
     try {
-      var value = new URLSearchParams(window.location.search).get('rb_qa');
-      return value === '1' || value === 'true';
-    } catch {
-      return false;
-    }
+      value = new URLSearchParams(window.location.search || '').get('rb_qa');
+      if (value === '1' || value === 'true') window.sessionStorage.setItem(qaSessionKey, '1');
+      else if (value === '0') window.sessionStorage.removeItem(qaSessionKey);
+      if (window.sessionStorage.getItem(qaSessionKey) === '1') return true;
+    } catch { if (value === '1' || value === 'true') return true; }
+    try { return window.parent !== window && window.parent.__WW_QA_TRACKING_DISABLED__ === true; }
+    catch { return false; }
   }
 
   function send(eventName, params) {
