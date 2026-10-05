@@ -1,11 +1,11 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
-import { lazy, Suspense, useEffect, useRef } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import GameSEO from './seo/GameSEO'
 import GAME_META from './seo/gameMeta'
 import TopPage from './pages/TopPage'
 import { recordRecentGame } from './utils/recentGames'
 import { recordGamePlay } from './utils/playHistory'
-import { handleGameAnalyticsMessage, trackGameView, trackPageView } from './utils/analytics'
+import { handleGameAnalyticsMessage, isAnalyticsSuppressed, QA_MODE_CHANGE_EVENT, trackGameView, trackPageView } from './utils/analytics'
 
 const Shabondama = lazy(() => import('./games/Shabondama'))
 const KudamonoCatch = lazy(() => import('./games/KudamonoCatch'))
@@ -141,9 +141,21 @@ function RouteTracker() {
   return null;
 }
 
+function QATrackingIndicator() {
+  const [disabled, setDisabled] = useState(() => isAnalyticsSuppressed());
+  useEffect(() => {
+    const update = () => setDisabled(isAnalyticsSuppressed());
+    window.addEventListener(QA_MODE_CHANGE_EVENT, update);
+    return () => window.removeEventListener(QA_MODE_CHANGE_EVENT, update);
+  }, []);
+  if (!disabled) return null;
+  return <aside role="status" aria-live="polite" style={{ position: 'fixed', zIndex: 10000, right: 10, bottom: 10, padding: '5px 9px', borderRadius: 999, background: '#263445', color: '#fff', font: '600 11px/1.3 system-ui,sans-serif', opacity: 0.84, pointerEvents: 'none' }}>QA tracking disabled · QA 計測停止中</aside>;
+}
+
 export default function App() {
   return (
     <>
+      <QATrackingIndicator />
       <RouteTracker />
       <Suspense fallback={<RouteLoading />}>
       <Routes>

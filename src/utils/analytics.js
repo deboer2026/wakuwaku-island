@@ -3,6 +3,8 @@ import { incrementPlayCount } from './playCounter';
 
 const SITE_SCOPE = 'wakuwaku_island';
 const QA_QUERY_PARAMETER = 'rb_qa';
+const QA_SESSION_KEY = 'ww_qa_tracking_disabled';
+export const QA_MODE_CHANGE_EVENT = 'ww:qa-tracking-change';
 const ALLOWED_KEYS = new Set([
   'site_scope', 'hostname', 'page_path', 'page_title', 'content_type',
   'content_id', 'content_name', 'series_name', 'game_id', 'game_name',
@@ -10,12 +12,35 @@ const ALLOWED_KEYS = new Set([
   'score', 'engagement_seconds', 'value', 'source_page'
 ]);
 const sent = new Map();
+let memoryQaSuppressed = false;
 
 export function isAnalyticsSuppressed() {
   if (typeof window === 'undefined') return true;
-  const value = new URLSearchParams(window.location.search).get(QA_QUERY_PARAMETER);
-  return value === '1' || value === 'true';
+  let value = null;
+  try { value = new URLSearchParams(window.location.search || '').get(QA_QUERY_PARAMETER); } catch { /* keep the current session setting */ }
+  let suppressed = false;
+  if (value === '1' || value === 'true') {
+    memoryQaSuppressed = true;
+    suppressed = true;
+    try { window.sessionStorage.setItem(QA_SESSION_KEY, '1'); } catch { /* the in-memory flag covers this page session */ }
+  } else if (value === '0') {
+    memoryQaSuppressed = false;
+    suppressed = false;
+    try { window.sessionStorage.removeItem(QA_SESSION_KEY); } catch { /* explicit opt-out still applies to this page */ }
+  } else {
+    try { suppressed = window.sessionStorage.getItem(QA_SESSION_KEY) === '1'; }
+    catch { suppressed = memoryQaSuppressed; }
+  }
+  const changed = window.__WW_QA_TRACKING_DISABLED__ !== suppressed;
+  window.__WW_QA_TRACKING_DISABLED__ = suppressed;
+  if (changed && typeof window.dispatchEvent === 'function' && typeof window.Event === 'function') {
+    window.dispatchEvent(new window.Event(QA_MODE_CHANGE_EVENT));
+  }
+  return suppressed;
 }
+
+// Resolve the URL override before React starts sending page and game events.
+if (typeof window !== 'undefined') isAnalyticsSuppressed();
 
 function cleanValue(value) {
   if (value === null || value === undefined) return undefined;
