@@ -99,9 +99,7 @@ function GameCard({ game, lang, played, thumbFor, ageText, cardGradients, defaul
         <div className="game-thumb-fallback" style={{ display: thumb ? 'none' : 'flex' }}>
           {gameSvgs[game.id] || <PlaceholderThumb />}
         </div>
-        {game.isNew ? (
-          <span className="badge-new">NEW</span>
-        ) : played ? (
+        {played ? (
           <span className="badge-played">{{ja:'あそんだ', en:'Played', zh:'玩过', ko:'플레이함', es:'Jugado'}[lang] || 'あそんだ'}</span>
         ) : null}
         <span className="play-fab" aria-hidden="true"><PlayFabIcon /></span>
