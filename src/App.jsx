@@ -191,7 +191,7 @@ export default function App() {
         <Route path="/okashi-crossing" element={<GameWithSEO route="/okashi-crossing"><OkashiCrossing /></GameWithSEO>} />
         <Route path="/kokki"          element={<GameWithSEO route="/kokki"><KokkiQuiz /></GameWithSEO>} />
         <Route path="/jewelry-master" element={<GameWithSEO route="/jewelry-master"><JewelryMaster /></GameWithSEO>} />
-        <Route path="/dressup"        element={<DressUp />} />
+        <Route path="/dressup"        element={<GameWithSEO route="/dressup"><DressUp /></GameWithSEO>} />
         <Route path="/mori" element={<GameWithSEO route="/mori"><MoriGame /></GameWithSEO>} />
         <Route path="/donguri" element={<GameWithSEO route="/donguri"><DonguriGame /></GameWithSEO>} />
         <Route path="/sora" element={<GameWithSEO route="/sora"><SoraGame /></GameWithSEO>} />
