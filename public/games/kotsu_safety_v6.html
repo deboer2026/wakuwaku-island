@@ -1,0 +1,3199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>こうつう あんぜん タウン｜わくわくアイランド</title>
+<meta name="description" content="まちを じゆうに たんけんし、しんごう・ふみきり・よるの こうつうあんぜんを まなぶ こども向けゲーム。">
+<style>
+  :root{
+    --sat:0px; --sab:0px; --sal:0px; --sar:0px;
+    --night:#1b2550; --accent:#ff9d2e; --accent-dark:#d4700f;
+    --go:#2fb355; --go-dark:#218040; --star:#ffc93c;
+  }
+  @supports (padding:env(safe-area-inset-top)){
+    :root{--sat:env(safe-area-inset-top); --sab:env(safe-area-inset-bottom); --sal:env(safe-area-inset-left); --sar:env(safe-area-inset-right);}
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none;}
+  html,body{margin:0; padding:0;}
+  body{
+    font-family:"Yu Gothic UI","Yu Gothic","Meiryo","Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;
+    background:radial-gradient(circle at 18% 6%, rgba(255,255,255,.55), transparent 40%),
+               linear-gradient(180deg,#4fc3f0 0%,#8fdcf7 32%,#c9f0d8 66%,#eaf7d4 100%);
+    background-attachment:fixed; min-height:100vh; min-height:100dvh; color:var(--night);
+    padding:var(--sat) var(--sar) var(--sab) var(--sal);
+    display:flex; flex-direction:column; align-items:center; overflow-x:hidden;
+    touch-action:manipulation;
+  }
+  .wrap{width:100%; max-width:470px; padding:8px 12px 26px;}
+  .hidden{display:none !important;}
+
+  /* タイトル */
+  .titlebar{text-align:center; margin:4px 0 10px;}
+  .badge{display:inline-block; background:linear-gradient(180deg,#2b3a6b,#16204a); color:#fff; border-radius:999px;
+         padding:4px 15px; font-size:11px; font-weight:700; letter-spacing:.14em; box-shadow:0 3px 0 rgba(0,0,0,.18);}
+  h1{margin:8px 0 0; font-size:31px; font-weight:900; line-height:1.15; color:#fff;
+     text-shadow:0 2px 0 #2b6fbf,0 4px 0 #24589a,0 7px 12px rgba(20,40,80,.35); animation:float 3.4s ease-in-out infinite;}
+  h1 .em{color:#ffe066; text-shadow:0 2px 0 #c98c14,0 4px 0 #a06e0c,0 7px 12px rgba(20,40,80,.35);}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  .sub{font-size:12px; font-weight:700; color:#1d3d6a; opacity:.8; margin-top:6px;}
+  .hero{border-radius:22px; overflow:hidden; margin-bottom:12px; box-shadow:0 7px 0 rgba(27,37,80,.16), inset 0 0 0 4px rgba(255,255,255,.75);}
+  .hero canvas{display:block; width:100%;}
+  .stats{display:flex; gap:10px; margin-bottom:12px;}
+  .stat{flex:1; background:#fff; border-radius:16px; padding:8px 6px; text-align:center; box-shadow:0 4px 0 rgba(27,37,80,.12);}
+  .stat b{display:block; font-size:20px; color:#d4700f;} .stat span{font-size:10.5px; font-weight:700; opacity:.6;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
+
+  .btn{display:block; width:100%; border:none; border-radius:19px; padding:16px; font-family:inherit; font-size:21px;
+       font-weight:900; color:#fff; letter-spacing:.04em; position:relative; overflow:hidden; cursor:pointer;
+       background:linear-gradient(180deg,#ffc267,#ff9524); box-shadow:0 7px 0 var(--accent-dark),0 10px 14px rgba(212,112,15,.28);}
+  .btn::after{content:""; position:absolute; left:0; right:0; top:0; height:42%; background:linear-gradient(180deg,rgba(255,255,255,.55),transparent); pointer-events:none;}
+  .btn:active{transform:translateY(6px); box-shadow:0 1px 0 var(--accent-dark);}
+  .btn.sky{background:linear-gradient(180deg,#7cc3f5,#3f8fdb); box-shadow:0 6px 0 #2b66a8; font-size:17px; padding:14px 8px;}
+  .btn.pink{background:linear-gradient(180deg,#ff9cc4,#f0679f); box-shadow:0 6px 0 #c44a7d; font-size:17px; padding:14px 8px;}
+  .btn.gray{background:linear-gradient(180deg,#a4b0cc,#7c8bb0); box-shadow:0 5px 0 #5a6684; font-size:16px; padding:12px;}
+  .btn.small{font-size:16px; padding:12px; border-radius:16px; margin-top:8px;}
+  .pulse{animation:pl 1.5s ease-in-out infinite;}
+  @keyframes pl{0%,100%{transform:none}50%{transform:scale(1.03)}}
+  .card{background:linear-gradient(180deg,#fff,#f7fbff); border-radius:22px; padding:14px 13px; box-shadow:0 6px 0 rgba(27,37,80,.14); margin-bottom:12px;}
+  .rules{font-size:12.5px; line-height:2; font-weight:700; margin:0; padding-left:1.2em;}
+  .rules b{color:#c05a12;}
+  .ttl{font-size:13.5px; font-weight:900; margin:0 0 8px;}
+
+  /* 画面上部 */
+  .topbar{display:flex; align-items:center; gap:10px; margin:4px 0 12px;}
+  .topbar h2{margin:0; font-size:21px; font-weight:900; color:#fff; text-shadow:0 2px 0 #2b6fbf, 0 3px 6px rgba(20,40,80,.3);}
+  .back{border:none; background:#fff; width:42px; height:42px; border-radius:14px; font-size:16px; color:#3f6fd8;
+        box-shadow:0 4px 0 rgba(27,37,80,.15); cursor:pointer; font-family:inherit; font-weight:900;}
+
+  /* ミッション */
+  .modeSel{display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:12px;}
+  .opt{position:relative; background:linear-gradient(180deg,#fff,#eef3fa); border:3px solid transparent; border-radius:17px;
+       padding:8px 4px; text-align:center; font-weight:900; font-size:13.5px; cursor:pointer; font-family:inherit; color:var(--night);
+       box-shadow:0 4px 0 rgba(27,37,80,.12); transition:transform .12s;}
+  .opt canvas{display:block; margin:0 auto 2px;}
+  .opt.sel{background:linear-gradient(180deg,#fff6e2,#ffe7bd); border-color:var(--accent); transform:translateY(-2px);}
+  .opt.sel::after{content:"✓"; position:absolute; top:-7px; right:-5px; background:var(--accent); color:#fff; width:23px; height:23px;
+                  border-radius:50%; font-size:13px; line-height:23px; box-shadow:0 2px 0 var(--accent-dark);}
+  .opt.locked{opacity:.55;}
+  .opt:active{transform:scale(.95);}
+  .mcard{display:flex; align-items:center; gap:12px; width:100%; text-align:left; border:none; font-family:inherit; color:var(--night);
+         background:linear-gradient(180deg,#fff,#f5f9ff); border-radius:20px; padding:10px 12px; margin-bottom:10px; cursor:pointer;
+         box-shadow:0 5px 0 rgba(27,37,80,.13); position:relative;}
+  .mcard:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(27,37,80,.13);}
+  .mcard canvas{flex:none;}
+  .mbody{flex:1; min-width:0;}
+  .mtop{display:flex; align-items:center; gap:6px;}
+  .mtop b{font-size:16px;}
+  .tag{font-size:10px; font-weight:900; border-radius:999px; padding:2px 8px; color:#fff;}
+  .tday{background:#4fb6e8;} .teve{background:#ff9a5a;} .tnight{background:#3b4c8a;}
+  .mles{font-size:11.5px; font-weight:700; opacity:.65; margin:3px 0;}
+  .mstar{font-size:17px; color:var(--star); letter-spacing:2px; text-shadow:0 1px 0 #d9a300;}
+  .mstar.none{color:#ccd3df; text-shadow:none;}
+  .mcard.locked{filter:grayscale(.8); opacity:.75;}
+  .mcard.locked .mstar{font-size:11px; letter-spacing:0; color:#7c8bb0; text-shadow:none;}
+  .lock{position:absolute; right:12px; top:10px; font-size:20px;}
+  .shake{animation:sh .35s;}
+  @keyframes sh{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+  /* きせかえ */
+  .dressStage{display:flex; justify-content:center; margin-bottom:10px;}
+  .dressStage canvas{border-radius:22px; box-shadow:0 6px 0 rgba(27,37,80,.15), inset 0 0 0 4px #fff;}
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
+  .swatches{display:flex; gap:10px; flex-wrap:wrap;}
+  .sw{width:46px; height:46px; border-radius:50%; border:4px solid #fff; box-shadow:0 3px 0 rgba(27,37,80,.2); cursor:pointer; font-size:16px;}
+  .sw.sel{outline:4px solid var(--accent); outline-offset:2px;}
+  .sw.locked{filter:grayscale(.6) brightness(.9);}
+  .note{font-size:10.5px; font-weight:700; opacity:.55;}
+
+  /* シールちょう */
+  .bookCount{text-align:center; font-size:15px; font-weight:900; color:#c44a7d; margin-bottom:10px;}
+  .stk{background:#fff; border-radius:18px; padding:8px 4px 10px; text-align:center; box-shadow:0 4px 0 rgba(27,37,80,.12);}
+  .stk canvas{display:block; margin:0 auto 4px;}
+  .stk span{font-size:11px; font-weight:900;}
+  .stk.no span{opacity:.4;}
+
+  /* ゲーム */
+  .hud{display:flex; align-items:center; gap:7px; margin-bottom:8px;}
+  #hearts{font-size:15px;}
+  .place{font-size:11.5px; font-weight:900; background:#fff; border-radius:999px; padding:4px 10px; box-shadow:0 2px 0 rgba(27,37,80,.13); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  #score{font-size:14px; font-weight:900; margin-left:auto; white-space:nowrap;}
+  .hbtn{border:none; background:#ffffffe0; border-radius:999px; width:34px; height:32px; font-size:15px; box-shadow:0 2px 0 rgba(27,37,80,.13); cursor:pointer;}
+  .stagebox{width:min(100%, calc((100vh - 182px) * 400 / 620)); margin:0 auto;}
+  @supports (height:100dvh){ .stagebox{width:min(100%, calc((100dvh - 182px) * 400 / 620));} }
+  .stagebox{min-width:240px; position:relative; border-radius:20px; overflow:hidden; box-shadow:0 8px 0 rgba(27,37,80,.17), inset 0 0 0 4px rgba(255,255,255,.6); background:#8fc47a;}
+  #cv{display:block; width:100%; touch-action:none;}
+  .toast{position:absolute; left:50%; top:78px; transform:translateX(-50%) scale(.9); max-width:92%;
+         background:linear-gradient(180deg,#fff,#fff0e6); color:#c0392b; font-size:13px; font-weight:900; padding:8px 14px;
+         border-radius:999px; box-shadow:0 4px 0 rgba(27,37,80,.22); white-space:nowrap; opacity:0; transition:opacity .18s, transform .18s; pointer-events:none;}
+  .toast.on{opacity:1; transform:translateX(-50%) scale(1);}
+  .ov{position:absolute; inset:0; background:rgba(20,28,58,.62); display:flex; align-items:center; justify-content:center; padding:18px;}
+  .ovcard{background:linear-gradient(180deg,#fff,#f4f8ff); border-radius:22px; padding:16px 14px 14px; text-align:center; width:100%; max-width:290px;
+          box-shadow:0 10px 30px rgba(10,20,50,.35); animation:pop .26s cubic-bezier(.2,1.7,.4,1);}
+  @keyframes pop{from{transform:scale(.78) translateY(10px); opacity:0} to{transform:none; opacity:1}}
+  .ovcard canvas{display:block; margin:0 auto 2px;}
+  .ovcard .t{font-size:19.5px; font-weight:900; margin:2px 0 7px; color:#c0392b;}
+  .ovcard .t.blue{color:#2b66a8; font-size:22px; margin-bottom:6px;}
+  .ovcard .tip{font-size:13px; font-weight:700; line-height:1.8; opacity:.85; margin-bottom:6px;}
+  .pad{display:grid; grid-template-columns:1fr; gap:9px; margin-top:10px;}
+  #scr-game .hud, #scr-game .pad, #scr-game .hint{max-width:400px; margin-left:auto; margin-right:auto;}
+  .pad.bike{grid-template-columns:1fr 1.6fr;}
+  .ctl{border:none; border-radius:19px; padding:14px 4px; font-family:inherit; font-weight:900; font-size:18px; color:#fff;
+       cursor:pointer; touch-action:none; position:relative; overflow:hidden;}
+  .ctl::after{content:""; position:absolute; left:0; right:0; top:0; height:40%; background:linear-gradient(180deg,rgba(255,255,255,.45),transparent); pointer-events:none;}
+  .ctl .ic{font-size:20px; margin-right:6px;}
+  .ctl.look{background:linear-gradient(180deg,#79b7ee,#3f82cf); box-shadow:0 6px 0 #2b5f9e; order:2;}
+  .ctl.off{background:linear-gradient(180deg,#b79ce4,#8e6fc4); box-shadow:0 6px 0 #684b98; order:1;}
+  .ctl:active{transform:translateY(5px); box-shadow:none;}
+  .ctl.look.want{animation:want 1s ease-in-out infinite;}
+  @keyframes want{0%,100%{transform:none; filter:none}50%{transform:scale(1.04); filter:brightness(1.15) drop-shadow(0 0 10px #ffe066)}}
+  .hint{text-align:center; font-size:11px; font-weight:700; opacity:.7; margin:8px 0 0;}
+
+  /* けっか */
+  .resTop{text-align:center;}
+  #rCard{display:block; margin:0 auto 6px;}
+  #rStars{font-size:42px; letter-spacing:6px; text-align:center;}
+  #rStars i{font-style:normal; display:inline-block; animation:sp .45s backwards cubic-bezier(.2,1.7,.4,1);}
+  #rStars i:nth-child(2){animation-delay:.2s} #rStars i:nth-child(3){animation-delay:.4s}
+  @keyframes sp{from{transform:scale(0) rotate(-50deg); opacity:0} to{transform:none; opacity:1}}
+  #rStars .on{color:var(--star); text-shadow:0 3px 0 #d9a300, 0 0 14px rgba(255,201,60,.7)} #rStars .off{color:#e3e8f1}
+  #rMsg{font-size:19px; font-weight:900; margin:4px 0 2px;}
+  #rDet{font-size:12.5px; font-weight:700; opacity:.7; margin-bottom:10px;}
+  .newTitle{font-size:13px; font-weight:900; color:#c44a7d; text-align:center; margin:4px 0 6px;}
+  #rNew{display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;}
+  .newst{text-align:center; animation:sp .5s backwards cubic-bezier(.2,1.7,.4,1);}
+  .newst span{display:block; font-size:10px; font-weight:900;}
+  .unl{background:linear-gradient(90deg,#fff6d8,#ffe9b0); border-radius:12px; padding:7px 10px; font-size:12.5px; font-weight:900; color:#a0620c; margin-bottom:6px; text-align:center;}
+  #rLearn{background:linear-gradient(180deg,#f2f8ff,#e9f2ff); border-radius:15px; padding:10px 12px 10px 28px; margin:6px 0 12px; font-size:12.5px; font-weight:700; line-height:1.95; text-align:left;}
+  footer{text-align:center; font-size:10.5px; font-weight:700; opacity:.5; padding:6px 0 10px;}
+  @media (prefers-reduced-motion: reduce){*{animation:none !important; transition:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section id="scr-title">
+    <div class="titlebar">
+      <span class="badge">こうつう あんぜん</span>
+      <h1>わくわく <span class="em">タウン</span></h1>
+      <div class="sub">まちを あるいて ルールを まなぼう</div>
+    </div>
+    <div class="hero"><canvas id="hero"></canvas></div>
+    <div class="stats" id="titleStats"></div>
+    <button class="btn pulse" id="btnPlay">あそぶ</button>
+    <div class="row2">
+      <button class="btn sky" id="btnDress">👕 きせかえ</button>
+      <button class="btn pink" id="btnBook">📒 シールちょう</button>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <p class="ttl">4つの おやくそく</p>
+      <ol class="rules">
+        <li><b>とまる</b> — みちの てまえで かならず ストップ</li>
+        <li><b>みる</b> — みぎ → ひだり → もういちど みぎ</li>
+        <li><b>まつ</b> — しんごうは「あお」。ちかちかは まつ</li>
+        <li><b>きをつける</b> — あおでも まがってくる くるまが いる</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="scr-missions" class="hidden">
+    <div class="topbar"><button class="back" id="msBack">◀</button><h2>どこへ いく？</h2></div>
+    <div class="modeSel">
+      <button class="opt" id="modeWalk">👟 あるいて</button>
+      <button class="opt" id="modeBike">🚲 じてんしゃ</button>
+    </div>
+    <div id="missionList"></div>
+  </section>
+
+  <section id="scr-dress" class="hidden">
+    <div class="topbar"><button class="back" id="drBack">◀</button><h2>きせかえ</h2></div>
+    <div class="dressStage"><canvas id="dressCv"></canvas></div>
+    <div class="card"><p class="ttl">キャラクター</p><div class="grid3" id="charGrid"></div></div>
+    <div class="card"><p class="ttl">ぼうし <span class="note" id="hatNote"></span></p><div class="grid3" id="hatGrid"></div></div>
+    <div class="card"><p class="ttl">ふくの いろ <span class="note" id="colorNote"></span></p><div class="swatches" id="colorRow"></div></div>
+  </section>
+
+  <section id="scr-book" class="hidden">
+    <div class="topbar"><button class="back" id="bkBack">◀</button><h2>シールちょう</h2></div>
+    <div class="bookCount" id="bookCount"></div>
+    <div class="grid3" id="bookGrid"></div>
+  </section>
+
+  <section id="scr-game" class="hidden">
+    <div class="hud">
+      <div id="hearts"></div>
+      <div class="place" id="place"></div>
+      <div id="score"></div>
+      <button class="hbtn" id="sndBtn">🔊</button>
+      <button class="hbtn" id="pauseBtn">⏸</button>
+    </div>
+    <div class="stagebox">
+      <canvas id="cv"></canvas>
+      <div class="toast" id="toastEl"></div>
+      <div class="ov hidden" id="penOv">
+        <div class="ovcard">
+          <canvas id="penCv"></canvas>
+          <div class="t" id="penTitle"></div>
+          <div class="tip" id="penTip"></div>
+          <button class="btn small" id="penBtn">わかった！</button>
+        </div>
+      </div>
+      <div class="ov hidden" id="pauseOv">
+        <div class="ovcard">
+          <div class="t blue">ひとやすみ</div>
+          <button class="btn small" id="resumeBtn">つづける</button>
+          <button class="btn small gray" id="restartBtn">さいしょから</button>
+          <button class="btn small gray" id="quitBtn">メニューへ</button>
+        </div>
+      </div>
+    </div>
+    <div class="pad" id="pad">
+      <button class="ctl off hidden" id="bikeBtn"></button>
+      <button class="ctl look" id="lookBtn"><span class="ic">👀</span>みる</button>
+    </div>
+    <p class="hint">がめんを ドラッグして うごく ／ みちの まえで「みる」</p>
+  </section>
+
+  <section id="scr-result" class="hidden">
+    <div class="card resTop">
+      <canvas id="rCard"></canvas>
+      <div id="rStars"></div>
+      <div id="rMsg"></div>
+      <div id="rDet"></div>
+      <div id="rNewWrap" class="hidden"><div class="newTitle">あたらしい シール ゲット！</div><div id="rNew"></div></div>
+      <div id="rUnlock"></div>
+      <ul id="rLearn"></ul>
+      <button class="btn" id="rNext">つぎへ</button>
+      <div style="height:10px"></div>
+      <div class="row2" style="margin-top:0">
+        <button class="btn gray" id="rAgain">もういちど</button>
+        <button class="btn gray" id="rMenu">ほかの ばしょ</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>わくわくアイランド ／ こうつう あんぜん タウン</footer>
+</div>
+<script src="/games/safe_area.js"></script>
+<script src="/games/analytics_bridge.js"></script>
+<script>
+(function(){
+"use strict";
+/* =====================================================================
+   00 CORE ― 設定・ユーティリティ・音・セーブ
+   ===================================================================== */
+var $ = function(id){ return document.getElementById(id); };
+var TAU = Math.PI * 2;
+var REDUCE = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+/* ---- ここだけ触れば難易度・地域を調整できる ---- */
+var CFG = {
+  LEFT_HAND: true,        // true=日本など左側通行 / false=右側通行の国
+  WALK: 92, BIKE: 150, PUSH: 70,
+  LOOK_HOLD: 1.0,         // 「みる」のアニメ時間
+  LOOK_VALID: 7,          // 確認が有効な秒数
+  LOOK_DIST: 70,          // 確認した場所から これ以上はなれると無効
+  LOOK_NEAR: 64,          // 道からこの距離以内で「みる」が有効
+  HEARTS: 3, TURN_RATE: 0.42, MAX_CARS: 14, MAX_PARTS: 260,
+  CAR_V: [80, 115], CAR_ACC: 90, CAR_DEC: 190
+};
+var LOOK_ORDER = CFG.LEFT_HAND ? ["みぎ", "ひだり", "みぎ"] : ["ひだり", "みぎ", "ひだり"];
+
+function rnd(a, b){ return a + Math.random() * (b - a); }
+function pick(a){ return a[(Math.random() * a.length) | 0]; }
+function clamp(v, a, b){ return v < a ? a : (v > b ? b : v); }
+function lerp(a, b, t){ return a + (b - a) * t; }
+function dist(ax, ay, bx, by){ var dx = ax - bx, dy = ay - by; return Math.sqrt(dx * dx + dy * dy); }
+function rr(c, x, y, w, h, r){
+  r = Math.max(0, Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2));
+  c.beginPath(); c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);         c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
+function shade(hex, amt){
+  var n = parseInt(hex.slice(1), 16);
+  var r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  if(amt > 0){ r += (255 - r) * amt; g += (255 - g) * amt; b += (255 - b) * amt; }
+  else { r *= (1 + amt); g *= (1 + amt); b *= (1 + amt); }
+  return "rgb(" + (r | 0) + "," + (g | 0) + "," + (b | 0) + ")";
+}
+function inRect(x, y, r, pad){
+  pad = pad || 0;
+  return x >= r.x - pad && x <= r.x + r.w + pad && y >= r.y - pad && y <= r.y + r.h + pad;
+}
+function rectDist(x, y, r){
+  var dx = Math.max(r.x - x, 0, x - (r.x + r.w));
+  var dy = Math.max(r.y - y, 0, y - (r.y + r.h));
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+var DPR = Math.min(2, window.devicePixelRatio || 1);
+// fill=true のときだけ横幅100%（ゲーム画面とタイトル）。小さいキャンバスは px 指定
+function fitCanvas(c, w, h, fill){
+  c.width = Math.round(w * DPR); c.height = Math.round(h * DPR);
+  if(fill){ c.style.width = "100%"; c.style.height = "auto"; }
+  else { c.style.width = w + "px"; c.style.height = h + "px"; }
+  var cc = c.getContext("2d");
+  cc.setTransform(DPR, 0, 0, DPR, 0, 0);
+  return cc;
+}
+function mkCanvas(w, h, scale){
+  scale = scale || DPR;
+  var cv = document.createElement("canvas");
+  cv.width = Math.max(1, Math.ceil(w * scale)); cv.height = Math.max(1, Math.ceil(h * scale));
+  var x = cv.getContext("2d");
+  x.setTransform(scale, 0, 0, scale, 0, 0);
+  return { cv:cv, ctx:x, s:scale, w:w, h:h };
+}
+var FONT = '"Yu Gothic UI","Yu Gothic","Meiryo","Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif';
+function fnt(w, px){ return w + " " + px + "px " + FONT; }
+
+/* =====================================================================
+   セーブ（端末内のみ・個人情報なし）
+   ===================================================================== */
+var SAFE_LS = (function(){
+  var mem = {}, ok = false;
+  try{ var k = "__kotsu_v6_probe__"; window.localStorage.setItem(k, "1"); window.localStorage.removeItem(k); ok = true; }catch(e){ ok = false; }
+  return {
+    get:function(k){ try{ return ok ? window.localStorage.getItem(k) : (k in mem ? mem[k] : null); }catch(e){ return k in mem ? mem[k] : null; } },
+    set:function(k, v){ v = String(v); try{ if(ok) window.localStorage.setItem(k, v); else mem[k] = v; }catch(e){ mem[k] = v; } }
+  };
+})();
+var SAVE_KEY = "kotsu_safety_v6_progress";
+var SHARED_SOUND_KEY = "wakuwaku_bgm";
+var SAVE = { best:{}, stickers:{}, char:0, hat:"none", color:0, mode:"walk", sound:true };
+function loadSave(){
+  try{
+    var s = SAFE_LS.get(SAVE_KEY);
+    if(s){ var o = JSON.parse(s); for(var k in o){ if(Object.prototype.hasOwnProperty.call(o, k)) SAVE[k] = o[k]; } }
+  }catch(e){}
+  // こわれた記録でも 起動できるように 形を なおす
+  function obj(v){ return v && typeof v === "object" && !Array.isArray(v) ? v : {}; }
+  SAVE.best = obj(SAVE.best); SAVE.stickers = obj(SAVE.stickers);
+  for(var b in SAVE.best){ var n = parseInt(SAVE.best[b], 10); SAVE.best[b] = isNaN(n) ? 0 : clamp(n, 0, 3); }
+  SAVE.char = (SAVE.char | 0) >= 0 && (SAVE.char | 0) < 6 ? SAVE.char | 0 : 0;
+  SAVE.color = (SAVE.color | 0) >= 0 && (SAVE.color | 0) < 6 ? SAVE.color | 0 : 0;
+  if(["none", "cap", "ribbon", "straw", "flower", "crown"].indexOf(SAVE.hat) < 0) SAVE.hat = "none";
+  if(SAVE.mode !== "walk" && SAVE.mode !== "bike") SAVE.mode = "walk";
+  var sharedSound = SAFE_LS.get(SHARED_SOUND_KEY);
+  SAVE.sound = sharedSound === "on" ? true : (sharedSound === "off" ? false : SAVE.sound !== false);
+}
+function saveSave(){ try{ SAFE_LS.set(SAVE_KEY, JSON.stringify(SAVE)); }catch(e){} }
+function setSound(on){
+  SAVE.sound = !!on;
+  SAFE_LS.set(SHARED_SOUND_KEY, SAVE.sound ? "on" : "off");
+  saveSave();
+  if(SAVE.sound) ensureAudio();
+  if(AC && MASTER) MASTER.gain.value = SAVE.sound ? .85 : 0;
+  $("sndBtn").textContent = SAVE.sound ? "🔊" : "🔇";
+}
+function totalStars(){ var n = 0; for(var k in SAVE.best) n += SAVE.best[k] || 0; return n; }
+function stickerCount(){ var n = 0; for(var k in SAVE.stickers) if(SAVE.stickers[k]) n++; return n; }
+
+/* =====================================================================
+   サウンド（WebAudio合成・外部音源なし）
+   ===================================================================== */
+var AC = null, MASTER = null;
+function ensureAudio(){
+  if(!AC){
+    try{
+      var A = window.AudioContext || window.webkitAudioContext;
+      if(!A) return;
+      AC = new A(); MASTER = AC.createGain(); MASTER.gain.value = .85; MASTER.connect(AC.destination);
+    }catch(e){ AC = null; }
+  }
+  if(AC && AC.state === "suspended") AC.resume();
+}
+function noteAt(f, dur, type, vol, at){
+  if(!AC || !SAVE.sound) return;
+  var o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || "sine"; o.frequency.setValueAtTime(f, at);
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(Math.max(.0002, vol), at + .015);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  o.connect(g); g.connect(MASTER);
+  o.start(at); o.stop(at + dur + .06);
+}
+function tone(f, dur, type, vol, delay){ if(!AC) return; noteAt(f, dur, type, vol || .06, AC.currentTime + (delay || 0)); }
+function seTap(){ tone(700, .07, "square", .045); }
+function seStep(){ tone(rnd(170, 215), .05, "triangle", .02); }
+function seLook(){ tone(980, .07, "triangle", .045); tone(1300, .08, "triangle", .04, .14); tone(980, .07, "triangle", .04, .3); }
+function seStar(){ tone(1320, .07, "sine", .05); tone(1760, .1, "sine", .05, .07); tone(2093, .1, "sine", .03, .14); }
+function seOk(){ [660, 880, 1174, 1568].forEach(function(f, i){ tone(f, .16, "sine", .05, i * .06); }); }
+function seNg(){ tone(200, .3, "sawtooth", .045); tone(150, .32, "sawtooth", .04, .05); }
+function seHorn(){ tone(360, .2, "square", .055); tone(300, .24, "square", .055, .24); }
+function seChime(){ tone(880, .2, "sine", .04); tone(1174, .24, "sine", .036, .17); }
+function seGoal(){ [523, 659, 784, 1046, 1318, 1568].forEach(function(f, i){ tone(f, .22, "sine", .055, i * .11); }); }
+function seFire(){ tone(rnd(700, 1400), .18, "triangle", .035); }
+function seBell(v){ tone(760, .14, "square", .03 * v); }
+function seBeep(){ tone(1450, .09, "square", .03); }
+function seBall(){ tone(rnd(300, 360), .07, "sine", .05); }
+function seItem(){ [784, 988, 1318, 1568, 2093].forEach(function(f, i){ tone(f, .14, "triangle", .045, i * .07); }); }
+function seUnlock(){ [523, 784, 659, 1046].forEach(function(f, i){ tone(f, .2, "triangle", .05, i * .1); }); }
+
+var BGM = { t:0, i:0 };
+var MEL_DAY   = [523, 0, 659, 0, 784, 0, 659, 0, 587, 0, 784, 0, 880, 0, 784, 0];
+var MEL_NIGHT = [440, 0, 0, 523, 0, 0, 659, 0, 587, 0, 0, 523, 0, 0, 494, 0];
+var BASS = [131, 165, 147, 110];
+function bgmTick(night){
+  if(!AC || !SAVE.sound) return;
+  if(BGM.t < AC.currentTime) BGM.t = AC.currentTime + .1;
+  var mel = night ? MEL_NIGHT : MEL_DAY, step = night ? .26 : .2;
+  while(BGM.t < AC.currentTime + .7){
+    var s = BGM.i % 16;
+    if(mel[s]) noteAt(mel[s], .32, "triangle", .018, BGM.t);
+    if(s % 4 === 0) noteAt(BASS[(BGM.i / 4 | 0) % 4] * (night ? .84 : 1), .45, "sine", .03, BGM.t);
+    BGM.t += step; BGM.i++;
+  }
+}
+
+/* =====================================================================
+   10 ART ― すべてコードで描画（端末による絵柄の差が出ない）
+   ===================================================================== */
+var CHARS = [
+  { id:"kuma",  name:"くまた",   kind:"animal", ear:"round", fur:"#bd8552", fur2:"#ecd0a8", line:"#7a4f28", cloth:"#4aa3e0", cloth2:"#2f80c2" },
+  { id:"usagi", name:"みみか",   kind:"animal", ear:"long",  fur:"#fbf7f4", fur2:"#ffd9e4", line:"#c9a9a0", cloth:"#f57ca0", cloth2:"#d95c83" },
+  { id:"neko",  name:"にゃんた", kind:"animal", ear:"tri",   fur:"#f4a95c", fur2:"#ffe0b8", line:"#c06f22", cloth:"#4cc48b", cloth2:"#2fa16c" },
+  { id:"panda", name:"ぱんだん", kind:"animal", ear:"panda", fur:"#fdfdfd", fur2:"#ffffff", line:"#b9bcc4", cloth:"#7a6bd6", cloth2:"#5b4cba" },
+  { id:"ouji",  name:"おうじ",   kind:"prince",   hair:"#8a5a2b", fur:"#ffdcc0", fur2:"#ffdcc0", line:"#d9a882", cloth:"#3f6fd8", cloth2:"#2b53ab", cape:"#e2574c" },
+  { id:"hime",  name:"おひめ",   kind:"princess", hair:"#f7d878", fur:"#ffdcc0", fur2:"#ffdcc0", line:"#d9a882", cloth:"#ef6ea8", cloth2:"#cf4d89", cape:"#ffd9ec" }
+];
+var COLORS = [
+  null,
+  { c1:"#ff8a3d", c2:"#e06a1f", need:0 },
+  { c1:"#3ccf9e", c2:"#25a57b", need:0 },
+  { c1:"#ffd23f", c2:"#d9a20c", need:3 },
+  { c1:"#8f7cf0", c2:"#6a57d1", need:6 },
+  { c1:"#ff6fae", c2:"#e04d8d", need:9 }
+];
+var HATS = [
+  { id:"none",   name:"なし",         need:0 },
+  { id:"cap",    name:"キャップ",     need:2 },
+  { id:"ribbon", name:"リボン",       need:4 },
+  { id:"straw",  name:"むぎわら",     need:7 },
+  { id:"flower", name:"はなかんむり", need:10 },
+  { id:"crown",  name:"おうかん",     need:13 }
+];
+
+/* ---------- キャラクター ----------
+   (x,y)=足元 / s=スケール(1で約48px)
+   o: dir("down"|"up"|"left"|"right"), moving, walk, look(-1..1), t, face("normal"|"happy"|"scared"),
+      ride, hold, helmet, bag, vest, hat, color                                                     */
+function drawChar(c, ch, x, y, s, o){
+  o = o || {};
+  var dir = o.dir || "down";
+  var side = dir === "left" ? -1 : (dir === "right" ? 1 : 0);
+  var back = (dir === "up");
+  var moving = !!o.moving, ph = o.walk || 0, t = o.t || 0, look = o.look || 0;
+  var face = o.face || "normal";
+  var cl = (o.color && COLORS[o.color]) ? COLORS[o.color] : null;
+  var C1 = cl ? cl.c1 : ch.cloth, C2 = cl ? cl.c2 : ch.cloth2;
+  var sw = moving ? Math.sin(ph) : 0;
+  var bob = moving ? Math.abs(Math.sin(ph)) * 1.6 * s : Math.sin(t * 2) * .5 * s;
+  var hy = y - bob, LN = ch.line;
+  var ride = !!o.ride;
+
+  c.save(); c.lineJoin = "round"; c.lineCap = "round";
+  // かげ
+  c.fillStyle = "rgba(0,0,0,.22)";
+  c.beginPath(); c.ellipse(x, y + 1.5 * s, 13 * s, 4.6 * s, 0, 0, TAU); c.fill();
+
+  if(ride){ drawBikeFor(c, x, y, s, ph, dir, false); hy -= 8 * s; }
+  if(o.hold && (dir === "up")) drawBikeFor(c, x + 15 * s, y, s * .9, 0, dir, true);
+
+  // マント（せなか以外は からだの うしろ）
+  if(ch.cape && !back) drawCape(c, ch, x, hy, s, ph, t, false);
+
+  // あし
+  if(ch.kind === "princess"){
+    c.fillStyle = "#f7e6d5"; c.strokeStyle = LN; c.lineWidth = 1.2 * s;
+    rr(c, x - 7 * s + sw * 2 * s, hy - 5 * s, 5.5 * s, 5 * s, 2 * s); c.fill(); c.stroke();
+    rr(c, x + 1.5 * s - sw * 2 * s, hy - 5 * s, 5.5 * s, 5 * s, 2 * s); c.fill(); c.stroke();
+  }else{
+    var l1 = ride ? 3 * s : sw * 4 * s, l2 = ride ? -3 * s : -sw * 4 * s;
+    c.fillStyle = C2;
+    rr(c, x - 8.5 * s + l1 * .3, hy - 11 * s + (ride ? 4 * s : 0), 7 * s, 11 * s - (ride ? 3 * s : 0) - Math.abs(l1) * .2, 3 * s); c.fill();
+    rr(c, x + 1.5 * s + l2 * .3, hy - 11 * s + (ride ? 4 * s : 0), 7 * s, 11 * s - (ride ? 3 * s : 0) - Math.abs(l2) * .2, 3 * s); c.fill();
+    c.fillStyle = "#3a3f52";
+    rr(c, x - 9.5 * s + l1 * .3, hy - 3.8 * s - (ride ? 3 * s : 0), 8.5 * s, 4.2 * s, 2 * s); c.fill();
+    rr(c, x + 1 * s + l2 * .3, hy - 3.8 * s - (ride ? 3 * s : 0), 8.5 * s, 4.2 * s, 2 * s); c.fill();
+  }
+
+  // からだ
+  c.strokeStyle = LN; c.lineWidth = 1.3 * s;
+  if(ch.kind === "princess"){
+    var dg = c.createLinearGradient(x - 15 * s, 0, x + 15 * s, 0);
+    dg.addColorStop(0, C2); dg.addColorStop(.45, C1); dg.addColorStop(1, C2);
+    c.fillStyle = dg;
+    c.beginPath();
+    c.moveTo(x - 9 * s, hy - 26 * s); c.lineTo(x + 9 * s, hy - 26 * s);
+    c.quadraticCurveTo(x + 17 * s, hy - 8 * s, x + 15 * s, hy - 1 * s);
+    c.lineTo(x - 15 * s, hy - 1 * s);
+    c.quadraticCurveTo(x - 17 * s, hy - 8 * s, x - 9 * s, hy - 26 * s);
+    c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = "rgba(255,255,255,.38)";
+    c.beginPath(); c.moveTo(x - 12.5 * s, hy - 9 * s); c.lineTo(x + 12.5 * s, hy - 9 * s);
+    c.lineTo(x + 13.5 * s, hy - 5 * s); c.lineTo(x - 13.5 * s, hy - 5 * s); c.closePath(); c.fill();
+  }else{
+    var bg = c.createLinearGradient(0, hy - 27 * s, 0, hy - 9 * s);
+    bg.addColorStop(0, C1); bg.addColorStop(1, C2);
+    c.fillStyle = bg;
+    rr(c, x - 10.5 * s, hy - 27 * s, 21 * s, 18 * s, 7 * s); c.fill(); c.stroke();
+    c.fillStyle = "rgba(255,255,255,.3)";
+    rr(c, x - 9 * s, hy - 25.5 * s, 18 * s, 5.5 * s, 4 * s); c.fill();
+  }
+  if(o.vest){
+    c.fillStyle = "rgba(236,255,110,.95)";
+    rr(c, x - 11 * s, hy - 22 * s, 22 * s, 8 * s, 3 * s); c.fill();
+    c.fillStyle = "#f2fbff"; rr(c, x - 11 * s, hy - 19.6 * s, 22 * s, 2.4 * s, 1 * s); c.fill();
+  }
+  // ランドセル
+  if(o.bag){
+    if(back){
+      var rg = c.createLinearGradient(0, hy - 30 * s, 0, hy - 10 * s);
+      rg.addColorStop(0, "#e2574c"); rg.addColorStop(1, "#a8322a");
+      c.fillStyle = rg; rr(c, x - 10 * s, hy - 29 * s, 20 * s, 18 * s, 4 * s); c.fill();
+      c.strokeStyle = "#7d2019"; c.lineWidth = 1 * s; c.stroke();
+      c.fillStyle = "#ffd34d"; rr(c, x - 2 * s, hy - 19 * s, 4 * s, 3 * s, 1 * s); c.fill();
+    }else if(side){
+      c.fillStyle = "#c0392b"; rr(c, x - side * 15 * s, hy - 27 * s, 7 * s, 16 * s, 2.5 * s); c.fill();
+    }else{
+      c.fillStyle = "#c0392b";
+      rr(c, x - 7.5 * s, hy - 27 * s, 3.2 * s, 14 * s, 1.4 * s); c.fill();
+      rr(c, x + 4.3 * s, hy - 27 * s, 3.2 * s, 14 * s, 1.4 * s); c.fill();
+    }
+  }
+  if(ch.cape && back) drawCape(c, ch, x, hy, s, ph, t, true);
+
+  // うで
+  var aSw = ride ? -1.5 : (moving ? -sw * 3.4 : .3);
+  c.fillStyle = C2; c.strokeStyle = LN; c.lineWidth = 1.1 * s;
+  rr(c, x - 14.6 * s, hy - 25 * s + aSw * s, 5.6 * s, 13 * s, 2.7 * s); c.fill(); c.stroke();
+  rr(c, x + 9 * s, hy - 25 * s - aSw * s, 5.6 * s, 13 * s, 2.7 * s); c.fill(); c.stroke();
+  c.fillStyle = ch.fur2;
+  c.beginPath(); c.arc(x - 11.8 * s, hy - 12.4 * s + aSw * s, 3 * s, 0, TAU); c.fill(); c.stroke();
+  c.beginPath(); c.arc(x + 11.8 * s, hy - 12.4 * s - aSw * s, 3 * s, 0, TAU); c.fill(); c.stroke();
+
+  // あたま
+  var hx = x + side * 1.4 * s + look * 2.6 * s, headY = hy - 35 * s;
+  var eb = moving ? Math.sin(ph * 2) * .8 * s : 0;
+  c.lineWidth = 1.3 * s; c.strokeStyle = LN;
+  if(ch.kind === "animal"){
+    c.fillStyle = (ch.ear === "panda") ? "#2f2f33" : ch.fur;
+    if(ch.ear === "round" || ch.ear === "panda"){
+      c.beginPath(); c.arc(hx - 9.6 * s, headY - 9 * s - eb, 5.2 * s, 0, TAU); c.fill(); c.stroke();
+      c.beginPath(); c.arc(hx + 9.6 * s, headY - 9 * s + eb, 5.2 * s, 0, TAU); c.fill(); c.stroke();
+    }else if(ch.ear === "long"){
+      c.beginPath(); c.ellipse(hx - 6 * s, headY - 14 * s - eb, 3.5 * s, 10 * s, -.13, 0, TAU); c.fill(); c.stroke();
+      c.beginPath(); c.ellipse(hx + 6 * s, headY - 14 * s + eb, 3.5 * s, 10 * s, .13, 0, TAU); c.fill(); c.stroke();
+      c.fillStyle = back ? ch.fur : ch.fur2;
+      c.beginPath(); c.ellipse(hx - 6 * s, headY - 14 * s - eb, 1.8 * s, 6.6 * s, -.13, 0, TAU); c.fill();
+      c.beginPath(); c.ellipse(hx + 6 * s, headY - 14 * s + eb, 1.8 * s, 6.6 * s, .13, 0, TAU); c.fill();
+    }else{
+      c.beginPath(); c.moveTo(hx - 11.4 * s, headY - 4 * s); c.lineTo(hx - 8.4 * s, headY - 14.5 * s - eb); c.lineTo(hx - 2 * s, headY - 7 * s); c.closePath(); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(hx + 11.4 * s, headY - 4 * s); c.lineTo(hx + 8.4 * s, headY - 14.5 * s + eb); c.lineTo(hx + 2 * s, headY - 7 * s); c.closePath(); c.fill(); c.stroke();
+      if(!back){
+        c.fillStyle = "#ffb6c1";
+        c.beginPath(); c.moveTo(hx - 9.4 * s, headY - 6 * s); c.lineTo(hx - 8.2 * s, headY - 11.5 * s - eb); c.lineTo(hx - 4.6 * s, headY - 7.6 * s); c.closePath(); c.fill();
+        c.beginPath(); c.moveTo(hx + 9.4 * s, headY - 6 * s); c.lineTo(hx + 8.2 * s, headY - 11.5 * s + eb); c.lineTo(hx + 4.6 * s, headY - 7.6 * s); c.closePath(); c.fill();
+      }
+    }
+  }else if(!back){
+    c.fillStyle = ch.hair;
+    c.beginPath(); c.arc(hx, headY - 1.5 * s, 12.8 * s, Math.PI, TAU); c.fill();
+    if(ch.kind === "princess"){
+      c.beginPath(); c.ellipse(hx - 12.4 * s, headY + 4 * s, 4.4 * s, 10.5 * s, 0, 0, TAU); c.fill();
+      c.beginPath(); c.ellipse(hx + 12.4 * s, headY + 4 * s, 4.4 * s, 10.5 * s, 0, 0, TAU); c.fill();
+    }
+  }
+  // かお
+  var fg = c.createRadialGradient(hx - 4 * s, headY - 5 * s, 1, hx, headY, 14 * s);
+  fg.addColorStop(0, "#ffffff"); fg.addColorStop(.35, ch.fur); fg.addColorStop(1, ch.fur);
+  c.fillStyle = fg; c.strokeStyle = LN; c.lineWidth = 1.3 * s;
+  c.beginPath(); c.arc(hx, headY, 12.2 * s, 0, TAU); c.fill(); c.stroke();
+
+  if(back){
+    if(ch.kind !== "animal"){
+      c.fillStyle = ch.hair;
+      c.beginPath(); c.arc(hx, headY - .5 * s, 12.6 * s, 0, TAU); c.fill();
+      if(ch.kind === "princess"){
+        c.beginPath(); c.ellipse(hx, headY + 8 * s, 9 * s, 8 * s, 0, 0, TAU); c.fill();
+      }
+    }else{
+      c.fillStyle = "rgba(0,0,0,.06)";
+      c.beginPath(); c.arc(hx, headY + 2 * s, 10 * s, 0, TAU); c.fill();
+    }
+  }else{
+    var fx = side * 2.6 * s;
+    if(ch.id === "panda"){
+      c.fillStyle = "#2f2f33";
+      c.beginPath(); c.ellipse(hx - 4.7 * s + fx, headY - .4 * s, 3.8 * s, 4.4 * s, -.2, 0, TAU); c.fill();
+      c.beginPath(); c.ellipse(hx + 4.7 * s + fx, headY - .4 * s, 3.8 * s, 4.4 * s, .2, 0, TAU); c.fill();
+    }
+    if(ch.kind === "animal"){
+      c.fillStyle = ch.fur2;
+      c.beginPath(); c.ellipse(hx + fx * 1.2, headY + 4.8 * s, 6.6 * s, 4.8 * s, 0, 0, TAU); c.fill();
+    }
+    var blink = (Math.sin(t * 1.7 + ch.id.length) > .985);
+    var ex = look * 1.7 * s + fx;
+    c.fillStyle = "#25293a";
+    if(face === "happy"){
+      c.strokeStyle = "#25293a"; c.lineWidth = 1.7 * s;
+      c.beginPath(); c.arc(hx - 4.5 * s + fx, headY, 2.4 * s, Math.PI * 1.15, Math.PI * 1.85); c.stroke();
+      c.beginPath(); c.arc(hx + 4.5 * s + fx, headY, 2.4 * s, Math.PI * 1.15, Math.PI * 1.85); c.stroke();
+    }else if(blink){
+      c.strokeStyle = "#25293a"; c.lineWidth = 1.5 * s;
+      c.beginPath(); c.moveTo(hx - 6.2 * s + fx, headY - .6 * s); c.lineTo(hx - 2.6 * s + fx, headY - .6 * s); c.stroke();
+      c.beginPath(); c.moveTo(hx + 2.6 * s + fx, headY - .6 * s); c.lineTo(hx + 6.2 * s + fx, headY - .6 * s); c.stroke();
+    }else{
+      var er = face === "scared" ? 2.4 * s : 1.85 * s;
+      c.beginPath(); c.arc(hx - 4.5 * s + ex, headY - .6 * s, er, 0, TAU); c.fill();
+      c.beginPath(); c.arc(hx + 4.5 * s + ex, headY - .6 * s, er, 0, TAU); c.fill();
+      c.fillStyle = "#fff";
+      c.beginPath(); c.arc(hx - 3.9 * s + ex, headY - 1.5 * s, .7 * s, 0, TAU); c.fill();
+      c.beginPath(); c.arc(hx + 5.1 * s + ex, headY - 1.5 * s, .7 * s, 0, TAU); c.fill();
+    }
+    if(ch.kind === "animal"){
+      c.fillStyle = "#4a3b33";
+      c.beginPath(); c.ellipse(hx + fx * 1.3, headY + 3.5 * s, 1.8 * s, 1.4 * s, 0, 0, TAU); c.fill();
+    }
+    c.strokeStyle = "#a8565a"; c.lineWidth = 1.3 * s;
+    if(face === "scared"){
+      c.fillStyle = "#a8565a";
+      c.beginPath(); c.ellipse(hx + fx, headY + 5.4 * s, 1.9 * s, 2.4 * s, 0, 0, TAU); c.fill();
+    }else if(face === "happy"){
+      c.beginPath(); c.arc(hx + fx, headY + 3.6 * s, 3.4 * s, .12 * Math.PI, .88 * Math.PI); c.stroke();
+    }else{
+      c.beginPath(); c.arc(hx + fx, headY + 4.5 * s, 2.7 * s, .25 * Math.PI, .75 * Math.PI); c.stroke();
+    }
+    c.fillStyle = "rgba(255,138,150,.42)";
+    c.beginPath(); c.arc(hx - 8.6 * s + fx * .6, headY + 3.2 * s, 2.6 * s, 0, TAU); c.fill();
+    c.beginPath(); c.arc(hx + 8.6 * s + fx * .6, headY + 3.2 * s, 2.6 * s, 0, TAU); c.fill();
+    if(face === "scared"){
+      c.fillStyle = "#8fd8ff";
+      c.beginPath(); c.moveTo(hx + 12 * s, headY - 7 * s);
+      c.quadraticCurveTo(hx + 15.5 * s, headY - 2 * s, hx + 12 * s, headY - 1 * s);
+      c.quadraticCurveTo(hx + 9.5 * s, headY - 2.5 * s, hx + 12 * s, headY - 7 * s); c.fill();
+    }
+  }
+
+  // ぼうし類
+  if(o.helmet) drawHelmet(c, hx, headY, s, back);
+  else if(o.hat && o.hat !== "none") drawHat(c, o.hat, hx, headY, s, back, side);
+  else if(ch.kind === "prince" || ch.kind === "princess") drawHat(c, "crown", hx, headY, s, back, side, ch.kind === "princess");
+
+  if(o.hold && dir !== "up") drawBikeFor(c, x + (side ? side * 22 : 17) * s, y, s * .9, 0, dir, true);
+  c.restore();
+}
+
+function drawCape(c, ch, x, hy, s, ph, t, front){
+  var fl = Math.sin(ph * .8 + t * 3) * 2.2 * s;
+  c.fillStyle = ch.cape;
+  c.beginPath();
+  c.moveTo(x - 9 * s, hy - 27 * s);
+  c.quadraticCurveTo(x - 18 * s - fl, hy - 14 * s, x - 13 * s - fl, hy - 2 * s);
+  c.lineTo(x + 13 * s + fl * .5, hy - 2 * s);
+  c.quadraticCurveTo(x + 18 * s + fl * .5, hy - 14 * s, x + 9 * s, hy - 27 * s);
+  c.closePath(); c.fill();
+  if(front){
+    c.fillStyle = "rgba(255,255,255,.22)";
+    c.beginPath(); c.moveTo(x - 4 * s, hy - 26 * s); c.lineTo(x - 7 * s - fl, hy - 4 * s); c.lineTo(x - 2 * s, hy - 4 * s); c.closePath(); c.fill();
+  }
+}
+
+function drawHelmet(c, hx, headY, s, back){
+  var hg = c.createLinearGradient(hx - 13 * s, 0, hx + 13 * s, 0);
+  hg.addColorStop(0, "#ff8f6b"); hg.addColorStop(.5, "#ff6b4a"); hg.addColorStop(1, "#e2503a");
+  c.fillStyle = hg;
+  c.beginPath(); c.arc(hx, headY - 1 * s, 13.4 * s, Math.PI * 1.02, TAU * .99); c.fill();
+  if(back){ c.beginPath(); c.arc(hx, headY - 1 * s, 13.4 * s, 0, Math.PI); c.fill(); }
+  c.fillStyle = "rgba(255,255,255,.5)";
+  c.beginPath(); c.arc(hx, headY - 1 * s, 13.4 * s, Math.PI * 1.1, Math.PI * 1.34); c.lineTo(hx, headY - 1 * s); c.fill();
+  c.fillStyle = "#d94f30"; rr(c, hx - 13.6 * s, headY - 3.4 * s, 27.2 * s, 3.4 * s, 1.6 * s); c.fill();
+  c.fillStyle = "#fff"; rr(c, hx - 2 * s, headY - 13 * s, 4 * s, 9 * s, 1.5 * s); c.fill();
+}
+
+function drawHat(c, kind, hx, headY, s, back, side, small){
+  c.lineWidth = 1 * s;
+  if(kind === "cap"){
+    c.fillStyle = "#3f6fd8";
+    c.beginPath(); c.arc(hx, headY - 1.5 * s, 13 * s, Math.PI, TAU); c.fill();
+    c.fillStyle = "#2b53ab"; rr(c, hx - 13 * s, headY - 3 * s, 26 * s, 2.6 * s, 1.3 * s); c.fill();
+    if(!back){
+      c.fillStyle = "#2b53ab";
+      c.beginPath(); c.ellipse(hx + side * 8 * s, headY - 3.6 * s, side ? 8 * s : 11 * s, 2.6 * s, 0, 0, TAU); c.fill();
+    }
+    c.fillStyle = "#ffd34d"; c.beginPath(); c.arc(hx, headY - 14 * s, 1.8 * s, 0, TAU); c.fill();
+    c.fillStyle = "rgba(255,255,255,.35)";
+    c.beginPath(); c.arc(hx - 4 * s, headY - 9 * s, 3.5 * s, 0, TAU); c.fill();
+  }else if(kind === "ribbon"){
+    var rx = hx + 7 * s, ry = headY - 10 * s;
+    c.fillStyle = "#ff6fae"; c.strokeStyle = "#d94d8a";
+    c.beginPath(); c.ellipse(rx - 4.5 * s, ry, 5 * s, 3.2 * s, -.5, 0, TAU); c.fill(); c.stroke();
+    c.beginPath(); c.ellipse(rx + 4.5 * s, ry, 5 * s, 3.2 * s, .5, 0, TAU); c.fill(); c.stroke();
+    c.fillStyle = "#ffd0e4"; c.beginPath(); c.arc(rx, ry, 2.2 * s, 0, TAU); c.fill();
+  }else if(kind === "straw"){
+    c.fillStyle = "#e9c46a"; c.strokeStyle = "#c79a3c";
+    c.beginPath(); c.ellipse(hx, headY - 6 * s, 18 * s, 5.6 * s, 0, 0, TAU); c.fill(); c.stroke();
+    c.beginPath(); c.arc(hx, headY - 8 * s, 9.5 * s, Math.PI, TAU); c.fill(); c.stroke();
+    c.fillStyle = "#e2574c"; rr(c, hx - 9.5 * s, headY - 10.5 * s, 19 * s, 3 * s, 1.4 * s); c.fill();
+  }else if(kind === "flower"){
+    var cols = ["#ff8fb1", "#ffd34d", "#9fd8ff", "#ff8fb1", "#c9a7ff"];
+    for(var i = 0; i < 5; i++){
+      var a = Math.PI * (1.12 + i * .19);
+      var fx = hx + Math.cos(a) * 12 * s, fy = headY - 1 * s + Math.sin(a) * 12 * s;
+      c.fillStyle = cols[i];
+      for(var k = 0; k < 5; k++){ var b = k * TAU / 5; c.beginPath(); c.arc(fx + Math.cos(b) * 1.8 * s, fy + Math.sin(b) * 1.8 * s, 1.6 * s, 0, TAU); c.fill(); }
+      c.fillStyle = "#fff6c0"; c.beginPath(); c.arc(fx, fy, 1.2 * s, 0, TAU); c.fill();
+    }
+  }else if(kind === "crown"){
+    var cg = c.createLinearGradient(hx - 9 * s, 0, hx + 9 * s, 0);
+    cg.addColorStop(0, "#ffe98a"); cg.addColorStop(.5, "#ffd34d"); cg.addColorStop(1, "#e8a90c");
+    c.fillStyle = cg; c.strokeStyle = "#c98c14";
+    var cw = small ? 7.4 * s : 9.4 * s, cy0 = headY - 11 * s;
+    c.beginPath();
+    c.moveTo(hx - cw, cy0); c.lineTo(hx - cw * .5, cy0 - 5.4 * s); c.lineTo(hx, cy0 - 1 * s);
+    c.lineTo(hx + cw * .5, cy0 - 5.4 * s); c.lineTo(hx + cw, cy0);
+    c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = "#ff5f7e"; c.beginPath(); c.arc(hx, cy0 - 5.8 * s, 1.6 * s, 0, TAU); c.fill();
+    c.fillStyle = "#8fd8ff";
+    c.beginPath(); c.arc(hx - cw * .5, cy0 - 5.4 * s, 1.1 * s, 0, TAU); c.fill();
+    c.beginPath(); c.arc(hx + cw * .5, cy0 - 5.4 * s, 1.1 * s, 0, TAU); c.fill();
+  }
+}
+
+// じてんしゃ（よこ向きは横から、上下向きは正面から）
+function drawBikeFor(c, x, y, s, ph, dir, pushed){
+  if(dir === "left" || dir === "right"){
+    c.save(); c.translate(x, 0); if(dir === "left") c.scale(-1, 1);
+    drawBikeSide(c, 0, y, s, ph, pushed); c.restore();
+    return;
+  }
+  var wy = y - 8 * s;
+  c.fillStyle = "#2f3646";
+  c.beginPath(); c.ellipse(x, wy, 2.6 * s, 8.8 * s, 0, 0, TAU); c.fill();
+  c.strokeStyle = pushed ? "#8c9ab8" : "#e2574c"; c.lineWidth = 2.4 * s;
+  c.beginPath(); c.moveTo(x, wy - 8 * s); c.lineTo(x, wy - 15 * s); c.stroke();
+  c.strokeStyle = "#2f3646"; c.lineWidth = 2 * s;
+  c.beginPath(); c.moveTo(x - 9 * s, wy - 15 * s); c.lineTo(x + 9 * s, wy - 15 * s); c.stroke();
+  c.fillStyle = dir === "down" ? "#fff3c4" : "#ff5b52";
+  c.beginPath(); c.arc(x, wy - 11 * s, 1.8 * s, 0, TAU); c.fill();
+}
+function drawBikeSide(c, x, y, s, ph, pushed){
+  var wy = y - 8 * s, r = 8.8 * s;
+  c.strokeStyle = "#2f3646"; c.lineWidth = 2.4 * s;
+  c.beginPath(); c.arc(x - 13 * s, wy, r, 0, TAU); c.stroke();
+  c.beginPath(); c.arc(x + 13 * s, wy, r, 0, TAU); c.stroke();
+  c.strokeStyle = "rgba(200,212,232,.9)"; c.lineWidth = .9 * s;
+  for(var i = 0; i < 4; i++){
+    var a = ph * .6 + i * Math.PI / 4;
+    c.beginPath(); c.moveTo(x - 13 * s - Math.cos(a) * r, wy - Math.sin(a) * r); c.lineTo(x - 13 * s + Math.cos(a) * r, wy + Math.sin(a) * r); c.stroke();
+    c.beginPath(); c.moveTo(x + 13 * s - Math.cos(a) * r, wy - Math.sin(a) * r); c.lineTo(x + 13 * s + Math.cos(a) * r, wy + Math.sin(a) * r); c.stroke();
+  }
+  c.strokeStyle = pushed ? "#8c9ab8" : "#e2574c"; c.lineWidth = 2.6 * s;
+  c.beginPath();
+  c.moveTo(x - 13 * s, wy); c.lineTo(x - 1 * s, wy); c.lineTo(x + 5 * s, wy - 11 * s);
+  c.moveTo(x - 1 * s, wy); c.lineTo(x + 13 * s, wy); c.lineTo(x + 9 * s, wy - 12 * s);
+  c.stroke();
+  c.strokeStyle = "#2f3646"; c.lineWidth = 2 * s;
+  c.beginPath(); c.moveTo(x + 6 * s, wy - 12.5 * s); c.lineTo(x + 12.5 * s, wy - 12.5 * s); c.stroke();
+  c.fillStyle = "#2f3646"; rr(c, x - 8 * s, wy - 13 * s, 8 * s, 3 * s, 1.5 * s); c.fill();
+}
+
+/* ---------- 車（真上から見たスプライト。上向きで作って回転して描く） ---------- */
+var CAR_DIM = { car:[22, 40], taxi:[22, 40], van:[24, 46], bus:[27, 72], truck:[26, 60] };
+var CAR_COLORS = ["#e6564f", "#4a90d9", "#f5c243", "#6bc48a", "#9b7ede", "#e88f4f", "#5ec9c9", "#f4f4f6"];
+var VTYPES = ["car", "car", "car", "van", "taxi", "bus", "truck"];
+var SPR = {};
+function carSprite(type, col){
+  var key = type + col;
+  if(SPR[key]) return SPR[key];
+  var d = CAR_DIM[type], w = d[0], L = d[1];
+  var m = mkCanvas(w + 10, L + 10);
+  var c = m.ctx; c.translate((w + 10) / 2, (L + 10) / 2);
+  if(type === "taxi") col = "#ffd34d";
+  var bg = c.createLinearGradient(-w / 2, 0, w / 2, 0);
+  bg.addColorStop(0, shade(col, -.3)); bg.addColorStop(.22, col); bg.addColorStop(.5, shade(col, .18));
+  bg.addColorStop(.78, col); bg.addColorStop(1, shade(col, -.3));
+  c.fillStyle = bg; c.strokeStyle = "rgba(20,20,30,.4)"; c.lineWidth = 1.1;
+  if(type === "truck"){
+    c.fillStyle = bg; rr(c, -w / 2, -L / 2, w, L * .3, 6); c.fill(); c.stroke();
+    var tg = c.createLinearGradient(-w / 2, 0, w / 2, 0);
+    tg.addColorStop(0, "#c9cfd9"); tg.addColorStop(.5, "#f6f8fb"); tg.addColorStop(1, "#c9cfd9");
+    c.fillStyle = tg; rr(c, -w / 2, -L / 2 + L * .32, w, L * .68, 3); c.fill(); c.stroke();
+    c.strokeStyle = "rgba(0,0,0,.08)";
+    for(var i = 1; i < 6; i++){ c.beginPath(); c.moveTo(-w / 2 + 2, -L / 2 + L * .32 + i * L * .11); c.lineTo(w / 2 - 2, -L / 2 + L * .32 + i * L * .11); c.stroke(); }
+    c.fillStyle = "#bfe3f7"; rr(c, -w * .38, -L / 2 + 3, w * .76, L * .1, 2); c.fill();
+  }else if(type === "bus"){
+    rr(c, -w / 2, -L / 2, w, L, 7); c.fill(); c.stroke();
+    c.fillStyle = "#f6f8fb"; rr(c, -w * .36, -L / 2 + 8, w * .72, L - 14, 4); c.fill();
+    c.fillStyle = "rgba(0,0,0,.08)";
+    for(var j = 0; j < 4; j++) rr(c, -w * .22, -L / 2 + 14 + j * 14, w * .44, 7, 2), c.fill();
+    c.fillStyle = "#bfe3f7"; rr(c, -w * .42, -L / 2 + 2, w * .84, 6, 2); c.fill();
+    c.fillStyle = "#27426b";
+    for(var k = 0; k < 6; k++){ c.fillRect(-w / 2 + .5, -L / 2 + 12 + k * 9.5, 2, 7); c.fillRect(w / 2 - 2.5, -L / 2 + 12 + k * 9.5, 2, 7); }
+  }else{
+    rr(c, -w / 2, -L / 2, w, L, 7); c.fill(); c.stroke();
+    var wg = c.createLinearGradient(0, -L / 2 + L * .18, 0, -L / 2 + L * .38);
+    wg.addColorStop(0, "#d8f0fc"); wg.addColorStop(1, "#7fb2d3");
+    c.fillStyle = wg;
+    c.beginPath();
+    c.moveTo(-w * .4, -L / 2 + L * .38); c.lineTo(-w * .32, -L / 2 + L * .19);
+    c.lineTo(w * .32, -L / 2 + L * .19); c.lineTo(w * .4, -L / 2 + L * .38); c.closePath(); c.fill();
+    c.fillStyle = "#7fb2d3";
+    c.beginPath();
+    c.moveTo(-w * .38, L / 2 - L * .28); c.lineTo(w * .38, L / 2 - L * .28);
+    c.lineTo(w * .3, L / 2 - L * .14); c.lineTo(-w * .3, L / 2 - L * .14); c.closePath(); c.fill();
+    var rg = c.createLinearGradient(-w / 2, 0, w / 2, 0);
+    rg.addColorStop(0, shade(col, -.12)); rg.addColorStop(.5, shade(col, .26)); rg.addColorStop(1, shade(col, -.12));
+    c.fillStyle = rg; rr(c, -w * .4, -L / 2 + L * .38, w * .8, L * .34, 4); c.fill();
+    c.fillStyle = "rgba(255,255,255,.45)"; rr(c, -w * .3, -L / 2 + L * .41, w * .18, L * .26, 2); c.fill();
+    c.fillStyle = shade(col, -.25);
+    rr(c, -w / 2 - 2, -L / 2 + L * .3, 3, 4, 1); c.fill(); rr(c, w / 2 - 1, -L / 2 + L * .3, 3, 4, 1); c.fill();
+    if(type === "taxi"){
+      c.fillStyle = "#fff"; rr(c, -5, -L / 2 + L * .5, 10, 5, 2); c.fill();
+      c.fillStyle = "#e2574c"; rr(c, -3, -L / 2 + L * .51, 6, 2, 1); c.fill();
+    }
+    if(type === "van"){
+      c.fillStyle = "rgba(0,0,0,.1)"; rr(c, -w * .34, -L / 2 + L * .74, w * .68, L * .05, 1); c.fill();
+    }
+  }
+  c.fillStyle = "#fff6c8";
+  rr(c, -w / 2 + 2, -L / 2 + 1, 5, 3, 1.5); c.fill(); rr(c, w / 2 - 7, -L / 2 + 1, 5, 3, 1.5); c.fill();
+  c.fillStyle = "#b8403c";
+  rr(c, -w / 2 + 2, L / 2 - 4, 5, 3, 1.5); c.fill(); rr(c, w / 2 - 7, L / 2 - 4, 5, 3, 1.5); c.fill();
+  SPR[key] = m;
+  return m;
+}
+// car: x,y,ang(進行方向・0=東), type,col, stopped, reverse, blinkL
+function drawCar(c, car, t){
+  var d = CAR_DIM[car.type], w = d[0], L = d[1];
+  var spr = carSprite(car.type, car.col);
+  c.save(); c.translate(car.x + 3, car.y + 4); c.rotate(car.ang + Math.PI / 2);
+  c.fillStyle = "rgba(10,20,30,.28)"; rr(c, -w / 2, -L / 2, w, L, 7); c.fill();
+  c.restore();
+  c.save(); c.translate(car.x, car.y); c.rotate(car.ang + Math.PI / 2);
+  c.drawImage(spr.cv, -(w + 10) / 2, -(L + 10) / 2, w + 10, L + 10);
+  if(car.stopped || car.reverse){
+    c.fillStyle = car.reverse ? "rgba(255,255,255,.95)" : "rgba(255,60,50,.95)";
+    rr(c, -w / 2 + 2, L / 2 - 4, 5, 3, 1.5); c.fill(); rr(c, w / 2 - 7, L / 2 - 4, 5, 3, 1.5); c.fill();
+    c.fillStyle = car.reverse ? "rgba(255,255,255,.35)" : "rgba(255,60,50,.28)";
+    c.beginPath(); c.ellipse(0, L / 2 + 4, w * .7, 7, 0, 0, TAU); c.fill();
+  }
+  if(car.blinkL && Math.floor(t * 5) % 2 === 0){
+    var bx = CFG.LEFT_HAND ? -w / 2 : w / 2;
+    c.fillStyle = "#ffb300";
+    c.beginPath(); c.arc(bx + (CFG.LEFT_HAND ? 1.5 : -1.5), -L / 2 + 5, 2.6, 0, TAU); c.fill();
+    c.beginPath(); c.arc(bx + (CFG.LEFT_HAND ? 1.5 : -1.5), L / 2 - 5, 2.6, 0, TAU); c.fill();
+    c.fillStyle = "rgba(255,179,0,.3)";
+    c.beginPath(); c.arc(bx, -L / 2 + 5, 7, 0, TAU); c.fill();
+  }
+  c.restore();
+}
+
+/* ---------- 電車 ---------- */
+var TRAIN_L = 3 * 112 + 2 * 6;
+var TRAIN_SPR = null;
+function trainSprite(){
+  if(TRAIN_SPR) return TRAIN_SPR;
+  var m = mkCanvas(TRAIN_L + 8, 40), c = m.ctx;
+  c.translate(4, 20);
+  for(var i = 0; i < 3; i++){
+    var x0 = i * 118;
+    var g = c.createLinearGradient(0, -15, 0, 15);
+    g.addColorStop(0, "#d7dde6"); g.addColorStop(.5, "#ffffff"); g.addColorStop(1, "#d7dde6");
+    c.fillStyle = g; c.strokeStyle = "rgba(20,30,40,.35)"; c.lineWidth = 1.2;
+    var front = (i === 2);
+    if(front){
+      c.beginPath(); c.moveTo(x0, -15); c.lineTo(x0 + 92, -15);
+      c.quadraticCurveTo(x0 + 114, -14, x0 + 112, 0); c.quadraticCurveTo(x0 + 114, 14, x0 + 92, 15);
+      c.lineTo(x0, 15); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = "#26354d";
+      c.beginPath(); c.moveTo(x0 + 96, -11); c.quadraticCurveTo(x0 + 108, -9, x0 + 108, 0);
+      c.quadraticCurveTo(x0 + 108, 9, x0 + 96, 11); c.closePath(); c.fill();
+    }else{ rr(c, x0, -15, 112, 30, 5); c.fill(); c.stroke(); }
+    c.fillStyle = "#2fb355"; c.fillRect(x0 + 2, -13, front ? 92 : 108, 3); c.fillRect(x0 + 2, 10, front ? 92 : 108, 3);
+    c.fillStyle = "#a9b4c4";
+    for(var k = 0; k < 4; k++) rr(c, x0 + 14 + k * 22, -5, 14, 10, 2), c.fill();
+    if(i === 1){ c.strokeStyle = "#555"; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x0 + 50, -8); c.lineTo(x0 + 62, 8); c.moveTo(x0 + 62, -8); c.lineTo(x0 + 50, 8); c.stroke(); }
+    if(i < 2){ c.fillStyle = "#666"; c.fillRect(x0 + 112, -6, 6, 12); }
+  }
+  TRAIN_SPR = m;
+  return m;
+}
+
+/* ---------- 木（キャッシュ） ---------- */
+var TREE_SPR = {};
+function treeSprite(kind, r){
+  var key = kind + r;
+  if(TREE_SPR[key]) return TREE_SPR[key];
+  var m = mkCanvas(r * 2 + 8, r * 2 + 8), c = m.ctx;
+  c.translate(r + 4, r + 4);
+  var base = kind === "sakura" ? ["#ffd6e6", "#f7a6c4", "#d9779f"] : (kind === "light" ? ["#b8f09a", "#6ccf6a", "#3f9a4e"] : ["#8fe39b", "#4aa862", "#2a7040"]);
+  var blobs = [[0, 0, 1], [-.42, .18, .62], [.42, .2, .6], [.12, -.42, .58], [-.3, -.32, .5], [.32, .4, .5]];
+  blobs.forEach(function(b){
+    var g = c.createRadialGradient(b[0] * r - r * .2, b[1] * r - r * .25, 1, b[0] * r, b[1] * r, b[2] * r * .9);
+    g.addColorStop(0, base[0]); g.addColorStop(.55, base[1]); g.addColorStop(1, base[2]);
+    c.fillStyle = g; c.beginPath(); c.arc(b[0] * r, b[1] * r, b[2] * r * .72, 0, TAU); c.fill();
+  });
+  if(kind === "sakura"){
+    c.fillStyle = "rgba(255,255,255,.75)";
+    for(var i = 0; i < 9; i++){ var a = i * 2.4, d = (i % 3) * .22 * r + .15 * r; c.beginPath(); c.arc(Math.cos(a) * d, Math.sin(a) * d, 1.6, 0, TAU); c.fill(); }
+  }
+  TREE_SPR[key] = m;
+  return m;
+}
+function drawTree(c, tr, t){
+  var r = tr.r, sw = Math.sin(t * 1.2 + tr.x * .03) * .025;
+  c.fillStyle = "rgba(10,30,20,.22)";
+  c.beginPath(); c.ellipse(tr.x + r * .25, tr.y + 3, r * .85, r * .4, 0, 0, TAU); c.fill();
+  if(!tr.over){
+    c.fillStyle = "#7a5233"; rr(c, tr.x - 3.5, tr.y - r * .5, 7, r * .5 + 2, 2.5); c.fill();
+  }
+  var spr = treeSprite(tr.kind || "green", r);
+  c.save(); c.translate(tr.x, tr.y - r * .75); c.scale(1 + sw, 1 - sw);
+  c.drawImage(spr.cv, -(r + 4), -(r + 4), r * 2 + 8, r * 2 + 8);
+  c.restore();
+}
+
+/* ---------- ★ ---------- */
+function drawStar(c, x, y, r, t, hue){
+  var pop = 1 + Math.sin(t * 3 + x) * .08;
+  c.save(); c.translate(x, y); c.rotate(Math.sin(t * 1.6 + y) * .2); c.scale(pop, pop);
+  c.fillStyle = hue === "blue" ? "rgba(120,200,255,.3)" : "rgba(255,214,90,.32)";
+  c.beginPath(); c.arc(0, 0, r * 1.7, 0, TAU); c.fill();
+  var g = c.createLinearGradient(0, -r, 0, r);
+  if(hue === "blue"){ g.addColorStop(0, "#e6f6ff"); g.addColorStop(.5, "#6cc6ff"); g.addColorStop(1, "#2f8ad6"); c.strokeStyle = "#2770b0"; }
+  else { g.addColorStop(0, "#fff3b0"); g.addColorStop(.5, "#ffc93c"); g.addColorStop(1, "#f0a800"); c.strokeStyle = "#c98c14"; }
+  c.fillStyle = g; c.lineWidth = 1.6;
+  c.beginPath();
+  for(var i = 0; i < 10; i++){
+    var a = -Math.PI / 2 + i * Math.PI / 5, rad = (i % 2 ? r * .45 : r);
+    if(i) c.lineTo(Math.cos(a) * rad, Math.sin(a) * rad); else c.moveTo(Math.cos(a) * rad, Math.sin(a) * rad);
+  }
+  c.closePath(); c.fill(); c.stroke();
+  c.fillStyle = "rgba(255,255,255,.8)"; c.beginPath(); c.arc(-r * .25, -r * .3, r * .16, 0, TAU); c.fill();
+  c.restore();
+}
+
+/* ---------- 歩行者信号のピクトグラム（色だけに頼らない） ---------- */
+function drawPed(c, x, y, col, walking, k){
+  k = k || 1;
+  c.save(); c.translate(x, y); c.scale(k, k);
+  c.fillStyle = col;
+  c.beginPath(); c.arc(0, -5.6, 2.3, 0, TAU); c.fill();
+  if(walking){
+    rr(c, -2.7, -3.3, 4.8, 5.6, 1.7); c.fill();
+    c.beginPath(); c.moveTo(-1, 2.1); c.lineTo(-4.6, 6.8); c.lineTo(-2.7, 7.3); c.lineTo(.7, 3.1); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(.4, 2.1); c.lineTo(3.6, 6.9); c.lineTo(5.2, 5.8); c.lineTo(2.1, 2.1); c.closePath(); c.fill();
+  }else{
+    rr(c, -2.3, -3.3, 4.6, 6.2, 1.7); c.fill();
+    rr(c, -2.5, 2.5, 2, 5.2, .9); c.fill(); rr(c, .6, 2.5, 2, 5.2, .9); c.fill();
+  }
+  c.restore();
+}
+function drawPedSignal(c, x, y, state, blinkOn, k){
+  k = k || 1;
+  c.save(); c.translate(x, y); c.scale(k, k);
+  var g = c.createLinearGradient(-14, 0, 14, 0);
+  g.addColorStop(0, "#4a515f"); g.addColorStop(1, "#2c313c");
+  c.fillStyle = "rgba(0,0,0,.25)"; rr(c, -13, -21, 30, 46, 8); c.fill();
+  c.fillStyle = g; rr(c, -15, -23, 30, 46, 8); c.fill();
+  c.fillStyle = "#181c24"; rr(c, -12, -20, 24, 40, 5); c.fill();
+  var redOn = state === "red", grnOn = state === "green" || (state === "blink" && blinkOn);
+  if(redOn){ c.fillStyle = "rgba(255,90,90,.3)"; c.beginPath(); c.arc(0, -9, 12, 0, TAU); c.fill(); }
+  if(grnOn){ c.fillStyle = "rgba(92,240,122,.3)"; c.beginPath(); c.arc(0, 10, 12, 0, TAU); c.fill(); }
+  drawPed(c, 0, -9, redOn ? "#ff6b6b" : "#4a2323", false, 1.1);
+  drawPed(c, 0, 10, grnOn ? "#6cf58a" : "#1e4326", true, 1.1);
+  c.restore();
+}
+function drawCarSignal(c, x, y, light, horiz){
+  c.fillStyle = "rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(x + 3, y + 2, 5, 2.5, 0, 0, TAU); c.fill();
+  c.fillStyle = "#6a7184"; c.fillRect(x - 2, y - 44, 4, 44);
+  c.fillStyle = "#39404f"; rr(c, x - 17, y - 54, 34, 13, 5); c.fill();
+  var L = [["r", "#ff5a5a", "#4a2323"], ["y", "#ffd44a", "#4a3f18"], ["g", "#5cf07a", "#1e4326"]];
+  for(var i = 0; i < 3; i++){
+    var on = (light === L[i][0]);
+    var lx = x - 10 + i * 10;
+    if(on){ c.fillStyle = L[i][1]; c.globalAlpha = .3; c.beginPath(); c.arc(lx, y - 47.5, 7, 0, TAU); c.fill(); c.globalAlpha = 1; }
+    c.fillStyle = on ? L[i][1] : L[i][2];
+    c.beginPath(); c.arc(lx, y - 47.5, 3.8, 0, TAU); c.fill();
+  }
+}
+
+/* ---------- タイトル用：横から見た車 ---------- */
+function drawCarSide(c, x, y, dir, col, type){
+  var big = (type === "bus");
+  var w = big ? 74 : (type === "van" ? 58 : 52), h = big ? 28 : 23;
+  c.save(); c.translate(x, y); if(dir > 0) c.scale(-1, 1);
+  c.fillStyle = "rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(0, h * .55, w * .55, 5, 0, 0, TAU); c.fill();
+  var bg = c.createLinearGradient(0, -h * 1.1, 0, h * .6);
+  bg.addColorStop(0, "#ffffff"); bg.addColorStop(.22, col); bg.addColorStop(1, shade(col, -.32));
+  c.fillStyle = bg; c.strokeStyle = "rgba(30,25,40,.28)"; c.lineWidth = 1.2;
+  rr(c, -w / 2, -h / 2, w, h, 7); c.fill(); c.stroke();
+  rr(c, -w * .3, -h * 1.02, w * .6, h * .6, 6); c.fill(); c.stroke();
+  c.fillStyle = "#d3ecfa";
+  rr(c, -w * .27, -h * .95, w * .25, h * .45, 3); c.fill(); rr(c, w * .03, -h * .95, w * .22, h * .45, 3); c.fill();
+  c.fillStyle = "#fff3c4"; c.beginPath(); c.arc(-w / 2 + 4.5, -1, 3.4, 0, TAU); c.fill();
+  c.fillStyle = "#23262f";
+  c.beginPath(); c.arc(-w * .28, h * .5, 6.4, 0, TAU); c.fill(); c.beginPath(); c.arc(w * .28, h * .5, 6.4, 0, TAU); c.fill();
+  c.fillStyle = "#9aa3b5";
+  c.beginPath(); c.arc(-w * .28, h * .5, 2.6, 0, TAU); c.fill(); c.beginPath(); c.arc(w * .28, h * .5, 2.6, 0, TAU); c.fill();
+  c.restore();
+}
+
+/* ---------- ミッションのアイコン ---------- */
+function drawMissionIcon(c, kind, cx, cy, r){
+  c.save(); c.translate(cx, cy);
+  var bgc = { park:"#bff0c2", shop:"#ffe2b8", school:"#ffd6c9", library:"#cdeefe", night:"#33427a", explore:"#fff1a8" }[kind] || "#eee";
+  var g = c.createRadialGradient(-r * .3, -r * .3, 2, 0, 0, r);
+  g.addColorStop(0, "#ffffff"); g.addColorStop(.35, bgc); g.addColorStop(1, shade(bgc.length === 7 ? bgc : "#eeeeee", -.12));
+  c.fillStyle = g; c.beginPath(); c.arc(0, 0, r, 0, TAU); c.fill();
+  c.strokeStyle = "#fff"; c.lineWidth = 3; c.stroke();
+  var k = r / 30;
+  c.scale(k, k);
+  if(kind === "park"){
+    c.fillStyle = "#4aa862"; c.beginPath(); c.arc(-8, -4, 11, 0, TAU); c.arc(4, -8, 10, 0, TAU); c.fill();
+    c.fillStyle = "#7a5233"; c.fillRect(-3, 2, 5, 12);
+    c.strokeStyle = "#e2574c"; c.lineWidth = 3; c.beginPath(); c.moveTo(8, 14); c.lineTo(18, 0); c.stroke();
+    c.strokeStyle = "#555"; c.lineWidth = 2; c.beginPath(); c.moveTo(18, 0); c.lineTo(18, 14); c.stroke();
+  }else if(kind === "shop"){
+    c.fillStyle = "#fff"; rr(c, -16, -6, 32, 22, 3); c.fill();
+    for(var i = 0; i < 4; i++){ c.fillStyle = i % 2 ? "#e2574c" : "#fff"; c.fillRect(-18 + i * 9, -14, 9, 8); }
+    c.fillStyle = "#7fc4ea"; rr(c, -11, 0, 10, 12, 2); c.fill();
+    c.fillStyle = "#8a5d3b"; rr(c, 3, 0, 9, 16, 2); c.fill();
+  }else if(kind === "school"){
+    c.fillStyle = "#fff3d8"; rr(c, -18, -6, 36, 22, 3); c.fill();
+    c.fillStyle = "#e07a4c"; c.beginPath(); c.moveTo(-20, -6); c.lineTo(0, -18); c.lineTo(20, -6); c.closePath(); c.fill();
+    c.fillStyle = "#fff"; c.beginPath(); c.arc(0, -8, 5, 0, TAU); c.fill();
+    c.strokeStyle = "#333"; c.lineWidth = 1.2; c.beginPath(); c.moveTo(0, -8); c.lineTo(0, -11); c.moveTo(0, -8); c.lineTo(2.5, -8); c.stroke();
+    c.fillStyle = "#7fc4ea"; for(var j = 0; j < 3; j++) c.fillRect(-14 + j * 11, 2, 7, 6);
+  }else if(kind === "library"){
+    c.fillStyle = "#4a90d9"; rr(c, -16, -12, 15, 24, 2); c.fill();
+    c.fillStyle = "#e2574c"; rr(c, 1, -12, 15, 24, 2); c.fill();
+    c.fillStyle = "#fff"; c.fillRect(-1.5, -12, 3, 24);
+    c.fillStyle = "rgba(255,255,255,.7)"; c.fillRect(-13, -6, 9, 2); c.fillRect(4, -6, 9, 2); c.fillRect(-13, -1, 9, 2); c.fillRect(4, -1, 9, 2);
+  }else if(kind === "night"){
+    c.fillStyle = "#fff6c0"; c.beginPath(); c.arc(-3, -2, 13, 0, TAU); c.fill();
+    c.fillStyle = "#33427a"; c.beginPath(); c.arc(4, -6, 11, 0, TAU); c.fill();
+    c.fillStyle = "#ffe066"; c.beginPath(); c.arc(12, 8, 2.4, 0, TAU); c.fill(); c.beginPath(); c.arc(-14, -14, 1.8, 0, TAU); c.fill();
+  }else{
+    c.fillStyle = "#f4e2b8"; rr(c, -17, -13, 34, 26, 3); c.fill();
+    c.strokeStyle = "#c79a3c"; c.lineWidth = 1.5; c.setLineDash([3, 3]);
+    c.beginPath(); c.moveTo(-12, 8); c.quadraticCurveTo(-2, -12, 10, -2); c.stroke(); c.setLineDash([]);
+    c.fillStyle = "#e2574c"; c.font = "bold 12px sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("×", 11, -3);
+  }
+  c.restore();
+}
+
+/* ---------- シール ---------- */
+var STICKERS = [
+  { id:"sig",     name:"しんごう はかせ",   col:"#ff8f8f" },
+  { id:"ball",    name:"ボール がまん",     col:"#ffd36b" },
+  { id:"lot",     name:"ちゅうしゃじょう",  col:"#9fd8ff" },
+  { id:"uncross", name:"しんごうなし OK", col:"#b6f0a8" },
+  { id:"turn",    name:"まがりかど たつじん", col:"#ffb27a" },
+  { id:"rail",    name:"ふみきり マスター", col:"#c9b6ff" },
+  { id:"mirror",  name:"カーブミラー",      col:"#ffa5d0" },
+  { id:"night",   name:"よるの ひかり",     col:"#6e7fd6" },
+  { id:"perfect", name:"パーフェクト",      col:"#ffe066" },
+  { id:"bike",    name:"じてんしゃ マスター", col:"#7fe0c9" },
+  { id:"explore", name:"たんけんか",        col:"#f2c38a" },
+  { id:"all",     name:"ぜんぶ クリア",     col:"#ffd34d" }
+];
+function drawSticker(c, id, cx, cy, r, earned, t){
+  var st = null;
+  for(var i = 0; i < STICKERS.length; i++) if(STICKERS[i].id === id) st = STICKERS[i];
+  if(!st) return;
+  c.save(); c.translate(cx, cy);
+  if(!earned){
+    c.fillStyle = "#eceff5"; c.beginPath(); c.arc(0, 0, r, 0, TAU); c.fill();
+    c.strokeStyle = "#dfe4ee"; c.lineWidth = 3; c.setLineDash([5, 4]); c.stroke(); c.setLineDash([]);
+    c.fillStyle = "#c2c9d6"; c.font = fnt(900, r * .8); c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("?", 0, 2);
+    c.restore(); return;
+  }
+  c.fillStyle = "rgba(0,0,0,.14)"; c.beginPath(); c.arc(2, 3, r, 0, TAU); c.fill();
+  c.fillStyle = "#fff"; c.beginPath(); c.arc(0, 0, r, 0, TAU); c.fill();
+  var g = c.createRadialGradient(-r * .3, -r * .3, 1, 0, 0, r * .86);
+  g.addColorStop(0, shade(st.col, .5)); g.addColorStop(1, st.col);
+  c.fillStyle = g; c.beginPath(); c.arc(0, 0, r * .84, 0, TAU); c.fill();
+  var k = r / 30; c.scale(k, k);
+  if(id === "sig"){ drawPedSignal(c, 0, 0, "green", true, .62); }
+  else if(id === "ball"){ drawBall(c, 0, 0, 13, 0); }
+  else if(id === "lot"){ c.fillStyle = "#2f6ba8"; rr(c, -12, -14, 24, 28, 5); c.fill(); c.fillStyle = "#fff"; c.font = fnt(900, 22); c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("P", 0, 1); }
+  else if(id === "uncross"){ c.fillStyle = "#555c6a"; rr(c, -16, -12, 32, 24, 3); c.fill(); c.fillStyle = "#fff"; for(var a = 0; a < 4; a++) c.fillRect(-14 + a * 8, -10, 4, 20); }
+  else if(id === "turn"){ c.strokeStyle = "#fff"; c.lineWidth = 6; c.beginPath(); c.moveTo(-8, 14); c.lineTo(-8, -2); c.quadraticCurveTo(-8, -10, 2, -10); c.lineTo(10, -10); c.stroke(); c.fillStyle = "#fff"; c.beginPath(); c.moveTo(16, -10); c.lineTo(8, -17); c.lineTo(8, -3); c.closePath(); c.fill(); }
+  else if(id === "rail"){ c.strokeStyle = "#ffd34d"; c.lineWidth = 5; c.beginPath(); c.moveTo(-12, -12); c.lineTo(12, 12); c.moveTo(12, -12); c.lineTo(-12, 12); c.stroke(); c.strokeStyle = "#333"; c.lineWidth = 2; c.setLineDash([4, 4]); c.stroke(); c.setLineDash([]); c.fillStyle = "#ff4b4b"; c.beginPath(); c.arc(-14, 14, 4, 0, TAU); c.arc(14, 14, 4, 0, TAU); c.fill(); }
+  else if(id === "mirror"){ c.fillStyle = "#ff8f3c"; c.beginPath(); c.arc(0, -3, 13, 0, TAU); c.fill(); c.fillStyle = "#dff3ff"; c.beginPath(); c.arc(0, -3, 9.5, 0, TAU); c.fill(); c.fillStyle = "#ff8f3c"; c.fillRect(-2, 9, 4, 10); }
+  else if(id === "night"){ c.fillStyle = "#fff6c0"; c.beginPath(); c.arc(-2, 0, 12, 0, TAU); c.fill(); c.fillStyle = st.col; c.beginPath(); c.arc(5, -4, 10, 0, TAU); c.fill(); c.fillStyle = "#ecff6e"; rr(c, 4, 4, 10, 6, 2); c.fill(); }
+  else if(id === "perfect"){ drawStar(c, 0, 0, 15, 0); }
+  else if(id === "bike"){ drawBikeSide(c, 0, 10, .62, 0, false); }
+  else if(id === "explore"){ c.fillStyle = "#fff"; rr(c, -14, -12, 28, 24, 3); c.fill(); c.strokeStyle = "#c79a3c"; c.lineWidth = 2; c.setLineDash([3, 3]); c.beginPath(); c.moveTo(-10, 8); c.quadraticCurveTo(0, -12, 10, -4); c.stroke(); c.setLineDash([]); c.strokeStyle = "#e2574c"; c.lineWidth = 2.6; c.beginPath(); c.moveTo(7, -7); c.lineTo(13, -1); c.moveTo(13, -7); c.lineTo(7, -1); c.stroke(); }
+  else if(id === "all"){ c.fillStyle = "#fff"; c.beginPath(); c.moveTo(-14, 6); c.lineTo(-16, -10); c.lineTo(-7, -2); c.lineTo(0, -14); c.lineTo(7, -2); c.lineTo(16, -10); c.lineTo(14, 6); c.closePath(); c.fill(); c.fillStyle = "#e2574c"; c.fillRect(-14, 7, 28, 5); }
+  c.restore();
+}
+function drawBall(c, x, y, r, rot){
+  c.save(); c.translate(x, y); c.rotate(rot || 0);
+  c.fillStyle = "#fff"; c.strokeStyle = "#333"; c.lineWidth = r * .1;
+  c.beginPath(); c.arc(0, 0, r, 0, TAU); c.fill(); c.stroke();
+  c.fillStyle = "#2b2b2b";
+  c.beginPath();
+  for(var i = 0; i < 5; i++){ var a = -Math.PI / 2 + i * TAU / 5; if(i) c.lineTo(Math.cos(a) * r * .38, Math.sin(a) * r * .38); else c.moveTo(Math.cos(a) * r * .38, Math.sin(a) * r * .38); }
+  c.closePath(); c.fill();
+  for(var j = 0; j < 5; j++){ var b = -Math.PI / 2 + j * TAU / 5; c.beginPath(); c.arc(Math.cos(b) * r * .85, Math.sin(b) * r * .85, r * .18, 0, TAU); c.fill(); }
+  c.restore();
+}
+
+/* =====================================================================
+   20 WORLD ― 町の地図（1200×1600）・ミッション・静的レイヤー
+   ===================================================================== */
+var WW = 1200, WH = 1600;
+var BLOCK = "block", WALK = "walk", ROAD = "road";
+
+// 幹線道路（はば64＝片側1車線×2）
+var ROADS = [
+  { x:568, y:0,   w:64,   h:1600, axis:"v" },   // たて道
+  { x:0,   y:308, w:1200, h:64,   axis:"h" },   // 上の よこ道
+  { x:0,   y:828, w:1200, h:64,   axis:"h" }    // 下の よこ道
+];
+var INTERS = { top:{ x:600, y:340, off:0 }, mid:{ x:600, y:860, off:0 } };
+var RAIL_ROAD = { x:568, y:1236, w:64, h:48 };
+
+// 横断ポイント（ここ以外で道路に入ると「とびだし」）
+var CROSS = [];
+["top", "mid"].forEach(function(k){
+  var I = INTERS[k];
+  CROSS.push({ id:k + "N", x:568, y:I.y - 56, w:64, h:22, type:"sig", inter:k, axis:"EW", walkH:true });
+  CROSS.push({ id:k + "S", x:568, y:I.y + 34, w:64, h:22, type:"sig", inter:k, axis:"EW", walkH:true });
+  CROSS.push({ id:k + "W", x:544, y:I.y - 32, w:22, h:64, type:"sig", inter:k, axis:"NS", walkH:false });
+  CROSS.push({ id:k + "E", x:634, y:I.y - 32, w:22, h:64, type:"sig", inter:k, axis:"NS", walkH:false });
+});
+CROSS.push({ id:"u2", x:748, y:308, w:24, h:64, type:"uncross", walkH:false });
+CROSS.push({ id:"u1", x:288, y:828, w:24, h:64, type:"uncross", walkH:false });
+CROSS.push({ id:"rw", x:542, y:1236, w:26, h:48, type:"rail", walkH:false });
+CROSS.push({ id:"re", x:632, y:1236, w:26, h:48, type:"rail", walkH:false });
+CROSS.push({ id:"a1", x:0,   y:970, w:400, h:40,  type:"alley", group:"alley", walkH:false });
+CROSS.push({ id:"a2", x:360, y:970, w:40,  h:210, type:"alley", group:"alley", walkH:true });
+CROSS.push({ id:"a3", x:0,   y:1140, w:400, h:40, type:"alley", group:"alley", walkH:false });
+CROSS.forEach(function(c){ c.cx = c.x + c.w / 2; c.cy = c.y + c.h / 2; c.gid = c.group || c.id; });
+
+var BUILD = [
+  { x:40,  y:40,  w:120, h:100, kind:"house", roof:"#e2574c" },
+  { x:200, y:30,  w:130, h:110, kind:"house", roof:"#4a90d9" },
+  { x:370, y:50,  w:130, h:100, kind:"house", roof:"#6bc48a" },
+  { x:60,  y:170, w:110, h:80,  kind:"house", roof:"#e8a93c" },
+  { x:260, y:170, w:120, h:84,  kind:"house", roof:"#9b7ede" },
+  { x:830, y:110, w:150, h:120, kind:"home",  roof:"#f2a33a" },
+  { x:700, y:60,  w:100, h:110, kind:"house", roof:"#5ec9c9" },
+  { x:1020,y:50,  w:140, h:110, kind:"house", roof:"#e06aa0" },
+  { x:1030,y:190, w:120, h:70,  kind:"house", roof:"#6bc48a" },
+  { x:688, y:650, w:512, h:146, kind:"super" },
+  { x:120, y:1020,w:200, h:110, kind:"library" },
+  { x:412, y:928, w:112, h:104, kind:"house", roof:"#e2574c" },
+  { x:412, y:1108,w:112, h:118, kind:"house", roof:"#4a90d9" },
+  { x:720, y:960, w:180, h:110, kind:"conbini" },
+  { x:960, y:950, w:110, h:100, kind:"house", roof:"#e8a93c" },
+  { x:1090,y:960, w:100, h:90,  kind:"house", roof:"#9b7ede" },
+  { x:960, y:1110,w:120, h:100, kind:"house", roof:"#e06aa0" },
+  { x:740, y:1120,w:150, h:96,  kind:"house", roof:"#5ec9c9" },
+  { x:60,  y:1320,w:140, h:110, kind:"house", roof:"#6bc48a" },
+  { x:260, y:1330,w:130, h:100, kind:"house", roof:"#e2574c" },
+  { x:60,  y:1470,w:150, h:100, kind:"house", roof:"#4a90d9" },
+  { x:300, y:1470,w:160, h:100, kind:"house", roof:"#e8a93c" },
+  { x:780, y:1440,w:380, h:130, kind:"school" }
+];
+var FENCES = [
+  { x:0,   y:398, w:430, h:6, kind:"park" }, { x:480, y:398, w:62, h:6, kind:"park" },
+  { x:536, y:404, w:6, h:196, kind:"park" }, { x:536, y:650, w:6, h:152, kind:"park" },
+  { x:0,   y:796, w:250, h:6, kind:"park" }, { x:300, y:796, w:242, h:6, kind:"park" },
+  { x:0,   y:1236, w:542, h:48, kind:"rail" }, { x:658, y:1236, w:542, h:48, kind:"rail" },
+  { x:658, y:1284, w:6, h:16, kind:"school" }, { x:658, y:1350, w:6, h:250, kind:"school" }
+];
+var PLANTS = [ { x:658, y:404, w:30, h:392 }, { x:688, y:404, w:60, h:22 }, { x:772, y:404, w:428, h:22 } ];
+var PARK_OBJ = [
+  { x:70,  y:560, w:160, h:100, kind:"pond" },
+  { x:300, y:470, w:36,  h:64,  kind:"slide" },
+  { x:150, y:440, w:90,  h:36,  kind:"swing" },
+  { x:330, y:640, w:56,  h:56,  kind:"fountain" }
+];
+var PARKED = [];
+[800, 890, 935, 980, 1025, 1070, 1115].forEach(function(x, i){ PARKED.push({ x:x, y:465, ang:-Math.PI / 2, type:i % 3 ? "car" : "van", col:CAR_COLORS[(i * 3) % CAR_COLORS.length] }); });
+[800, 845, 935, 980, 1025, 1070, 1115].forEach(function(x, i){ PARKED.push({ x:x, y:610, ang:Math.PI / 2, type:i % 4 ? "car" : "van", col:CAR_COLORS[(i * 5 + 2) % CAR_COLORS.length] }); });
+var REV_SLOT = { x:845, y:465 };
+
+var TREES = [
+  { x:40,  y:440, r:26, kind:"sakura" }, { x:270, y:425, r:22 }, { x:505, y:520, r:24, kind:"sakura" },
+  { x:30,  y:730, r:24 }, { x:130, y:770, r:22, kind:"light" }, { x:250, y:740, r:24, kind:"sakura" }, { x:520, y:770, r:22 },
+  { x:20,  y:262, r:18 }, { x:185, y:160, r:16, kind:"light" }, { x:525, y:30, r:18 }, { x:510, y:250, r:20 },
+  { x:680, y:250, r:18, kind:"light" }, { x:1180,y:270, r:16 }, { x:800, y:30, r:16 },
+  { x:690, y:1215,r:16 }, { x:1180,y:935, r:18, kind:"light" }, { x:930, y:1225, r:14 },
+  { x:40,  y:1030,r:20 },
+  { x:30,  y:1310,r:18 }, { x:500, y:1580,r:18 }, { x:220, y:1580, r:18 }, { x:690, y:1580, r:18, kind:"light" }, { x:1180, y:1310, r:18 },
+  { x:378, y:1035,r:52, over:true }, { x:378, y:1195, r:52, over:true }     // ほそい道の角を かくす木
+];
+var LAMPS = [
+  [120, 285], [380, 285], [820, 285], [1080, 285], [200, 395], [1000, 396],
+  [545, 520], [545, 720], [545, 1000], [545, 1160], [545, 1420],
+  [655, 180], [655, 1000], [655, 1180], [655, 1420],
+  [150, 805], [1000, 805], [300, 915], [1100, 915], [720, 560], [1180, 560], [470, 1100]
+];
+var MIRROR = { x:420, y:1040 };
+
+var OBST = [];
+function rebuildObst(){
+  OBST = [];
+  BUILD.forEach(function(b){ OBST.push(b); });
+  FENCES.forEach(function(f){ OBST.push(f); });
+  PLANTS.forEach(function(p){ OBST.push(p); });
+  PARK_OBJ.forEach(function(p){ OBST.push(p); });
+  PARKED.forEach(function(p){ OBST.push({ x:p.x - 12, y:p.y - 21, w:24, h:42 }); });
+  TREES.forEach(function(t){ if(!t.over) OBST.push({ x:t.x - 6, y:t.y - 9, w:12, h:10 }); });
+  OBST.push({ x:MIRROR.x - 3, y:MIRROR.y - 4, w:6, h:6 });
+}
+rebuildObst();
+
+function zoneAt(x, y){
+  if(x < 2 || y < 2 || x > WW - 2 || y > WH - 2) return BLOCK;
+  var i;
+  for(i = 0; i < CROSS.length; i++){ var c = CROSS[i]; if(x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h) return c; }
+  for(i = 0; i < ROADS.length; i++){ if(inRect(x, y, ROADS[i])) return ROAD; }
+  for(i = 0; i < OBST.length; i++){ if(inRect(x, y, OBST[i])) return BLOCK; }
+  return WALK;
+}
+
+/* ---------- ミッション ---------- */
+var MISSIONS = [
+  { id:"park", name:"こうえんへ いこう", time:"day", icon:"park", need:null, ball:true,
+    lessons:["しんごうの ある こうさてん", "ボールが とびだしたら？"],
+    start:[900, 262], goal:[390, 505],
+    route:[[900, 262], [900, 295], [645, 295], [555, 295], [555, 385], [455, 385], [455, 440], [390, 505]] },
+  { id:"shop", name:"おみせへ いこう", time:"day", icon:"shop", need:"park",
+    lessons:["しんごうの ない おうだんほどう", "ちゅうしゃじょうの くるま"],
+    start:[900, 262], goal:[900, 640],
+    route:[[900, 262], [900, 295], [760, 295], [760, 385], [760, 440], [760, 537], [900, 537], [900, 640]] },
+  { id:"school", name:"がっこうへ いこう", time:"day", icon:"school", need:"shop", bag:true,
+    lessons:["まがってくる くるま", "ふみきり"],
+    start:[900, 262], goal:[720, 1325],
+    route:[[900, 262], [900, 295], [645, 295], [645, 385], [645, 815], [645, 905], [645, 1225], [645, 1300], [720, 1325]] },
+  { id:"library", name:"としょかんへ いこう", time:"eve", icon:"library", need:"school",
+    lessons:["みえない まがりかど", "カーブミラー"],
+    start:[900, 262], goal:[336, 1075],
+    route:[[900, 262], [900, 295], [645, 295], [555, 295], [555, 385], [555, 815], [555, 905], [555, 1070], [470, 1070], [415, 1070], [336, 1075]] },
+  { id:"night", name:"よるの おつかい", time:"night", icon:"night", need:"library", reflector:true,
+    lessons:["はんしゃざいを つけよう", "よるは みえにくい"],
+    start:[900, 262], goal:[900, 640],
+    route:[[900, 262], [955, 262], [900, 295], [760, 295], [760, 385], [760, 440], [760, 537], [900, 537], [900, 640]] },
+  { id:"free", name:"じゆう たんけん", time:"day", icon:"explore", need:"school", free:true,
+    lessons:["まちに かくれた ★を 12こ さがそう"],
+    start:[900, 262], goal:null, route:null }
+];
+var FREE_STARS = [[470, 220], [950, 60], [120, 470], [460, 720], [1150, 537], [1100, 295],
+                  [700, 1000], [60, 1075], [1000, 1080], [250, 905], [900, 1350], [450, 1300]];
+function missionUnlocked(i){
+  var m = MISSIONS[i];
+  return !m.need || (SAVE.best[m.need] || 0) > 0;
+}
+
+/* =====================================================================
+   静的レイヤー（地面・道路・建物）を1回だけ描いておく
+   ===================================================================== */
+var STATIC = null, MINI = null, WINDOWS = [];
+function makePatterns(c){
+  var a = mkCanvas(64, 64, 1), x = a.ctx;
+  x.fillStyle = "#6e737d"; x.fillRect(0, 0, 64, 64);
+  for(var i = 0; i < 240; i++){
+    x.fillStyle = "rgba(255,255,255," + (Math.random() * .06) + ")"; x.fillRect(Math.random() * 64, Math.random() * 64, 1.5, 1.5);
+    x.fillStyle = "rgba(0,0,0," + (Math.random() * .07) + ")"; x.fillRect(Math.random() * 64, Math.random() * 64, 2, 2);
+  }
+  var b = mkCanvas(30, 30, 1), y = b.ctx;
+  y.fillStyle = "#ece4d4"; y.fillRect(0, 0, 30, 30);
+  y.strokeStyle = "#d6cab3"; y.lineWidth = 1.4; y.strokeRect(.7, .7, 28.6, 28.6);
+  y.fillStyle = "rgba(255,255,255,.35)"; y.fillRect(2, 2, 26, 3);
+  var g = mkCanvas(48, 48, 1), z = g.ctx;
+  z.fillStyle = "#8fc47a"; z.fillRect(0, 0, 48, 48);
+  for(var j = 0; j < 34; j++){
+    var gx = Math.random() * 48, gy = Math.random() * 48;
+    z.strokeStyle = "rgba(255,255,255,.14)"; z.lineWidth = 1.3;
+    z.beginPath(); z.moveTo(gx, gy); z.lineTo(gx + rnd(-1.5, 1.5), gy - rnd(3, 6)); z.stroke();
+    z.strokeStyle = "rgba(20,60,20,.07)";
+    z.beginPath(); z.moveTo(gx + 3, gy + 4); z.lineTo(gx + 3, gy); z.stroke();
+  }
+  var d = mkCanvas(40, 40, 1), w = d.ctx;
+  w.fillStyle = "#e3c99a"; w.fillRect(0, 0, 40, 40);
+  for(var k = 0; k < 60; k++){ w.fillStyle = "rgba(120,80,30," + (Math.random() * .1) + ")"; w.fillRect(Math.random() * 40, Math.random() * 40, 2, 2); }
+  return { asphalt:c.createPattern(a.cv, "repeat"), tile:c.createPattern(b.cv, "repeat"),
+           grass:c.createPattern(g.cv, "repeat"), dirt:c.createPattern(d.cv, "repeat") };
+}
+
+function buildStatic(){
+  var S = Math.min(2, DPR);
+  var m = mkCanvas(WW, WH, S), c = m.ctx;
+  WINDOWS = [];
+  var P = makePatterns(c);
+
+  // ---- じめん ----
+  c.fillStyle = P.grass; c.fillRect(0, 0, WW, WH);
+  c.fillStyle = "rgba(190,240,150,.3)"; c.fillRect(0, 404, 536, 392);           // こうえん
+  c.fillStyle = P.dirt; c.fillRect(664, 1294, 536, 140);                        // こうてい
+  c.strokeStyle = "rgba(255,255,255,.85)"; c.lineWidth = 3;
+  c.beginPath(); c.ellipse(960, 1364, 170, 46, 0, 0, TAU); c.stroke();
+  [[700, 1364], [1180, 1364]].forEach(function(g){ c.strokeStyle = "#fff"; c.lineWidth = 3; c.strokeRect(g[0] - 6, g[1] - 16, 12, 32); });
+
+  // ---- ほどう ----
+  function walkStrip(x, y, w, h){ c.fillStyle = P.tile; c.fillRect(x, y, w, h); }
+  walkStrip(542, 0, 26, WH); walkStrip(632, 0, 26, WH);
+  walkStrip(0, 282, WW, 26); walkStrip(0, 372, WW, 26);
+  walkStrip(0, 802, WW, 26); walkStrip(0, 892, WW, 26);
+  walkStrip(400, 1040, 142, 60);                                              // ほそい道への こみち
+  // 点字ブロック（交差点の手前）
+  c.fillStyle = "#f2c744";
+  CROSS.forEach(function(k){
+    if(k.type !== "sig" && k.type !== "uncross") return;
+    if(k.walkH){ c.fillRect(k.x - 22, k.y + 2, 10, k.h - 4); c.fillRect(k.x + k.w + 12, k.y + 2, 10, k.h - 4); }
+    else { c.fillRect(k.x + 2, k.y - 22, k.w - 4, 10); c.fillRect(k.x + 2, k.y + k.h + 12, k.w - 4, 10); }
+  });
+
+  // ---- どうろ ----
+  ROADS.forEach(function(r){ c.fillStyle = P.asphalt; c.fillRect(r.x, r.y, r.w, r.h); });
+  // ふちいし
+  c.fillStyle = "#c9c2b2";
+  c.fillRect(564, 0, 4, WH); c.fillRect(632, 0, 4, WH);
+  c.fillRect(0, 304, WW, 4); c.fillRect(0, 372, WW, 4); c.fillRect(0, 824, WW, 4); c.fillRect(0, 892, WW, 4);
+  ROADS.forEach(function(r){ c.fillStyle = P.asphalt; c.fillRect(r.x + (r.axis === "v" ? 0 : 0), r.y, r.w, r.h); });
+  // 交差点の すみ（歩道の角は残す）
+  ["top", "mid"].forEach(function(k){ var I = INTERS[k]; c.fillStyle = P.asphalt; c.fillRect(I.x - 32, I.y - 32, 64, 64); });
+
+  // 車線の線
+  c.strokeStyle = "#f4d75a"; c.lineWidth = 3; c.setLineDash([18, 14]);
+  function vline(x, y0, y1){ c.beginPath(); c.moveTo(x, y0); c.lineTo(x, y1); c.stroke(); }
+  function hline(y, x0, x1){ c.beginPath(); c.moveTo(x0, y); c.lineTo(x1, y); c.stroke(); }
+  vline(600, 0, 274); vline(600, 406, 794); vline(600, 926, 1222); vline(600, 1298, WH);
+  hline(340, 0, 532); hline(340, 668, WW); hline(860, 0, 532); hline(860, 668, WW);
+  c.setLineDash([]);
+  c.strokeStyle = "rgba(255,255,255,.75)"; c.lineWidth = 2;
+  vline(572, 0, 278); vline(628, 0, 278); vline(572, 402, 798); vline(628, 402, 798); vline(572, 922, 1230); vline(628, 922, 1230); vline(572, 1290, WH); vline(628, 1290, WH);
+  hline(312, 0, 536); hline(368, 0, 536); hline(312, 664, WW); hline(368, 664, WW);
+  hline(832, 0, 536); hline(888, 0, 536); hline(832, 664, WW); hline(888, 664, WW);
+
+  // ていしせん
+  c.fillStyle = "rgba(255,255,255,.9)";
+  ["top", "mid"].forEach(function(k){
+    var I = INTERS[k];
+    c.fillRect(602, I.y - 64, 28, 4); c.fillRect(570, I.y + 60, 28, 4);
+    c.fillRect(536, I.y - 30, 4, 28); c.fillRect(660, I.y + 2, 4, 28);
+  });
+  c.fillRect(602, 1220, 28, 4); c.fillRect(570, 1296, 28, 4);
+  // ◇（信号のない横断歩道の予告）
+  function diamond(x, y){ c.strokeStyle = "rgba(255,255,255,.85)"; c.lineWidth = 2.4; c.beginPath(); c.moveTo(x - 12, y); c.lineTo(x, y - 6); c.lineTo(x + 12, y); c.lineTo(x, y + 6); c.closePath(); c.stroke(); }
+  diamond(700, 324); diamond(820, 356); diamond(240, 844); diamond(360, 876);
+
+  // おうだんほどう（白線は 車の進む向きと平行）
+  CROSS.forEach(function(k){
+    if(k.type !== "sig" && k.type !== "uncross") return;
+    c.fillStyle = "rgba(252,252,248,.95)";
+    if(k.walkH){ for(var x = k.x + 3; x < k.x + k.w - 3; x += 9) rr(c, x, k.y + 1, 5, k.h - 2, 1.5), c.fill(); }
+    else { for(var y = k.y + 3; y < k.y + k.h - 3; y += 9) rr(c, k.x + 1, y, k.w - 2, 5, 1.5), c.fill(); }
+  });
+
+  // ---- ほそい道 ----
+  c.fillStyle = "#858a93";
+  CROSS.forEach(function(k){ if(k.type === "alley") c.fillRect(k.x, k.y, k.w, k.h); });
+  c.fillStyle = "rgba(255,255,255,.12)";
+  for(var ai = 0; ai < 200; ai++){ var ax = rnd(0, 400), ay = rnd(970, 1180); if(zoneAt(ax, ay).type === "alley") c.fillRect(ax, ay, 2, 2); }
+  c.strokeStyle = "rgba(255,255,255,.7)"; c.lineWidth = 1.6;
+  c.beginPath(); c.moveTo(0, 973); c.lineTo(357, 973); c.lineTo(357, 1137); c.lineTo(0, 1137); c.stroke();
+  c.beginPath(); c.moveTo(0, 1007); c.lineTo(363, 1007); c.lineTo(363, 1007); c.stroke();
+  c.beginPath(); c.moveTo(397, 973); c.lineTo(397, 1177); c.lineTo(0, 1177); c.stroke();
+  // 「とまれ」と あしあと（子どもの とびだし防止マーク）
+  c.fillStyle = "rgba(255,255,255,.95)"; c.font = fnt(900, 13); c.textAlign = "center"; c.textBaseline = "middle";
+  c.save(); c.translate(424, 1070); c.rotate(-Math.PI / 2); c.fillText("とまれ", 0, 0); c.restore();
+  footprint(c, 446, 1060, -Math.PI / 2); footprint(c, 446, 1080, -Math.PI / 2);
+
+  // ---- せんろ ----
+  c.fillStyle = "#9c9288"; c.fillRect(0, 1240, WW, 40);
+  for(var si = 0; si < 300; si++){ c.fillStyle = "rgba(60,50,40," + (Math.random() * .2) + ")"; c.fillRect(rnd(0, WW), rnd(1240, 1280), 2, 2); }
+  c.fillStyle = "#6b4d34";
+  for(var sx = 4; sx < WW; sx += 14){ if(sx > 536 && sx < 664) continue; c.fillRect(sx, 1243, 7, 34); }
+  c.fillStyle = "#5a5f6a"; c.fillRect(536, 1238, 128, 44);                       // ふみきりの 床
+  c.fillStyle = "#3f434b"; for(var fx = 540; fx < 664; fx += 10) c.fillRect(fx, 1240, 4, 40);
+  var rg = c.createLinearGradient(0, 1248, 0, 1252);
+  rg.addColorStop(0, "#e9eef4"); rg.addColorStop(1, "#7d8590");
+  c.fillStyle = rg; c.fillRect(0, 1248, WW, 4); c.fillRect(0, 1268, WW, 4);
+  for(var yb = 0; yb < 2; yb++){
+    var yy = yb ? 1282 : 1236;
+    for(var hx = 536; hx < 664; hx += 12){ c.fillStyle = (hx / 12 | 0) % 2 ? "#222" : "#ffd34d"; c.fillRect(hx, yy, 12, 3); }
+  }
+
+  // ---- こうえん ----
+  c.strokeStyle = "#ead7ab"; c.lineCap = "round"; c.lineWidth = 30;
+  c.beginPath(); c.moveTo(455, 400); c.quadraticCurveTo(440, 520, 358, 640); c.stroke();
+  c.beginPath(); c.moveTo(540, 625); c.quadraticCurveTo(450, 640, 380, 660); c.stroke();
+  c.beginPath(); c.moveTo(275, 800); c.quadraticCurveTo(300, 720, 345, 690); c.stroke();
+  c.strokeStyle = "#f3e5c1"; c.lineWidth = 16;
+  c.beginPath(); c.moveTo(455, 400); c.quadraticCurveTo(440, 520, 358, 640); c.stroke();
+  c.lineCap = "butt";
+  c.fillStyle = "#ead7ab"; c.beginPath(); c.arc(358, 668, 64, 0, TAU); c.fill();
+  c.fillStyle = "#f3e5c1"; c.beginPath(); c.arc(358, 668, 52, 0, TAU); c.fill();
+  // いけ
+  var pg = c.createRadialGradient(130, 595, 10, 150, 610, 90);
+  pg.addColorStop(0, "#9fe0f7"); pg.addColorStop(1, "#3f9ccf");
+  c.fillStyle = "#c9b98f"; c.beginPath(); c.ellipse(150, 610, 86, 56, 0, 0, TAU); c.fill();
+  c.fillStyle = pg; c.beginPath(); c.ellipse(150, 610, 78, 48, 0, 0, TAU); c.fill();
+  c.fillStyle = "#5fbf6b"; [[110, 590], [182, 628], [150, 632]].forEach(function(p){ c.beginPath(); c.arc(p[0], p[1], 7, .3, TAU - .3); c.lineTo(p[0], p[1]); c.fill(); });
+  c.fillStyle = "#ff9fc4"; c.beginPath(); c.arc(184, 626, 2.6, 0, TAU); c.fill();
+  // すなば
+  c.fillStyle = "#b07a4a"; rr(c, 398, 688, 84, 64, 6); c.fill();
+  c.fillStyle = "#f2dda6"; rr(c, 404, 694, 72, 52, 4); c.fill();
+  c.fillStyle = "#e0c27e"; c.beginPath(); c.arc(425, 715, 9, 0, TAU); c.fill();
+  c.fillStyle = "#e2574c"; rr(c, 450, 724, 10, 8, 2); c.fill();
+  // ブランコ
+  c.fillStyle = "rgba(0,0,0,.15)"; c.fillRect(154, 474, 88, 6);
+  c.strokeStyle = "#e2574c"; c.lineWidth = 4;
+  c.beginPath(); c.moveTo(152, 476); c.lineTo(158, 442); c.lineTo(232, 442); c.lineTo(238, 476); c.stroke();
+  c.strokeStyle = "#555"; c.lineWidth = 1.4;
+  [175, 215].forEach(function(sx2){ c.beginPath(); c.moveTo(sx2 - 5, 442); c.lineTo(sx2 - 5, 464); c.moveTo(sx2 + 5, 442); c.lineTo(sx2 + 5, 464); c.stroke(); c.fillStyle = "#4a90d9"; rr(c, sx2 - 8, 463, 16, 5, 2); c.fill(); });
+  // すべりだい
+  c.fillStyle = "rgba(0,0,0,.15)"; rr(c, 304, 476, 36, 64, 5); c.fill();
+  c.fillStyle = "#f5c243"; rr(c, 300, 470, 36, 18, 4); c.fill();
+  var slg = c.createLinearGradient(0, 488, 0, 534);
+  slg.addColorStop(0, "#5ec9f0"); slg.addColorStop(1, "#2f8ad6");
+  c.fillStyle = slg; rr(c, 308, 486, 20, 48, 6); c.fill();
+  c.fillStyle = "rgba(255,255,255,.4)"; rr(c, 311, 488, 4, 42, 2); c.fill();
+  c.strokeStyle = "#8a5d3b"; c.lineWidth = 2;
+  for(var ld = 0; ld < 4; ld++){ c.beginPath(); c.moveTo(302, 452 + ld * 5); c.lineTo(334, 452 + ld * 5); c.stroke(); }
+  // ふんすいの台
+  c.fillStyle = "#c9ccd4"; c.beginPath(); c.arc(358, 668, 28, 0, TAU); c.fill();
+  c.fillStyle = "#7fcbf0"; c.beginPath(); c.arc(358, 668, 22, 0, TAU); c.fill();
+  c.fillStyle = "#c9ccd4"; c.beginPath(); c.arc(358, 668, 7, 0, TAU); c.fill();
+  // 花だん
+  flowerBed(c, 70, 470, 46); flowerBed(c, 470, 610, 40); flowerBed(c, 220, 520, 30); flowerBed(c, 90, 720, 34);
+  // ベンチ
+  bench(c, 420, 580); bench(c, 220, 690); bench(c, 300, 585);
+  // かんばん
+  signBoard(c, 505, 420, "こうえん", "#3fa35f");
+
+  // ---- ちゅうしゃじょう ----
+  c.fillStyle = P.asphalt; c.fillRect(688, 426, 512, 224);
+  c.strokeStyle = "rgba(255,255,255,.85)"; c.lineWidth = 2;
+  for(var px = 777; px <= 1137; px += 45){ c.beginPath(); c.moveTo(px, 440); c.lineTo(px, 492); c.moveTo(px, 586); c.lineTo(px, 638); c.stroke(); }
+  c.beginPath(); c.moveTo(777, 492); c.lineTo(1140, 492); c.moveTo(777, 586); c.lineTo(1140, 586); c.stroke();
+  c.strokeStyle = "rgba(80,200,120,.6)"; c.lineWidth = 22; c.lineJoin = "round";
+  c.beginPath(); c.moveTo(760, 426); c.lineTo(760, 537); c.lineTo(900, 537); c.lineTo(900, 650); c.stroke();
+  c.strokeStyle = "rgba(255,255,255,.8)"; c.lineWidth = 1.5; c.setLineDash([6, 5]);
+  c.beginPath(); c.moveTo(749, 426); c.lineTo(749, 548); c.lineTo(889, 548); c.lineTo(889, 650);
+  c.moveTo(771, 426); c.lineTo(771, 526); c.lineTo(911, 526); c.lineTo(911, 650); c.stroke(); c.setLineDash([]);
+  [[760, 470], [830, 537], [900, 600]].forEach(function(p){ c.save(); c.globalAlpha = .9; drawPed(c, p[0], p[1], "#fff", true, 1.3); c.restore(); });
+  c.fillStyle = "rgba(255,255,255,.7)";
+  [960, 1060, 1160].forEach(function(ax2){ c.beginPath(); c.moveTo(ax2 + 12, 537); c.lineTo(ax2, 529); c.lineTo(ax2, 545); c.closePath(); c.fill(); c.fillRect(ax2 - 14, 535, 14, 4); });
+  PLANTS.forEach(function(p){
+    c.fillStyle = "#6aaa58"; c.fillRect(p.x, p.y, p.w, p.h);
+    for(var bx = p.x + 8; bx < p.x + p.w; bx += 16) for(var by = p.y + 8; by < p.y + p.h; by += 16){ c.fillStyle = (bx + by) % 32 ? "#4f9a4e" : "#5fb55a"; c.beginPath(); c.arc(bx, by, 8, 0, TAU); c.fill(); }
+  });
+  signBoard(c, 1150, 438, "P", "#2f6ba8");
+  PARKED.forEach(function(p){ drawCar(c, { x:p.x, y:p.y, ang:p.ang, type:p.type, col:p.col }, 0); });
+
+  // ---- たてもの ----
+  BUILD.slice().sort(function(a, b){ return a.y + a.h - (b.y + b.h); }).forEach(function(b){ drawBuilding(c, b); });
+
+  // ---- へい ----
+  FENCES.forEach(function(f){
+    if(f.kind === "rail"){
+      c.fillStyle = "#c8ccd4";
+      for(var x = f.x; x < f.x + f.w; x += 16){ c.fillRect(x, f.y, 3, 5); c.fillRect(x, f.y + f.h - 5, 3, 5); }
+      c.fillRect(f.x, f.y + 1, f.w, 2); c.fillRect(f.x, f.y + f.h - 3, f.w, 2);
+      return;
+    }
+    var col = f.kind === "park" ? "#3f8f4e" : "#f4f4f4";
+    c.fillStyle = "rgba(0,0,0,.15)"; c.fillRect(f.x + 2, f.y + 3, f.w, f.h);
+    c.fillStyle = col; c.fillRect(f.x, f.y, f.w, f.h);
+    c.fillStyle = shade(col === "#f4f4f4" ? "#f4f4f4" : col, -.25);
+    if(f.w > f.h){ for(var px2 = f.x; px2 < f.x + f.w; px2 += 16) c.fillRect(px2, f.y - 3, 3, f.h + 3); }
+    else { for(var py2 = f.y; py2 < f.y + f.h; py2 += 16) c.fillRect(f.x - 1, py2, f.w + 2, 3); }
+  });
+  // 校門
+  c.fillStyle = "#b9a58a"; rr(c, 654, 1290, 12, 14, 2); c.fill(); rr(c, 654, 1346, 12, 14, 2); c.fill();
+  signBoard(c, 700, 1300, "がっこう", "#c05a2e");
+  // いえの 前の ゆうびんうけ
+  c.fillStyle = "#e2574c"; rr(c, 862, 236, 12, 14, 3); c.fill(); c.fillStyle = "#555"; c.fillRect(866, 250, 3, 10);
+  // 花・しげみ（にぎやかし）
+  [[830, 250], [990, 245], [60, 270], [300, 268], [1000, 1060], [760, 1225], [100, 1440], [420, 1440]].forEach(function(p){ flowerBed(c, p[0], p[1], 14); });
+
+  STATIC = m;
+  MINI = mkCanvas(96, 128, DPR);
+  MINI.ctx.drawImage(m.cv, 0, 0, m.cv.width, m.cv.height, 0, 0, 96, 128);
+  MINI.ctx.fillStyle = "rgba(255,255,255,.1)"; MINI.ctx.fillRect(0, 0, 96, 128);
+}
+
+function footprint(c, x, y, a){
+  c.save(); c.translate(x, y); c.rotate(a);
+  c.fillStyle = "rgba(255,255,255,.95)";
+  c.beginPath(); c.ellipse(-4, 0, 3, 5.5, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(4, 1, 3, 5.5, 0, 0, TAU); c.fill();
+  c.restore();
+}
+function flowerBed(c, x, y, r){
+  c.fillStyle = "#6bb85a"; c.beginPath(); c.ellipse(x, y, r, r * .55, 0, 0, TAU); c.fill();
+  var cols = ["#ff8fb1", "#ffd34d", "#ffffff", "#c9a7ff", "#ff6b6b"];
+  for(var i = 0; i < r * .7; i++){
+    var a = i * 2.39, d = Math.sqrt(i / (r * .7)) * r * .8;
+    c.fillStyle = cols[i % cols.length];
+    c.beginPath(); c.arc(x + Math.cos(a) * d, y + Math.sin(a) * d * .55, 2.4, 0, TAU); c.fill();
+  }
+}
+function bench(c, x, y){
+  c.fillStyle = "rgba(0,0,0,.15)"; c.fillRect(x - 16, y + 3, 34, 6);
+  c.fillStyle = "#b9803f"; rr(c, x - 17, y - 6, 34, 8, 2); c.fill();
+  c.fillStyle = "#a06a30"; rr(c, x - 17, y - 12, 34, 5, 2); c.fill();
+}
+function signBoard(c, x, y, text, col){
+  c.fillStyle = "#7a5233"; c.fillRect(x - 2, y, 4, 14);
+  c.font = fnt(900, 11); var w = Math.max(26, c.measureText(text).width + 14);
+  c.fillStyle = "rgba(0,0,0,.18)"; rr(c, x - w / 2 + 2, y - 16, w, 18, 6); c.fill();
+  c.fillStyle = "#fff"; rr(c, x - w / 2, y - 18, w, 18, 6); c.fill();
+  c.strokeStyle = col; c.lineWidth = 2; c.stroke();
+  c.fillStyle = col; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(text, x, y - 9);
+}
+
+function drawBuilding(c, b){
+  var fh = clamp(Math.round(b.h * .36), 24, 46), rh = b.h - fh;
+  c.fillStyle = "rgba(10,20,30,.2)"; rr(c, b.x + 7, b.y + 9, b.w, b.h, 8); c.fill();
+  var wall = { house:"#fff6e6", home:"#fff1dc", super:"#f4f8fb", library:"#f2f7ee", school:"#fff3d8", conbini:"#ffffff" }[b.kind] || "#fff";
+  var wg = c.createLinearGradient(0, b.y + rh, 0, b.y + b.h);
+  wg.addColorStop(0, wall); wg.addColorStop(1, shade(wall, -.12));
+  c.fillStyle = wg; rr(c, b.x, b.y + rh - 4, b.w, fh + 4, 4); c.fill();
+  c.strokeStyle = "rgba(60,40,30,.2)"; c.lineWidth = 1.2; c.stroke();
+
+  if(b.kind === "house" || b.kind === "home" || b.kind === "library" || b.kind === "school"){
+    var rc = b.roof || (b.kind === "library" ? "#3aa39a" : (b.kind === "school" ? "#d9694a" : "#e2574c"));
+    var g1 = c.createLinearGradient(0, b.y, 0, b.y + rh);
+    g1.addColorStop(0, shade(rc, .22)); g1.addColorStop(.5, rc); g1.addColorStop(.5, shade(rc, -.16)); g1.addColorStop(1, shade(rc, -.28));
+    c.fillStyle = g1; rr(c, b.x - 4, b.y - 2, b.w + 8, rh + 2, 7); c.fill();
+    c.strokeStyle = "rgba(0,0,0,.08)"; c.lineWidth = 1;
+    for(var ty = b.y + 6; ty < b.y + rh - 2; ty += 7){ c.beginPath(); c.moveTo(b.x - 2, ty); c.lineTo(b.x + b.w + 2, ty); c.stroke(); }
+    c.fillStyle = shade(rc, -.35); c.fillRect(b.x - 4, b.y + rh / 2 - 1.5, b.w + 8, 3);
+    c.fillStyle = "rgba(255,255,255,.25)"; rr(c, b.x, b.y + 2, b.w * .5, 4, 2); c.fill();
+    if(b.kind === "house" && b.w > 110){ c.fillStyle = "#9b6b4d"; c.fillRect(b.x + b.w * .72, b.y + 4, 12, 14); }
+  }else{
+    var g2 = c.createLinearGradient(0, b.y, 0, b.y + rh);
+    g2.addColorStop(0, "#e9edf2"); g2.addColorStop(1, "#c9d0d9");
+    c.fillStyle = g2; rr(c, b.x, b.y, b.w, rh, 6); c.fill();
+    c.strokeStyle = "rgba(0,0,0,.12)"; c.lineWidth = 1.2; c.stroke();
+    c.fillStyle = "#b3bcc8";
+    for(var ax = b.x + 30; ax < b.x + b.w - 30; ax += 70){ rr(c, ax, b.y + 14, 26, 18, 3); c.fill(); }
+  }
+
+  var fy = b.y + rh;
+  if(b.kind === "house" || b.kind === "home"){
+    var dx = b.x + b.w * .5 - 9;
+    c.fillStyle = "#8a5d3b"; rr(c, dx, fy + fh - 22, 18, 22, 3); c.fill();
+    c.fillStyle = "#ffd76e"; c.beginPath(); c.arc(dx + 14, fy + fh - 11, 1.6, 0, TAU); c.fill();
+    winRect(c, b.x + 10, fy + 6, 22, 14); winRect(c, b.x + b.w - 32, fy + 6, 22, 14);
+    if(b.kind === "home"){
+      c.fillStyle = "#ff6b8a";
+      c.beginPath(); var hx = b.x + b.w * .5, hy = b.y + rh * .45;
+      c.moveTo(hx, hy + 8); c.bezierCurveTo(hx - 14, hy - 2, hx - 6, hy - 12, hx, hy - 4);
+      c.bezierCurveTo(hx + 6, hy - 12, hx + 14, hy - 2, hx, hy + 8); c.fill();
+      c.font = fnt(900, 10); var nw = c.measureText("わたしの いえ").width + 14;
+      c.fillStyle = "#fff"; rr(c, b.x + b.w * .5 - nw / 2, b.y + rh * .72, nw, 15, 6); c.fill();
+      c.strokeStyle = "#f2a33a"; c.lineWidth = 1.5; c.stroke();
+      c.fillStyle = "#c05a12"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("わたしの いえ", b.x + b.w * .5, b.y + rh * .72 + 8);
+    }
+  }else if(b.kind === "super"){
+    for(var i = 0; i < 16; i++){ c.fillStyle = i % 2 ? "#e2574c" : "#fff"; c.fillRect(b.x + 6 + i * ((b.w - 12) / 16), fy + 2, (b.w - 12) / 16, 9); }
+    for(var gx = b.x + 20; gx < b.x + b.w - 30; gx += 48){ winRect(c, gx, fy + 16, 36, 18, "#bfe3f2"); }
+    c.fillStyle = "#cfeffd"; rr(c, b.x + 196, fy + 14, 32, 30, 2); c.fill();
+    c.strokeStyle = "#7fa8bf"; c.beginPath(); c.moveTo(b.x + 212, fy + 14); c.lineTo(b.x + 212, fy + 44); c.stroke();
+    labelBox(c, b.x + b.w / 2, b.y + 36, "スーパー わくわく", "#e2574c", 16);
+  }else if(b.kind === "conbini"){
+    var cs = ["#3fb36b", "#ff9d2e", "#3f82cf"];
+    for(var k = 0; k < 3; k++){ c.fillStyle = cs[k]; c.fillRect(b.x, fy + k * 4, b.w, 4); }
+    winRect(c, b.x + 12, fy + 16, 60, 18, "#cfeffd"); winRect(c, b.x + 108, fy + 16, 60, 18, "#cfeffd");
+    c.fillStyle = "#cfeffd"; rr(c, b.x + 78, fy + 14, 24, fh - 14, 2); c.fill();
+    labelBox(c, b.x + b.w / 2, b.y + 30, "コンビニ", "#3fb36b", 13);
+  }else if(b.kind === "library"){
+    for(var p = 0; p < 6; p++){ c.fillStyle = "#e9efe4"; c.fillRect(b.x + 12 + p * 34, fy + 2, 7, fh - 4); }
+    for(var q = 0; q < 5; q++) winRect(c, b.x + 22 + q * 34, fy + 8, 20, 18);
+    labelBox(c, b.x + b.w / 2, b.y + 30, "としょかん", "#2f8f7f", 14);
+    c.fillStyle = "#c0392b"; rr(c, b.x + b.w + 2, b.y + 44, 14, 40, 3); c.fill();          // 入口マット
+    c.fillStyle = "#fff"; c.font = fnt(900, 9); c.textAlign = "center";
+    c.save(); c.translate(b.x + b.w + 9, b.y + 64); c.rotate(Math.PI / 2); c.fillText("いりぐち", 0, 0); c.restore();
+  }else if(b.kind === "school"){
+    for(var s2 = 0; s2 < 10; s2++) winRect(c, b.x + 14 + s2 * 37, fy + 6, 24, 16);
+    c.fillStyle = "#8a5d3b"; rr(c, b.x + b.w / 2 - 18, fy + fh - 20, 36, 20, 3); c.fill();
+    c.fillStyle = "#fff"; c.beginPath(); c.arc(b.x + b.w / 2, b.y + 28, 16, 0, TAU); c.fill();
+    c.strokeStyle = "#5b4033"; c.lineWidth = 2.6; c.stroke();
+    c.lineWidth = 2; c.beginPath(); c.moveTo(b.x + b.w / 2, b.y + 28); c.lineTo(b.x + b.w / 2, b.y + 18); c.moveTo(b.x + b.w / 2, b.y + 28); c.lineTo(b.x + b.w / 2 + 7, b.y + 28); c.stroke();
+    labelBox(c, b.x + b.w / 2, b.y + 64, "わくわく しょうがっこう", "#c05a2e", 14);
+  }
+}
+function winRect(c, x, y, w, h, col){
+  c.fillStyle = "#fff"; rr(c, x - 2, y - 2, w + 4, h + 4, 3); c.fill();
+  var g = c.createLinearGradient(x, y, x + w, y + h);
+  g.addColorStop(0, col || "#cfe9f7"); g.addColorStop(1, shade(col || "#cfe9f7", -.18));
+  c.fillStyle = g; rr(c, x, y, w, h, 2); c.fill();
+  c.fillStyle = "rgba(255,255,255,.55)";
+  c.beginPath(); c.moveTo(x + 2, y + h - 2); c.lineTo(x + w * .35, y + 2); c.lineTo(x + w * .5, y + 2); c.lineTo(x + w * .15, y + h - 2); c.closePath(); c.fill();
+  WINDOWS.push({ x:x, y:y, w:w, h:h });
+}
+function labelBox(c, x, y, text, col, px){
+  c.font = fnt(900, px);
+  var w = c.measureText(text).width + 22;
+  c.fillStyle = "rgba(0,0,0,.18)"; rr(c, x - w / 2 + 2, y - px * .9 + 3, w, px * 1.8, px * .6); c.fill();
+  c.fillStyle = "#fff"; rr(c, x - w / 2, y - px * .9, w, px * 1.8, px * .6); c.fill();
+  c.strokeStyle = col; c.lineWidth = 2.4; c.stroke();
+  c.fillStyle = col; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(text, x, y + 1);
+}
+
+/* =====================================================================
+   30 SIM ― 信号・車・踏切・しかけ・プレイヤー
+   ===================================================================== */
+var G = null;
+var INPUT = { jx:0, jy:0, kx:0, ky:0, active:false, bx:0, by:0, px:0, py:0, used:false, id:null };
+
+/* ---------- 信号（1周期24秒） ----------
+   NS=たて道の車が青のとき。歩行者は「車と同じ向き」に歩く横断歩道が青。 */
+var CYC = 24;
+function sigT(k){ var t = (G.t + INTERS[k].off) % CYC; return t < 0 ? t + CYC : t; }
+function carLight(k, axis){
+  var t = sigT(k);
+  if(axis === "NS") return t < 9 ? "g" : (t < 10.5 ? "y" : "r");
+  return (t >= 12 && t < 21) ? "g" : ((t >= 21 && t < 22.5) ? "y" : "r");
+}
+function pedLight(k, axis){
+  var t = sigT(k);
+  if(axis === "NS") return t < 7 ? "green" : (t < 9.5 ? "blink" : "red");
+  return (t >= 12 && t < 19) ? "green" : ((t >= 19 && t < 21.5) ? "blink" : "red");
+}
+
+/* ---------- 車の道すじ ---------- */
+var LANES = {
+  S:  { x0:616, y0:-70,     dx:0,  dy:1,  inters:["top", "mid"] },
+  N:  { x0:584, y0:WH + 70, dx:0,  dy:-1, inters:["mid", "top"] },
+  E2: { x0:-70, y0:324,     dx:1,  dy:0,  inters:["top"] },
+  W2: { x0:WW + 70, y0:356, dx:-1, dy:0,  inters:["top"] },
+  E1: { x0:-70, y0:844,     dx:1,  dy:0,  inters:["mid"] },
+  W1: { x0:WW + 70, y0:876, dx:-1, dy:0,  inters:["mid"] }
+};
+function mkPath(pts){
+  var cum = [0];
+  for(var i = 1; i < pts.length; i++) cum.push(cum[i - 1] + dist(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1]));
+  return { pts:pts, cum:cum, len:cum[cum.length - 1] };
+}
+function posAt(path, s){
+  s = clamp(s, 0, path.len);
+  var i = 0;
+  while(i < path.cum.length - 2 && path.cum[i + 1] < s) i++;
+  var a = path.pts[i], b = path.pts[i + 1];
+  var seg = path.cum[i + 1] - path.cum[i] || 1, t = (s - path.cum[i]) / seg;
+  var dx = (b[0] - a[0]) / seg, dy = (b[1] - a[1]) / seg;
+  return { x:a[0] + (b[0] - a[0]) * t, y:a[1] + (b[1] - a[1]) * t, dx:dx, dy:dy };
+}
+// 左折（左側通行なので小回り）。円弧の中心は交差点の角
+function lanePath(id, turn){
+  var L = LANES[id], pts = [[L.x0, L.y0]];
+  if(!turn){
+    pts.push([L.dx ? (L.dx > 0 ? WW + 70 : -70) : L.x0, L.dy ? (L.dy > 0 ? WH + 70 : -70) : L.y0]);
+    return { pts:pts, arc:null };
+  }
+  var I = INTERS[turn], c, a0, a1, end;
+  if(id === "S"){ c = [I.x + 32, I.y - 32]; a0 = Math.PI; a1 = Math.PI / 2; end = [WW + 70, I.y - 16]; }
+  else if(id === "N"){ c = [I.x - 32, I.y + 32]; a0 = 0; a1 = -Math.PI / 2; end = [-70, I.y + 16]; }
+  else if(id === "E1" || id === "E2"){ c = [I.x - 32, I.y - 32]; a0 = Math.PI / 2; a1 = 0; end = [I.x - 16, -70]; }
+  else { c = [I.x + 32, I.y + 32]; a0 = -Math.PI / 2; a1 = -Math.PI; end = [I.x + 16, WH + 70]; }
+  var r = 16;
+  for(var i = 0; i <= 8; i++){ var a = a0 + (a1 - a0) * i / 8; pts.push([c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r]); }
+  pts.push(end);
+  return { pts:pts, arc:[1, 9] };
+}
+function alleyPath(){
+  var pts = [[-50, 990], [360, 990]];
+  for(var i = 1; i <= 6; i++){ var a = -Math.PI / 2 + (Math.PI / 2) * i / 6; pts.push([360 + Math.cos(a) * 20, 1010 + Math.sin(a) * 20]); }
+  pts.push([380, 1140]);
+  for(var j = 1; j <= 6; j++){ var b = (Math.PI / 2) * j / 6; pts.push([360 + Math.cos(b) * 20, 1140 + Math.sin(b) * 20]); }
+  pts.push([-50, 1160]);
+  return pts;
+}
+
+function makeCar(path, type){
+  var d = CAR_DIM[type];
+  var big = (type === "bus" || type === "truck");
+  return { path:path, s:0, v:0, vmax:rnd(CFG.CAR_V[0], CFG.CAR_V[1]) * (big ? .85 : 1), type:type,
+           col:pick(CAR_COLORS), w:d[0], L:d[1], x:0, y:0, ang:0, stops:[], stopped:false, say:null };
+}
+function computeStops(car){
+  var seen = {}, inside = {}, stops = [];
+  var targets = CROSS.filter(function(c){ return c.type === "sig" || c.type === "uncross"; });
+  for(var s = 0; s <= car.path.len; s += 3){
+    var p = posAt(car.path, s);
+    for(var i = 0; i < targets.length; i++){
+      var c = targets[i];
+      var hit = p.x >= c.x && p.x <= c.x + c.w && p.y >= c.y && p.y <= c.y + c.h;
+      if(hit && !inside[c.id]){
+        inside[c.id] = true;
+        if(c.type === "sig"){
+          if(!seen[c.inter]){ seen[c.inter] = true; stops.push({ s:s, kind:"sig", inter:c.inter, axis:Math.abs(p.dx) > Math.abs(p.dy) ? "EW" : "NS" }); }
+          else stops.push({ s:s, kind:"yield", c:c });
+        }else stops.push({ s:s, kind:"uncross", c:c });
+      }
+    }
+    if(!inside.rail && inRect(p.x, p.y, RAIL_ROAD)){ inside.rail = true; stops.push({ s:s, kind:"rail" }); }
+  }
+  car.stops = stops;
+}
+function spawnCar(id){
+  var L = LANES[id];
+  for(var i = 0; i < G.cars.length; i++) if(dist(G.cars[i].x, G.cars[i].y, L.x0, L.y0) < 110) return;
+  var turn = Math.random() < CFG.TURN_RATE ? pick(L.inters) : null;
+  var lp = lanePath(id, turn);
+  var car = makeCar(mkPath(lp.pts), pick(VTYPES));
+  if(lp.arc){ car.turnS0 = car.path.cum[lp.arc[0]]; car.turnS1 = car.path.cum[lp.arc[1]]; car.turnInter = turn; }
+  computeStops(car);
+  var p = posAt(car.path, 0); car.x = p.x; car.y = p.y; car.ang = Math.atan2(p.dy, p.dx);
+  G.cars.push(car);
+}
+function spawnAlleyCar(){
+  for(var i = 0; i < G.cars.length; i++) if(G.cars[i].alley && G.cars[i].s < 120) return;
+  var car = makeCar(mkPath(alleyPath()), pick(["car", "car", "van"]));
+  car.alley = true; car.vmax = rnd(46, 58);
+  var p = posAt(car.path, 0); car.x = p.x; car.y = p.y; car.ang = 0;
+  G.cars.push(car);
+}
+
+function pedAheadLimit(car){
+  if(G.state !== "play") return null;
+  var fx = Math.cos(car.ang), fy = Math.sin(car.ang);
+  var rx = G.x - car.x, ry = G.y - car.y;
+  var fwd = rx * fx + ry * fy, lat = Math.abs(-rx * fy + ry * fx);
+  if(lat > car.w / 2 + 12) return null;
+  var see = car.alley ? 44 : ((G.m.time === "night" && !G.reflector) ? 24 : 80);
+  var edge = car.L / 2 + 8;
+  if(fwd > edge && fwd < edge + see) return car.s + (fwd - car.L / 2 - 14);
+  return null;
+}
+function uncrossStop(car, st, d, dt){
+  var c = st.c;
+  var inside = inRect(G.x, G.y, c);
+  if(inside && G.inCross === c.gid && G.crossT > .25) return true;
+  var waiting = !inside && G.state === "play" && rectDist(G.x, G.y, c) < 28;
+  if(waiting && d < 130){
+    if(st.decided === undefined){
+      var p = (G.m.time === "night" && !G.reflector) ? .08 : .62;
+      st.decided = Math.random() < p; st.waitT = 0;
+    }
+    if(st.decided){ st.waitT += dt; if(st.waitT < 6){ car.say = "どうぞ"; return true; } }
+  }
+  return false;
+}
+function updateCar(car, dt){
+  car.say = null;
+  var limit = car.path.len + 500, front = car.s + car.L / 2;
+  for(var i = 0; i < car.stops.length; i++){
+    var st = car.stops[i];
+    if(st.passed) continue;
+    if(front > st.s + 3){ st.passed = true; continue; }
+    var d = st.s - front;
+    if(d > 150) continue;
+    var must = false;
+    if(st.kind === "sig"){ var lt = carLight(st.inter, st.axis); must = (lt === "r") || (lt === "y" && d > 22); }
+    else if(st.kind === "rail") must = RAILS.blocking();
+    else if(st.kind === "uncross") must = uncrossStop(car, st, d, dt);
+    else if(st.kind === "yield") must = G.state === "play" && inRect(G.x, G.y, st.c, 6);
+    if(must) limit = Math.min(limit, st.s - 3 - car.L / 2);
+  }
+  var pl = pedAheadLimit(car);
+  if(pl !== null) limit = Math.min(limit, pl);
+  var fx = Math.cos(car.ang), fy = Math.sin(car.ang), follow = Infinity;
+  for(var j = 0; j < G.cars.length; j++){
+    var o = G.cars[j];
+    if(o === car) continue;
+    var rx = o.x - car.x, ry = o.y - car.y, fwd = rx * fx + ry * fy;
+    if(fwd <= 0 || fwd > 160) continue;
+    if(Math.abs(-rx * fy + ry * fx) > 14) continue;
+    follow = Math.min(follow, car.s + fwd - (car.L / 2 + o.L / 2) - 9);
+  }
+  limit = Math.min(limit, follow);
+  var gap = limit - car.s;
+  var target = gap < .5 ? 0 : Math.min(car.vmax, Math.sqrt(2 * CFG.CAR_DEC * gap));
+  if(target > car.v) car.v = Math.min(target, car.v + CFG.CAR_ACC * dt);
+  else car.v = Math.max(target, car.v - CFG.CAR_DEC * 1.4 * dt);
+  car.s += car.v * dt;
+  if(car.s > follow) car.s = Math.max(car.s - car.v * dt, follow);
+  var p = posAt(car.path, car.s);
+  car.x = p.x; car.y = p.y; car.ang = Math.atan2(p.dy, p.dx);
+  car.stopped = car.v < 4;
+  if(car.turnInter){
+    car.blinkL = car.s + car.L / 2 > car.turnS0 - 150 && car.s < car.turnS1;
+    car.turning = car.s + car.L / 2 > car.turnS0 - 6 && car.s < car.turnS1 + 90;
+  }
+}
+function updateTraffic(dt){
+  for(var id in LANES){
+    G.laneT[id] -= dt;
+    if(G.laneT[id] <= 0){
+      G.laneT[id] = rnd(3.2, 6.4);
+      if(G.cars.length < CFG.MAX_CARS) spawnCar(id);
+    }
+  }
+  G.alleyT -= dt;
+  if(G.alleyT <= 0){ G.alleyT = rnd(6, 10); spawnAlleyCar(); }
+  for(var i = 0; i < G.cars.length; i++) updateCar(G.cars[i], dt);
+  G.cars = G.cars.filter(function(c){ return c.s < c.path.len; });
+}
+
+/* ---------- 踏切 ---------- */
+var RAILS = {
+  state:"idle", t:8, bar:0, tx:-9999, dir:1, bellT:0, lampT:0,
+  blocking:function(){ return this.state !== "idle" || this.bar > .02; }
+};
+function resetRail(){ RAILS.state = "idle"; RAILS.t = rnd(4, 9); RAILS.bar = 0; RAILS.tx = -9999; }
+function updateRail(dt){
+  var R = RAILS;
+  if(R.state === "idle"){ R.t -= dt; if(R.t <= 0){ R.state = "warn"; R.t = 2.8; R.dir = Math.random() < .5 ? 1 : -1; } }
+  else if(R.state === "warn"){ R.t -= dt; if(R.t <= 0){ R.state = "train"; R.tx = R.dir > 0 ? -TRAIN_L - 40 : WW + 40; } }
+  else if(R.state === "train"){
+    R.tx += R.dir * 250 * dt;
+    if(R.dir > 0 ? R.tx > 676 : R.tx + TRAIN_L < 524){ R.state = "clear"; R.t = 1.2; }
+  }else{
+    if(R.tx > -TRAIN_L - 60 && R.tx < WW + 60) R.tx += R.dir * 250 * dt;
+    if(R.state === "clear"){ R.t -= dt; if(R.t <= 0 && R.bar <= .01){ R.state = "idle"; R.t = rnd(13, 21); } }
+  }
+  var want = (R.state === "warn" || R.state === "train") ? 1 : 0;
+  R.bar += clamp(want - R.bar, -dt * 1.1, dt * 1.1);
+  R.lampT += dt;
+  if(R.state !== "idle" || R.bar > .05){
+    R.bellT -= dt;
+    if(R.bellT <= 0){ R.bellT = .42; var dd = dist(G.x, G.y, 600, 1260); if(dd < 560) seBell(1 - dd / 560); }
+  }
+}
+
+/* ---------- ボールのしかけ ---------- */
+function updateBall(dt){
+  if(!G.m.ball) return;
+  var B = G.ball;
+  if(!B){
+    if(!G.ballDone && G.state === "play" && G.x > 466 && G.x < 566 && G.y > 366 && G.y < 402){
+      G.ball = { x:455, y:448, vy:-150, h:0, hv:180, t:0, rot:0, active:true };
+      toast("あっ！ ボールが どうろに！");
+      G.kidSay = 2.2;
+    }
+    return;
+  }
+  B.t += dt;
+  if(B.y > 292){ B.y += B.vy * dt; B.rot += dt * 9; }
+  B.hv -= 620 * dt; B.h += B.hv * dt;
+  if(B.h < 0){ B.h = 0; B.hv = B.y > 292 ? 160 : B.hv * -.35; if(Math.abs(B.hv) > 30) seBall(); }
+  if(B.active && B.t > 3.8){
+    B.active = false; G.ballDone = true;
+    if(!G.ballFail){ G.ballOK = true; G.score += 100; pop(G.x, G.y - 60, "+100", "#d99a00", true); praise("えらい！ ボールは おとなに たのもう"); seOk(); }
+  }
+}
+
+/* ---------- 駐車場のバックする車 ---------- */
+function newRev(){ return { x:REV_SLOT.x, y:REV_SLOT.y, ang:-Math.PI / 2, state:"parked", t:0, cool:0, type:"car", col:"#4a90d9", w:22, L:40, reverse:false, hit:false, beepT:0 }; }
+function updateRev(dt){
+  var R = G.rev;
+  if(R.cool > 0) R.cool -= dt;
+  if(R.state === "parked"){
+    R.reverse = false;
+    if(R.cool <= 0 && G.state === "play" && dist(G.x, G.y, 845, 525) < 118){ R.state = "warn"; R.t = 1.6; toast("バックする くるま！ うしろを とおらないで"); }
+  }else if(R.state === "warn" || R.state === "back"){
+    R.reverse = R.state === "back" || Math.floor(G.t * 4) % 2 === 0;
+    R.beepT -= dt; if(R.beepT <= 0){ R.beepT = .5; if(dist(G.x, G.y, R.x, R.y) < 300) seBeep(); }
+    if(R.state === "warn"){ R.t -= dt; if(R.t <= 0) R.state = "back"; }
+    else { R.y += 34 * dt; if(R.y >= 532){ R.y = 532; R.state = "turn"; R.t = 0; } }
+  }else if(R.state === "turn"){
+    R.reverse = false; R.t += dt;
+    R.ang = lerp(-Math.PI / 2, 0, clamp(R.t, 0, 1)); R.x += 10 * dt;
+    if(R.t >= 1) R.state = "go";
+  }else if(R.state === "go"){
+    R.x += 78 * dt;
+    if(R.x > WW + 60){
+      R.state = "gone"; R.t = 6;
+      if(!R.hit && !G.revOK){ G.revOK = true; G.score += 80; pop(G.x, G.y - 60, "+80", "#d99a00", true); praise("えらい！ まてたね"); seOk(); }
+    }
+  }else if(R.state === "gone"){
+    R.t -= dt;
+    if(R.t <= 0 && dist(G.x, G.y, 845, 520) > 300){ var keep = G.revOK; G.rev = newRev(); G.rev.hit = false; G.revOK = keep; }
+  }
+}
+
+/* ---------- 町の人 ---------- */
+function makeNPCs(){
+  return [
+    { ax:60,  ay:296, bx:500,  by:296, ch:2, sp:30, u:0,   d:1 },
+    { ax:645, ay:420, bx:645,  by:780, ch:3, sp:26, u:.4,  d:1 },
+    { ax:700, ay:906, bx:1160, by:906, ch:0, sp:28, u:.7,  d:-1 },
+    { ax:150, ay:1035,bx:150,  by:1035, ch:5, sp:0, u:0, d:1, still:true },
+    { ax:900, ay:1360,bx:900,  by:1360, ch:4, sp:0, u:0, d:1, circle:true }
+  ];
+}
+function updateNPCs(dt){
+  G.npcs.forEach(function(n){
+    if(n.circle){ n.u += dt * .9; n.x = 960 + Math.cos(n.u) * 150; n.y = 1364 + Math.sin(n.u) * 44; n.dir = Math.sin(n.u) > 0 ? "left" : "right"; n.moving = true; return; }
+    if(n.still){ n.x = n.ax; n.y = n.ay; n.moving = false; n.dir = "down"; return; }
+    var L = dist(n.ax, n.ay, n.bx, n.by);
+    n.u += n.d * n.sp * dt / L;
+    if(n.u > 1){ n.u = 1; n.d = -1; } if(n.u < 0){ n.u = 0; n.d = 1; }
+    n.x = lerp(n.ax, n.bx, n.u); n.y = lerp(n.ay, n.by, n.u); n.moving = true;
+    var dx = (n.bx - n.ax) * n.d, dy = (n.by - n.ay) * n.d;
+    n.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up");
+  });
+}
+
+/* ---------- プレイヤー ---------- */
+var NG = {
+  road:  { t:"どうろに でちゃった！",   tip:"どうろを わたるのは おうだんほどう だけ。ほどうを あるこうね。" },
+  ball:  { t:"ボールを おいかけちゃった！", tip:"ボールが どうろに でても おいかけない。おとなの ひとに とってもらおう。" },
+  signal:{ t:"しんごうが あお じゃないよ", tip:"あおに なるまで まとう。ちかちか したら わたりはじめないよ。" },
+  look:  { t:"みぎ ひだり みた？",       tip:"わたる まえに とまって「みる」ボタン。" + LOOK_ORDER.join(" → ") + " の じゅんばん。" },
+  car:   { t:"あぶない！ くるまだよ",     tip:"くるまが とおりすぎるまで まとう。とまって くれたか よく みてから わたろう。" },
+  carN:  { t:"くるまから みえて なかった！", tip:"よるは くるまから みえにくい。はんしゃざいや あかるい ふくで みつけて もらおう。" },
+  turn:  { t:"まがってきた くるま！",     tip:"しんごうが あおでも、まがって くる くるまが いるよ。うんてんしゅさんと めを あわせよう。" },
+  bike:  { t:"じてんしゃを おりよう",     tip:"おうだんほどうや ふみきりは、じてんしゃから おりて おして わたるよ。" },
+  rail:  { t:"ふみきりが なってるよ！",   tip:"カンカン なったら ぜったいに はいらない。しゃだんきが あがるまで まとう。" },
+  train: { t:"でんしゃが きた！",         tip:"ふみきりの なかで とまらない。なりだしたら いそいで わたりきろう。" },
+  back:  { t:"バックする くるま！",       tip:"ちゅうしゃじょうでは くるまの うしろを とおらない。しろい ライトは バックの あいず。" }
+};
+var PRAISE = ["ナイス かくにん！", "じょうず！", "かんぺき！", "すばらしい！", "たつじん！"];
+
+function isBlockPt(x, y){
+  if(zoneAt(x, y) === BLOCK) return true;
+  var R = G.rev;
+  if((R.state === "parked" || R.state === "warn") && x > R.x - 12 && x < R.x + 12 && y > R.y - 21 && y < R.y + 21) return true;
+  return false;
+}
+function blockedAt(x, y){
+  var r = 8;
+  return isBlockPt(x, y) || isBlockPt(x - r, y) || isBlockPt(x + r, y) || isBlockPt(x, y - r) || isBlockPt(x, y + r);
+}
+function nearestCross(x, y){
+  var best = null, bd = 1e9;
+  CROSS.forEach(function(c){ var d = rectDist(x, y, c); if(d < bd){ bd = d; best = c; } });
+  return best ? { c:best, d:bd } : null;
+}
+// 角では横断歩道が2つ並ぶので、「むいている ほう」を えらぶ
+function facingCross(maxD){
+  var fx = 0, fy = 0, tg = (!G.moving && typeof routeTarget === "function") ? routeTarget() : null;
+  if(tg && dist(tg.x, tg.y, G.x, G.y) > 1){ var tl = dist(tg.x, tg.y, G.x, G.y); fx = (tg.x - G.x) / tl; fy = (tg.y - G.y) / tl; }
+  else if(G.dir === "up") fy = -1; else if(G.dir === "down") fy = 1; else if(G.dir === "left") fx = -1; else fx = 1;
+  var best = null, bs = 1e9;
+  CROSS.forEach(function(c){
+    var d = rectDist(G.x, G.y, c);
+    if(d > maxD) return;
+    var px = clamp(G.x, c.x, c.x + c.w), py = clamp(G.y, c.y, c.y + c.h);
+    var vx = px - G.x, vy = py - G.y, L = Math.sqrt(vx * vx + vy * vy);
+    var dot = L > .01 ? (vx * fx + vy * fy) / L : 1;
+    var score = d - dot * 40;
+    if(score < bs){ bs = score; best = c; }
+  });
+  return best ? { c:best, d:rectDist(G.x, G.y, best) } : null;
+}
+function lookValid(){
+  return G.look <= 0 && G.lookEnd > -50 && (G.t - G.lookEnd) < CFG.LOOK_VALID && dist(G.x, G.y, G.lookX, G.lookY) < CFG.LOOK_DIST;
+}
+function safeSpot(x, y){
+  if(zoneAt(x, y) !== WALK) return false;
+  var d = 11, pts = [[x + d, y], [x - d, y], [x, y + d], [x, y - d]];
+  for(var i = 0; i < 4; i++){ var z = zoneAt(pts[i][0], pts[i][1]); if(z !== WALK && z !== BLOCK) return false; }
+  return true;
+}
+function crossViolation(c){
+  if(G.mode === "bike" && G.onBike && c.type !== "alley") return "bike";
+  if(c.type === "sig" && pedLight(c.inter, c.axis) !== "green") return "signal";
+  if(c.type === "rail" && RAILS.blocking()) return "rail";
+  if(!lookValid()) return "look";
+  return null;
+}
+
+function updatePlayer(dt){
+  if(G.look > 0){ G.look -= dt; if(G.look <= 0){ G.look = 0; G.lookEnd = G.t; } }
+  var ix = INPUT.jx + INPUT.kx, iy = INPUT.jy + INPUT.ky;
+  var mag = Math.sqrt(ix * ix + iy * iy);
+  if(mag > 1){ ix /= mag; iy /= mag; mag = 1; }
+  G.moving = false;
+  if(mag > .06 && G.look <= 0) G.dir = Math.abs(ix) > Math.abs(iy) ? (ix > 0 ? "right" : "left") : (iy > 0 ? "down" : "up");
+  if(mag > .18 && G.look <= 0){
+    var sp = (G.mode === "bike") ? (G.onBike ? CFG.BIKE : CFG.PUSH) : CFG.WALK;
+    sp *= (.35 + .65 * mag);
+    G.dir = Math.abs(ix) > Math.abs(iy) ? (ix > 0 ? "right" : "left") : (iy > 0 ? "down" : "up");
+    var nx = G.x + ix * sp * dt, ny = G.y + iy * sp * dt;
+    if(!blockedAt(nx, G.y)) G.x = nx;
+    if(!blockedAt(G.x, ny)) G.y = ny;
+    G.moving = true;
+    G.walkPh += dt * ((G.mode === "bike" && G.onBike) ? 13 : 10);
+    G.stepT -= dt;
+    if(G.stepT <= 0){
+      G.stepT = .32; seStep();
+      if(!REDUCE && G.parts.length < CFG.MAX_PARTS) G.parts.push({ x:G.x + rnd(-5, 5), y:G.y + 2, vx:rnd(-14, 14), vy:rnd(-22, -6), life:.4, col:"rgba(255,255,255,.75)", r:rnd(1.5, 2.6), g:60 });
+    }
+  }
+  checkZone(dt);
+}
+
+function checkZone(dt){
+  var z = zoneAt(G.x, G.y);
+  if(z === ROAD){ penalty((G.ball && G.ball.active) ? "ball" : "road"); return; }
+  if(z && z.id){
+    if(G.inCross !== z.gid){
+      var v = crossViolation(z);
+      if(v){ penalty(v); return; }
+      G.inCross = z.gid; G.crossObj = z; G.crossT = 0; G.crossEX = G.x; G.crossEY = G.y;
+      G.crossYield = (z.type === "uncross") && carYielding(z);
+    }else G.crossT += dt;
+    return;
+  }
+  if(G.inCross){
+    var c = G.crossObj;
+    var moved = c.walkH ? Math.abs(G.x - G.crossEX) : Math.abs(G.y - G.crossEY);
+    if(moved >= (c.walkH ? c.w : c.h) * .66 && !G.rewarded[G.inCross]){ G.rewarded[G.inCross] = true; crossSuccess(c); }
+    G.inCross = null; G.crossObj = null;
+  }
+  if(safeSpot(G.x, G.y)){ G.safeX = G.x; G.safeY = G.y; }
+}
+
+function crossSuccess(c){
+  G.crossOK[c.type] = (G.crossOK[c.type] || 0) + 1;
+  G.combo++;
+  var pts = 100;
+  G.score += pts;
+  var msg = PRAISE[Math.min(PRAISE.length - 1, G.combo - 1)];
+  if(c.type === "rail") msg = "ふみきり クリア！";
+  if(c.type === "alley") msg = "ミラーで かくにん できたね！";
+  if(c.type === "uncross" && G.crossYield){ msg = "ゆずって もらえたね！"; G.yieldCrossed = true; }
+  praise(msg + "  +" + pts);
+  pop(G.x, G.y - 58, "+" + pts, "#218040", true);
+  seOk(); confetti(G.x, G.y - 40, 22); setFace("happy", 1.2);
+}
+
+function carYielding(c){
+  for(var i = 0; i < G.cars.length; i++){
+    var car = G.cars[i];
+    if(car.say && car.stopped) for(var j = 0; j < car.stops.length; j++){ var st = car.stops[j]; if(st.kind === "uncross" && st.c === c && st.decided) return true; }
+  }
+  return false;
+}
+function mirrorShowsCar(){
+  for(var i = 0; i < G.cars.length; i++){
+    var c = G.cars[i];
+    if(!c.alley) continue;
+    if((c.x > 350 && c.x < 410 && c.y < 1052 && c.y > 960) || (c.y > 960 && c.y < 1020 && c.x > 250)) return true;
+  }
+  return false;
+}
+
+function carHit(car){
+  var rx = G.x - car.x, ry = G.y - car.y;
+  var a = -(car.ang + Math.PI / 2), ca = Math.cos(a), sa = Math.sin(a);
+  var lx = rx * ca - ry * sa, ly = rx * sa + ry * ca;
+  return Math.abs(lx) < car.w / 2 + 4 && Math.abs(ly) < car.L / 2 + 4;
+}
+function checkHits(){
+  for(var i = 0; i < G.cars.length; i++){
+    var c = G.cars[i];
+    if(carHit(c)){
+      var k = c.turning ? "turn" : ((G.m.time === "night" && !G.reflector) ? "carN" : "car");
+      penalty(k); return;
+    }
+  }
+  var R = G.rev;
+  if((R.state === "back" || R.state === "turn" || R.state === "go") && carHit(R)){ R.hit = true; penalty("back"); return; }
+  if(RAILS.tx > -TRAIN_L && RAILS.tx < WW && G.x > RAILS.tx - 6 && G.x < RAILS.tx + TRAIN_L + 6 && G.y > 1240 && G.y < 1280){ penalty("train"); }
+}
+
+function penalty(kind){
+  if(G.state !== "play") return;
+  var key = kind === "carN" ? "car" : kind;
+  G.hearts = Math.max(0, G.hearts - 1);
+  G.miss[key] = (G.miss[key] || 0) + 1; G.missTotal++;
+  G.combo = 0; G.state = "pen"; G.shake = 1; G.danger = 1;
+  resetInput(); setFace("scared", 3);
+  if(kind === "car" || kind === "carN" || kind === "turn" || kind === "back") seHorn(); else seNg();
+  if(kind === "ball") G.ballFail = true;
+  if(kind === "back"){ G.rev = newRev(); G.rev.cool = 3; G.rev.hit = true; }
+  if(typeof onPenalty === "function") onPenalty(kind);
+}
+function resumeAfterPenalty(){
+  if(zoneAt(G.safeX, G.safeY) !== WALK){ G.safeX = G.m.start[0]; G.safeY = G.m.start[1]; }
+  G.x = G.safeX; G.y = G.safeY; G.inCross = null; G.crossObj = null;
+  G.look = 0; G.lookEnd = -99; G.state = "play"; G.danger = 0;
+  setFace("normal", 0);
+}
+
+function doLook(){
+  if(!G || G.state !== "play") return;
+  ensureAudio();
+  G.look = CFG.LOOK_HOLD; G.lookX = G.x; G.lookY = G.y; G.lookEnd = -99;
+  seLook();
+  var nc = facingCross(CFG.LOOK_NEAR);
+  if(!nc){ toast("みちの てまえで つかおう"); return; }
+  var c = nc.c, key = c.gid;
+  if(!G.bonusDone[key] && !G.m.free){
+    G.bonusDone[key] = true;
+    for(var k = 1; k <= 3; k++){
+      var bx, by;
+      if(c.walkH){ bx = c.x + c.w * k / 4; by = clamp(G.y, c.y + 6, c.y + c.h - 6); }
+      else { bx = clamp(G.x, c.x + 6, c.x + c.w - 6); by = c.y + c.h * k / 4; }
+      G.stars.push({ x:bx, y:by, got:false, kind:"bonus" });
+    }
+  }
+}
+function toggleBike(){
+  if(!G || G.state !== "play" || G.mode !== "bike") return;
+  ensureAudio(); seTap(); G.onBike = !G.onBike;
+  if(typeof onBikeChange === "function") onBikeChange();
+}
+
+/* ---------- 演出の部品 ---------- */
+function setFace(f, dur){ G.face = f; G.faceT = dur || 1.2; }
+function pop(x, y, text, col, big){ G.pops.push({ x:x + rnd(-6, 6), y:y, text:text, col:col || "#218040", life:1.3, big:!!big }); }
+function praise(text){ G.flash = { text:text, t:1.8 }; }
+function toast(msg){ G.toastMsg = msg; G.toastT = 2.2; if(typeof onToast === "function") onToast(msg); }
+function burst(x, y, col, n){
+  if(REDUCE || G.parts.length > CFG.MAX_PARTS) return;
+  for(var i = 0; i < n; i++){ var a = Math.random() * TAU, v = rnd(50, 150); G.parts.push({ x:x, y:y, vx:Math.cos(a) * v, vy:Math.sin(a) * v - 40, life:rnd(.4, .85), col:col, r:rnd(2, 4.2), g:400 }); }
+}
+function confetti(x, y, n){
+  if(REDUCE || G.parts.length > CFG.MAX_PARTS) return;
+  var cols = ["#ff6b8a", "#ffc93c", "#5ec9f0", "#7fdc9b", "#c69bff", "#ffffff"];
+  for(var i = 0; i < n; i++) G.parts.push({ x:x + rnd(-40, 40), y:y + rnd(-10, 10), vx:rnd(-90, 90), vy:rnd(-260, -110), life:rnd(1, 1.8), col:pick(cols), r:rnd(2.5, 5.5), rot:Math.random() * TAU, flat:true, g:400 });
+}
+function updateParts(dt){
+  for(var i = G.parts.length - 1; i >= 0; i--){
+    var p = G.parts[i];
+    p.life -= dt; if(p.life <= 0){ G.parts.splice(i, 1); continue; }
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vy += (p.g || 0) * dt;
+    if(p.flat) p.vx *= .985;
+    if(p.rot !== undefined) p.rot += dt * 8;
+  }
+  for(var j = G.pops.length - 1; j >= 0; j--){ var q = G.pops[j]; q.life -= dt; q.y -= dt * 40; if(q.life <= 0) G.pops.splice(j, 1); }
+}
+function resetInput(keepKeys){
+  INPUT.jx = 0; INPUT.jy = 0; INPUT.active = false; INPUT.id = null;
+  if(!keepKeys){ INPUT.kx = 0; INPUT.ky = 0; }
+}
+
+/* ---------- ミッション開始 ---------- */
+function startMission(idx){
+  var m = MISSIONS[idx];
+  if(!STATIC) buildStatic();
+  INTERS.top.off = rnd(0, CYC); INTERS.mid.off = rnd(0, CYC);
+  resetRail();
+  G = {
+    idx:idx, m:m, mode:SAVE.mode, onBike:SAVE.mode === "bike", ch:CHARS[SAVE.char] || CHARS[0],
+    hat:SAVE.hat, color:SAVE.color,
+    x:m.start[0], y:m.start[1], dir:"down", moving:false, walkPh:0, stepT:0,
+    safeX:m.start[0], safeY:m.start[1],
+    camX:0, camY:0, camCX:m.start[0], camCY:m.start[1],
+    t:0, state:"warm", hearts:CFG.HEARTS, score:0, combo:0,
+    miss:{}, missTotal:0, crossOK:{}, rewarded:{}, bonusDone:{},
+    inCross:null, crossObj:null, crossT:0, crossEX:0, crossEY:0, crossYield:false, yieldCrossed:false,
+    look:0, lookEnd:-99, lookX:0, lookY:0,
+    cars:[], laneT:{}, alleyT:1, rev:newRev(), revOK:false,
+    ball:null, ballDone:false, ballOK:false, ballFail:false, kidSay:0,
+    item:m.reflector ? { x:955, y:262, got:false } : null, reflector:false,
+    stars:[], found:0, npcs:makeNPCs(), parts:[], pops:[], bugs:[],
+    face:"normal", faceT:0, shake:0, danger:0, flash:null, toastT:0, toastMsg:"", celeT:0,
+    prompt:null, wantLook:false, introT:5
+  };
+  for(var id in LANES) G.laneT[id] = rnd(0, 3);
+  // ルートぞいの★（しるべ）
+  if(m.route){
+    var acc = 0;
+    for(var i = 1; i < m.route.length; i++){
+      var a = m.route[i - 1], b = m.route[i], L = dist(a[0], a[1], b[0], b[1]);
+      for(var d = 0; d < L; d += 8){
+        acc += 8;
+        if(acc >= 110){
+          var x = lerp(a[0], b[0], d / L), y = lerp(a[1], b[1], d / L);
+          if(zoneAt(x, y) === WALK && dist(x, y, m.start[0], m.start[1]) > 50 && dist(x, y, m.goal[0], m.goal[1]) > 50){ G.stars.push({ x:x, y:y, got:false, kind:"route" }); acc = 0; }
+        }
+      }
+    }
+  }
+  if(m.free) FREE_STARS.forEach(function(p){ G.stars.push({ x:p[0], y:p[1], got:false, kind:"hidden" }); });
+  for(var b2 = 0; b2 < 7; b2++) G.bugs.push({ x:G.x + rnd(-200, 200), y:G.y + rnd(-300, 300), a:Math.random() * TAU, v:rnd(14, 30) });
+  // 交通を先に走らせておく
+  for(var w = 0; w < 120; w++){ G.t += .1; updateTraffic(.1); updateRail(.1); }
+  G.state = "play";
+  updateCamera(1);
+  try{ if(window.WakuwakuAnalytics){ window.WakuwakuAnalytics.startGame({game_id:"/kotsu-safety", game_name:"こうつう あんぜん タウン", game_category:"がくしゅう"}); window.WakuwakuAnalytics.stageStart(m.id); } }catch(e){}
+}
+
+function updateCamera(k){
+  var ix = INPUT.jx + INPUT.kx, iy = INPUT.jy + INPUT.ky;
+  var tx = G.x + ix * 40, ty = G.y + iy * 50;
+  G.camCX += (tx - G.camCX) * k; G.camCY += (ty - G.camCY) * k;
+  G.camX = clamp(G.camCX - VW / 2, 0, WW - VW);
+  G.camY = clamp(G.camCY - VH * .56, 0, WH - VH);
+}
+
+function updateGame(dt){
+  G.t += dt;
+  bgmTick(G.m.time === "night");
+  if(G.toastT > 0) G.toastT -= dt;
+  if(G.shake > 0) G.shake = Math.max(0, G.shake - dt * 2.6);
+  if(G.danger > 0) G.danger = Math.max(0, G.danger - dt * 1.6);
+  if(G.faceT > 0){ G.faceT -= dt; if(G.faceT <= 0) G.face = "normal"; }
+  if(G.flash){ G.flash.t -= dt; if(G.flash.t <= 0) G.flash = null; }
+  if(G.kidSay > 0) G.kidSay -= dt;
+  if(G.introT > 0) G.introT -= dt;
+
+  updateTraffic(dt); updateRail(dt); updateRev(dt); updateNPCs(dt); updateBall(dt); updateParts(dt); updateBugs(dt);
+
+  if(G.state === "play"){
+    updatePlayer(dt);
+    if(G.state === "play") checkHits();
+    if(G.state === "play"){
+      // ★
+      for(var i = 0; i < G.stars.length; i++){
+        var s = G.stars[i];
+        if(!s.got && dist(s.x, s.y, G.x, G.y) < 18){
+          s.got = true; G.found += (s.kind === "hidden") ? 1 : 0;
+          var v = s.kind === "hidden" ? 50 : 10;
+          G.score += v; seStar(); burst(s.x, s.y - 12, s.kind === "hidden" ? "#6cc6ff" : "#ffc93c", 14);
+          pop(s.x, s.y - 30, "+" + v, "#d99a00"); setFace("happy", .6);
+          if(s.kind === "hidden"){ praise("みつけた！ " + G.found + " / " + FREE_STARS.length); if(G.found >= FREE_STARS.length) celebrate(); }
+        }
+      }
+      // はんしゃざい
+      if(G.item && !G.item.got && dist(G.item.x, G.item.y, G.x, G.y) < 22){
+        G.item.got = true; G.reflector = true; seItem(); confetti(G.x, G.y - 40, 26);
+        praise("はんしゃざいを つけたよ！"); toast("ライトが あたると ひかって くるまから みえるよ");
+      }
+      // ゴール
+      if(G.m.goal && G.state === "play" && !G.inCross && dist(G.x, G.y, G.m.goal[0], G.m.goal[1]) < 24) celebrate();
+      computePrompt();
+    }
+  }else if(G.state === "cele"){
+    G.celeT += dt;
+    if(!REDUCE && Math.random() < dt * 6){ burst(G.camX + rnd(60, VW - 60), G.camY + rnd(80, 260), pick(["#ffc93c", "#ff6b8a", "#5ec9f0", "#7fdc9b"]), 20); seFire(); }
+    if(G.celeT > 2.3 && typeof onFinish === "function"){ G.state = "end"; onFinish(); }
+  }
+  updateCamera(Math.min(1, dt * 7));
+}
+
+function updateBugs(dt){
+  G.bugs.forEach(function(b){
+    b.a += rnd(-1.6, 1.6) * dt * 3;
+    b.x += Math.cos(b.a) * b.v * dt; b.y += Math.sin(b.a) * b.v * dt;
+    if(b.x < G.camX - 40) b.x += VW + 80; if(b.x > G.camX + VW + 40) b.x -= VW + 80;
+    if(b.y < G.camY - 40) b.y += VH + 80; if(b.y > G.camY + VH + 40) b.y -= VH + 80;
+  });
+}
+
+function celebrate(){
+  if(G.state !== "play") return;
+  G.state = "cele"; G.celeT = 0; resetInput(); setFace("happy", 99); seGoal();
+  confetti(G.x, G.y - 60, 60);
+}
+
+function turningNear(c){
+  for(var i = 0; i < G.cars.length; i++){
+    var car = G.cars[i];
+    if(car.turnInter === c.inter && (car.blinkL || car.turning) && dist(car.x, car.y, c.cx, c.cy) < 115) return true;
+  }
+  return false;
+}
+// 横断歩道の上にいる車、または近づいてくる車
+function carThreat(c){
+  for(var i = 0; i < G.cars.length; i++){
+    var car = G.cars[i];
+    if(inRect(car.x, car.y, c, 16)) return true;
+    if(car.stopped) continue;
+    var vx = c.cx - car.x, vy = c.cy - car.y, d = Math.sqrt(vx * vx + vy * vy);
+    if(d < 85 && (vx * Math.cos(car.ang) + vy * Math.sin(car.ang)) > 0) return true;
+  }
+  return false;
+}
+function computePrompt(){
+  G.prompt = null; G.wantLook = false;
+  if(G.look > 0) return;
+  var R = G.rev;
+  if((R.state === "warn" || R.state === "back" || R.state === "turn") && dist(G.x, G.y, R.x, R.y) < 130){
+    G.prompt = { text:"バックする くるま！ まとう", col:"#e2574c" }; return;
+  }
+  if(G.inCross) return;
+  var nc = facingCross(24);
+  if(!nc) return;
+  var c = nc.c, text, col = "#2d6fd0";
+  if(G.mode === "bike" && G.onBike && c.type !== "alley"){ text = "じてんしゃを おりよう"; col = "#8e6fc4"; }
+  else if(c.type === "sig" && pedLight(c.inter, c.axis) !== "green"){ text = "あお まで まとう"; col = "#e2574c"; }
+  else if(c.type === "rail" && RAILS.blocking()){ text = "カンカン… まとう"; col = "#e2574c"; }
+  else if(!lookValid()){ text = "「みる」を おそう"; G.wantLook = true; }
+  else if(c.type === "sig" && turningNear(c)){ text = "まがる くるまが いるよ！"; col = "#e2574c"; }
+  else if(c.type === "sig" && carThreat(c)){ text = "くるまが とおるよ まとう"; col = "#e2574c"; }
+  else if(c.type === "uncross"){
+    if(carYielding(c)){ text = "とまって くれた！ わたろう"; col = "#218040"; }
+    else if(carThreat(c)){ text = "くるまが くるよ まとう"; col = "#e2574c"; }
+    else { text = "くるま なし！ わたろう"; col = "#218040"; }
+  }
+  else if(c.type === "alley"){
+    if(mirrorShowsCar()){ text = "ミラーに くるま！ まとう"; col = "#e2574c"; }
+    else if(carThreat(c)){ text = "くるまが くるよ まとう"; col = "#e2574c"; }
+    else { text = "ミラーを みて わたろう"; col = "#218040"; }
+  }
+  else { text = "わたろう！"; col = "#218040"; }
+  G.prompt = { text:text, col:col };
+}
+
+/* =====================================================================
+   40 RENDER ― 毎フレームの描画
+   ===================================================================== */
+var VW = 400, VH = 620;
+var cv = null, ctx = null, GLOW = null;
+
+function unitGlow(c, inner, outer){
+  var g = c.createRadialGradient(0, 0, 0, 0, 0, 1);
+  g.addColorStop(0, inner); g.addColorStop(1, outer);
+  return g;
+}
+function initGlow(){
+  GLOW = {
+    lamp: unitGlow(ctx, "rgba(255,232,160,.55)", "rgba(255,232,160,0)"),
+    head: unitGlow(ctx, "rgba(255,246,210,.5)",  "rgba(255,246,210,0)"),
+    red:  unitGlow(ctx, "rgba(255,70,60,.55)",   "rgba(255,70,60,0)"),
+    grn:  unitGlow(ctx, "rgba(90,255,130,.5)",   "rgba(90,255,130,0)"),
+    amb:  unitGlow(ctx, "rgba(200,220,255,.22)", "rgba(200,220,255,0)"),
+    star: unitGlow(ctx, "rgba(255,220,90,.55)",  "rgba(255,220,90,0)"),
+    cloud:unitGlow(ctx, "rgba(20,40,60,.12)",    "rgba(20,40,60,0)"),
+    vest: unitGlow(ctx, "rgba(240,255,120,.9)",  "rgba(240,255,120,0)")
+  };
+}
+function glowAt(c, g, x, y, r, sy){
+  c.save(); c.translate(x, y); c.scale(r, r * (sy || 1));
+  c.fillStyle = g; c.beginPath(); c.arc(0, 0, 1, 0, TAU); c.fill(); c.restore();
+}
+
+function lookDirVec(){
+  var pr = 1 - G.look / CFG.LOOK_HOLD;
+  var first = pr < .34 || pr >= .67 ? 1 : -1;            // みぎ→ひだり→みぎ
+  if(!CFG.LEFT_HAND) first *= -1;
+  var rx = 0, ry = 0;
+  if(G.dir === "up"){ rx = 1; } else if(G.dir === "down"){ rx = -1; } else if(G.dir === "left"){ ry = -1; } else { ry = 1; }
+  return { x:rx * first, y:ry * first, head:(G.dir === "down" ? -1 : 1) * first * (G.dir === "left" || G.dir === "right" ? 0 : 1) };
+}
+
+function routeTarget(){
+  var m = G.m;
+  if(m.free){
+    var best = null, bd = 1e9;
+    G.stars.forEach(function(s){ if(!s.got && s.kind === "hidden"){ var d = dist(s.x, s.y, G.x, G.y); if(d < bd){ bd = d; best = s; } } });
+    return best ? { x:best.x, y:best.y, k:-1 } : null;
+  }
+  if(G.item && !G.item.got) return { x:G.item.x, y:G.item.y, k:0, t:0 };
+  var R = m.route, bk = 0, bd2 = 1e9, bt = 0;
+  for(var i = 0; i < R.length - 1; i++){
+    var ax = R[i][0], ay = R[i][1], bx = R[i + 1][0], by = R[i + 1][1];
+    var vx = bx - ax, vy = by - ay, L2 = vx * vx + vy * vy || 1;
+    var t = clamp(((G.x - ax) * vx + (G.y - ay) * vy) / L2, 0, 1);
+    var d = dist(G.x, G.y, ax + vx * t, ay + vy * t);
+    if(d < bd2 - 1){ bd2 = d; bk = i; bt = t; }
+  }
+  var nxt = R[Math.min(R.length - 1, bk + 1)];
+  if(dist(G.x, G.y, nxt[0], nxt[1]) < 20 && bk + 2 < R.length) nxt = R[bk + 2];
+  return { x:nxt[0], y:nxt[1], k:bk, t:bt };
+}
+
+function draw(){
+  var c = ctx;
+  c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  var shk = (G.shake > 0 && !REDUCE) ? (Math.random() - .5) * 10 * G.shake : 0;
+  var cx = Math.round(G.camX * 2) / 2, cy = Math.round(G.camY * 2) / 2;
+  var X0 = cx - 90, X1 = cx + VW + 90, Y0 = cy - 120, Y1 = cy + VH + 120;
+  function vis(x, y){ return x > X0 && x < X1 && y > Y0 && y < Y1; }
+  var night = G.m.time === "night", eve = G.m.time === "eve";
+
+  c.save(); c.translate(-cx + shk, -cy + shk * .5);
+  var S = STATIC.s;
+  c.drawImage(STATIC.cv, cx * S, cy * S, VW * S, VH * S, cx, cy, VW, VH);
+
+  // ---- うごく地面のもの ----
+  if(vis(358, 668)){
+    for(var f = 0; f < 3; f++){ var rr0 = ((G.t * 14 + f * 7) % 20); c.strokeStyle = "rgba(255,255,255," + (.6 - rr0 / 34) + ")"; c.lineWidth = 1.5; c.beginPath(); c.arc(358, 668, 7 + rr0, 0, TAU); c.stroke(); }
+    for(var d0 = 0; d0 < 10; d0++){ var a0 = d0 * TAU / 10 + G.t * .6, h0 = Math.abs(Math.sin(G.t * 4 + d0)) * 10; c.fillStyle = "rgba(220,245,255,.9)"; c.beginPath(); c.arc(358 + Math.cos(a0) * 9, 668 + Math.sin(a0) * 6 - h0, 1.6, 0, TAU); c.fill(); }
+  }
+  if(vis(150, 610)){
+    var dkx = 150 + Math.cos(G.t * .35) * 46, dky = 610 + Math.sin(G.t * .35) * 22;
+    c.strokeStyle = "rgba(255,255,255,.5)"; c.lineWidth = 1.2; c.beginPath(); c.ellipse(dkx, dky + 3, 11, 4, 0, 0, TAU); c.stroke();
+    var fl = Math.sin(G.t * .35) > 0 ? -1 : 1;
+    c.fillStyle = "#fff6c8"; c.beginPath(); c.ellipse(dkx, dky, 8, 5.5, 0, 0, TAU); c.fill();
+    c.fillStyle = "#ffe066"; c.beginPath(); c.arc(dkx + 6 * fl, dky - 5, 4, 0, TAU); c.fill();
+    c.fillStyle = "#ff9d2e"; c.beginPath(); c.moveTo(dkx + 9 * fl, dky - 5); c.lineTo(dkx + 13 * fl, dky - 4); c.lineTo(dkx + 9 * fl, dky - 3); c.fill();
+  }
+  // ガイドの光の点
+  var tgt = routeTarget();
+  if(tgt && !G.m.free && G.state === "play"){
+    var R = G.m.route, k = tgt.k, pts = [];
+    var sx = lerp(R[k][0], R[k + 1][0], tgt.t), sy2 = lerp(R[k][1], R[k + 1][1], tgt.t);
+    var acc = 0, step = 22, travel = 300, seg = k, px = sx, py = sy2;
+    while(acc < travel && seg < R.length - 1){
+      var ex = R[seg + 1][0], ey = R[seg + 1][1], L = dist(px, py, ex, ey);
+      if(L < 1){ seg++; continue; }
+      var mv = Math.min(step, L);
+      px += (ex - px) * mv / L; py += (ey - py) * mv / L; acc += mv;
+      if(mv === L) seg++;
+      pts.push([px, py, acc]);
+    }
+    pts.forEach(function(p){
+      var a = (.55 + .45 * Math.max(0, Math.sin((p[2] - G.t * 90) / 30))) * (1 - p[2] / (travel + 40));
+      c.fillStyle = "rgba(255,255,255," + a + ")"; c.beginPath(); c.arc(p[0], p[1], 5, 0, TAU); c.fill();
+      c.fillStyle = "rgba(255,157,46," + a + ")"; c.beginPath(); c.arc(p[0], p[1], 3.4, 0, TAU); c.fill();
+    });
+  }
+  // ゴールの わ
+  if(G.m.goal && vis(G.m.goal[0], G.m.goal[1])){
+    var gx = G.m.goal[0], gy = G.m.goal[1], pr = (G.t * .8) % 1;
+    c.strokeStyle = "rgba(255,201,60," + (1 - pr) + ")"; c.lineWidth = 3;
+    c.beginPath(); c.ellipse(gx, gy, 16 + pr * 18, (16 + pr * 18) * .55, 0, 0, TAU); c.stroke();
+    c.fillStyle = "rgba(255,214,90,.35)"; c.beginPath(); c.ellipse(gx, gy, 20, 11, 0, 0, TAU); c.fill();
+  }
+
+  // ---- くるま・でんしゃ・ボール ----
+  G.cars.forEach(function(car){ if(vis(car.x, car.y)) drawCar(c, car, G.t); });
+  if(vis(G.rev.x, G.rev.y)) drawCar(c, G.rev, G.t);
+  if(RAILS.tx > -TRAIN_L - 60 && RAILS.tx < WW + 60 && 1260 > Y0 && 1260 < Y1){
+    var ts = trainSprite();
+    c.fillStyle = "rgba(10,20,30,.25)"; rr(c, RAILS.tx + 4, 1250, TRAIN_L, 30, 6); c.fill();
+    c.save();
+    if(RAILS.dir > 0){ c.drawImage(ts.cv, RAILS.tx - 4, 1240, TRAIN_L + 8, 40); }
+    else { c.translate(RAILS.tx + TRAIN_L, 1240); c.scale(-1, 1); c.drawImage(ts.cv, -4, 0, TRAIN_L + 8, 40); }
+    c.restore();
+  }
+  if(G.ball && vis(G.ball.x, G.ball.y)){
+    c.fillStyle = "rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(G.ball.x, G.ball.y + 2, 6, 2.5, 0, 0, TAU); c.fill();
+    drawBall(c, G.ball.x, G.ball.y - G.ball.h * .25 - 5, 6, G.ball.rot);
+  }
+  if(vis(600, 1260)) drawRailGates(c);
+
+  // ---- 高さのあるもの（足元のYで並べて描く） ----
+  var list = [];
+  TREES.forEach(function(t){ if(vis(t.x, t.y)) list.push({ y:t.y, f:function(){ drawTree(c, t, G.t); } }); });
+  LAMPS.forEach(function(L){ if(vis(L[0], L[1])) list.push({ y:L[1], f:function(){ drawLamp(c, L[0], L[1], night); } }); });
+  ["top", "mid"].forEach(function(k){
+    var I = INTERS[k];
+    [[I.x - 52, I.y - 40, "EW"], [I.x + 52, I.y - 40, "NS"], [I.x - 52, I.y + 52, "NS"], [I.x + 52, I.y + 52, "EW"]].forEach(function(p){
+      if(vis(p[0], p[1])) list.push({ y:p[1], f:function(){ drawCarSignal(c, p[0], p[1], carLight(k, p[2])); } });
+    });
+  });
+  G.npcs.forEach(function(n){ if(vis(n.x, n.y)) list.push({ y:n.y, f:function(){ drawChar(c, CHARS[n.ch], n.x, n.y, .7, { dir:n.dir, moving:n.moving, walk:G.t * 8 + n.ax, t:G.t }); } }); });
+  if(G.m.ball && vis(480, 460)){
+    var kf = G.kidSay > 0 ? "scared" : "happy";
+    list.push({ y:458, f:function(){ drawChar(c, CHARS[1], 470, 458, .66, { dir:"up", t:G.t, face:kf }); } });
+    list.push({ y:470, f:function(){ drawChar(c, CHARS[4], 506, 470, .66, { dir:"left", t:G.t + 1, face:kf }); } });
+  }
+  G.stars.forEach(function(s){ if(!s.got && vis(s.x, s.y)) list.push({ y:s.y, f:function(){ drawStar(c, s.x, s.y - 14 + Math.sin(G.t * 2 + s.x) * 3, s.kind === "hidden" ? 11 : 8.5, G.t, s.kind === "hidden" ? "blue" : null); } }); });
+  if(G.item && !G.item.got && vis(G.item.x, G.item.y)) list.push({ y:G.item.y, f:function(){ drawReflector(c, G.item.x, G.item.y - 14 + Math.sin(G.t * 3) * 3, G.t); } });
+  if(G.m.goal && vis(G.m.goal[0], G.m.goal[1])) list.push({ y:G.m.goal[1] - 1, f:function(){ drawGoalFlag(c, G.m.goal[0], G.m.goal[1]); } });
+  var lookV = G.look > 0 ? lookDirVec() : null;
+  var jump = G.state === "cele" ? Math.abs(Math.sin(G.celeT * 7)) * 18 : 0;
+  list.push({ y:G.y, f:function(){
+    drawChar(c, G.ch, G.x, G.y - jump, .8, {
+      dir:G.dir, moving:G.moving, walk:G.walkPh, t:G.t, face:G.face, look:lookV ? lookV.head : 0,
+      ride:(G.mode === "bike" && G.onBike), hold:(G.mode === "bike" && !G.onBike),
+      helmet:(G.mode === "bike"), bag:!!G.m.bag, vest:G.reflector, hat:G.hat, color:G.color
+    });
+  } });
+  list.sort(function(a, b){ return a.y - b.y; });
+  list.forEach(function(o){ o.f(); });
+
+  // カーブミラー（木の上に出す）
+  if(vis(MIRROR.x, MIRROR.y)) drawMirror(c);
+  // 近くの歩行者信号を大きく見せる
+  var nc = facingCross(110);
+  if(nc && nc.c.type === "sig"){
+    var k2 = nc.c, st = pedLight(k2.inter, k2.axis), bl = Math.floor(G.t * 4) % 2 === 0, fx2, fy2;
+    if(k2.walkH){ fx2 = G.x < k2.cx ? k2.x + k2.w + 16 : k2.x - 16; fy2 = k2.y - 30; }
+    else { fx2 = k2.x + k2.w + 22; fy2 = G.y < k2.cy ? k2.y + k2.h - 4 : k2.y - 30; }
+    c.fillStyle = "#6a7184"; c.fillRect(fx2 - 2, fy2 + 18, 4, 30);
+    drawPedSignal(c, fx2, fy2, st, bl, .82);
+  }
+
+  // ---- ちょうちょ・ほたる ----
+  G.bugs.forEach(function(b){
+    if(night){ c.fillStyle = "rgba(220,255,140," + (.5 + .4 * Math.sin(G.t * 3 + b.a)) + ")"; c.beginPath(); c.arc(b.x, b.y, 2, 0, TAU); c.fill(); return; }
+    var fw = Math.sin(G.t * 16 + b.a) * .5 + .6;
+    c.fillStyle = "rgba(255,255,255,.9)";
+    c.beginPath(); c.ellipse(b.x - 2.6, b.y, 2.6 * fw, 3.4, .3, 0, TAU); c.fill();
+    c.beginPath(); c.ellipse(b.x + 2.6, b.y, 2.6 * fw, 3.4, -.3, 0, TAU); c.fill();
+    c.fillStyle = "#ffb0c8";
+    c.beginPath(); c.ellipse(b.x - 2.6, b.y, 1.5 * fw, 2.1, .3, 0, TAU); c.fill();
+    c.beginPath(); c.ellipse(b.x + 2.6, b.y, 1.5 * fw, 2.1, -.3, 0, TAU); c.fill();
+  });
+
+  // ---- ライティング ----
+  if(!night && !eve){
+    for(var cl = 0; cl < 3; cl++){
+      var cxw = ((G.t * 9 + cl * 520) % (WW + 600)) - 300, cyw = cy + 120 + cl * 180;
+      glowAt(c, GLOW.cloud, cxw, cyw, 170, .55);
+    }
+  }
+  if(eve){
+    c.fillStyle = "rgba(255,128,48,.2)"; c.fillRect(cx - 20, cy - 20, VW + 40, VH + 40);
+    c.save(); c.globalCompositeOperation = "lighter";
+    LAMPS.forEach(function(L){ if(vis(L[0], L[1])) glowAt(c, GLOW.lamp, L[0], L[1] - 46, 34); });
+    c.restore();
+  }
+  if(night){
+    c.fillStyle = "rgba(8,14,48,.62)"; c.fillRect(cx - 20, cy - 20, VW + 40, VH + 40);
+    c.save(); c.globalCompositeOperation = "lighter";
+    glowAt(c, GLOW.amb, G.x, G.y - 16, 70);
+    LAMPS.forEach(function(L){ if(vis(L[0], L[1])){ glowAt(c, GLOW.lamp, L[0], L[1] - 48, 28); glowAt(c, GLOW.lamp, L[0], L[1] - 10, 80, .6); } });
+    WINDOWS.forEach(function(w){ if(vis(w.x, w.y)){ c.fillStyle = "rgba(255,214,120,.55)"; c.fillRect(w.x, w.y, w.w, w.h); glowAt(c, GLOW.lamp, w.x + w.w / 2, w.y + w.h / 2, w.w * .9, .6); } });
+    var allCars = G.cars.concat([G.rev]);
+    var lit = false;
+    allCars.forEach(function(car){
+      if(!vis(car.x, car.y)) return;
+      var fx = Math.cos(car.ang), fy = Math.sin(car.ang);
+      if(car.reverse){ fx = -fx; fy = -fy; }
+      var hx = car.x + fx * (car.L / 2 + 30), hy = car.y + fy * (car.L / 2 + 30);
+      glowAt(c, GLOW.head, hx, hy, 46);
+      glowAt(c, GLOW.red, car.x - fx * car.L / 2, car.y - fy * car.L / 2, car.stopped ? 16 : 9);
+      if(G.reflector && dist(hx, hy, G.x, G.y) < 90) lit = true;
+    });
+    G.stars.forEach(function(s){ if(!s.got && vis(s.x, s.y)) glowAt(c, GLOW.star, s.x, s.y - 14, 22); });
+    if(G.item && !G.item.got) glowAt(c, GLOW.vest, G.item.x, G.item.y - 14, 26 + Math.sin(G.t * 4) * 4);
+    if(lit){ glowAt(c, GLOW.vest, G.x, G.y - 18, 26 + Math.sin(G.t * 20) * 4); }
+    if(vis(600, 1260) && (RAILS.state !== "idle" || RAILS.bar > .05)){
+      var on = Math.floor(RAILS.lampT * 2.4) % 2;
+      glowAt(c, GLOW.red, on ? 528 : 540, 1214, 22); glowAt(c, GLOW.red, on ? 672 : 660, 1300, 22);
+    }
+    ["top", "mid"].forEach(function(k){ var I = INTERS[k]; if(vis(I.x, I.y)) glowAt(c, GLOW.grn, I.x, I.y, 50, .5); });
+    c.restore();
+  }
+
+  // ---- ふきだし・案内 ----
+  G.cars.forEach(function(car){ if(car.say && vis(car.x, car.y)) bubble(c, car.x, car.y - 34, car.say, "#2fb355", 12); });
+  if(G.kidSay > 0) bubble(c, 488, 418, "あっ！ ボールが！", "#e2574c", 12);
+  if(G.prompt && G.state === "play") bubble(c, G.x, G.y - 64 + Math.sin(G.t * 5) * 2, G.prompt.text, G.prompt.col, 14);
+  if(G.look > 0 && lookV){
+    var word = LOOK_ORDER[Math.min(2, Math.floor((1 - G.look / CFG.LOOK_HOLD) * 3))];
+    bubble(c, G.x, G.y - 66, word + " よし！", "#2d6fd0", 15);
+    arrowAt(c, G.x + lookV.x * 34, G.y - 22 + lookV.y * 30, Math.atan2(lookV.y, lookV.x), "#2d6fd0", 1.1);
+  }else if(tgt && G.state === "play" && !G.prompt){
+    var ang = Math.atan2(tgt.y - G.y, tgt.x - G.x);
+    var bob = Math.sin(G.t * 5) * 3;
+    arrowAt(c, G.x + Math.cos(ang) * (30 + bob), G.y - 18 + Math.sin(ang) * (26 + bob), ang, G.m.free ? "#2f8ad6" : "#ff9d2e", .9);
+  }
+  G.parts.forEach(function(p){
+    c.globalAlpha = clamp(p.life * 1.5, 0, 1); c.fillStyle = p.col;
+    if(p.flat){ c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.fillRect(-p.r, -p.r * .5, p.r * 2, p.r); c.restore(); }
+    else { c.beginPath(); c.arc(p.x, p.y, p.r, 0, TAU); c.fill(); }
+  });
+  c.globalAlpha = 1;
+  G.pops.forEach(function(q){
+    c.globalAlpha = clamp(q.life * 1.4, 0, 1);
+    c.font = fnt(900, q.big ? 22 : 16); c.textAlign = "center"; c.textBaseline = "middle";
+    c.lineWidth = 5; c.strokeStyle = "#fff"; c.strokeText(q.text, q.x, q.y);
+    c.fillStyle = q.col; c.fillText(q.text, q.x, q.y);
+  });
+  c.globalAlpha = 1;
+  c.restore();
+
+  // ---- 画面に固定するもの ----
+  if(G.danger > 0){
+    var dg = c.createRadialGradient(VW / 2, VH / 2, VH * .25, VW / 2, VH / 2, VH * .72);
+    dg.addColorStop(0, "rgba(255,0,0,0)"); dg.addColorStop(1, "rgba(255,30,30," + (.5 * G.danger) + ")");
+    c.fillStyle = dg; c.fillRect(0, 0, VW, VH);
+  }
+  if(tgt && G.state === "play"){
+    var sx3 = tgt.x - cx, sy3 = tgt.y - cy;
+    if(sx3 < 10 || sx3 > VW - 10 || sy3 < 10 || sy3 > VH - 10){
+      var a3 = Math.atan2(sy3 - VH / 2, sx3 - VW / 2);
+      var ex2 = clamp(VW / 2 + Math.cos(a3) * 400, 26, VW - 26), ey2 = clamp(VH / 2 + Math.sin(a3) * 400, 150, VH - 30);
+      c.fillStyle = "rgba(255,255,255,.92)"; c.beginPath(); c.arc(ex2, ey2, 17, 0, TAU); c.fill();
+      c.strokeStyle = G.m.free ? "#2f8ad6" : "#ff9d2e"; c.lineWidth = 3; c.stroke();
+      arrowAt(c, ex2, ey2, a3, G.m.free ? "#2f8ad6" : "#ff9d2e", .8);
+    }
+  }
+  if(G.flash){
+    var fa = clamp(G.flash.t * 1.7, 0, 1);
+    c.globalAlpha = fa;
+    c.font = fnt(900, 18);
+    var bw = Math.min(VW - 30, c.measureText(G.flash.text).width + 40), bx2 = (VW - bw) / 2, by2 = 150;
+    var g3 = c.createLinearGradient(0, by2, 0, by2 + 42);
+    g3.addColorStop(0, "#ffffff"); g3.addColorStop(1, "#e9fff0");
+    c.fillStyle = g3; rr(c, bx2, by2, bw, 42, 16); c.fill();
+    c.strokeStyle = "rgba(33,128,64,.4)"; c.lineWidth = 2.4; c.stroke();
+    c.fillStyle = "#218040"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(G.flash.text, VW / 2, by2 + 22);
+    c.globalAlpha = 1;
+  }
+  if(G.introT > 0 && G.state === "play"){
+    var ia = clamp(G.introT, 0, 1);
+    c.globalAlpha = ia;
+    c.fillStyle = "rgba(27,37,80,.82)"; rr(c, 14, 12, VW - 132, 56, 14); c.fill();
+    c.fillStyle = "#fff"; c.font = fnt(900, 16); c.textAlign = "left"; c.textBaseline = "middle";
+    c.fillText(G.m.name + "！", 28, 31);
+    c.font = fnt(700, 11.5); c.fillStyle = "#ffe9a8";
+    c.fillText(G.m.free ? "あおい ★を さがそう" : "ひかる みちと やじるしを たどってね", 28, 52);
+    c.globalAlpha = 1;
+  }
+  drawMinimap(c);
+  if(INPUT.active){
+    c.fillStyle = "rgba(255,255,255,.22)"; c.beginPath(); c.arc(INPUT.bx, INPUT.by, 46, 0, TAU); c.fill();
+    c.strokeStyle = "rgba(255,255,255,.7)"; c.lineWidth = 3; c.stroke();
+    var kg = c.createRadialGradient(INPUT.bx + INPUT.jx * 40 - 6, INPUT.by + INPUT.jy * 40 - 6, 2, INPUT.bx + INPUT.jx * 40, INPUT.by + INPUT.jy * 40, 22);
+    kg.addColorStop(0, "#ffffff"); kg.addColorStop(1, "#ffd9a8");
+    c.fillStyle = kg; c.beginPath(); c.arc(INPUT.bx + INPUT.jx * 40, INPUT.by + INPUT.jy * 40, 21, 0, TAU); c.fill();
+  }else if(!INPUT.used && G.state === "play"){
+    var ga = .5 + .3 * Math.sin(G.t * 3), hxp = 90 + Math.sin(G.t * 2) * 24;
+    c.globalAlpha = ga;
+    c.strokeStyle = "#fff"; c.lineWidth = 3; c.beginPath(); c.arc(90, VH - 110, 44, 0, TAU); c.stroke();
+    c.fillStyle = "#fff"; c.beginPath(); c.arc(hxp, VH - 110, 18, 0, TAU); c.fill();
+    c.globalAlpha = 1;
+    c.font = fnt(900, 13); c.textAlign = "center"; c.lineWidth = 4; c.strokeStyle = "rgba(27,37,80,.7)";
+    c.strokeText("ゆびで ドラッグして うごこう", 140, VH - 46); c.fillStyle = "#fff"; c.fillText("ゆびで ドラッグして うごこう", 140, VH - 46);
+  }
+  var vg = c.createLinearGradient(0, 0, 0, VH);
+  vg.addColorStop(0, "rgba(16,24,52,.16)"); vg.addColorStop(.12, "rgba(16,24,52,0)");
+  vg.addColorStop(.9, "rgba(16,24,52,0)"); vg.addColorStop(1, "rgba(16,24,52,.16)");
+  c.fillStyle = vg; c.fillRect(0, 0, VW, VH);
+}
+
+function drawMinimap(c){
+  var x = VW - 104, y = 8, w = 96, h = 128;
+  c.fillStyle = "rgba(0,0,0,.25)"; rr(c, x + 2, y + 3, w + 4, h + 4, 10); c.fill();
+  c.fillStyle = "#fff"; rr(c, x - 2, y - 2, w + 4, h + 4, 10); c.fill();
+  c.save(); rr(c, x, y, w, h, 8); c.clip();
+  c.drawImage(MINI.cv, x, y, w, h);
+  if(G.m.time === "night"){ c.fillStyle = "rgba(10,16,50,.45)"; c.fillRect(x, y, w, h); }
+  c.strokeStyle = "rgba(255,255,255,.9)"; c.lineWidth = 1.2;
+  c.strokeRect(x + G.camX / WW * w, y + G.camY / WH * h, VW / WW * w, VH / WH * h);
+  if(G.m.route){
+    c.strokeStyle = "rgba(255,157,46,.9)"; c.lineWidth = 2; c.setLineDash([3, 2]);
+    c.beginPath(); G.m.route.forEach(function(p, i){ var mx = x + p[0] / WW * w, my = y + p[1] / WH * h; if(i) c.lineTo(mx, my); else c.moveTo(mx, my); }); c.stroke(); c.setLineDash([]);
+  }
+  if(G.m.goal){ drawStar(c, x + G.m.goal[0] / WW * w, y + G.m.goal[1] / WH * h, 6, G.t); }
+  if(G.m.free) G.stars.forEach(function(s){ if(s.got){ c.fillStyle = "#2f8ad6"; c.beginPath(); c.arc(x + s.x / WW * w, y + s.y / WH * h, 2.2, 0, TAU); c.fill(); } });
+  var pu = 3.4 + Math.sin(G.t * 6) * .8;
+  c.fillStyle = "#ff3b6b"; c.strokeStyle = "#fff"; c.lineWidth = 1.5;
+  c.beginPath(); c.arc(x + G.x / WW * w, y + G.y / WH * h, pu, 0, TAU); c.fill(); c.stroke();
+  c.restore();
+  if(G.m.free){
+    c.fillStyle = "#2f8ad6"; rr(c, x, y + h + 6, w, 20, 8); c.fill();
+    c.fillStyle = "#fff"; c.font = fnt(900, 12); c.textAlign = "center"; c.textBaseline = "middle";
+    c.fillText("★ " + G.found + " / " + FREE_STARS.length, x + w / 2, y + h + 16);
+  }
+}
+
+function bubble(c, x, y, text, col, px){
+  px = px || 14;
+  c.font = fnt(900, px);
+  var w = c.measureText(text).width + 24, h = px + 16;
+  c.fillStyle = "rgba(0,0,0,.15)"; rr(c, x - w / 2 + 2, y - h / 2 + 3, w, h, h / 2); c.fill();
+  c.fillStyle = "rgba(255,255,255,.97)"; rr(c, x - w / 2, y - h / 2, w, h, h / 2); c.fill();
+  c.strokeStyle = col; c.lineWidth = 2.4; c.stroke();
+  c.beginPath(); c.moveTo(x - 6, y + h / 2 - 1); c.lineTo(x, y + h / 2 + 8); c.lineTo(x + 6, y + h / 2 - 1);
+  c.fillStyle = "rgba(255,255,255,.97)"; c.fill();
+  c.fillStyle = col; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(text, x, y + 1);
+}
+function arrowAt(c, x, y, ang, col, k){
+  c.save(); c.translate(x, y); c.rotate(ang); c.scale(k, k);
+  c.fillStyle = "rgba(0,0,0,.2)"; c.beginPath(); c.moveTo(14, 2); c.lineTo(-6, -9); c.lineTo(-2, 2); c.lineTo(-6, 13); c.closePath(); c.fill();
+  c.fillStyle = col; c.strokeStyle = "#fff"; c.lineWidth = 2.6; c.lineJoin = "round";
+  c.beginPath(); c.moveTo(13, 0); c.lineTo(-7, -11); c.lineTo(-3, 0); c.lineTo(-7, 11); c.closePath(); c.stroke(); c.fill();
+  c.restore();
+}
+function drawLamp(c, x, y, night){
+  c.fillStyle = "rgba(0,0,0,.18)"; c.beginPath(); c.ellipse(x + 3, y + 1, 5, 2.4, 0, 0, TAU); c.fill();
+  c.fillStyle = "#7d8498"; c.fillRect(x - 2, y - 46, 4, 46);
+  c.fillStyle = "#5d6478"; rr(c, x - 9, y - 52, 18, 7, 3); c.fill();
+  c.fillStyle = night ? "#fff6c8" : "#e8eef7"; rr(c, x - 7, y - 46, 14, 3, 1.5); c.fill();
+}
+function drawMirror(c){
+  var x = MIRROR.x, y = MIRROR.y;
+  c.fillStyle = "rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(x + 3, y + 1, 5, 2.4, 0, 0, TAU); c.fill();
+  c.fillStyle = "#ff8f3c"; c.fillRect(x - 2, y - 36, 4, 36);
+  var hx = x, hy = y - 48;
+  c.fillStyle = "#ff8f3c"; c.beginPath(); c.arc(hx, hy, 17, 0, TAU); c.fill();
+  var g = c.createRadialGradient(hx - 5, hy - 5, 2, hx, hy, 14);
+  g.addColorStop(0, "#ffffff"); g.addColorStop(1, "#a9c6d8");
+  c.fillStyle = g; c.beginPath(); c.arc(hx, hy, 13, 0, TAU); c.fill();
+  c.save(); c.beginPath(); c.arc(hx, hy, 13, 0, TAU); c.clip();
+  c.fillStyle = "#8d929b"; c.beginPath(); c.moveTo(hx - 3, hy - 13); c.lineTo(hx + 3, hy - 13); c.lineTo(hx + 9, hy + 13); c.lineTo(hx - 9, hy + 13); c.closePath(); c.fill();
+  G.cars.forEach(function(car){
+    if(!car.alley) return;
+    var near = -1;
+    if(car.x > 350 && car.x < 410 && car.y < 1052 && car.y > 960) near = clamp((car.y - 990) / 60, 0, 1) * .5 + .5;
+    else if(car.y > 960 && car.y < 1020 && car.x > 250) near = clamp((car.x - 250) / 120, 0, 1) * .5;
+    if(near < 0) return;
+    var sz = 3 + near * 6;
+    c.fillStyle = car.col === "#f4f4f6" ? "#d0d4dc" : car.col;
+    rr(c, hx - sz * .6, hy - 10 + near * 14, sz * 1.2, sz, 2); c.fill();
+    c.fillStyle = "#fff6c8"; c.fillRect(hx - sz * .5, hy - 10 + near * 14 + sz - 1.5, 2, 1.5); c.fillRect(hx + sz * .5 - 2, hy - 10 + near * 14 + sz - 1.5, 2, 1.5);
+  });
+  c.fillStyle = "rgba(255,255,255,.55)"; c.beginPath(); c.ellipse(hx - 5, hy - 6, 4, 2.4, -.6, 0, TAU); c.fill();
+  c.restore();
+  if(mirrorShowsCar() && dist(G.x, G.y, x, y) < 160){
+    c.strokeStyle = "rgba(255,60,60," + (.5 + .5 * Math.sin(G.t * 10)) + ")"; c.lineWidth = 3;
+    c.beginPath(); c.arc(hx, hy, 20, 0, TAU); c.stroke();
+  }
+}
+function drawRailGates(c){
+  var R = RAILS, ring = R.state !== "idle" || R.bar > .05, on = Math.floor(R.lampT * 2.4) % 2;
+  function gate(px, py, dirX){
+    var ang = (1 - R.bar) * Math.PI / 2 * .95, L = 116;
+    var ex = px + dirX * L * Math.cos(ang), ey = py - 12 - L * Math.sin(ang) * .8;
+    c.strokeStyle = "#222"; c.lineWidth = 5; c.lineCap = "round";
+    c.beginPath(); c.moveTo(px, py - 12); c.lineTo(ex, ey); c.stroke();
+    c.strokeStyle = "#ffd34d"; c.lineWidth = 5; c.setLineDash([8, 8]);
+    c.beginPath(); c.moveTo(px, py - 12); c.lineTo(ex, ey); c.stroke(); c.setLineDash([]);
+    c.lineCap = "butt";
+  }
+  function post(px, py){
+    c.fillStyle = "rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(px + 3, py + 1, 6, 2.6, 0, 0, TAU); c.fill();
+    c.fillStyle = "#e9e9e9"; c.fillRect(px - 2.5, py - 46, 5, 46);
+    c.fillStyle = "#222"; for(var i = 0; i < 4; i++) c.fillRect(px - 2.5, py - 40 + i * 10, 5, 5);
+    c.save(); c.translate(px, py - 46);
+    c.strokeStyle = "#ffd34d"; c.lineWidth = 4;
+    c.beginPath(); c.moveTo(-10, -8); c.lineTo(10, 8); c.moveTo(10, -8); c.lineTo(-10, 8); c.stroke();
+    c.strokeStyle = "#222"; c.lineWidth = 1.5; c.setLineDash([3, 3]); c.stroke(); c.setLineDash([]);
+    c.restore();
+    c.fillStyle = "#2a2a2a"; rr(c, px - 14, py - 34, 28, 10, 5); c.fill();
+    c.fillStyle = ring && on ? "#ff4b4b" : "#5a2020"; c.beginPath(); c.arc(px - 8, py - 29, 4, 0, TAU); c.fill();
+    c.fillStyle = ring && !on ? "#ff4b4b" : "#5a2020"; c.beginPath(); c.arc(px + 8, py - 29, 4, 0, TAU); c.fill();
+  }
+  gate(668, 1228, -1); gate(532, 1296, 1);
+  post(668, 1228); post(532, 1296);
+}
+function drawReflector(c, x, y, t){
+  c.save(); c.translate(x, y); c.rotate(Math.sin(t * 2) * .3);
+  c.fillStyle = "rgba(240,255,120,.35)"; c.beginPath(); c.arc(0, 0, 16, 0, TAU); c.fill();
+  c.fillStyle = "#ecff6e"; c.strokeStyle = "#a9b81e"; c.lineWidth = 1.5;
+  c.beginPath(); for(var i = 0; i < 10; i++){ var a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 4.5 : 10; if(i) c.lineTo(Math.cos(a) * r, Math.sin(a) * r); else c.moveTo(Math.cos(a) * r, Math.sin(a) * r); } c.closePath(); c.fill(); c.stroke();
+  c.strokeStyle = "#888"; c.lineWidth = 1.4; c.beginPath(); c.arc(0, -13, 3.4, 0, TAU); c.stroke();
+  c.restore();
+}
+function drawGoalFlag(c, x, y){
+  c.fillStyle = "rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(x + 13, y + 1, 4, 2, 0, 0, TAU); c.fill();
+  c.fillStyle = "#8a90a6"; c.fillRect(x + 10, y - 50, 3, 50);
+  var wv = Math.sin(G.t * 5) * 3;
+  c.fillStyle = "#ff5f7e";
+  c.beginPath(); c.moveTo(x + 13, y - 50); c.quadraticCurveTo(x + 26, y - 47 + wv, x + 38, y - 44 + wv); c.lineTo(x + 13, y - 34); c.closePath(); c.fill();
+  c.fillStyle = "#fff"; c.font = fnt(900, 11); c.textAlign = "center"; c.textBaseline = "middle";
+  c.lineWidth = 3; c.strokeStyle = "#c0392b"; c.strokeText("ゴール", x + 12, y - 58); c.fillText("ゴール", x + 12, y - 58);
+}
+
+/* =====================================================================
+   50 UI ― 画面・メニュー・入力・けっか
+   ===================================================================== */
+var SCREENS = ["scr-title", "scr-missions", "scr-dress", "scr-book", "scr-game", "scr-result"];
+var raf = null, lastT = 0, heroT = 0, heroLast = 0, dressCtx = null, heroCtx = null;
+var charCanvases = [], hatCanvases = [];
+
+function show(id){
+  SCREENS.forEach(function(s){ $(s).classList.add("hidden"); });
+  $(id).classList.remove("hidden");
+  if(window.scrollTo) window.scrollTo(0, 0);
+  if(id === "scr-title") renderTitleStats();
+  if(id === "scr-missions") renderMissions();
+  if(id === "scr-dress") renderDress();
+  if(id === "scr-book") renderBook();
+}
+function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
+function starStr(n){ var s = ""; for(var i = 0; i < 3; i++) s += i < n ? "★" : "☆"; return s; }
+
+/* ---------- タイトル ---------- */
+function renderTitleStats(){
+  $("titleStats").innerHTML = "";
+  var a = el("div", "stat"); a.appendChild(el("b", "", "★ " + totalStars())); a.appendChild(el("span", "", "あつめた ほし")); $("titleStats").appendChild(a);
+  var b = el("div", "stat"); b.appendChild(el("b", "", stickerCount() + " / " + STICKERS.length)); b.appendChild(el("span", "", "シール")); $("titleStats").appendChild(b);
+}
+function heroLoop(now){
+  var dt = Math.min(.05, (now - heroLast) / 1000); heroLast = now;
+  var vis = !$("scr-title").classList.contains("hidden"), dv = !$("scr-dress").classList.contains("hidden");
+  if(vis){ heroT += dt; drawHero(heroCtx, heroT); }
+  if(dv){ heroT += dt; drawDressPreview(heroT); }
+  requestAnimationFrame(heroLoop);
+}
+var HERO = { x:-30, phase:"walk", wait:0 };
+function drawHero(c, t){
+  var W = 470, H = 200;
+  var g = c.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, "#4fc3f0"); g.addColorStop(1, "#bfeaff");
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  c.fillStyle = "rgba(255,255,255,.35)"; c.beginPath(); c.arc(W - 64, 40, 32, 0, TAU); c.fill();
+  c.fillStyle = "#fff9d0"; c.beginPath(); c.arc(W - 64, 40, 21, 0, TAU); c.fill();
+  for(var i = 0; i < 3; i++){
+    var cx = ((t * (10 + i * 6) + i * 190) % 620) - 70;
+    c.fillStyle = "rgba(255,255,255,.92)";
+    c.beginPath(); c.arc(cx, 34 + i * 12, 15, 0, TAU); c.arc(cx + 18, 29 + i * 12, 18, 0, TAU); c.arc(cx + 38, 35 + i * 12, 14, 0, TAU); c.fill();
+  }
+  for(var b = 0; b < 8; b++){
+    var bx = ((b * 78 - t * 12) % 640 + 640) % 640 - 80, bh = 38 + (b % 3) * 16;
+    var cols = ["#ffd9b8", "#cdeefe", "#e1f7d5", "#ffe0ec"];
+    c.fillStyle = cols[b % 4]; c.fillRect(bx, 118 - bh, 54, bh);
+    c.fillStyle = ["#e2574c", "#4a90d9", "#3fa35f", "#e06aa0"][b % 4]; c.fillRect(bx - 3, 118 - bh - 6, 60, 8);
+    c.fillStyle = "rgba(255,255,255,.75)";
+    for(var wy = 0; wy < 2; wy++) for(var wx = 0; wx < 2; wx++) c.fillRect(bx + 10 + wx * 22, 118 - bh + 10 + wy * 15, 12, 9);
+  }
+  c.fillStyle = "#8fc47a"; c.fillRect(0, 116, W, H - 116);
+  c.fillStyle = "#6e737d"; c.fillRect(0, 124, W, 34);
+  c.strokeStyle = "#f4d75a"; c.lineWidth = 3; c.setLineDash([15, 13]); c.lineDashOffset = -t * 60;
+  c.beginPath(); c.moveTo(0, 141); c.lineTo(W, 141); c.stroke(); c.setLineDash([]);
+  c.fillStyle = "#ece4d4"; c.fillRect(0, 158, W, H - 158);
+  c.fillStyle = "#f2c744"; c.fillRect(216, 160, 10, 38);
+  // 信号（4秒あか / 3秒あお）
+  var ct = t % 7, st = ct < 4 ? "red" : (ct < 6.2 ? "green" : "blink");
+  c.fillStyle = "#6a7184"; c.fillRect(244, 120, 4, 62);
+  drawPedSignal(c, 246, 112, st, Math.floor(t * 4) % 2 === 0, .8);
+  if(st === "red"){ drawCarSide(c, ((t * 160) % 700) - 100, 136, 1, "#e6564f", "car"); }
+  // しゅやく：あかで止まって みぎひだり、あおで わたる
+  var H0 = HERO;
+  if(H0.phase === "walk"){ H0.x += dt0(t) * 70; if(H0.x > 200 && H0.x < 206 && st !== "green"){ H0.phase = "wait"; } if(H0.x > W + 40) H0.x = -40; }
+  else if(H0.phase === "wait"){ if(st === "green") H0.phase = "walk"; }
+  var lk = H0.phase === "wait" ? (Math.sin(t * 2.5) > 0 ? 1 : -1) : 0;
+  drawChar(c, CHARS[SAVE.char] || CHARS[0], H0.x, 190, 1.25, {
+    dir:"right", moving:H0.phase === "walk", walk:t * 9, t:t, look:lk, face:H0.phase === "walk" ? "happy" : "normal",
+    hat:SAVE.hat, color:SAVE.color, ride:SAVE.mode === "bike" && H0.phase === "walk", helmet:SAVE.mode === "bike"
+  });
+  if(H0.phase === "wait"){ c.font = fnt(900, 13); c.textAlign = "center"; c.fillStyle = "#fff"; c.strokeStyle = "#2d6fd0"; c.lineWidth = 4; var w = lk > 0 ? "みぎ よし！" : "ひだり よし！"; c.strokeText(w, H0.x, 118); c.fillText(w, H0.x, 118); }
+}
+var _lastHeroT = 0;
+function dt0(t){ var d = clamp(t - _lastHeroT, 0, .05); _lastHeroT = t; return d; }
+
+/* ---------- ミッション一覧 ---------- */
+function renderMissions(){
+  $("modeWalk").classList.toggle("sel", SAVE.mode !== "bike");
+  $("modeBike").classList.toggle("sel", SAVE.mode === "bike");
+  var box = $("missionList"); box.innerHTML = "";
+  MISSIONS.forEach(function(m, i){
+    var ok = missionUnlocked(i);
+    var card = el("button", "mcard" + (ok ? "" : " locked"));
+    var cvv = el("canvas"); card.appendChild(cvv);
+    var c = fitCanvas(cvv, 64, 64, false);
+    drawMissionIcon(c, m.icon, 32, 32, 29);
+    var body = el("div", "mbody");
+    var top = el("div", "mtop");
+    top.appendChild(el("b", "", m.name));
+    var tb = { day:["ひる", "tday"], eve:["ゆうがた", "teve"], night:["よる", "tnight"] }[m.time];
+    top.appendChild(el("span", "tag " + tb[1], tb[0]));
+    body.appendChild(top);
+    body.appendChild(el("div", "mles", m.lessons.join("・")));
+    var best = SAVE.best[m.id] || 0;
+    body.appendChild(el("div", "mstar" + (best ? "" : " none"), ok ? starStr(best) : "「" + MISSIONS.filter(function(x){ return x.id === m.need; })[0].name + "」を クリアで ひらく"));
+    card.appendChild(body);
+    if(!ok) card.appendChild(el("span", "lock", "🔒"));
+    card.addEventListener("click", function(){
+      ensureAudio();
+      if(!ok){ seNg(); card.classList.add("shake"); setTimeout(function(){ card.classList.remove("shake"); }, 400); return; }
+      seTap(); startGameUI(i);
+    });
+    box.appendChild(card);
+  });
+}
+
+/* ---------- きせかえ ---------- */
+function renderDress(){
+  var cg = $("charGrid"); cg.innerHTML = ""; charCanvases = [];
+  CHARS.forEach(function(ch, i){
+    var b = el("button", "opt" + (SAVE.char === i ? " sel" : ""));
+    var cvv = el("canvas"); b.appendChild(cvv); b.appendChild(el("span", "", ch.name));
+    var c = fitCanvas(cvv, 58, 66, false);
+    drawChar(c, ch, 29, 62, .8, { t:0, face:SAVE.char === i ? "happy" : "normal" });
+    b.addEventListener("click", function(){ ensureAudio(); seTap(); SAVE.char = i; saveSave(); renderDress(); });
+    cg.appendChild(b);
+  });
+  var ts = totalStars();
+  var hg = $("hatGrid"); hg.innerHTML = "";
+  HATS.forEach(function(h){
+    var ok = ts >= h.need;
+    var b = el("button", "opt" + (SAVE.hat === h.id ? " sel" : "") + (ok ? "" : " locked"));
+    var cvv = el("canvas"); b.appendChild(cvv);
+    b.appendChild(el("span", "", ok ? h.name : "★" + h.need + "で でる"));
+    var c = fitCanvas(cvv, 58, 50, false);
+    var ch = CHARS[SAVE.char] || CHARS[0];
+    if(ok){ c.save(); c.beginPath(); c.rect(0, 0, 58, 50); c.clip(); drawChar(c, ch, 29, 70, .95, { t:0, hat:h.id, face:"happy" }); c.restore(); }
+    else {
+      c.strokeStyle = "#9ca6b8"; c.lineWidth = 3; c.beginPath(); c.arc(29, 28, 7, Math.PI, TAU); c.stroke();
+      c.fillStyle = "#c2c9d6"; rr(c, 20, 27, 18, 14, 3); c.fill();
+      c.fillStyle = "#f6f8fc"; c.beginPath(); c.arc(29, 33, 1.8, 0, TAU); c.fill(); c.fillRect(28.2, 34, 1.6, 3);
+    }
+    b.addEventListener("click", function(){ ensureAudio(); if(!ok){ seNg(); return; } seTap(); SAVE.hat = h.id; saveSave(); renderDress(); });
+    hg.appendChild(b);
+  });
+  $("hatNote").textContent = "（いまの ★ " + ts + "）";
+  var sc = stickerCount();
+  var row = $("colorRow"); row.innerHTML = "";
+  COLORS.forEach(function(col, i){
+    var ok = !col || sc >= col.need;
+    var b = el("button", "sw" + (SAVE.color === i ? " sel" : "") + (ok ? "" : " locked"));
+    var ch = CHARS[SAVE.char] || CHARS[0];
+    b.style.background = col ? col.c1 : ch.cloth;
+    if(!ok) b.textContent = "🔒";
+    b.title = ok ? "" : "シール " + col.need + "まいで でる";
+    b.addEventListener("click", function(){ ensureAudio(); if(!ok){ seNg(); return; } seTap(); SAVE.color = i; saveSave(); renderDress(); });
+    row.appendChild(b);
+  });
+  var lockedColor = COLORS.filter(function(c){ return c && sc < c.need; })[0];
+  $("colorNote").textContent = lockedColor ? "（シール " + lockedColor.need + "まいで つぎの いろ）" : "";
+}
+function drawDressPreview(t){
+  if(!dressCtx) return;
+  var c = dressCtx, W = 220, H = 200;
+  var g = c.createRadialGradient(W / 2, H * .45, 10, W / 2, H / 2, W * .7);
+  g.addColorStop(0, "#fffbe8"); g.addColorStop(1, "#ffe1b8");
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  c.fillStyle = "rgba(255,255,255,.6)"; c.beginPath(); c.ellipse(W / 2, 176, 70, 14, 0, 0, TAU); c.fill();
+  for(var i = 0; i < 6; i++){ var a = t * .6 + i * TAU / 6; drawStar(c, W / 2 + Math.cos(a) * 88, 92 + Math.sin(a) * 60, 6, t); }
+  var dirs = ["down", "right", "up", "left"], d = dirs[Math.floor(t / 1.6) % 4];
+  drawChar(c, CHARS[SAVE.char] || CHARS[0], W / 2, 176, 2.2, { dir:d, moving:true, walk:t * 8, t:t, face:"happy", hat:SAVE.hat, color:SAVE.color, helmet:false });
+}
+
+/* ---------- シールちょう ---------- */
+function renderBook(){
+  var g = $("bookGrid"); g.innerHTML = "";
+  STICKERS.forEach(function(st){
+    var ok = !!SAVE.stickers[st.id];
+    var b = el("div", "stk" + (ok ? "" : " no"));
+    var cvv = el("canvas"); b.appendChild(cvv);
+    var c = fitCanvas(cvv, 72, 72, false);
+    drawSticker(c, st.id, 36, 36, 30, ok, 0);
+    b.appendChild(el("span", "", ok ? st.name : "？？？"));
+    g.appendChild(b);
+  });
+  $("bookCount").textContent = stickerCount() + " / " + STICKERS.length + " まい";
+}
+
+/* ---------- ゲーム ---------- */
+function startGameUI(i){
+  if(raf) cancelAnimationFrame(raf);
+  resetInput();
+  startMission(i);
+  $("place").textContent = G.m.name;
+  $("bikeBtn").classList.toggle("hidden", G.mode !== "bike");
+  $("pad").classList.toggle("bike", G.mode === "bike");
+  onBikeChange();
+  $("penOv").classList.add("hidden"); $("pauseOv").classList.add("hidden");
+  $("quitBtn").textContent = G.m.free ? "おわって きろく" : "メニューへ";
+  show("scr-game");
+  lastT = performance.now();
+  raf = requestAnimationFrame(loop);
+}
+function loop(now){
+  if(!G) return;
+  var dt = Math.min(.05, (now - lastT) / 1000); lastT = now;
+  if(G.state === "play" || G.state === "cele") updateGame(dt);
+  else if(G.state === "pen"){ G.t += dt; updateParts(dt); if(G.shake > 0) G.shake = Math.max(0, G.shake - dt * 2.6); }
+  if(G.state === "end") return;
+  draw(); updateHud();
+  raf = requestAnimationFrame(loop);
+}
+var hudCache = {};
+function setText(id, v){ if(hudCache[id] !== v){ hudCache[id] = v; $(id).textContent = v; } }
+function updateHud(){
+  var h = Math.max(0, G.hearts);
+  setText("hearts", "❤️".repeat(h) + "🤍".repeat(Math.max(0, CFG.HEARTS - h)));
+  setText("score", G.score + "てん");
+  var on = G.toastT > 0;
+  if(hudCache.toast !== on){ hudCache.toast = on; $("toastEl").classList.toggle("on", on); }
+  if(hudCache.want !== G.wantLook){ hudCache.want = G.wantLook; $("lookBtn").classList.toggle("want", !!G.wantLook); }
+}
+function onToast(msg){ $("toastEl").textContent = msg; }
+function onBikeChange(){
+  $("bikeBtn").innerHTML = G.onBike ? '<span class="ic">🚶</span>おりる' : '<span class="ic">🚲</span>のる';
+}
+function onPenalty(kind){
+  var m = NG[kind] || NG.car;
+  $("penTitle").textContent = m.t; $("penTip").textContent = m.tip;
+  var c = fitCanvas($("penCv"), 96, 96, false);
+  var g = c.createRadialGradient(48, 40, 4, 48, 48, 52);
+  g.addColorStop(0, "#fff3f0"); g.addColorStop(1, "#ffd9d0");
+  c.fillStyle = g; c.beginPath(); c.arc(48, 48, 46, 0, TAU); c.fill();
+  drawChar(c, G.ch, 48, 90, 1.55, { t:0, face:"scared", helmet:G.mode === "bike", bag:!!G.m.bag, hat:G.hat, color:G.color, vest:G.reflector });
+  setTimeout(function(){ $("penOv").classList.remove("hidden"); }, 260);
+}
+function pauseGame(){
+  if(!G || G.state !== "play") return;
+  G.state = "pause"; resetInput(); $("pauseOv").classList.remove("hidden");
+}
+function resumeGame(){
+  if(!G || G.state !== "pause") return;
+  $("pauseOv").classList.add("hidden"); G.state = "play"; lastT = performance.now();
+}
+
+/* ---------- けっか ---------- */
+function evalStickers(stars){
+  var got = [];
+  function award(id){ if(!SAVE.stickers[id]){ SAVE.stickers[id] = true; got.push(id); } }
+  var mi = G.miss;
+  if((G.crossOK.sig || 0) >= 2 && !mi.signal) award("sig");
+  if(G.ballOK) award("ball");
+  if(G.revOK) award("lot");
+  if((G.crossOK.uncross || 0) >= 1 && !mi.car) award("uncross");
+  if(G.m.id === "school" && !mi.turn && (G.crossOK.sig || 0) >= 2) award("turn");
+  if((G.crossOK.rail || 0) >= 1 && !mi.rail && !mi.train) award("rail");
+  if((G.crossOK.alley || 0) >= 1 && !mi.car) award("mirror");
+  if(G.m.id === "night" && G.reflector) award("night");
+  if(!G.m.free && G.missTotal === 0) award("perfect");
+  if(G.mode === "bike" && !G.m.free && !mi.bike) award("bike");
+  if(G.m.free && G.found >= FREE_STARS.length) award("explore");
+  var all = true; for(var i = 0; i < 5; i++) if(!(SAVE.best[MISSIONS[i].id] > 0)) all = false;
+  if(all) award("all");
+  return got;
+}
+function onFinish(){
+  if(raf) cancelAnimationFrame(raf);
+  var m = G.m, stars;
+  if(m.free) stars = G.found >= FREE_STARS.length ? 3 : (G.found >= 8 ? 2 : 1);
+  else stars = G.missTotal === 0 ? 3 : (G.missTotal <= 2 ? 2 : 1);
+  G.score += m.free ? 0 : 200 + G.hearts * 60;
+  var bStars = totalStars(), bStk = stickerCount();
+  var before = MISSIONS.map(function(_, i){ return missionUnlocked(i); });
+  SAVE.best[m.id] = Math.max(SAVE.best[m.id] || 0, stars);
+  var got = evalStickers(stars);
+  saveSave();
+  try{ if(window.WakuwakuAnalytics) window.WakuwakuAnalytics.stageComplete({game_id:"/kotsu-safety", game_name:"こうつう あんぜん タウン", game_category:"がくしゅう", stage_id:m.id, stars:stars, score:G.score, result:"complete"}); }catch(e){}
+
+  var html = "";
+  for(var i = 0; i < 3; i++) html += '<i class="' + (i < stars ? "on" : "off") + '">★</i>';
+  $("rStars").innerHTML = html;
+  $("rMsg").textContent = m.free ? (G.found >= FREE_STARS.length ? "まちの たんけん はかせ！" : "たんけん おつかれさま！")
+    : (stars === 3 ? "パーフェクト！ こうつう あんぜん はかせ" : (stars === 2 ? "じょうずに いけたね！" : "ゴール とうちゃく！"));
+  $("rDet").textContent = m.free ? ("みつけた ★ " + G.found + " / " + FREE_STARS.length)
+    : ("あぶなかった かず " + G.missTotal + "　" + G.score + "てん");
+  var ns = $("rNew"); ns.innerHTML = "";
+  got.forEach(function(id, k){
+    var w = el("div", "newst"); var cvv = el("canvas"); w.appendChild(cvv);
+    var c = fitCanvas(cvv, 70, 70, false); drawSticker(c, id, 35, 35, 29, true, 0);
+    var st = STICKERS.filter(function(s){ return s.id === id; })[0];
+    w.appendChild(el("span", "", st.name)); w.style.animationDelay = (.5 + k * .18) + "s";
+    ns.appendChild(w);
+  });
+  $("rNewWrap").classList.toggle("hidden", !got.length);
+  var msgs = [];
+  MISSIONS.forEach(function(mm, i){ if(!before[i] && missionUnlocked(i)) msgs.push("あたらしい ばしょ「" + mm.name + "」が ひらいたよ！"); });
+  HATS.forEach(function(h){ if(h.need > bStars && h.need <= totalStars()) msgs.push("ぼうし「" + h.name + "」が でたよ！"); });
+  COLORS.forEach(function(col){ if(col && col.need > bStk && col.need <= stickerCount()) msgs.push("あたらしい ふくの いろが でたよ！"); });
+  var ub = $("rUnlock"); ub.innerHTML = "";
+  msgs.forEach(function(t){ ub.appendChild(el("div", "unl", t)); });
+  if(msgs.length) setTimeout(seUnlock, 900);
+  var tips = [];
+  var mi = G.miss;
+  if(mi.road || mi.ball) tips.push("どうろを わたるのは おうだんほどう だけ。");
+  if(mi.signal) tips.push("しんごうは「あお」に なってから。");
+  if(mi.look) tips.push("わたる まえに とまって " + LOOK_ORDER.join("→") + "。");
+  if(mi.car) tips.push("くるまが とおりすぎるまで まとう。");
+  if(mi.turn) tips.push("あおでも まがってくる くるまに きをつける。");
+  if(mi.rail || mi.train) tips.push("ふみきりが なったら はいらない。");
+  if(mi.back) tips.push("ちゅうしゃじょうでは くるまの うしろを とおらない。");
+  if(mi.bike) tips.push("おうだんほどうは じてんしゃを おりて おす。");
+  if(!tips.length) tips = ["とまる・みる・まつ、ぜんぶ できたね！", "ほんとうの みちでも おなじように やってみよう。"];
+  $("rLearn").innerHTML = "";
+  tips.forEach(function(t){ $("rLearn").appendChild(el("li", "", t)); });
+  drawResultCard(stars);
+  var next = -1;
+  for(var j = G.idx + 1; j < MISSIONS.length; j++){ if(missionUnlocked(j) && !(SAVE.best[MISSIONS[j].id] > 0)){ next = j; break; } }
+  $("rNext").classList.toggle("hidden", next < 0);
+  $("rNext").onclick = function(){ seTap(); startGameUI(next); };
+  if(next >= 0) $("rNext").textContent = "つぎ：" + MISSIONS[next].name;
+  show("scr-result");
+}
+function drawResultCard(stars){
+  var c = fitCanvas($("rCard"), 220, 190, false);
+  var g = c.createLinearGradient(0, 0, 0, 190);
+  if(G.m.time === "night"){ g.addColorStop(0, "#28407e"); g.addColorStop(1, "#5d7fb8"); }
+  else if(G.m.time === "eve"){ g.addColorStop(0, "#ffa768"); g.addColorStop(1, "#ffe0b0"); }
+  else { g.addColorStop(0, "#7fdcf7"); g.addColorStop(1, "#dff7c8"); }
+  c.fillStyle = g; rr(c, 3, 3, 214, 184, 24); c.fill();
+  c.strokeStyle = "#fff"; c.lineWidth = 5; rr(c, 8, 8, 204, 174, 20); c.stroke();
+  c.fillStyle = "rgba(255,255,255,.35)"; rr(c, 12, 128, 196, 52, 14); c.fill();
+  drawMissionIcon(c, G.m.icon, 166, 56, 26);
+  drawChar(c, G.ch, 82, 172, 1.75, { t:0, face:"happy", helmet:G.mode === "bike", bag:!!G.m.bag, vest:G.reflector, hat:G.hat, color:G.color });
+  for(var i = 0; i < 3; i++) drawStar(c, 138 + i * 22, 112, 9, 0, i < stars ? null : "blue");
+  c.fillStyle = "#fff"; c.font = fnt(900, 15); c.textAlign = "center"; c.textBaseline = "middle";
+  c.strokeStyle = "rgba(20,40,80,.45)"; c.lineWidth = 4;
+  c.strokeText(G.ch.name + " の きろく", 82, 26); c.fillText(G.ch.name + " の きろく", 82, 26);
+}
+
+/* ---------- 入力 ---------- */
+function toCanvas(e){
+  var r = cv.getBoundingClientRect();
+  return { x:(e.clientX - r.left) / r.width * VW, y:(e.clientY - r.top) / r.height * VH };
+}
+function bindInput(){
+  cv.addEventListener("pointerdown", function(e){
+    if(!G || G.state !== "play") return;
+    if(e.cancelable) e.preventDefault();
+    ensureAudio();
+    var p = toCanvas(e);
+    INPUT.active = true; INPUT.used = true; INPUT.id = e.pointerId;
+    INPUT.bx = p.x; INPUT.by = p.y; INPUT.jx = 0; INPUT.jy = 0;
+    try{ cv.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  cv.addEventListener("pointermove", function(e){
+    if(!INPUT.active || e.pointerId !== INPUT.id) return;
+    var p = toCanvas(e), dx = p.x - INPUT.bx, dy = p.y - INPUT.by, L = Math.sqrt(dx * dx + dy * dy), R = 40;
+    if(L > R){ INPUT.bx = p.x - dx / L * R; INPUT.by = p.y - dy / L * R; dx = dx / L * R; dy = dy / L * R; }
+    INPUT.jx = dx / R; INPUT.jy = dy / R;
+  });
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach(function(ev){
+    cv.addEventListener(ev, function(e){ if(e.pointerId === INPUT.id) resetInput(true); });
+  });
+  $("lookBtn").addEventListener("pointerdown", function(e){ if(e.cancelable) e.preventDefault(); doLook(); });
+  $("bikeBtn").addEventListener("click", function(){ toggleBike(); });
+  $("pauseBtn").addEventListener("click", function(){ seTap(); pauseGame(); });
+  $("resumeBtn").addEventListener("click", function(){ seTap(); resumeGame(); });
+  $("restartBtn").addEventListener("click", function(){ seTap(); startGameUI(G.idx); });
+  $("quitBtn").addEventListener("click", function(){
+    seTap();
+    if(G && G.m.free){ $("pauseOv").classList.add("hidden"); G.state = "end"; onFinish(); return; }
+    if(raf) cancelAnimationFrame(raf); G = null; show("scr-missions");
+  });
+  $("penBtn").addEventListener("click", function(){ seTap(); $("penOv").classList.add("hidden"); resumeAfterPenalty(); lastT = performance.now(); });
+  $("sndBtn").addEventListener("click", function(){ setSound(!SAVE.sound); });
+  var keys = {};
+  function applyKeys(){
+    INPUT.kx = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.a ? 1 : 0);
+    INPUT.ky = (keys.ArrowDown || keys.s ? 1 : 0) - (keys.ArrowUp || keys.w ? 1 : 0);
+    if(INPUT.kx || INPUT.ky) INPUT.used = true;
+  }
+  document.addEventListener("keydown", function(e){
+    if(!G) return;
+    var k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].indexOf(e.key) >= 0) e.preventDefault();
+    if(k === " " || k === "l"){ doLook(); return; }
+    if(k === "b"){ toggleBike(); return; }
+    if(k === "p" || k === "Escape"){ if(G.state === "play") pauseGame(); else resumeGame(); return; }
+    keys[k] = true; applyKeys();
+  });
+  document.addEventListener("keyup", function(e){ var k = e.key.length === 1 ? e.key.toLowerCase() : e.key; keys[k] = false; applyKeys(); });
+  document.addEventListener("visibilitychange", function(){ if(document.hidden) pauseGame(); });
+  window.addEventListener("blur", function(){ keys = {}; applyKeys(); resetInput(true); });
+
+  $("btnPlay").addEventListener("click", function(){ ensureAudio(); seTap(); show("scr-missions"); });
+  $("btnDress").addEventListener("click", function(){ ensureAudio(); seTap(); show("scr-dress"); });
+  $("btnBook").addEventListener("click", function(){ ensureAudio(); seTap(); show("scr-book"); });
+  ["msBack", "drBack", "bkBack"].forEach(function(id){ $(id).addEventListener("click", function(){ seTap(); show("scr-title"); }); });
+  $("modeWalk").addEventListener("click", function(){ seTap(); SAVE.mode = "walk"; saveSave(); renderMissions(); });
+  $("modeBike").addEventListener("click", function(){ seTap(); SAVE.mode = "bike"; saveSave(); renderMissions(); });
+  $("rAgain").addEventListener("click", function(){ seTap(); startGameUI(G.idx); });
+  $("rMenu").addEventListener("click", function(){ seTap(); G = null; show("scr-missions"); });
+}
+
+/* ---------- 起動 ---------- */
+function boot(){
+  loadSave();
+  cv = $("cv"); ctx = fitCanvas(cv, VW, VH, true); initGlow();
+  heroCtx = fitCanvas($("hero"), 470, 200, true);
+  dressCtx = fitCanvas($("dressCv"), 220, 200, false);
+  $("sndBtn").textContent = SAVE.sound ? "🔊" : "🔇";
+  bindInput();
+  show("scr-title");
+  heroLast = performance.now();
+  requestAnimationFrame(heroLoop);
+  var prebuild = function(){ if(!STATIC) setTimeout(function(){ if(!STATIC) buildStatic(); }, 60); };
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(prebuild); else prebuild();
+}
+window.KOTSU = {
+  G:function(){ return G; }, INPUT:INPUT, SAVE:SAVE, MISSIONS:MISSIONS, CROSS:CROSS, RAILS:RAILS,
+  startUI:startGameUI, doLook:doLook, toggleBike:toggleBike, pedLight:pedLight, carLight:carLight,
+  zoneAt:zoneAt, nearestCross:nearestCross, lookValid:lookValid, crossViolation:crossViolation,
+  resume:function(){ $("penOv").classList.add("hidden"); resumeAfterPenalty(); }, show:show, mirrorShowsCar:mirrorShowsCar
+};
+boot();
+
+})();
+</script>
+</body>
+</html>

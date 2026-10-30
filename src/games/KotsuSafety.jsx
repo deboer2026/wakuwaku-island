@@ -17,8 +17,8 @@ export default function KotsuSafety() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/kotsu_safety_v5.html"
-          title="とまって みて わたろう"
+          src="/games/kotsu_safety_v6.html"
+          title="こうつう あんぜん タウン"
           allow="autoplay; fullscreen"
           allowFullScreen
           sandbox="allow-scripts allow-same-origin allow-popups"
