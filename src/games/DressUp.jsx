@@ -24,8 +24,8 @@ export default function DressUp() {
         <HomeChip />
         <iframe
           ref={iframeRef}
-          src="/games/dressup_v2.html"
-          title="きせかえプリンセス"
+          src="/games/dressup_v3.html"
+          title="ゆめいろヘアサロン"
           allow="autoplay; fullscreen"
           allowFullScreen
           sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
