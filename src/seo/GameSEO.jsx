@@ -2,9 +2,10 @@ import { Helmet } from 'react-helmet-async';
 
 const BASE = 'https://wakuwakuislands.com';
 
-export default function GameSEO({ route, name, desc, category, intro, faq, ageMin = 4, ageMax = 12 }) {
+export default function GameSEO({ route, name, desc, category, intro, faq, ogImage, ageMin = 4, ageMax = 12 }) {
   const url = `${BASE}${route}`;
   const title = `${name}｜わくわくアイランド`;
+  const shareImage = ogImage ? new URL(ogImage, BASE).href : `${BASE}/og-image.png`;
   const ld = {
     '@context': 'https://schema.org',
     '@type': 'VideoGame',
@@ -38,7 +39,7 @@ export default function GameSEO({ route, name, desc, category, intro, faq, ageMi
       <meta property="og:title" content={title} />
       <meta property="og:description" content={desc} />
       <meta property="og:url" content={url} />
-      <meta property="og:image" content={`${BASE}/og-image.png`} />
+      <meta property="og:image" content={shareImage} />
       <script type="application/ld+json">{JSON.stringify(ld)}</script>
       {faqLd && <script type="application/ld+json">{JSON.stringify(faqLd)}</script>}
     </Helmet>

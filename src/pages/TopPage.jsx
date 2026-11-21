@@ -40,6 +40,20 @@ const DEFAULT_GRADIENT = 'linear-gradient(145deg, #7B8FA1, #3D4A5C)';
    ゲームSVGイラスト（SNES風）
 ════════════════════════════════════════════════════ */
 const GAME_SVGS = {
+  g_dressup_v3: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="85" rx="12" fill="#FFE5F1"/>
+      <path d="M17 12h66v60H17z" fill="#FFF" stroke="#F7B4D2" strokeWidth="3"/>
+      <path d="M32 72V39c0-15 8-24 18-24s18 9 18 24v33" fill="#A34D68"/>
+      <ellipse cx="50" cy="43" rx="16" ry="19" fill="#FFD9C9"/>
+      <path d="M34 42c0-16 8-24 17-24 10 0 17 8 17 22-8-5-18-8-34 2z" fill="#6B3D58"/>
+      <path d="M38 65q12-11 24 0l7 7H31z" fill="#AEEBDD"/>
+      <path d="M30 28l4-10 7 7m21 3 5-10 6 12" fill="none" stroke="#F45F9F" strokeWidth="4" strokeLinecap="round"/>
+      <circle cx="44" cy="45" r="1.6" fill="#603E58"/><circle cx="56" cy="45" r="1.6" fill="#603E58"/>
+      <path d="M46 53q4 4 8 0" fill="none" stroke="#D66D82" strokeWidth="2" strokeLinecap="round"/>
+      <path d="m78 20 2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#FFC23A"/>
+    </svg>
+  ),
   g_astral: (
     <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
       <rect x="0" y="0" width="100" height="85" rx="12" fill="#2b2350"/>
@@ -1699,6 +1713,12 @@ const GAMES = [
     zh:{ name:'涂色和画画',         desc:'涂色、画画，让自己的\n角色和作品动起来！' },
     ko:{ name:'색칠·그림 그리기',   desc:'색칠하고 그리고, 내\n캐릭터와 그림을 움직여요!' },
     es:{ name:'Colorear y Dibujar', desc:'¡Colorea, dibuja y da\nvida a tus personajes!' } },
+  { id:'g_dressup_v3', route:'/dressup', icon:'💇', num:30, color:'#f45f9f', stars:5, isNew:true, category:'そうぞう',
+    ja:{ name:'ゆめいろヘアサロン', desc:'おねがいどおりに かわいく\nヘアアレンジしよう！' },
+    en:{ name:'Dream Hair Salon', desc:'Style each customer’s hair\nto match their wish!' },
+    zh:{ name:'梦幻美发沙龙', desc:'按顾客的心愿\n设计漂亮发型！' },
+    ko:{ name:'꿈빛 헤어 살롱', desc:'손님의 부탁대로\n예쁜 머리를 꾸며요!' },
+    es:{ name:'Salón de Pelo de Ensueño', desc:'¡Peina a cada cliente\ncomo lo pidió!' } },
 ];
 
 /* ════════════════════════════════════════════════════
