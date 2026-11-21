@@ -1584,6 +1584,22 @@ const GAME_SVGS = {
       </g>
     </svg>
   ),
+  g_reji: (
+    <svg viewBox="0 0 100 85" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="85" rx="12" fill="#DDF7EB"/>
+      <path d="M8 70h84v7a8 8 0 0 1-8 8H16a8 8 0 0 1-8-8z" fill="#6FC49A"/>
+      <rect x="27" y="20" width="47" height="44" rx="8" fill="#F7B65E" stroke="#D98B35" strokeWidth="2"/>
+      <rect x="34" y="26" width="33" height="15" rx="4" fill="#244F4B"/>
+      <path d="M39 34h23" stroke="#A8F3C4" strokeWidth="2" strokeLinecap="round"/>
+      <rect x="33" y="45" width="35" height="12" rx="4" fill="#FFF5E4"/>
+      <circle cx="40" cy="51" r="2" fill="#E9A94F"/><circle cx="50" cy="51" r="2" fill="#E9A94F"/><circle cx="60" cy="51" r="2" fill="#E9A94F"/>
+      <path d="M42 20v-6a8 8 0 0 1 16 0v6" fill="#F28B78" stroke="#D76962" strokeWidth="2"/>
+      <circle cx="20" cy="61" r="8" fill="#FFD76A" stroke="#E3A83C" strokeWidth="1.5"/><path d="M18 61h4m-2-3v6" stroke="#A86A25" strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx="80" cy="59" r="7" fill="#FFE79B" stroke="#E3A83C" strokeWidth="1.5"/><path d="M78 59h4m-2-3v6" stroke="#A86A25" strokeWidth="1.4" strokeLinecap="round"/>
+      <path d="M13 19l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7z" fill="#FFC94D"/>
+      <path d="M82 15l1.7 3.4 3.8.6-2.8 2.7.7 3.8-3.4-1.8-3.4 1.8.7-3.8-2.8-2.7 3.8-.6z" fill="#FF9FC0"/>
+    </svg>
+  ),
 };
 
 /* ════════════════════════════════════════════════════
@@ -1719,6 +1735,12 @@ const GAMES = [
     zh:{ name:'梦幻美发沙龙', desc:'按顾客的心愿\n设计漂亮发型！' },
     ko:{ name:'꿈빛 헤어 살롱', desc:'손님의 부탁대로\n예쁜 머리를 꾸며요!' },
     es:{ name:'Salón de Pelo de Ensueño', desc:'¡Peina a cada cliente\ncomo lo pidió!' } },
+  { id:'g_reji', route:'/reji', icon:'🧾', num:31, color:'#4aa878', stars:5, isNew:true, category:'がくしゅう',
+    ja:{ name:'わくわくレジ', desc:'3つのおみせで\nレジのおしごと！' },
+    en:{ name:'Wakuwaku Cashier', desc:'Serve animal shoppers\nand count their change!' },
+    zh:{ name:'快乐收银员', desc:'接待动物顾客\n练习收银和找零！' },
+    ko:{ name:'두근두근 계산대', desc:'동물 손님을 맞이하고\n거스름돈을 계산해요!' },
+    es:{ name:'Caja Divertida', desc:'¡Atiende a los animales\ny calcula el cambio!' } },
 ];
 
 /* ════════════════════════════════════════════════════
